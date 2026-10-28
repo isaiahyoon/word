@@ -119,11 +119,6 @@ function renderChapter(focusVerse = null) {
     tab.classList.toggle("is-active", active);
     tab.setAttribute("aria-selected", String(active));
   });
-  if (focusVerse !== null) {
-    requestAnimationFrame(() => document.querySelector(`#verse-${focusVerse}`)?.scrollIntoView({ behavior: "smooth", block: "center" }));
-  } else {
-    document.querySelector("#reader").scrollIntoView({ block: "start" });
-  }
 }
 
 function adjacentChapter(offset) {
