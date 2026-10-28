@@ -63,7 +63,7 @@ Please review the full text in the linked license file included in this reposito
 
 ![The Word application demo](assets/demo.gif)
 
-The demo shows a pointer entering `John 3:16`, selecting its result, and manually scrolling to the highlighted verse without an automatic jump. To refresh it, replace `assets/demo-frame-01.png` through `assets/demo-frame-08.png` with current captures, then run:
+The demo shows a pointer searching `John 3:16`, opening the shortcut guide, navigating with the arrow keys, and manually scrolling to the highlighted verse without an automatic jump. To refresh it, replace the numbered `assets/demo-frame-*.png` captures, then run:
 
 ```sh
 swift tools/build-demo.swift
