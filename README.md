@@ -1,5 +1,15 @@
 # Word
 
+## Demo
+
+![The Word application demo](assets/demo.gif)
+
+The demo shows chapter reading, phrase search, verse selection, and chapter navigation. To refresh it, replace `assets/demo-frame-01.png` through `assets/demo-frame-04.png` with current captures, then run:
+
+```sh
+swift tools/build-demo.swift
+```
+
 ## About
 
 An application that allows you to easily navigate the word of God.
