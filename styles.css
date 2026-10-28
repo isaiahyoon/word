@@ -6,7 +6,7 @@
   --canvas: #f4f2ec;
   --line: #e9e6de;
   --blue: #defefc;
-  --blue-strong: #8db4c4;
+  --blue-strong: #defefc;
   --lavender: #e9e3f2;
   --yellow: #f5ebc7;
   --pink: #f3e0dc;
@@ -104,7 +104,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .chapter-kicker { display: flex; align-items: center; gap: 10px; color: #8a8b82; font-size: 9px; font-weight: 700; letter-spacing: 1.35px; }
 .kicker-dash { width: 23px; height: 1px; background: #c9aebf; }
 .chapter-heading h1 { margin: 13px 0 12px; font-family: var(--serif); font-size: clamp(42px, 5vw, 58px); font-weight: 400; line-height: 1.05; letter-spacing: 0; }
-.heading-number { color: #8db4c4; }
+.heading-number {
+  color: var(--blue-strong);
+  -webkit-text-stroke: 1.5px var(--ink);
+  paint-order: stroke fill;
+}
 .chapter-meta { display: flex; align-items: center; gap: 9px; margin: 0; color: #85867e; font-size: 10px; }
 .meta-dot { width: 5px; height: 5px; }
 .meta-divider { color: #c4c1b8; }
