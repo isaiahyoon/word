@@ -12,13 +12,13 @@
   --blue-strong: var(--blue);
   --lavender: #dcd7f7;
   --yellow: #fffecf;
-  --pink: #f3e0dc;
+  --pink: #fad4e0;
   --green: #d6f2b9;
 
   /* Higher-contrast gradient stops for the chapter number */
   --chapter-blue: #72c6d3;
   --chapter-lavender: #dcd7f7;
-  --chapter-pink: #e78da5;
+  --chapter-pink: #fad4e0;
   --chapter-green: #d6f2b9;
 
   /* Shared interaction accents */
@@ -109,7 +109,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .eyebrow { color: #81827b; font-size: 9px; font-weight: 700; letter-spacing: 1.1px; }
 .book-total { color: #4a4b45; font-family: var(--serif); font-size: 18px; }
 .book-total span { color: #8a8b83; font-family: var(--sans); font-size: 10px; }
-.testament-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin: 0 5px 15px; padding: 4px; border-radius: 5px; background: rgba(226,223,214,.55); }
+.testament-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin: 0 5px 15px; padding: 4px; border-radius: 5px; background: var(--pink); }
 .testament-tab { height: 34px; border: 0; border-radius: 3px; background: transparent; color: #777970; font-size: 11px; font-weight: 600; cursor: pointer; transition: background .18s, color .18s; }
 .testament-tab span { margin-left: 4px; color: #a09f97; font-size: 9px; }
 .testament-tab.is-active { background: #fffefa; color: #343631; box-shadow: 0 1px 3px rgba(48,47,42,.08); }
