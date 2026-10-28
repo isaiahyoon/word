@@ -10,14 +10,14 @@
   /* Shared pastel theme palette */
   --blue: #defefc;
   --blue-strong: var(--blue);
-  --lavender: #e9e3f2;
-  --yellow: #f5ebc7;
+  --lavender: #c5c3f9;
+  --yellow: #fffecf;
   --pink: #f3e0dc;
   --green: #e0eadc;
 
   /* Higher-contrast gradient stops for the chapter number */
   --chapter-blue: #72c6d3;
-  --chapter-lavender: #aa91d2;
+  --chapter-lavender: #c5c3f9;
   --chapter-pink: #e78da5;
   --chapter-green: #8bc27b;
 
