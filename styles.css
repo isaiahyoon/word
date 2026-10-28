@@ -13,13 +13,13 @@
   --lavender: #c5c3f9;
   --yellow: #fffecf;
   --pink: #f3e0dc;
-  --green: #e0eadc;
+  --green: #d6f2b9;
 
   /* Higher-contrast gradient stops for the chapter number */
   --chapter-blue: #72c6d3;
   --chapter-lavender: #c5c3f9;
   --chapter-pink: #e78da5;
-  --chapter-green: #8bc27b;
+  --chapter-green: #d6f2b9;
 
   /* Shared interaction accents */
   --focus: #799da8;

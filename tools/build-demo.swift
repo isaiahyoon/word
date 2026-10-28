@@ -11,7 +11,7 @@ let frameURLs = (try? FileManager.default.contentsOfDirectory(at: assets, includ
     .sorted { $0.lastPathComponent < $1.lastPathComponent } ?? []
 
 let targetWidth = 1280
-let targetHeight = 840
+let targetHeight = 720
 let frameDelay = 0.65
 
 guard frameURLs.count >= 2 else {
@@ -24,8 +24,8 @@ func loadFrame(from url: URL) -> CGImage? {
 }
 
 func cropAndResize(_ image: CGImage) -> CGImage? {
-    let cropWidth = min(image.width, 1584)
-    let cropHeight = min(image.height, 1040)
+    let cropWidth = min(image.width, 2016)
+    let cropHeight = min(image.height, 1134)
     guard let cropped = image.cropping(to: CGRect(x: 0, y: 0, width: cropWidth, height: cropHeight)) else { return nil }
 
     guard let context = CGContext(
