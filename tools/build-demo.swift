@@ -12,7 +12,7 @@ let frameURLs = (try? FileManager.default.contentsOfDirectory(at: assets, includ
 
 let targetWidth = 1280
 let targetHeight = 720
-let frameDelay = 0.65
+let frameDelay = 0.3
 
 guard frameURLs.count >= 2 else {
     fatalError("Add at least two numbered demo-frame PNGs to assets")
