@@ -57,11 +57,24 @@
             <div class="breadcrumbs"><span id="testament-name">OLD TESTAMENT</span><span class="crumb-slash">/</span><span id="book-crumb">GENESIS</span></div>
             <div class="chapter-navigation">
               <button class="chapter-arrow" id="previous-chapter" type="button" aria-label="Previous chapter" title="Previous chapter">←</button>
-              <label class="select-wrap">
-                <span class="sr-only">Chapter</span>
-                <select id="chapter-select" aria-label="Choose chapter"></select>
-                <span class="select-caret" aria-hidden="true">⌄</span>
-              </label>
+              <div class="chapter-picker" id="chapter-picker">
+                <button class="chapter-select" id="chapter-select" type="button" aria-label="Choose chapter" aria-haspopup="listbox" aria-expanded="false" aria-controls="chapter-options-list">
+                  <span id="chapter-select-value">1</span>
+                  <span class="chapter-select-flower" aria-hidden="true">✦</span>
+                  <span class="select-caret" aria-hidden="true">⌄</span>
+                </button>
+                <div class="chapter-popover" id="chapter-options" hidden>
+                  <div class="chapter-menu-heading">
+                    <span class="chapter-menu-flower" aria-hidden="true">✿</span>
+                    <div class="chapter-menu-copy">
+                      <span class="chapter-menu-kicker">TURN THE PAGE</span>
+                      <h2 id="chapter-options-title">GENESIS</h2>
+                    </div>
+                    <span class="chapter-options-count" id="chapter-options-count">50 CHAPTERS</span>
+                  </div>
+                  <div class="chapter-options-grid" id="chapter-options-list" role="listbox" aria-labelledby="chapter-options-title"></div>
+                </div>
+              </div>
               <span class="chapter-label">CHAPTER</span>
               <button class="chapter-arrow" id="next-chapter" type="button" aria-label="Next chapter" title="Next chapter">→</button>
             </div>

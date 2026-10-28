@@ -1,4 +1,5 @@
 import { bindKeyboardShortcuts } from "./keyboard-shortcuts.js";
+import { createChapterPicker } from "./chapter-picker.js";
 
 const BOOKS = [
   "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah", "Esther", "Job", "Psalms", "Proverbs", "Ecclesiastes", "Song of Solomon", "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi",
@@ -15,6 +16,12 @@ const state = { book: 1, chapter: 1, testament: "old", verses: [], chapters: new
 const elements = {
   bookList: document.querySelector("#book-list"),
   chapterSelect: document.querySelector("#chapter-select"),
+  chapterSelectValue: document.querySelector("#chapter-select-value"),
+  chapterPicker: document.querySelector("#chapter-picker"),
+  chapterOptions: document.querySelector("#chapter-options"),
+  chapterOptionsTitle: document.querySelector("#chapter-options-title"),
+  chapterOptionsCount: document.querySelector("#chapter-options-count"),
+  chapterOptionsList: document.querySelector("#chapter-options-list"),
   verseList: document.querySelector("#verse-list"),
   searchInput: document.querySelector("#search-input"),
   searchResults: document.querySelector("#search-results"),
@@ -22,6 +29,7 @@ const elements = {
   sidebar: document.querySelector("#sidebar"),
   sidebarScrim: document.querySelector("#sidebar-scrim")
 };
+let chapterPicker;
 
 const testamentFor = (book) => book <= 39 ? "old" : "new";
 const bookName = (book) => BOOKS[book - 1];
@@ -49,6 +57,19 @@ async function initialize() {
     state.chapters.get(key).push(verse);
   }
   renderBookList();
+  chapterPicker = createChapterPicker({
+    root: elements.chapterPicker,
+    trigger: elements.chapterSelect,
+    value: elements.chapterSelectValue,
+    popover: elements.chapterOptions,
+    heading: elements.chapterOptionsTitle,
+    count: elements.chapterOptionsCount,
+    list: elements.chapterOptionsList,
+    onSelect: (chapter) => {
+      state.chapter = chapter;
+      renderChapter();
+    }
+  });
   renderChapter();
   bindEvents();
 }
@@ -91,14 +112,7 @@ function renderChapter(focusVerse = null) {
   document.title = `${name} ${state.chapter} — The Word`;
 
   const chapterCount = [...state.chapters.keys()].filter((key) => key.startsWith(`${state.book}:`)).length;
-  elements.chapterSelect.replaceChildren();
-  for (let chapter = 1; chapter <= chapterCount; chapter += 1) {
-    const option = document.createElement("option");
-    option.value = chapter;
-    option.textContent = chapter;
-    option.selected = chapter === state.chapter;
-    elements.chapterSelect.append(option);
-  }
+  chapterPicker.render({ bookName: name, chapterCount, activeChapter: state.chapter });
 
   elements.verseList.replaceChildren();
   for (const verse of verses) {
@@ -278,10 +292,6 @@ function bindEvents() {
     renderBookList();
     renderChapter();
   }));
-  elements.chapterSelect.addEventListener("change", () => {
-    state.chapter = Number(elements.chapterSelect.value);
-    renderChapter();
-  });
   document.querySelector("#previous-chapter").addEventListener("click", () => navigate(-1));
   document.querySelector("#next-chapter").addEventListener("click", () => navigate(1));
   document.querySelector("#bottom-previous").addEventListener("click", () => navigate(-1));
@@ -301,9 +311,11 @@ function bindEvents() {
     openButton: document.querySelector("#shortcuts-open"),
     closeButton: document.querySelector("#shortcuts-close"),
     searchInput: elements.searchInput,
+    isChapterPickerOpen: () => chapterPicker.isOpen(),
     onPreviousChapter: () => navigate(-1),
     onNextChapter: () => navigate(1),
     onEscape: () => {
+      chapterPicker.close(true);
       elements.searchResults.hidden = true;
       closeSidebar();
     }

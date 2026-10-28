@@ -3,6 +3,7 @@ export function bindKeyboardShortcuts({
   openButton,
   closeButton,
   searchInput,
+  isChapterPickerOpen,
   onPreviousChapter,
   onNextChapter,
   onEscape
@@ -19,7 +20,7 @@ export function bindKeyboardShortcuts({
       onEscape();
       return;
     }
-    if (dialog.open) return;
+    if (dialog.open || isChapterPickerOpen()) return;
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
       event.preventDefault();
       searchInput.focus();
