@@ -44,6 +44,10 @@ python3 -m http.server 8000
 
 Then open [http://localhost:8000](http://localhost:8000).
 
+## Customize the palette
+
+Edit the CSS custom properties at the top of `styles.css` to change the shared theme colors. The base pastels are `--blue`, `--lavender`, `--yellow`, `--pink`, and `--green`; the chapter number's higher-contrast gradient stops are `--chapter-blue`, `--chapter-lavender`, `--chapter-pink`, and `--chapter-green`.
+
 ## License
 
 This project is jointly licensed under the terms of both of the following licenses:

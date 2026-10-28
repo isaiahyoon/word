@@ -8,6 +8,7 @@ const BOOK_TITLES = [
   "The Gospel According to St. Matthew", "The Gospel According to St. Mark", "The Gospel According to St. Luke", "The Gospel According to St. John", "The Acts of the Apostles", "The Epistle of Paul the Apostle to the Romans", "The First Epistle of Paul the Apostle to the Corinthians", "The Second Epistle of Paul the Apostle to the Corinthians", "The Epistle of Paul the Apostle to the Galatians", "The Epistle of Paul the Apostle to the Ephesians", "The Epistle of Paul the Apostle to the Philippians", "The Epistle of Paul the Apostle to the Colossians", "The First Epistle of Paul the Apostle to the Thessalonians", "The Second Epistle of Paul the Apostle to the Thessalonians", "The First Epistle of Paul the Apostle to Timothy", "The Second Epistle of Paul the Apostle to Timothy", "The Epistle of Paul to Titus", "The Epistle of Paul to Philemon", "The Epistle of Paul the Apostle to the Hebrews", "The General Epistle of James", "The First Epistle General of Peter", "The Second Epistle General of Peter", "The First Epistle General of John", "The Second Epistle of John", "The Third Epistle of John", "The General Epistle of Jude", "The Revelation of St. John the Divine"
 ];
 
+const CHAPTER_GRADIENT_COLORS = ["var(--chapter-blue)", "var(--chapter-lavender)", "var(--chapter-pink)", "var(--chapter-green)"];
 const state = { book: 1, chapter: 1, testament: "old", verses: [], chapters: new Map(), searchTimer: null, searchMatches: [], searchQuery: "", searchShown: 0 };
 const elements = {
   bookList: document.querySelector("#book-list"),
@@ -23,6 +24,17 @@ const elements = {
 const testamentFor = (book) => book <= 39 ? "old" : "new";
 const bookName = (book) => BOOKS[book - 1];
 const chapterKey = (book, chapter) => `${book}:${chapter}`;
+
+function createChapterGradient() {
+  const colors = [...CHAPTER_GRADIENT_COLORS];
+  for (let index = colors.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [colors[index], colors[swapIndex]] = [colors[swapIndex], colors[index]];
+  }
+  const angle = Math.floor(Math.random() * 360);
+  const stops = colors.map((color, index) => `${color} ${index / (colors.length - 1) * 100}%`);
+  return `linear-gradient(${angle}deg, ${stops.join(", ")})`;
+}
 
 async function initialize() {
   const response = await fetch("./kjv.json");
@@ -68,7 +80,9 @@ function renderChapter(focusVerse = null) {
   document.querySelector("#testament-name").textContent = `${testament.toUpperCase()} TESTAMENT`;
   document.querySelector("#book-crumb").textContent = name.toUpperCase();
   document.querySelector("#heading-book").textContent = name;
-  document.querySelector("#heading-chapter").textContent = state.chapter;
+  const chapterNumber = document.querySelector("#heading-chapter");
+  chapterNumber.textContent = state.chapter;
+  chapterNumber.style.setProperty("--chapter-gradient", createChapterGradient());
   document.querySelector("#chapter-kicker").textContent = BOOK_TITLES[state.book - 1].toUpperCase();
   document.querySelector("#verse-count").textContent = `${verses.length} ${verses.length === 1 ? "verse" : "verses"}`;
   document.querySelector("#testament-meta").textContent = `${testament === "old" ? "Old" : "New"} Testament`;
