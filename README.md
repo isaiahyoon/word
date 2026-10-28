@@ -34,6 +34,16 @@ All things were made by him;
 and without him was not any thing made that was made.
 ```
 
+## Run locally
+
+Start a local web server from this directory so the reader can load `kjv.json`:
+
+```sh
+python3 -m http.server 8000
+```
+
+Then open [http://localhost:8000](http://localhost:8000).
+
 ## License
 
 This project is jointly licensed under the terms of both of the following licenses:

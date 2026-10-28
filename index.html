@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f5ef" />
+    <meta name="description" content="A quiet, searchable reader for the King James Version of the Bible." />
+    <title>The Word — King James Version</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Gelasio:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <button class="mobile-menu" id="menu-toggle" type="button" aria-label="Open book navigation" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+        <a class="brand" href="#" aria-label="The Word home">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          <span class="brand-copy"><strong>the word</strong><small>KING JAMES VERSION</small></span>
+        </a>
+        <div class="search-wrap">
+          <label class="search-box" for="search-input">
+            <span class="search-icon" aria-hidden="true"></span>
+            <input id="search-input" type="search" placeholder="Find a verse or phrase..." autocomplete="off" />
+            <kbd>⌘ K</kbd>
+          </label>
+          <div class="search-results" id="search-results" role="listbox" aria-label="Search results" hidden></div>
+        </div>
+        <div class="topbar-note"><span class="live-dot"></span><span>THE HOLY BIBLE</span></div>
+      </header>
+
+      <div class="workspace">
+        <div class="sidebar-scrim" id="sidebar-scrim"></div>
+        <aside class="sidebar" id="sidebar" aria-label="Book navigation">
+          <div class="sidebar-heading">
+            <span class="eyebrow">YOUR READING ROOM</span>
+            <span class="book-total">66 <span>books</span></span>
+          </div>
+          <div class="testament-tabs" role="tablist" aria-label="Choose testament">
+            <button type="button" class="testament-tab is-active" data-testament="old" role="tab" aria-selected="true">Old <span>39</span></button>
+            <button type="button" class="testament-tab" data-testament="new" role="tab" aria-selected="false">New <span>27</span></button>
+          </div>
+          <div class="book-list" id="book-list" aria-label="Books"></div>
+          <div class="sidebar-foot"><span class="foot-flower" aria-hidden="true">✳</span><span>One story. Sixty-six books.</span></div>
+        </aside>
+
+        <main class="reader" id="reader">
+          <div class="reader-topline">
+            <div class="breadcrumbs"><span id="testament-name">OLD TESTAMENT</span><span class="crumb-slash">/</span><span id="book-crumb">GENESIS</span></div>
+            <div class="chapter-navigation">
+              <button class="chapter-arrow" id="previous-chapter" type="button" aria-label="Previous chapter" title="Previous chapter">←</button>
+              <label class="select-wrap">
+                <span class="sr-only">Chapter</span>
+                <select id="chapter-select" aria-label="Choose chapter"></select>
+                <span class="select-caret" aria-hidden="true">⌄</span>
+              </label>
+              <span class="chapter-label">CHAPTER</span>
+              <button class="chapter-arrow" id="next-chapter" type="button" aria-label="Next chapter" title="Next chapter">→</button>
+            </div>
+          </div>
+
+          <section class="chapter-heading" aria-live="polite">
+            <div class="chapter-kicker"><span class="kicker-dash"></span><span id="chapter-kicker">THE FIRST BOOK OF MOSES</span></div>
+            <h1><span id="heading-book">Genesis</span> <span class="heading-number" id="heading-chapter">1</span></h1>
+            <p class="chapter-meta"><span class="meta-dot"></span><span id="verse-count">31 verses</span><span class="meta-divider">·</span><span id="testament-meta">Old Testament</span></p>
+          </section>
+
+          <div class="reader-rule"><span></span><span></span><span></span></div>
+          <section class="verse-list" id="verse-list" aria-label="Chapter text"></section>
+          <footer class="chapter-footer">
+            <span class="footer-ornament" aria-hidden="true">✳</span>
+            <span>END OF CHAPTER</span>
+            <span class="footer-ornament" aria-hidden="true">✳</span>
+          </footer>
+          <div class="bottom-navigation">
+            <button class="bottom-chapter" id="bottom-previous" type="button"><span aria-hidden="true">←</span><span><small>PREVIOUS</small><strong id="previous-title">—</strong></span></button>
+            <button class="bottom-chapter next" id="bottom-next" type="button"><span><small>NEXT CHAPTER</small><strong id="next-title">—</strong></span><span aria-hidden="true">→</span></button>
+          </div>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>
