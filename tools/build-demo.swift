@@ -6,13 +6,17 @@ import UniformTypeIdentifiers
 let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
 let assets = root.appendingPathComponent("assets", isDirectory: true)
 let output = assets.appendingPathComponent("demo.gif")
-let frameURLs = (1...4).map { index in
-    assets.appendingPathComponent(String(format: "demo-frame-%02d.png", index))
-}
+let frameURLs = (try? FileManager.default.contentsOfDirectory(at: assets, includingPropertiesForKeys: nil))?
+    .filter { $0.lastPathComponent.range(of: #"^demo-frame-\d{2}\.png$"#, options: .regularExpression) != nil }
+    .sorted { $0.lastPathComponent < $1.lastPathComponent } ?? []
 
 let targetWidth = 1280
 let targetHeight = 840
-let frameDelay = 1.4
+let frameDelay = 0.65
+
+guard frameURLs.count >= 2 else {
+    fatalError("Add at least two numbered demo-frame PNGs to assets")
+}
 
 func loadFrame(from url: URL) -> CGImage? {
     guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }

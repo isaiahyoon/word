@@ -209,6 +209,22 @@ function appendSearchResults() {
   }
 }
 
+function findReferenceMatches(query) {
+  const reference = query.match(/^(.+?)\s+(\d+)(?::(\d+))?$/);
+  if (!reference) return null;
+
+  const book = BOOKS.findIndex((name) => name.toLowerCase() === reference[1].toLowerCase()) + 1;
+  if (book === 0) return null;
+
+  const chapter = Number(reference[2]);
+  const verseNumber = reference[3] === undefined ? null : Number(reference[3]);
+  return state.verses.filter((verse) =>
+    verse.book === book &&
+    verse.chapter === chapter &&
+    (verseNumber === null || verse.verse === verseNumber)
+  );
+}
+
 function search(query) {
   const trimmed = query.trim();
   elements.searchResults.replaceChildren();
@@ -219,10 +235,9 @@ function search(query) {
     elements.searchResults.hidden = true;
     return;
   }
-  const matches = [];
-  for (const verse of state.verses) {
-    if (verse.text.toLowerCase().includes(trimmed.toLowerCase())) matches.push(verse);
-  }
+  const matches = findReferenceMatches(trimmed) ?? state.verses.filter((verse) =>
+    verse.text.toLowerCase().includes(trimmed.toLowerCase())
+  );
   elements.searchResults.hidden = false;
   state.searchMatches = matches;
   state.searchQuery = trimmed;
