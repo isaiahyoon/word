@@ -81,6 +81,7 @@ async function activateEdition(editionId) {
   await store.initialize();
   state.editionId = editionId;
   scripture = store;
+  document.body.classList.toggle("is-krv-edition", editionId === "krv");
   elements.editionSelect.value = editionId;
   elements.verseList.lang = edition.language;
   elements.verseList.dir = edition.direction;

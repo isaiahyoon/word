@@ -133,12 +133,20 @@ test("switches editions at the same passage and canonicalizes legacy KJV links",
   await expect(page).toHaveURL(/\/krv\/b\/john\/c\/3\/v\/16$/);
   await page.reload();
   await expect(page).toHaveURL(/\/krv\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("body")).toHaveClass(/is-krv-edition/);
+  await expect.poll(() => page.locator("body").evaluate((element) =>
+    getComputedStyle(element, "::before").opacity,
+  )).toBe("1");
   await expect(page.locator("#verse-list")).toHaveAttribute("lang", "ko");
   await expect(page.locator("#verse-16 .verse-text")).toContainText("하나님이 세상을 이처럼 사랑하사");
   await expect(page.locator("#edition-attribution")).toContainText("대한성서공회");
 
   await page.locator("#edition-select").selectOption("kjv");
   await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("body")).not.toHaveClass(/is-krv-edition/);
+  await expect.poll(() => page.locator("body").evaluate((element) =>
+    getComputedStyle(element, "::before").opacity,
+  )).toBe("0");
   await expect(page.locator("#verse-16 .verse-text")).toContainText("For God so loved the world");
   await expect(page.locator("#edition-attribution")).toBeHidden();
 });

@@ -3,6 +3,8 @@
 }
 
 body {
+  position: relative;
+  isolation: isolate;
   margin: 0;
   color: var(--ink);
   background-color: var(--canvas);
@@ -11,6 +13,23 @@ body {
   font-family: var(--sans);
   font-size: var(--type-copy);
   -webkit-font-smoothing: antialiased;
+}
+body::before {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  background-color: rgba(222, 239, 233, 0.82);
+  background-image:
+    linear-gradient(128deg, rgba(49, 88, 99, 0.12), transparent 52%),
+    linear-gradient(312deg, rgba(169, 124, 53, 0.09), transparent 48%),
+    repeating-linear-gradient(45deg, transparent 0 34px, rgba(49, 88, 99, 0.025) 34px 35px);
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.15s cubic-bezier(0.22, 1, 0.36, 1);
+}
+body.is-krv-edition::before {
+  opacity: 1;
 }
 
 button,
