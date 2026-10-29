@@ -271,6 +271,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
   .search-wrap { grid-column: 1 / -1; grid-row: 2; margin: 0 0 10px; }
   .topbar { height: 132px; align-content: center; }
   .search-box { height: 40px; }
+  .search-box input { font-size: 16px; }
   .search-box kbd { display: none; }
   .workspace { min-height: calc(100vh - 133px); display: block; }
   .sidebar { position: fixed; z-index: 10; top: 0; bottom: 0; left: 0; width: min(310px, 86vw); height: 100dvh; min-height: 0; padding: 24px 19px 16px; border-right: 1px solid var(--line); background: var(--paper); box-shadow: 14px 0 45px rgba(42,41,37,.08); transform: translateX(-105%); transition: transform .24s ease; }
