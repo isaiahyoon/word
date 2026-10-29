@@ -49,15 +49,16 @@ describe("development server", () => {
   });
 
   it("serves the shared typography sheet to the reader and error page", async () => {
-    const [readerResponse, errorResponse, typographyResponse] = await Promise.all([
-      fetch(origin),
-      fetch(`${origin}/404.html`),
-      fetch(`${origin}/typography.css`)
-    ]);
+    const [readerResponse, errorResponse, typographyResponse] =
+      await Promise.all([
+        fetch(origin),
+        fetch(`${origin}/404.html`),
+        fetch(`${origin}/typography.css`),
+      ]);
     const [readerHtml, errorHtml, typographyCss] = await Promise.all([
       readerResponse.text(),
       errorResponse.text(),
-      typographyResponse.text()
+      typographyResponse.text(),
     ]);
 
     assert.match(readerHtml, /href="typography\.css"/);
@@ -66,6 +67,25 @@ describe("development server", () => {
     assert.match(typographyCss, /--type-reading:\s*18px/);
     assert.match(typographyCss, /--serif:/);
     assert.match(typographyCss, /--sans:/);
+  });
+
+  it("serves the accessible chapter sparkle trigger and metallic animation", async () => {
+    const [readerResponse, stylesResponse] = await Promise.all([
+      fetch(origin),
+      fetch(`${origin}/styles.css`),
+    ]);
+    const [readerHtml, stylesCss] = await Promise.all([
+      readerResponse.text(),
+      stylesResponse.text(),
+    ]);
+
+    assert.match(readerHtml, /class="chapter-sparkles" aria-hidden="true"/);
+    assert.match(
+      stylesCss,
+      /\.chapter-select\[aria-expanded="true"\] \.chapter-sparkles i/,
+    );
+    assert.match(stylesCss, /@keyframes chapter-gold-sparkle/);
+    assert.match(stylesCss, /#a76d0d/);
   });
 
   it("rejects unsupported methods", async () => {

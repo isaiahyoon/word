@@ -4,13 +4,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#f6f4f9" />
-    <meta name="description" content="A quiet, searchable reader for the King James Version of the Bible." />
+    <meta
+      name="description"
+      content="A quiet, searchable reader for the King James Version of the Bible."
+    />
     <script>
       const currentPath = location.pathname;
       const routeIndex = currentPath.indexOf("/b/");
-      const appRoot = routeIndex < 0
-        ? currentPath.slice(0, currentPath.lastIndexOf("/") + 1)
-        : currentPath.slice(0, routeIndex + 1);
+      const appRoot =
+        routeIndex < 0
+          ? currentPath.slice(0, currentPath.lastIndexOf("/") + 1)
+          : currentPath.slice(0, routeIndex + 1);
       const baseElement = document.createElement("base");
       baseElement.href = appRoot || "/";
       document.head.append(baseElement);
@@ -19,7 +23,10 @@
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Gelasio:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Gelasio:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="theme.css" />
     <link rel="stylesheet" href="typography.css" />
     <link rel="stylesheet" href="styles.css" />
@@ -28,29 +35,86 @@
   <body>
     <div class="app-shell">
       <header class="topbar">
-        <button class="mobile-menu" id="menu-toggle" type="button" aria-label="Open book navigation" aria-expanded="false">
+        <button
+          class="mobile-menu"
+          id="menu-toggle"
+          type="button"
+          aria-label="Open book navigation"
+          aria-expanded="false"
+        >
           <span></span><span></span><span></span>
         </button>
         <a class="brand" href="#" aria-label="The Word home">
-          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          <span class="brand-mark" aria-hidden="true"
+            ><i></i><i></i><i></i><i></i
+          ></span>
           <span class="brand-copy">
-            <strong class="glimmer-text glimmer-gold" data-glimmer="the word" aria-hidden="true">the word</strong>
-            <small><span class="glimmer-text glimmer-blue" data-glimmer="KING JAMES" aria-hidden="true">KING JAMES</span> <span class="glimmer-text glimmer-pink" data-glimmer="VERSION" aria-hidden="true">VERSION</span></small>
+            <strong
+              class="glimmer-text glimmer-gold"
+              data-glimmer="the word"
+              aria-hidden="true"
+              >the word</strong
+            >
+            <small
+              ><span
+                class="glimmer-text glimmer-blue"
+                data-glimmer="KING JAMES"
+                aria-hidden="true"
+                >KING JAMES</span
+              >
+              <span
+                class="glimmer-text glimmer-pink"
+                data-glimmer="VERSION"
+                aria-hidden="true"
+                >VERSION</span
+              ></small
+            >
           </span>
         </a>
         <div class="search-wrap">
           <label class="search-box" for="search-input">
             <span class="search-icon" aria-hidden="true"></span>
-            <input id="search-input" type="search" role="combobox" aria-autocomplete="list" aria-controls="search-results" aria-expanded="false" placeholder="Find a verse or phrase..." autocomplete="off" />
+            <input
+              id="search-input"
+              type="search"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-controls="search-results"
+              aria-expanded="false"
+              placeholder="Find a verse or phrase..."
+              autocomplete="off"
+            />
             <kbd>⌘ K</kbd>
           </label>
-          <div class="search-results" id="search-results" role="listbox" aria-label="Search results" hidden></div>
+          <div
+            class="search-results"
+            id="search-results"
+            role="listbox"
+            aria-label="Search results"
+            hidden
+          ></div>
         </div>
-        <button class="shortcuts-trigger" id="shortcuts-open" type="button" aria-haspopup="dialog" aria-label="Show keyboard shortcuts" title="Keyboard shortcuts">
+        <button
+          class="shortcuts-trigger"
+          id="shortcuts-open"
+          type="button"
+          aria-haspopup="dialog"
+          aria-label="Show keyboard shortcuts"
+          title="Keyboard shortcuts"
+        >
           <span aria-hidden="true">?</span>
           <span class="shortcuts-trigger-label">SHORTCUTS</span>
         </button>
-        <div class="topbar-note" aria-label="The Holy Bible"><span class="theme-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="glimmer-text glimmer-gold" data-glimmer="THE HOLY BIBLE" aria-hidden="true">THE HOLY BIBLE</span></div>
+        <div class="topbar-note" aria-label="The Holy Bible">
+          <span class="theme-dots" aria-hidden="true"
+            ><i></i><i></i><i></i><i></i></span
+          ><span
+            class="glimmer-text glimmer-gold"
+            data-glimmer="THE HOLY BIBLE"
+            aria-hidden="true"
+            >THE HOLY BIBLE</span
+          >
+        </div>
       </header>
 
       <div class="workspace">
@@ -60,86 +124,244 @@
             <span class="eyebrow">YOUR READING ROOM</span>
             <span class="book-total">66 <span>books</span></span>
           </div>
-          <div class="testament-tabs" role="tablist" aria-label="Choose testament">
-            <button type="button" class="testament-tab is-active" data-testament="old" role="tab" aria-selected="true">Old <span>39</span></button>
-            <button type="button" class="testament-tab" data-testament="new" role="tab" aria-selected="false">New <span>27</span></button>
+          <div
+            class="testament-tabs"
+            role="tablist"
+            aria-label="Choose testament"
+          >
+            <button
+              type="button"
+              class="testament-tab is-active"
+              data-testament="old"
+              role="tab"
+              aria-selected="true"
+            >
+              Old <span>39</span>
+            </button>
+            <button
+              type="button"
+              class="testament-tab"
+              data-testament="new"
+              role="tab"
+              aria-selected="false"
+            >
+              New <span>27</span>
+            </button>
           </div>
           <div class="book-list" id="book-list" aria-label="Books"></div>
-          <div class="sidebar-foot"><span class="foot-flower" aria-hidden="true">✳</span><span>One story. Sixty-six books.</span></div>
+          <div class="sidebar-foot">
+            <span class="foot-flower" aria-hidden="true">✳</span
+            ><span>One story. Sixty-six books.</span>
+          </div>
         </aside>
 
         <main class="reader" id="reader">
           <div class="reader-topline">
-            <div class="breadcrumbs"><span id="testament-name">OLD TESTAMENT</span><span class="crumb-slash">/</span><span id="book-crumb">GENESIS</span></div>
+            <div class="breadcrumbs">
+              <span id="testament-name">OLD TESTAMENT</span
+              ><span class="crumb-slash">/</span
+              ><span id="book-crumb">GENESIS</span>
+            </div>
             <div class="chapter-navigation">
-              <button class="chapter-arrow" id="previous-chapter" type="button" aria-label="Previous chapter" title="Previous chapter"><span aria-hidden="true">←</span></button>
+              <button
+                class="chapter-arrow"
+                id="previous-chapter"
+                type="button"
+                aria-label="Previous chapter"
+                title="Previous chapter"
+              >
+                <span aria-hidden="true">←</span>
+              </button>
               <div class="chapter-picker" id="chapter-picker">
-                <button class="chapter-select" id="chapter-select" type="button" aria-label="Choose chapter" aria-haspopup="listbox" aria-expanded="false" aria-controls="chapter-options-list">
+                <button
+                  class="chapter-select"
+                  id="chapter-select"
+                  type="button"
+                  aria-label="Choose chapter"
+                  aria-haspopup="listbox"
+                  aria-expanded="false"
+                  aria-controls="chapter-options-list"
+                >
                   <span id="chapter-select-value">1</span>
-                  <span class="chapter-select-flower" aria-hidden="true">✦</span>
+                  <span class="chapter-select-flower" aria-hidden="true"
+                    >✦</span
+                  >
                   <span class="select-caret" aria-hidden="true">⌄</span>
+                  <span class="chapter-sparkles" aria-hidden="true"
+                    ><i></i><i></i><i></i><i></i
+                  ></span>
                 </button>
                 <div class="chapter-popover" id="chapter-options" hidden>
                   <div class="chapter-menu-heading">
-                    <span class="chapter-menu-flower" aria-hidden="true">✿</span>
+                    <span class="chapter-menu-flower" aria-hidden="true"
+                      >✿</span
+                    >
                     <div class="chapter-menu-copy">
                       <span class="chapter-menu-kicker">TURN THE PAGE</span>
                       <h2 id="chapter-options-title">GENESIS</h2>
                     </div>
-                    <span class="chapter-options-count" id="chapter-options-count">50 CHAPTERS</span>
+                    <span
+                      class="chapter-options-count"
+                      id="chapter-options-count"
+                      >50 CHAPTERS</span
+                    >
                   </div>
-                  <div class="chapter-options-grid" id="chapter-options-list" role="listbox" aria-labelledby="chapter-options-title"></div>
+                  <div
+                    class="chapter-options-grid"
+                    id="chapter-options-list"
+                    role="listbox"
+                    aria-labelledby="chapter-options-title"
+                  ></div>
                 </div>
               </div>
               <span class="chapter-label">CHAPTER</span>
-              <button class="chapter-arrow" id="next-chapter" type="button" aria-label="Next chapter" title="Next chapter"><span aria-hidden="true">→</span></button>
+              <button
+                class="chapter-arrow"
+                id="next-chapter"
+                type="button"
+                aria-label="Next chapter"
+                title="Next chapter"
+              >
+                <span aria-hidden="true">→</span>
+              </button>
             </div>
           </div>
 
           <section class="chapter-heading" aria-live="polite">
-            <div class="chapter-kicker"><span class="kicker-dash"></span><span id="chapter-kicker">THE FIRST BOOK OF MOSES</span></div>
-            <h1><span class="glimmer-text glimmer-white" id="heading-book" data-glimmer="Genesis">Genesis</span> <span class="heading-number glimmer-text glimmer-white" id="heading-chapter" data-glimmer="1">1</span></h1>
-            <p class="chapter-meta"><span class="meta-dot"></span><span id="verse-count">31 verses</span><span class="meta-divider">·</span><span id="testament-meta">Old Testament</span></p>
+            <div class="chapter-kicker">
+              <span class="kicker-dash"></span
+              ><span id="chapter-kicker">THE FIRST BOOK OF MOSES</span>
+            </div>
+            <h1>
+              <span
+                class="glimmer-text glimmer-white"
+                id="heading-book"
+                data-glimmer="Genesis"
+                >Genesis</span
+              >
+              <span
+                class="heading-number glimmer-text glimmer-white"
+                id="heading-chapter"
+                data-glimmer="1"
+                >1</span
+              >
+            </h1>
+            <p class="chapter-meta">
+              <span class="meta-dot"></span
+              ><span id="verse-count">31 verses</span
+              ><span class="meta-divider">·</span
+              ><span id="testament-meta">Old Testament</span>
+            </p>
           </section>
 
           <div class="reader-rule"><span></span><span></span><span></span></div>
-          <section class="verse-list" id="verse-list" aria-label="Chapter text"></section>
+          <section
+            class="verse-list"
+            id="verse-list"
+            aria-label="Chapter text"
+          ></section>
           <footer class="chapter-footer">
             <span class="footer-ornament" aria-hidden="true">✳</span>
             <span>END OF CHAPTER</span>
             <span class="footer-ornament" aria-hidden="true">✳</span>
           </footer>
           <div class="bottom-navigation">
-            <button class="bottom-chapter" id="bottom-previous" type="button"><span aria-hidden="true">←</span><span><small>PREVIOUS</small><strong id="previous-title">—</strong></span></button>
-            <button class="bottom-chapter next" id="bottom-next" type="button"><span><small>NEXT CHAPTER</small><strong id="next-title">—</strong></span><span aria-hidden="true">→</span></button>
+            <button class="bottom-chapter" id="bottom-previous" type="button">
+              <span aria-hidden="true">←</span
+              ><span
+                ><small>PREVIOUS</small
+                ><strong id="previous-title">—</strong></span
+              >
+            </button>
+            <button class="bottom-chapter next" id="bottom-next" type="button">
+              <span
+                ><small>NEXT CHAPTER</small
+                ><strong id="next-title">—</strong></span
+              ><span aria-hidden="true">→</span>
+            </button>
           </div>
           <footer class="site-footer">
-            <a class="site-footer-coffee" href="https://www.buymeacoffee.com/isaiahyoon" target="_blank" rel="noopener noreferrer" aria-label="Support The Word on Buy Me a Coffee, opens in a new tab">Buy me a coffee <span aria-hidden="true">↗</span></a>
-            <a class="site-footer-github" href="https://github.com/isaiahyoon/word" target="_blank" rel="noopener noreferrer" aria-label="View The Word source code on GitHub, opens in a new tab">View on GitHub <span aria-hidden="true">↗</span></a>
+            <a
+              class="site-footer-coffee"
+              href="https://www.buymeacoffee.com/isaiahyoon"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Support The Word on Buy Me a Coffee, opens in a new tab"
+              >Buy me a coffee <span aria-hidden="true">↗</span></a
+            >
+            <a
+              class="site-footer-github"
+              href="https://github.com/isaiahyoon/word"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="View The Word source code on GitHub, opens in a new tab"
+              >View on GitHub <span aria-hidden="true">↗</span></a
+            >
           </footer>
         </main>
       </div>
     </div>
-    <nav class="mobile-chapter-cues" id="mobile-chapter-cues" aria-label="Chapter navigation">
-      <button class="mobile-chapter-button mobile-chapter-button--previous" id="mobile-previous-chapter" type="button" aria-label="Previous chapter" aria-controls="verse-list">
-        <span class="mobile-chapter-destination" id="mobile-previous-title" aria-hidden="true"></span>
-        <span class="mobile-chapter-grip" aria-hidden="true"><i></i><i></i><i></i><b>‹</b></span>
+    <nav
+      class="mobile-chapter-cues"
+      id="mobile-chapter-cues"
+      aria-label="Chapter navigation"
+    >
+      <button
+        class="mobile-chapter-button mobile-chapter-button--previous"
+        id="mobile-previous-chapter"
+        type="button"
+        aria-label="Previous chapter"
+        aria-controls="verse-list"
+      >
+        <span
+          class="mobile-chapter-destination"
+          id="mobile-previous-title"
+          aria-hidden="true"
+        ></span>
+        <span class="mobile-chapter-grip" aria-hidden="true"
+          ><i></i><i></i><i></i><b>‹</b></span
+        >
       </button>
-      <button class="mobile-chapter-button mobile-chapter-button--next" id="mobile-next-chapter" type="button" aria-label="Next chapter" aria-controls="verse-list">
-        <span class="mobile-chapter-destination" id="mobile-next-title" aria-hidden="true"></span>
-        <span class="mobile-chapter-grip" aria-hidden="true"><i></i><i></i><i></i><b>›</b></span>
+      <button
+        class="mobile-chapter-button mobile-chapter-button--next"
+        id="mobile-next-chapter"
+        type="button"
+        aria-label="Next chapter"
+        aria-controls="verse-list"
+      >
+        <span
+          class="mobile-chapter-destination"
+          id="mobile-next-title"
+          aria-hidden="true"
+        ></span>
+        <span class="mobile-chapter-grip" aria-hidden="true"
+          ><i></i><i></i><i></i><b>›</b></span
+        >
       </button>
     </nav>
-    <dialog class="shortcuts-dialog" id="shortcuts-dialog" aria-labelledby="shortcuts-title">
+    <dialog
+      class="shortcuts-dialog"
+      id="shortcuts-dialog"
+      aria-labelledby="shortcuts-title"
+    >
       <div class="shortcuts-panel">
         <div class="shortcuts-heading">
           <div>
             <span class="shortcuts-eyebrow">A LITTLE QUICKER</span>
             <h2 id="shortcuts-title">Chapter navigation</h2>
           </div>
-          <button class="shortcuts-close" id="shortcuts-close" type="button" aria-label="Close keyboard shortcuts">×</button>
+          <button
+            class="shortcuts-close"
+            id="shortcuts-close"
+            type="button"
+            aria-label="Close keyboard shortcuts"
+          >
+            ×
+          </button>
         </div>
-        <p class="shortcuts-intro">Move through the text without losing your place.</p>
+        <p class="shortcuts-intro">
+          Move through the text without losing your place.
+        </p>
         <div class="shortcut-list">
           <div class="shortcut-row shortcut-row--previous">
             <kbd aria-label="Left arrow">←</kbd>
@@ -150,9 +372,21 @@
             <span>Next chapter</span>
           </div>
         </div>
-        <p class="shortcuts-note">Arrow keys pause while you’re typing in search.</p>
+        <p class="shortcuts-note">
+          Arrow keys pause while you’re typing in search.
+        </p>
       </div>
     </dialog>
-    <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="isaiahyoon" data-description="Support me on Buy me a coffee!" data-color="#FF813F" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
+    <script
+      data-name="BMC-Widget"
+      data-cfasync="false"
+      src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js"
+      data-id="isaiahyoon"
+      data-description="Support me on Buy me a coffee!"
+      data-color="#FF813F"
+      data-position="Right"
+      data-x_margin="18"
+      data-y_margin="18"
+    ></script>
   </body>
 </html>

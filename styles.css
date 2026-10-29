@@ -766,6 +766,8 @@ a:focus-visible {
   align-items: center;
 }
 .chapter-select {
+  position: relative;
+  isolation: isolate;
   min-width: 69px;
   height: 32px;
   display: inline-flex;
@@ -784,7 +786,79 @@ a:focus-visible {
   transition:
     background 0.16s,
     border-color 0.16s,
-    box-shadow 0.16s;
+    box-shadow 0.16s,
+    transform 0.16s;
+}
+.chapter-sparkles {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.chapter-sparkles i {
+  --sparkle-drift-x: 0px;
+  --sparkle-drift-y: -7px;
+  position: absolute;
+  width: 7px;
+  aspect-ratio: 1;
+  background: linear-gradient(
+    135deg,
+    #fff8d7 0%,
+    #f4d36d 22%,
+    #a76d0d 43%,
+    #fff0a5 56%,
+    #c58a1b 74%,
+    #fff9df 100%
+  );
+  clip-path: polygon(
+    50% 0,
+    62% 38%,
+    100% 50%,
+    62% 62%,
+    50% 100%,
+    38% 62%,
+    0 50%,
+    38% 38%
+  );
+  filter: drop-shadow(0 0 2px rgba(245, 204, 100, 0.85));
+  opacity: 0;
+}
+.chapter-sparkles i:nth-child(1) {
+  top: -8px;
+  left: 8px;
+  --sparkle-drift-x: -6px;
+  --sparkle-drift-y: -8px;
+}
+.chapter-sparkles i:nth-child(2) {
+  top: -7px;
+  right: 8px;
+  --sparkle-drift-x: 6px;
+  --sparkle-drift-y: -9px;
+}
+.chapter-sparkles i:nth-child(3) {
+  bottom: -7px;
+  left: 14px;
+  --sparkle-drift-x: -7px;
+  --sparkle-drift-y: 8px;
+}
+.chapter-sparkles i:nth-child(4) {
+  right: 13px;
+  bottom: -8px;
+  --sparkle-drift-x: 7px;
+  --sparkle-drift-y: 8px;
+}
+.chapter-select[aria-expanded="true"] .chapter-sparkles i {
+  animation: chapter-gold-sparkle 0.76s ease-out both;
+}
+.chapter-select[aria-expanded="true"] .chapter-sparkles i:nth-child(2) {
+  animation-delay: 0.06s;
+}
+.chapter-select[aria-expanded="true"] .chapter-sparkles i:nth-child(3) {
+  animation-delay: 0.12s;
+}
+.chapter-select[aria-expanded="true"] .chapter-sparkles i:nth-child(4) {
+  animation-delay: 0.18s;
 }
 .chapter-select:hover,
 .chapter-select[aria-expanded="true"] {
@@ -890,11 +964,15 @@ a:focus-visible {
     background 0.14s,
     border-color 0.14s,
     color 0.14s,
-    box-shadow 0.14s;
+    box-shadow 0.18s,
+    transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .chapter-option:hover {
   border-color: var(--lavender);
   background: var(--lavender);
+  color: #514d69;
+  box-shadow: 0 2px 0 #c5bee9;
+  transform: translateY(-1px);
 }
 .chapter-option[aria-selected="true"] {
   border-color: #e9aebf;
@@ -1168,6 +1246,21 @@ a:focus-visible {
   100% {
     opacity: 1;
     transform: rotate(0) scale(1);
+  }
+}
+@keyframes chapter-gold-sparkle {
+  0% {
+    opacity: 0;
+    transform: scale(0.25) rotate(-30deg);
+  }
+  34% {
+    opacity: 1;
+    transform: scale(1.25) rotate(4deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--sparkle-drift-x), var(--sparkle-drift-y))
+      scale(0.3) rotate(38deg);
   }
 }
 @keyframes chapter-panel-press {
