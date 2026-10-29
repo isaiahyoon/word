@@ -2,7 +2,7 @@ import { bindKeyboardShortcuts } from "./keyboard-shortcuts.js";
 import { createChapterPicker } from "./chapter-picker.js";
 import { createScriptureStore } from "./scripture-store.js";
 import { createVisualEffects } from "./visual-effects.js";
-import { createScriptureRoutes, isValidVerseRange, normalizeVerseRange } from "./scripture-routes.mjs";
+import { createScriptureRoutes, getVerseStep, isValidVerseRange, normalizeVerseRange } from "./scripture-routes.mjs";
 import { BOOKS } from "./books.mjs";
 
 const BOOK_TITLES = [
@@ -11,8 +11,9 @@ const BOOK_TITLES = [
 ];
 
 const CHAPTER_GRADIENT_COLORS = ["var(--chapter-blue)", "var(--chapter-lavender)", "var(--chapter-pink)", "var(--chapter-green)"];
-const state = { book: 1, chapter: 1, testament: "old", lastBookByTestament: { old: 1, new: 40 }, chapterRequestId: 0, searchTimer: null, searchRequestId: 0, searchMatches: [], searchQuery: "", searchShown: 0, searchActiveIndex: -1 };
-const scriptureRoutes = createScriptureRoutes(BOOKS, new URL(document.baseURI).pathname);
+const state = { book: 1, chapter: 1, verse: 1, testament: "old", lastBookByTestament: { old: 1, new: 40 }, chapterRequestId: 0, searchTimer: null, searchRequestId: 0, searchMatches: [], searchQuery: "", searchShown: 0, searchActiveIndex: -1 };
+const appBasePath = new URL(document.baseURI).pathname;
+const scriptureRoutes = createScriptureRoutes(BOOKS, appBasePath);
 const elements = {
   bookList: document.querySelector("#book-list"),
   chapterSelect: document.querySelector("#chapter-select"),
@@ -36,6 +37,7 @@ const elements = {
   sidebarScrim: document.querySelector("#sidebar-scrim")
 };
 let chapterPicker;
+let verseNavigationQueue = Promise.resolve();
 const scripture = createScriptureStore();
 const visualEffects = createVisualEffects({
   shell: document.querySelector(".app-shell"),
@@ -47,6 +49,7 @@ const bookName = (book) => BOOKS[book - 1];
 
 function setQuietReadingMode(enabled) {
   document.querySelector(".app-shell").classList.toggle("is-quiet-reading", enabled);
+  document.body.classList.toggle("is-quiet-reading", enabled);
   elements.quietViewToggle.setAttribute("aria-pressed", String(enabled));
   elements.quietViewToggle.setAttribute(
     "aria-label",
@@ -54,6 +57,11 @@ function setQuietReadingMode(enabled) {
   );
   elements.quietViewToggle.title = enabled ? "Exit quiet reading view" : "Enter quiet reading view";
   elements.quietViewToggle.textContent = enabled ? "Exit" : "Quiet";
+}
+
+function toggleQuietReadingMode() {
+  const isQuietReading = document.querySelector(".app-shell").classList.contains("is-quiet-reading");
+  setQuietReadingMode(!isQuietReading);
 }
 
 function showInvalidScripturePath() {
@@ -71,6 +79,13 @@ async function restoreLocationFromPath() {
   elements.quietWelcome.hidden = !route.home;
   const reference = route.home ? { book: 1, chapter: 1, range: null } : route;
   await openChapter(reference.book, reference.chapter, reference.range, { updateHistory: false });
+}
+
+function navigateHome() {
+  if (window.location.pathname !== appBasePath || window.location.search || window.location.hash) {
+    window.history.pushState(null, "", appBasePath);
+  }
+  void restoreLocationFromPath();
 }
 
 function createChapterGradient() {
@@ -105,8 +120,10 @@ async function initialize() {
 async function openChapter(book, chapter, requestedRange = null, { updateHistory = true, direction = 0 } = {}) {
   if (updateHistory) elements.quietWelcome.hidden = true;
   const requestId = ++state.chapterRequestId;
+  const normalizedRange = normalizeVerseRange(requestedRange);
   state.book = book;
   state.chapter = chapter;
+  state.verse = normalizedRange?.start ?? 1;
   state.testament = testamentFor(book);
   state.lastBookByTestament[state.testament] = book;
   renderBookList();
@@ -128,7 +145,7 @@ async function openChapter(book, chapter, requestedRange = null, { updateHistory
   }
 
   if (requestId !== state.chapterRequestId) return;
-  const range = normalizeVerseRange(requestedRange) ?? (updateHistory ? { start: 1, end: 1 } : null);
+  const range = normalizedRange ?? (updateHistory ? { start: 1, end: 1 } : null);
   const verses = scripture.getChapter(book, chapter);
   if (range && !isValidVerseRange(range, verses.length)) {
     showInvalidScripturePath();
@@ -271,6 +288,35 @@ function updateChapterLinks() {
 function navigate(offset) {
   const target = adjacentChapter(offset);
   void openChapter(target.book, target.chapter, null, { direction: offset });
+}
+
+function selectTestament(testament) {
+  void openChapter(state.lastBookByTestament[testament], 1);
+}
+
+function navigateVerse(offset) {
+  verseNavigationQueue = verseNavigationQueue
+    .then(() => moveToAdjacentVerse(offset))
+    .catch((error) => console.error(error));
+}
+
+async function moveToAdjacentVerse(offset) {
+  if (elements.verseList.getAttribute("aria-busy") === "true") return;
+
+  const verses = scripture.getChapter(state.book, state.chapter);
+  if (verses.length === 0) return;
+
+  const step = getVerseStep(state.verse, verses.length, offset);
+  if (step.chapterOffset === 0) {
+    await openChapter(state.book, state.chapter, step.verse);
+    return;
+  }
+
+  const target = adjacentChapter(step.chapterOffset);
+  if (target.book === state.book && target.chapter === state.chapter) return;
+
+  const targetVerse = step.verse ?? (await scripture.loadChapter(target.book, target.chapter)).length;
+  await openChapter(target.book, target.chapter, targetVerse);
 }
 
 function animateChapterTurn(direction, requestId) {
@@ -446,12 +492,10 @@ function bindMobileChapterButtons() {
 
 function bindEvents() {
   elements.quietViewToggle.addEventListener("click", () => {
-    const enabled = elements.quietViewToggle.getAttribute("aria-pressed") !== "true";
-    setQuietReadingMode(enabled);
+    toggleQuietReadingMode();
   });
   document.querySelectorAll(".testament-tab").forEach((tab) => tab.addEventListener("click", () => {
-    const book = state.lastBookByTestament[tab.dataset.testament];
-    void openChapter(book, 1);
+    selectTestament(tab.dataset.testament);
   }));
   document.querySelector("#previous-chapter").addEventListener("click", () => navigate(-1));
   document.querySelector("#next-chapter").addEventListener("click", () => navigate(1));
@@ -531,9 +575,16 @@ function bindEvents() {
     isChapterPickerOpen: () => chapterPicker.isOpen(),
     onPreviousChapter: () => navigate(-1),
     onNextChapter: () => navigate(1),
+    onPreviousVerse: () => navigateVerse(-1),
+    onNextVerse: () => navigateVerse(1),
+    onOldTestament: () => selectTestament("old"),
+    onNewTestament: () => selectTestament("new"),
+    onToggleQuietReading: toggleQuietReadingMode,
+    onHome: navigateHome,
     onEscape: () => {
+      const returnFocusToChapterPicker = chapterPicker.isOpen();
       setQuietReadingMode(false);
-      chapterPicker.close(true);
+      chapterPicker.close(returnFocusToChapterPicker);
       state.searchRequestId += 1;
       elements.searchResults.hidden = true;
       elements.searchInput.setAttribute("aria-expanded", "false");

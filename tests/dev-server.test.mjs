@@ -92,6 +92,86 @@ describe("development server", () => {
     assert.match(stylesCss, /#a76d0d/);
   });
 
+  it("documents testament shortcuts with their theme gradients", async () => {
+    const [readerResponse, stylesResponse] = await Promise.all([
+      fetch(origin),
+      fetch(`${origin}/styles.css`),
+    ]);
+    const [html, styles] = await Promise.all([
+      readerResponse.text(),
+      stylesResponse.text(),
+    ]);
+
+    assert.match(html, /<kbd aria-label="O key">O<\/kbd>/);
+    assert.match(html, /<kbd aria-label="N key">N<\/kbd>/);
+    assert.match(html, /<span>Old Testament<\/span>/);
+    assert.match(html, /<span>New Testament<\/span>/);
+    assert.match(html, /<kbd aria-label="Up arrow">↑<\/kbd>/);
+    assert.match(html, /<kbd aria-label="Down arrow">↓<\/kbd>/);
+    assert.match(html, /<span>Previous verse<\/span>/);
+    assert.match(html, /<span>Next verse<\/span>/);
+    assert.match(html, /<span>Previous chapter<\/span>/);
+    assert.match(html, /<span>Next chapter<\/span>/);
+    assert.match(html, /<kbd aria-label="H key">H<\/kbd>/);
+    assert.match(html, /<span>Go to homepage<\/span>/);
+    assert.match(html, /<kbd aria-label="Q key">Q<\/kbd>/);
+    assert.match(html, /<span>Toggle quiet reading<\/span>/);
+    assert.match(html, /<kbd aria-label="Escape key">Esc<\/kbd>/);
+    assert.match(html, /<span>Exit quiet reading<\/span>/);
+    assert.match(html, /<kbd aria-label="Slash key">\/<\/kbd>/);
+    assert.match(html, /<span>Show keyboard shortcuts<\/span>/);
+    assert.match(
+      styles,
+      /\.shortcut-row--quiet\s*\{[^}]*var\(--pink\)[^}]*var\(--blue\)[^}]*var\(--yellow\)/s,
+    );
+    assert.match(
+      styles,
+      /\.shortcut-row--escape\s*\{[^}]*var\(--green\)[^}]*var\(--lavender\)/s,
+    );
+    assert.match(
+      styles,
+      /\.shortcut-row--home\s*\{[^}]*var\(--blue\)[^}]*var\(--pink\)[^}]*var\(--yellow\)[^}]*var\(--green\)/s,
+    );
+    const shortcutListStart = html.indexOf('<div class="shortcut-list">');
+    const homeShortcut = html.indexOf(
+      "<span>Go to homepage</span>",
+      shortcutListStart,
+    );
+    const firstTestamentShortcut = html.indexOf(
+      "<span>Old Testament</span>",
+      shortcutListStart,
+    );
+    const lastChapterShortcut = html.indexOf(
+      "<span>Next chapter</span>",
+      shortcutListStart,
+    );
+    const openShortcutsEntry = html.indexOf(
+      "<span>Show keyboard shortcuts</span>",
+      shortcutListStart,
+    );
+    assert.ok(shortcutListStart >= 0);
+    assert.ok(
+      homeShortcut > shortcutListStart && homeShortcut < firstTestamentShortcut,
+    );
+    assert.ok(openShortcutsEntry > lastChapterShortcut);
+    assert.match(
+      styles,
+      /\.shortcut-row--old-testament\s*\{[^}]*var\(--yellow\)[^}]*var\(--green\)/s,
+    );
+    assert.match(
+      styles,
+      /\.shortcut-row--new-testament\s*\{[^}]*var\(--pink\)[^}]*var\(--blue\)/s,
+    );
+    assert.match(
+      styles,
+      /\.shortcuts-dialog\[open\] \.shortcut-row--previous kbd/,
+    );
+    assert.match(styles, /@keyframes shortcut-metal-sheen/);
+    assert.match(styles, /\.shortcut-row--shortcuts kbd\s*\{/);
+    assert.match(styles, /var\(--shortcut-key-color\)/);
+    assert.match(styles, /@keyframes shortcut-silver-sheen/);
+  });
+
   it("serves the quiet reading toggle and focus-mode styles", async () => {
     const [readerResponse, stylesResponse] = await Promise.all([
       fetch(origin),

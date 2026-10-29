@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import { BOOKS, bookFileName } from "../books.mjs";
 import {
   createScriptureRoutes,
+  getVerseStep,
   isValidVerseRange,
   normalizeVerseRange,
 } from "../scripture-routes.mjs";
@@ -132,6 +133,19 @@ describe("scripture routes", () => {
     assert.equal(isValidVerseRange({ start: 0, end: 1 }, 16), false);
     assert.equal(isValidVerseRange({ start: 4, end: 3 }, 16), false);
     assert.equal(isValidVerseRange({ start: 1, end: 17 }, 16), false);
+  });
+
+  it("steps through verses and across chapter boundaries", () => {
+    assert.deepEqual(getVerseStep(7, 16, -1), { chapterOffset: 0, verse: 6 });
+    assert.deepEqual(getVerseStep(7, 16, 1), { chapterOffset: 0, verse: 8 });
+    assert.deepEqual(getVerseStep(16, 16, 1), { chapterOffset: 1, verse: 1 });
+    assert.deepEqual(getVerseStep(1, 16, -1), { chapterOffset: -1, verse: null });
+  });
+
+  it("rejects invalid verse navigation steps", () => {
+    assert.throws(() => getVerseStep(0, 16, 1), RangeError);
+    assert.throws(() => getVerseStep(17, 16, -1), RangeError);
+    assert.throws(() => getVerseStep(1, 16, 0), RangeError);
   });
 });
 

@@ -441,10 +441,67 @@ a:focus-visible {
   --shortcut-key-ink: #4b5a40;
   --shortcut-key-edge: #b5d998;
 }
+.shortcut-row--old-testament {
+  --shortcut-key-color: linear-gradient(135deg, var(--yellow), var(--green));
+  --shortcut-key-ink: #596044;
+  --shortcut-key-edge: #c9d6a4;
+}
+.shortcut-row--new-testament {
+  --shortcut-key-color: linear-gradient(135deg, var(--pink), var(--blue));
+  --shortcut-key-ink: #67434e;
+  --shortcut-key-edge: #e9aebf;
+}
+.shortcut-row--verse-previous {
+  --shortcut-key-color: var(--blue);
+  --shortcut-key-ink: #426a70;
+  --shortcut-key-edge: #abd8d8;
+}
+.shortcut-row--verse-next {
+  --shortcut-key-color: var(--pink);
+  --shortcut-key-ink: #67434e;
+  --shortcut-key-edge: #e9aebf;
+}
 .shortcut-row--next {
   --shortcut-key-color: var(--yellow);
   --shortcut-key-ink: #65603d;
   --shortcut-key-edge: #e7e2bb;
+}
+.shortcut-row--home {
+  --shortcut-key-color: linear-gradient(
+    135deg,
+    var(--blue),
+    var(--pink),
+    var(--yellow),
+    var(--green)
+  );
+  --shortcut-key-ink: #514d52;
+  --shortcut-key-edge: #d3c9c4;
+}
+.shortcut-row--shortcuts {
+  --shortcut-key-color: linear-gradient(
+    135deg,
+    #d0d4da 0%,
+    #e6e9ed 38%,
+    #c7ccd3 72%,
+    #d9dde2 100%
+  );
+  --shortcut-key-ink: #515861;
+  --shortcut-key-edge: #b7bdc5;
+}
+.shortcut-row--quiet {
+  --shortcut-key-color: linear-gradient(
+    135deg,
+    var(--pink),
+    var(--blue),
+    var(--yellow)
+  );
+  --shortcut-key-ink: #555164;
+  --shortcut-key-edge: #d7c6d6;
+}
+.shortcut-row--escape {
+  --shortcut-key-color: linear-gradient(135deg, var(--green), var(--lavender));
+  --shortcut-key-ink: #50564b;
+  --shortcut-key-edge: #c3cfb6;
 }
 .shortcut-row--previous > span {
   color: #4b5a40;
@@ -461,6 +518,55 @@ a:focus-visible {
   font-family: var(--sans);
   font-size: 16px;
   box-shadow: 0 2px 0 var(--shortcut-key-edge);
+}
+.shortcut-row--verse-previous kbd,
+.shortcut-row--verse-next kbd,
+.shortcut-row--previous kbd,
+.shortcut-row--next kbd {
+  background-color: var(--shortcut-key-color);
+  background-image: linear-gradient(
+    112deg,
+    transparent 34%,
+    rgba(255, 255, 255, 0.94) 47%,
+    rgba(255, 255, 255, 0.24) 53%,
+    transparent 68%
+  );
+  background-position: 135% 0;
+  background-size: 220% 100%;
+}
+.shortcuts-dialog[open] .shortcut-row--verse-previous kbd {
+  animation: shortcut-metal-sheen 0.82s 0.08s ease-out both;
+}
+.shortcuts-dialog[open] .shortcut-row--verse-next kbd {
+  animation: shortcut-metal-sheen 0.82s 0.16s ease-out both;
+}
+.shortcuts-dialog[open] .shortcut-row--previous kbd {
+  animation: shortcut-metal-sheen 0.82s 0.24s ease-out both;
+}
+.shortcuts-dialog[open] .shortcut-row--next kbd {
+  animation: shortcut-metal-sheen 0.82s 0.32s ease-out both;
+}
+.shortcuts-dialog[open] .shortcut-row--shortcuts kbd {
+  animation: shortcut-silver-sheen 0.72s 0.28s ease-out both;
+}
+.shortcut-row--shortcuts kbd {
+  background-color: #d0d4da;
+  background-image:
+    linear-gradient(
+      108deg,
+      transparent 38%,
+      rgba(255, 255, 255, 0.5) 49%,
+      rgba(255, 255, 255, 0.12) 54%,
+      transparent 66%
+    ),
+    var(--shortcut-key-color);
+  background-position:
+    125% 0,
+    0 0;
+  background-repeat: no-repeat;
+  background-size:
+    220% 100%,
+    100% 100%;
 }
 .shortcuts-note {
   margin: 16px 0 0;
@@ -1327,6 +1433,10 @@ a:focus-visible {
 .app-shell.is-quiet-reading .site-footer {
   display: none !important;
 }
+body.is-quiet-reading #bmc-wbtn,
+body.is-quiet-reading #bmc-iframe {
+  display: none !important;
+}
 .app-shell.is-quiet-reading .workspace {
   min-height: 100vh;
   display: block;
@@ -1413,6 +1523,18 @@ a:focus-visible {
     box-shadow:
       0 2px 0 #e9aebf,
       0 0 0 0 rgba(209, 132, 153, 0);
+  }
+}
+@keyframes shortcut-metal-sheen {
+  to {
+    background-position: -35% 0;
+  }
+}
+@keyframes shortcut-silver-sheen {
+  to {
+    background-position:
+      -35% 0,
+      0 0;
   }
 }
 @keyframes shortcuts-sheen {

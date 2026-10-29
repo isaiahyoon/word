@@ -67,7 +67,8 @@ node tools/build-scripture-data.mjs
 
 ## Tests
 
-Run the 18 route, scripture-store, source-data parity, and development-server tests with Node's built-in test runner:
+Run the 34 route, keyboard-shortcut, scripture-store, source-data parity, and
+development-server tests with Node's built-in test runner:
 
 ```sh
 node --test tests/*.test.mjs
@@ -81,8 +82,8 @@ Edit the shared typography tokens in `typography.css` and the color custom prope
 
 This project is jointly licensed under the terms of both of the following licenses:
 
-* **[MIT License](LICENSE.md)**
-* **[Polymorph License](LICENSE.md)**
+- **[MIT License](LICENSE.md)**
+- **[Polymorph License](LICENSE.md)**
 
 By using, copying, modifying, or distributing this software, you agree to comply with the terms, conditions, and restrictions of **both** licenses simultaneously.
 

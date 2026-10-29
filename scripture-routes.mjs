@@ -64,6 +64,25 @@ export function normalizeVerseRange(range) {
   return Number.isSafeInteger(range) ? { start: range, end: range } : range;
 }
 
+export function getVerseStep(currentVerse, verseCount, offset) {
+  if (
+    !Number.isSafeInteger(currentVerse) ||
+    !Number.isSafeInteger(verseCount) ||
+    currentVerse < 1 ||
+    currentVerse > verseCount ||
+    ![-1, 1].includes(offset)
+  ) {
+    throw new RangeError("Invalid verse step");
+  }
+
+  const nextVerse = currentVerse + offset;
+  if (nextVerse >= 1 && nextVerse <= verseCount) {
+    return { chapterOffset: 0, verse: nextVerse };
+  }
+
+  return { chapterOffset: offset, verse: offset > 0 ? 1 : null };
+}
+
 export function isValidVerseRange(range, verseCount) {
   return Number.isSafeInteger(range.start) &&
     Number.isSafeInteger(range.end) &&
