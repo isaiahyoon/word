@@ -111,6 +111,14 @@ describe("development server", () => {
     assert.match(styles, /\.kicker-dash\s*\{[^}]*var\(--brass\)/s);
   });
 
+  it("reduces the verse loading message size", async () => {
+    const response = await fetch(`${origin}/styles.css`);
+    const styles = await response.text();
+
+    assert.equal(response.status, 200);
+    assert.match(styles, /\.verse-list\[aria-busy="true"\]\s*\{[^}]*font-size:\s*14px;/s);
+  });
+
   it("serves the accessible chapter sparkle trigger and metallic animation", async () => {
     const [readerResponse, stylesResponse] = await Promise.all([
       fetch(origin),

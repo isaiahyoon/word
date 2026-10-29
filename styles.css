@@ -1275,6 +1275,9 @@ a:focus-visible {
   font-size: var(--type-reading);
   line-height: var(--line-reading);
 }
+.verse-list[aria-busy="true"] {
+  font-size: 14px;
+}
 .verse {
   position: relative;
   display: grid;
