@@ -22,6 +22,7 @@ const elements = {
   chapterOptionsTitle: document.querySelector("#chapter-options-title"),
   chapterOptionsCount: document.querySelector("#chapter-options-count"),
   chapterOptionsList: document.querySelector("#chapter-options-list"),
+  quietViewToggle: document.querySelector("#quiet-view-toggle"),
   verseList: document.querySelector("#verse-list"),
   quietWelcome: document.querySelector("#quiet-welcome"),
   searchInput: document.querySelector("#search-input"),
@@ -43,6 +44,17 @@ const visualEffects = createVisualEffects({
 
 const testamentFor = (book) => book <= 39 ? "old" : "new";
 const bookName = (book) => BOOKS[book - 1];
+
+function setQuietReadingMode(enabled) {
+  document.querySelector(".app-shell").classList.toggle("is-quiet-reading", enabled);
+  elements.quietViewToggle.setAttribute("aria-pressed", String(enabled));
+  elements.quietViewToggle.setAttribute(
+    "aria-label",
+    enabled ? "Exit quiet reading view" : "Enter quiet reading view"
+  );
+  elements.quietViewToggle.title = enabled ? "Exit quiet reading view" : "Enter quiet reading view";
+  elements.quietViewToggle.textContent = enabled ? "Exit" : "Quiet";
+}
 
 function showInvalidScripturePath() {
   state.chapterRequestId += 1;
@@ -433,6 +445,10 @@ function bindMobileChapterButtons() {
 }
 
 function bindEvents() {
+  elements.quietViewToggle.addEventListener("click", () => {
+    const enabled = elements.quietViewToggle.getAttribute("aria-pressed") !== "true";
+    setQuietReadingMode(enabled);
+  });
   document.querySelectorAll(".testament-tab").forEach((tab) => tab.addEventListener("click", () => {
     const book = state.lastBookByTestament[tab.dataset.testament];
     void openChapter(book, 1);
@@ -516,6 +532,7 @@ function bindEvents() {
     onPreviousChapter: () => navigate(-1),
     onNextChapter: () => navigate(1),
     onEscape: () => {
+      setQuietReadingMode(false);
       chapterPicker.close(true);
       state.searchRequestId += 1;
       elements.searchResults.hidden = true;

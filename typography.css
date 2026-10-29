@@ -7,6 +7,8 @@
   --type-error-title: 50px;
   --type-section-title: 27px;
   --type-reading: 18px;
+  --type-quiet-reading: 20px;
+  --type-quiet-reading-mobile: 18px;
   --type-copy: 16px;
   --type-small-copy: 14px;
   --type-control: 13px;
@@ -25,5 +27,6 @@
   --line-heading: 1.15;
   --line-copy: 1.65;
   --line-reading: 1.78;
+  --line-quiet-reading: 1.9;
   --tracking-label: 1.1px;
 }

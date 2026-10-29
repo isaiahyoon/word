@@ -92,6 +92,22 @@ describe("development server", () => {
     assert.match(stylesCss, /#a76d0d/);
   });
 
+  it("serves the quiet reading toggle and focus-mode styles", async () => {
+    const [readerResponse, stylesResponse] = await Promise.all([
+      fetch(origin),
+      fetch(`${origin}/styles.css`),
+    ]);
+    const [readerHtml, stylesCss] = await Promise.all([
+      readerResponse.text(),
+      stylesResponse.text(),
+    ]);
+
+    assert.match(readerHtml, /id="quiet-view-toggle"/);
+    assert.match(readerHtml, /aria-pressed="false"/);
+    assert.match(stylesCss, /\.app-shell\.is-quiet-reading \.verse/);
+    assert.match(stylesCss, /--line-quiet-reading/);
+  });
+
   it("rejects unsupported methods", async () => {
     const response = await fetch(origin, { method: "POST" });
 
