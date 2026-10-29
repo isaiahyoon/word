@@ -128,10 +128,31 @@
             <span class="book-total">66 <span>books</span></span>
           </div>
           <div class="edition-switcher">
-            <label for="edition-select">READING EDITION</label>
-            <select id="edition-select" disabled aria-busy="true">
-              <option>Loading editions…</option>
-            </select>
+            <label id="edition-label">READING EDITION</label>
+            <div class="edition-picker" id="edition-picker">
+              <button
+                class="edition-trigger"
+                id="edition-select"
+                type="button"
+                aria-haspopup="listbox"
+                aria-expanded="false"
+                aria-controls="edition-options"
+                aria-labelledby="edition-label edition-select-label"
+                disabled
+                aria-busy="true"
+              >
+                <span class="edition-trigger-code" id="edition-select-code">…</span>
+                <span class="edition-trigger-label" id="edition-select-label">Loading editions…</span>
+                <span class="edition-select-caret" aria-hidden="true">⌄</span>
+              </button>
+              <div
+                class="edition-options"
+                id="edition-options"
+                role="listbox"
+                aria-labelledby="edition-label"
+                hidden
+              ></div>
+            </div>
             <p class="edition-attribution" id="edition-attribution" hidden></p>
           </div>
           <div

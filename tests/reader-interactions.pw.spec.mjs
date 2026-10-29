@@ -106,11 +106,11 @@ test("loads another search batch from a mobile touch scroll", async ({ page }) =
   const x = Math.round(bounds.x + bounds.width / 2);
   await session.send("Input.dispatchTouchEvent", {
     type: "touchStart",
-    touchPoints: [{ id: 1, x, y: Math.round(bounds.y + bounds.height - 24) }],
+    touchPoints: [{ id: 1, x, y: Math.round(bounds.y + bounds.height - 12) }],
   });
   await session.send("Input.dispatchTouchEvent", {
     type: "touchMove",
-    touchPoints: [{ id: 1, x, y: Math.round(bounds.y + 24) }],
+    touchPoints: [{ id: 1, x, y: Math.max(1, Math.round(bounds.y - 120)) }],
   });
   await session.send("Input.dispatchTouchEvent", {
     type: "touchEnd",
@@ -129,8 +129,14 @@ test("switches editions at the same passage and canonicalizes legacy KJV links",
   await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/16$/);
   await expect(page.locator("#verse-list")).toHaveAttribute("lang", "en");
 
-  await page.locator("#edition-select").selectOption("krv");
+  await page.locator("#edition-select").click();
+  await expect(page.locator("#edition-options")).toBeVisible();
+  await page.locator("#edition-option-krv").click();
   await expect(page).toHaveURL(/\/krv\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("#edition-options")).toBeHidden();
+  await expect.poll(() => page.locator("#reader").evaluate((reader) =>
+    reader.getAnimations().some((animation) => animation.effect.getTiming().duration === 620),
+  )).toBe(true);
   await expect(page.locator("#verse-16")).toBeFocused();
   await page.reload();
   await expect(page).toHaveURL(/\/krv\/b\/john\/c\/3\/v\/16$/);
@@ -146,7 +152,8 @@ test("switches editions at the same passage and canonicalizes legacy KJV links",
   await expect(page).toHaveURL(/\/krv\/b\/john\/c\/3\/v\/17$/);
   await expect(page.locator("#verse-17")).toHaveClass(/is-focused/);
 
-  await page.locator("#edition-select").selectOption("kjv");
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-option-kjv").click();
   await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/17$/);
   await expect(page.locator("body")).not.toHaveClass(/is-krv-edition/);
   await expect.poll(() => page.locator("body").evaluate((element) =>
@@ -156,11 +163,42 @@ test("switches editions at the same passage and canonicalizes legacy KJV links",
   await expect(page.locator("#edition-attribution")).toBeHidden();
 });
 
+test("supports keyboard navigation in the edition menu", async ({ page }) => {
+  await page.goto("/");
+  const trigger = page.locator("#edition-select");
+  await trigger.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator("#edition-options")).toBeVisible();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator("#edition-option-krv")).toBeFocused();
+  await page.keyboard.press("Enter");
+
+  await expect(page).toHaveURL(/\/krv\/b\/genesis\/c\/1\/v\/1$/);
+  await expect(page.locator("#verse-list")).toHaveAttribute("lang", "ko");
+});
+
+test("Escape from the edition menu returns focus to the verse for arrow navigation", async ({ page }) => {
+  await page.goto("/kjv/b/john/c/3/v/16");
+  const trigger = page.locator("#edition-select");
+  await trigger.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator("#edition-options")).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  await expect(page.locator("#edition-options")).toBeHidden();
+  await expect(page.locator("#verse-16")).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+
+  await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/17$/);
+  await expect(page.locator("#verse-17")).toHaveClass(/is-focused/);
+});
+
 test("switches to KRV from the mobile navigation drawer", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/kjv/b/john/c/3/v/16");
   await page.locator("#menu-toggle").click();
-  await page.locator("#edition-select").selectOption("krv");
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-option-krv").click();
 
   await expect(page).toHaveURL(/\/krv\/b\/john\/c\/3\/v\/16$/);
   await expect(page.locator("#sidebar")).not.toHaveClass(/is-open/);

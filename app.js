@@ -2,6 +2,7 @@ import { bindKeyboardShortcuts } from "./keyboard-shortcuts.js";
 import { createChapterPicker } from "./chapter-picker.js";
 import { createScriptureStore } from "./scripture-store.js";
 import { createVisualEffects } from "./visual-effects.js";
+import { createEditionPicker } from "./edition-picker.js";
 import { createScriptureRoutes, getVerseStep, isValidVerseRange, normalizeVerseRange } from "./scripture-routes.mjs";
 import { BOOKS } from "./books.mjs";
 import { DEFAULT_EDITION, EDITIONS, EDITION_IDS } from "./editions.mjs";
@@ -37,12 +38,17 @@ const elements = {
   menuToggle: document.querySelector("#menu-toggle"),
   sidebar: document.querySelector("#sidebar"),
   sidebarScrim: document.querySelector("#sidebar-scrim"),
+  editionPicker: document.querySelector("#edition-picker"),
   editionSelect: document.querySelector("#edition-select"),
+  editionSelectCode: document.querySelector("#edition-select-code"),
+  editionSelectLabel: document.querySelector("#edition-select-label"),
+  editionOptions: document.querySelector("#edition-options"),
   editionAttribution: document.querySelector("#edition-attribution"),
   brandEditionPrimary: document.querySelector("#brand-edition-primary"),
   brandEditionSecondary: document.querySelector("#brand-edition-secondary")
 };
 let chapterPicker;
+let editionPicker;
 let verseNavigationQueue = Promise.resolve();
 const scriptureStores = new Map(EDITION_IDS.map((editionId) => {
   const edition = EDITIONS[editionId];
@@ -61,18 +67,6 @@ const visualEffects = createVisualEffects({
 const testamentFor = (book) => book <= 39 ? "old" : "new";
 const bookName = (book) => scripture.bookName(book);
 
-function renderEditionOptions() {
-  elements.editionSelect.replaceChildren();
-  for (const editionId of EDITION_IDS) {
-    const option = document.createElement("option");
-    option.value = editionId;
-    option.textContent = EDITIONS[editionId].label;
-    elements.editionSelect.append(option);
-  }
-  elements.editionSelect.disabled = false;
-  elements.editionSelect.removeAttribute("aria-busy");
-}
-
 async function activateEdition(editionId) {
   const edition = EDITIONS[editionId];
   const store = scriptureStores.get(editionId);
@@ -82,7 +76,9 @@ async function activateEdition(editionId) {
   state.editionId = editionId;
   scripture = store;
   document.body.classList.toggle("is-krv-edition", editionId === "krv");
-  elements.editionSelect.value = editionId;
+  editionPicker.render(EDITION_IDS, EDITIONS, editionId);
+  elements.editionSelect.disabled = false;
+  elements.editionSelect.removeAttribute("aria-busy");
   elements.verseList.lang = edition.language;
   elements.verseList.dir = edition.direction;
   elements.searchResults.lang = edition.language;
@@ -113,6 +109,7 @@ async function changeEdition(editionId) {
   await activateEdition(editionId);
   const verses = await scripture.loadChapter(book, chapter);
   await openChapter(book, chapter, Math.min(verse, verses.length));
+  animateEditionSwitch();
   if (elements.sidebar.classList.contains("is-open")) closeSidebar();
   requestAnimationFrame(() => {
     document.querySelector(`#verse-${state.verse}`)?.focus({ preventScroll: true });
@@ -120,6 +117,18 @@ async function changeEdition(editionId) {
   if (searchQuery.length >= 2) {
     void search(searchQuery, ++state.searchRequestId);
   }
+}
+
+function animateEditionSwitch() {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  document.querySelector("#reader").animate(
+    [
+      { opacity: 0.68, transform: "translateY(8px) scale(0.995)", filter: "saturate(.82)" },
+      { opacity: 1, transform: "translateY(0) scale(1)", filter: "saturate(1)" },
+    ],
+    { duration: 620, easing: "cubic-bezier(.22, 1, .36, 1)" },
+  );
 }
 
 function setQuietReadingMode(enabled) {
@@ -185,7 +194,15 @@ function createChapterGradient() {
 }
 
 async function initialize() {
-  renderEditionOptions();
+  editionPicker = createEditionPicker({
+    root: elements.editionPicker,
+    trigger: elements.editionSelect,
+    code: elements.editionSelectCode,
+    label: elements.editionSelectLabel,
+    menu: elements.editionOptions,
+    onSelect: (editionId) => void changeEdition(editionId),
+    onEscape: () => document.querySelector(`#verse-${state.verse}`)?.focus({ preventScroll: true }),
+  });
   await activateEdition(DEFAULT_EDITION);
   renderBookList();
   chapterPicker = createChapterPicker({
@@ -587,9 +604,6 @@ function bindMobileChapterButtons() {
 }
 
 function bindEvents() {
-  elements.editionSelect.addEventListener("change", () => {
-    void changeEdition(elements.editionSelect.value);
-  });
   elements.searchResults.addEventListener("scroll", () => {
     if (state.searchShown >= state.searchMatches.length) return;
     const distanceToBottom = elements.searchResults.scrollHeight -
@@ -686,7 +700,7 @@ function bindEvents() {
     openButton: document.querySelector("#shortcuts-open"),
     closeButton: document.querySelector("#shortcuts-close"),
     searchInput: elements.searchInput,
-    isChapterPickerOpen: () => chapterPicker.isOpen(),
+    isChapterPickerOpen: () => chapterPicker.isOpen() || editionPicker.isOpen(),
     onPreviousChapter: () => navigate(-1),
     onNextChapter: () => navigate(1),
     onPreviousVerse: () => navigateVerse(-1),
