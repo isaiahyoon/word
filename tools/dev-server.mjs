@@ -22,52 +22,57 @@ function isScriptureRoute(pathname) {
   return /^\/b\/[^/]+(?:\/c\/\d+(?:\/v\/\d+(?:-\d+)?)?)?\/?$/.test(pathname.slice(routeIndex));
 }
 
-const server = createServer(async (request, response) => {
-  if (request.method !== "GET" && request.method !== "HEAD") {
-    response.writeHead(405, { Allow: "GET, HEAD" }).end();
-    return;
-  }
-
-  let pathname;
-  try {
-    pathname = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
-  } catch {
-    response.writeHead(400).end("Bad request");
-    return;
-  }
-
-  let filePath = resolve(root, `.${pathname}`);
-  let statusCode = 200;
-  if (pathname === "/404.html") statusCode = 404;
-  if (filePath !== root && !filePath.startsWith(`${root}${sep}`)) {
-    response.writeHead(403).end("Forbidden");
-    return;
-  }
-
-  try {
-    let stats = await fs.stat(filePath);
-    if (stats.isDirectory()) {
-      filePath = resolve(filePath, "index.html");
-      stats = await fs.stat(filePath);
+export function createDevServer(projectRoot = root) {
+  return createServer(async (request, response) => {
+    if (request.method !== "GET" && request.method !== "HEAD") {
+      response.writeHead(405, { Allow: "GET, HEAD" }).end();
+      return;
     }
-    if (!stats.isFile()) throw new Error("Not a file");
-  } catch {
-    if (!isScriptureRoute(pathname)) {
-      filePath = resolve(root, "404.html");
-      statusCode = 404;
-    } else {
-      filePath = resolve(root, "index.html");
-    }
-  }
 
-  response.writeHead(statusCode, {
-    "Cache-Control": "no-cache",
-    "Content-Type": contentTypes.get(extname(filePath)) ?? "application/octet-stream"
+    let pathname;
+    try {
+      pathname = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
+    } catch {
+      response.writeHead(400).end("Bad request");
+      return;
+    }
+
+    let filePath = resolve(projectRoot, `.${pathname}`);
+    let statusCode = 200;
+    if (pathname === "/404.html") statusCode = 404;
+    if (filePath !== projectRoot && !filePath.startsWith(`${projectRoot}${sep}`)) {
+      response.writeHead(403).end("Forbidden");
+      return;
+    }
+
+    try {
+      let stats = await fs.stat(filePath);
+      if (stats.isDirectory()) {
+        filePath = resolve(filePath, "index.html");
+        stats = await fs.stat(filePath);
+      }
+      if (!stats.isFile()) throw new Error("Not a file");
+    } catch {
+      if (!isScriptureRoute(pathname)) {
+        filePath = resolve(projectRoot, "404.html");
+        statusCode = 404;
+      } else {
+        filePath = resolve(projectRoot, "index.html");
+      }
+    }
+
+    response.writeHead(statusCode, {
+      "Cache-Control": "no-cache",
+      "Content-Type": contentTypes.get(extname(filePath)) ?? "application/octet-stream"
+    });
+    if (request.method === "HEAD") response.end();
+    else createReadStream(filePath).pipe(response);
   });
-  if (request.method === "HEAD") response.end();
-  else createReadStream(filePath).pipe(response);
-});
+}
 
-server.listen(port, "0.0.0.0", () => {
-  console.log(`The Word is available at http://localhost:${port}`);
-});
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const server = createDevServer();
+  server.listen(port, "0.0.0.0", () => {
+    console.log(`The Word is available at http://localhost:${port}`);
+  });
+}

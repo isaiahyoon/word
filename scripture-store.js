@@ -2,14 +2,14 @@ import { BOOKS, bookFileName } from "./books.mjs";
 
 const chapterKey = (book, chapter) => `${book}:${chapter}`;
 
-export function createScriptureStore() {
+export function createScriptureStore({ fetchImpl = fetch } = {}) {
   const chapters = new Map();
   const bookLoads = new Map();
   let chapterCounts = [];
   let bookFiles = [];
 
   async function initialize() {
-    const response = await fetch("./scripture/index.json");
+    const response = await fetchImpl("./scripture/index.json");
     if (!response.ok) throw new Error("Could not load scripture index");
 
     const index = await response.json();
@@ -39,7 +39,7 @@ export function createScriptureStore() {
     validateBook(book);
     if (bookLoads.has(book)) return bookLoads.get(book);
 
-    const request = fetch(`./scripture/books/${bookFiles[book - 1]}`)
+    const request = fetchImpl(`./scripture/books/${bookFiles[book - 1]}`)
       .then((response) => {
         if (!response.ok) throw new Error(`Could not load ${BOOKS[book - 1]}`);
         return response.json();

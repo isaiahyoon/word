@@ -61,6 +61,14 @@ The reader loads the chapter-count index and current book first. Book files use 
 node tools/build-scripture-data.mjs
 ```
 
+## Tests
+
+Run the route, scripture-store, and development-server tests with Node's built-in test runner:
+
+```sh
+node --test tests/*.test.mjs
+```
+
 ## Customize the palette
 
 Edit the CSS custom properties at the top of `styles.css` to change the shared theme colors. The base pastels are `--blue`, `--lavender`, `--yellow`, `--pink`, and `--green`; the chapter number's higher-contrast gradient stops are `--chapter-blue`, `--chapter-lavender`, `--chapter-pink`, and `--chapter-green`.

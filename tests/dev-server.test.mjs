@@ -1,0 +1,57 @@
+import assert from "node:assert/strict";
+import { once } from "node:events";
+import { after, before, describe, it } from "node:test";
+import { createDevServer } from "../tools/dev-server.mjs";
+
+describe("development server", () => {
+  const server = createDevServer();
+  let origin;
+
+  before(async () => {
+    server.listen(0, "127.0.0.1");
+    await once(server, "listening");
+    origin = `http://127.0.0.1:${server.address().port}`;
+  });
+
+  after(async () => {
+    server.close();
+    await once(server, "close");
+  });
+
+  it("serves the reader at the root", async () => {
+    const response = await fetch(origin);
+
+    assert.equal(response.status, 200);
+    assert.match(await response.text(), /The Word — King James Version/);
+  });
+
+  it("serves the app shell for scripture deep links", async () => {
+    const response = await fetch(`${origin}/b/joshua/c/1/v/1-10`);
+
+    assert.equal(response.status, 200);
+    assert.match(await response.text(), /id="verse-list"/);
+  });
+
+  it("serves the branded 404 document for unknown paths", async () => {
+    const response = await fetch(`${origin}/not-a-route`);
+    const html = await response.text();
+
+    assert.equal(response.status, 404);
+    assert.match(html, /Page Not Found — The Word/);
+    assert.match(html, /id="go-back"/);
+  });
+
+  it("preserves a 404 status for the standalone error document", async () => {
+    const response = await fetch(`${origin}/404.html`);
+
+    assert.equal(response.status, 404);
+    assert.match(await response.text(), /id="reader-link"/);
+  });
+
+  it("rejects unsupported methods", async () => {
+    const response = await fetch(origin, { method: "POST" });
+
+    assert.equal(response.status, 405);
+    assert.equal(response.headers.get("allow"), "GET, HEAD");
+  });
+});

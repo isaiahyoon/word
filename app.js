@@ -2,6 +2,7 @@ import { bindKeyboardShortcuts } from "./keyboard-shortcuts.js";
 import { createChapterPicker } from "./chapter-picker.js";
 import { createScriptureStore } from "./scripture-store.js";
 import { createVisualEffects } from "./visual-effects.js";
+import { createScriptureRoutes, isValidVerseRange, normalizeVerseRange } from "./scripture-routes.mjs";
 import { BOOKS } from "./books.mjs";
 
 const BOOK_TITLES = [
@@ -12,9 +13,7 @@ const BOOK_TITLES = [
 const CHAPTER_GRADIENT_COLORS = ["var(--chapter-blue)", "var(--chapter-lavender)", "var(--chapter-pink)", "var(--chapter-green)"];
 const LAST_READER_PATH_KEY = "the-word:last-reader-path";
 const state = { book: 1, chapter: 1, testament: "old", lastBookByTestament: { old: 1, new: 40 }, chapterRequestId: 0, searchTimer: null, searchRequestId: 0, searchMatches: [], searchQuery: "", searchShown: 0, searchActiveIndex: -1 };
-const basePath = new URL(document.baseURI).pathname;
-const slugifyBook = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-const bookNumbersBySlug = new Map(BOOKS.map((name, index) => [slugifyBook(name), index + 1]));
+const scriptureRoutes = createScriptureRoutes(BOOKS, new URL(document.baseURI).pathname);
 const elements = {
   bookList: document.querySelector("#book-list"),
   chapterSelect: document.querySelector("#chapter-select"),
@@ -42,62 +41,6 @@ const visualEffects = createVisualEffects({
 
 const testamentFor = (book) => book <= 39 ? "old" : "new";
 const bookName = (book) => BOOKS[book - 1];
-const bookSlug = (book) => slugifyBook(bookName(book));
-
-function normalizeVerseRange(range) {
-  if (range === null) return null;
-  return Number.isInteger(range) ? { start: range, end: range } : range;
-}
-
-function isValidVerseRange(range, verseCount) {
-  return Number.isInteger(range.start) &&
-    Number.isInteger(range.end) &&
-    range.start >= 1 &&
-    range.end >= range.start &&
-    range.end <= verseCount;
-}
-
-function parseScripturePath() {
-  if (!window.location.pathname.startsWith(basePath)) return null;
-  const path = window.location.pathname.slice(basePath.length).replace(/^\/+|\/+$/g, "");
-  if (!path || path === "index.html") return { home: true };
-
-  const segments = path.split("/");
-  if (![2, 4, 6].includes(segments.length) || segments[0] !== "b") return null;
-
-  let slug;
-  try {
-    slug = decodeURIComponent(segments[1]).toLowerCase();
-  } catch {
-    return null;
-  }
-  const book = bookNumbersBySlug.get(slug);
-  if (!book) return null;
-
-  let chapter = 1;
-  let range = { start: 1, end: 1 };
-  if (segments.length >= 4) {
-    if (segments[2] !== "c") return null;
-    chapter = Number(segments[3]);
-    if (!Number.isInteger(chapter) || chapter < 1) return null;
-  }
-
-  if (segments.length === 6) {
-    if (segments[4] !== "v") return null;
-    const match = segments[5].match(/^(\d+)(?:-(\d+))?$/);
-    if (!match) return null;
-    range = { start: Number(match[1]), end: Number(match[2] ?? match[1]) };
-  }
-
-  return { book, chapter, range };
-}
-
-function scripturePath(book, chapter, range) {
-  const path = `${basePath}b/${bookSlug(book)}/c/${chapter}`;
-  if (!range) return path;
-  const verses = range.start === range.end ? range.start : `${range.start}-${range.end}`;
-  return `${path}/v/${verses}`;
-}
 
 function rememberReaderPath(path) {
   try {
@@ -111,7 +54,7 @@ function showInvalidScripturePath() {
 }
 
 async function restoreLocationFromPath() {
-  const route = parseScripturePath();
+  const route = scriptureRoutes.parse(window.location.pathname);
   if (!route) {
     showInvalidScripturePath();
     return;
@@ -198,7 +141,7 @@ async function openChapter(book, chapter, requestedRange = null, { updateHistory
   } else {
     visualEffects.triggerChapterGlimmers();
   }
-  const path = scripturePath(book, chapter, range);
+  const path = scriptureRoutes.buildPath(book, chapter, range);
   rememberReaderPath(path);
   if (updateHistory) {
     if (window.location.pathname !== path) window.history.pushState(null, "", path);
