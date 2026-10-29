@@ -54,7 +54,7 @@ a:focus-visible {
   padding: 0;
   margin: -1px;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
 }
@@ -2408,7 +2408,8 @@ body.is-quiet-reading #bmc-iframe {
     padding: 0 17px;
   }
   .topbar {
-    height: 76px;
+    height: 132px;
+    align-content: center;
     grid-template-columns: 32px 1fr auto;
     gap: 10px;
   }
@@ -2457,10 +2458,6 @@ body.is-quiet-reading #bmc-iframe {
     grid-column: 1 / -1;
     grid-row: 2;
     margin: 0 0 10px;
-  }
-  .topbar {
-    height: 132px;
-    align-content: center;
   }
   .search-box {
     height: 40px;

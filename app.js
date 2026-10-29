@@ -150,7 +150,7 @@ async function writeClipboardText(text) {
   if (!copied) throw new Error("Clipboard copy failed");
 }
 
-async function copySelectedVerses() {
+async function copySelectedVerses({ clearAfter = false } = {}) {
   const selectedVerses = scripture.getChapter(state.book, state.chapter)
     .filter((verse) => state.selectedVerses.has(verse.verse));
   if (selectedVerses.length === 0) return;
@@ -159,6 +159,11 @@ async function copySelectedVerses() {
   const text = `${selectedVerses.map((verse) => verse.text.trim()).join(" ")}\n\n- ${reference}`;
   try {
     await writeClipboardText(text);
+    if (clearAfter) {
+      clearVerseSelection();
+      elements.copyStatus.textContent = `Copied ${reference} and cleared selected verses.`;
+      return;
+    }
     elements.copyControlLabel.textContent = "Copied";
     elements.copyStatus.textContent = `Copied ${reference} to clipboard.`;
     copyFeedbackTimer = setTimeout(updateCopyControl, 1600);
@@ -718,14 +723,15 @@ function bindMobileChapterButtons() {
 
 function bindEvents() {
   document.addEventListener("keydown", (event) => {
-    if (!(event.metaKey || event.ctrlKey) || event.altKey || event.key.toLowerCase() !== "c") return;
+    const key = event.key.toLowerCase();
+    if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey || (key !== "c" && key !== "x")) return;
     if (state.selectedVerses.size === 0) return;
     if (event.target instanceof Element && event.target.closest("input, textarea, select, [contenteditable='true']")) return;
     const selection = window.getSelection();
     if (selection && !selection.isCollapsed) return;
 
     event.preventDefault();
-    void copySelectedVerses();
+    void copySelectedVerses({ clearAfter: key === "x" });
   });
   elements.searchResults.addEventListener("scroll", () => {
     if (state.searchShown >= state.searchMatches.length) return;

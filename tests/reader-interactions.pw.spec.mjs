@@ -481,3 +481,24 @@ test("positions the Buy Me a Coffee widget on the left", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator('script[data-name="BMC-Widget"]')).toHaveAttribute("data-position", "Left");
 });
+
+for (const shortcut of ["Meta+X", "Control+X"]) {
+  test(`copies and clears selected verses with ${shortcut}`, async ({ page }) => {
+    await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.goto("/kjv/b/isaiah/c/3/v/10");
+    const verses = [21, 10];
+    const expectedText = (await Promise.all(verses.map(async (number) => ({
+      number,
+      text: await page.locator(`#verse-${number} .verse-text`).textContent(),
+    })))).sort((left, right) => left.number - right.number).map((verse) => verse.text).join(" ");
+
+    for (const number of verses) await page.locator(`#verse-${number}`).click();
+    await page.keyboard.press(shortcut);
+
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
+      .toBe(`${expectedText}\n\n- Isaiah 3:10, 21`);
+    await expect(page.locator("#verse-10")).toHaveAttribute("aria-pressed", "false");
+    await expect(page.locator("#verse-21")).toHaveAttribute("aria-pressed", "false");
+    await expect(page.locator("#verse-actions")).toBeHidden();
+  });
+}

@@ -71,17 +71,18 @@ The 1961 KRV source is pinned in `sources/krv-1961.json`; attribution is shown w
 
 ## Tests
 
-Run the route, keyboard-shortcut, scripture-store, source-data parity, and
-development-server tests with Node's built-in test runner, then install
-Chromium once and run the browser interaction tests:
+Run the CSS linter and the route, keyboard-shortcut, scripture-store,
+source-data parity, and development-server tests with Node's built-in test
+runner, then install Chromium once and run the browser interaction tests:
 
 ```sh
+npm run lint:css
 npm test
 npx playwright install chromium
 npm run test:ui
 ```
 
-Run both test suites together with `npm run test:all`.
+Run the CSS lint and both test suites together with `npm run test:all`.
 
 ## Customize the palette
 
