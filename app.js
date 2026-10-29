@@ -205,6 +205,16 @@ async function openChapter(book, chapter, focusVerse = null) {
   if (requestId !== state.chapterRequestId) return;
   elements.verseList.removeAttribute("aria-busy");
   renderChapter(focusVerse);
+  if (focusVerse !== null) {
+    requestAnimationFrame(() => {
+      if (requestId !== state.chapterRequestId) return;
+      document.querySelector(`#verse-${focusVerse}`)?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        block: "center",
+        inline: "nearest"
+      });
+    });
+  }
 }
 
 function renderBookList() {
