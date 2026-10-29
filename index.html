@@ -108,14 +108,14 @@
         </main>
       </div>
     </div>
-    <div class="mobile-swipe-cues" id="mobile-swipe-cues" aria-hidden="true">
-      <span class="mobile-swipe-zone mobile-swipe-zone--previous" data-swipe-direction="previous">
-        <span class="mobile-swipe-grip"><i></i><i></i><i></i><b>›</b></span>
-      </span>
-      <span class="mobile-swipe-zone mobile-swipe-zone--next" data-swipe-direction="next">
-        <span class="mobile-swipe-grip"><i></i><i></i><i></i><b>‹</b></span>
-      </span>
-    </div>
+    <nav class="mobile-chapter-cues" id="mobile-chapter-cues" aria-label="Chapter navigation">
+      <button class="mobile-chapter-button mobile-chapter-button--previous" id="mobile-previous-chapter" type="button" aria-label="Previous chapter" aria-controls="verse-list">
+        <span class="mobile-chapter-grip" aria-hidden="true"><i></i><i></i><i></i><b>‹</b></span>
+      </button>
+      <button class="mobile-chapter-button mobile-chapter-button--next" id="mobile-next-chapter" type="button" aria-label="Next chapter" aria-controls="verse-list">
+        <span class="mobile-chapter-grip" aria-hidden="true"><i></i><i></i><i></i><b>›</b></span>
+      </button>
+    </nav>
     <dialog class="shortcuts-dialog" id="shortcuts-dialog" aria-labelledby="shortcuts-title">
       <div class="shortcuts-panel">
         <div class="shortcuts-heading">
