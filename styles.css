@@ -931,9 +931,10 @@ a:focus-visible {
 }
 .chapter-arrow:hover,
 .chapter-arrow:focus-visible {
-  border-color: #c8d8d5;
-  background: #e8f0ea;
-  box-shadow: 0 2px 0 rgba(150, 180, 167, 0.28);
+  border-color: rgba(49, 88, 99, 0.38);
+  background: linear-gradient(140deg, #e1f2f2, var(--paper));
+  color: var(--deep-teal);
+  box-shadow: 0 2px 0 rgba(49, 88, 99, 0.2);
 }
 #previous-chapter:hover span,
 #previous-chapter:focus-visible span {
@@ -958,14 +959,14 @@ a:focus-visible {
   justify-content: center;
   gap: 7px;
   padding: 0 9px;
-  border: 1px solid var(--pink);
+  border: 1px solid var(--brass-soft);
   border-radius: 4px;
   background: var(--paper);
   color: var(--ink);
   font-family: var(--serif);
   font-size: 14px;
   cursor: pointer;
-  box-shadow: 0 2px 0 #edc4d0;
+  box-shadow: 0 2px 0 rgba(199, 169, 93, 0.5);
   transition:
     background 0.16s,
     border-color 0.16s,
@@ -1045,12 +1046,12 @@ a:focus-visible {
 }
 .chapter-select:hover,
 .chapter-select[aria-expanded="true"] {
-  border-color: #e9aebf;
-  background: var(--pink);
-  box-shadow: 0 2px 0 #e9aebf;
+  border-color: var(--brass);
+  background: linear-gradient(135deg, #fff5d5, #fffaf0);
+  box-shadow: 0 2px 0 var(--brass-shadow);
 }
 .chapter-select-flower {
-  color: #b86f84;
+  color: var(--brass);
   font-size: 9px;
 }
 .select-caret {
@@ -1066,7 +1067,7 @@ a:focus-visible {
   right: 0;
   width: min(286px, calc(100vw - 32px));
   padding: 12px;
-  border: 1px solid var(--pink);
+  border: 1px solid var(--brass-soft);
   border-radius: 6px;
   background: var(--paper);
   box-shadow: 0 14px 36px rgba(100, 65, 75, 0.18);
@@ -1085,7 +1086,7 @@ a:focus-visible {
   border-bottom: 1px solid var(--line);
 }
 .chapter-menu-flower {
-  color: #d18499;
+  color: var(--brass);
   font-size: 18px;
 }
 .chapter-popover:not([hidden]) .chapter-menu-flower {
@@ -1185,21 +1186,21 @@ a:focus-visible {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #8a8b82;
+  color: var(--deep-teal);
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 1.35px;
 }
 .kicker-dash {
-  width: 23px;
+  width: 27px;
   height: 1px;
-  background: var(--lavender);
+  background: linear-gradient(90deg, var(--deep-teal), var(--brass));
 }
 .chapter-heading h1 {
   margin: 13px 0 12px;
   font-family: var(--serif);
   font-size: var(--type-display);
-  font-weight: var(--weight-regular);
+  font-weight: var(--weight-medium);
   line-height: var(--line-display);
   letter-spacing: 0;
 }
@@ -1226,7 +1227,7 @@ a:focus-visible {
   align-items: center;
   gap: 9px;
   margin: 0;
-  color: #85867e;
+  color: #617171;
   font-size: 10px;
 }
 .quiet-welcome {

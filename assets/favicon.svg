@@ -1,5 +1,34 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-  <rect x="2.5" y="2.5" width="43" height="43" rx="12" fill="#fffecf" stroke="#fad4e0" stroke-width="3" />
-  <path d="M24 15c-4-4-10-5-16-3v24c6-2 12-1 16 3 4-4 10-5 16-3V12c-6-2-12-1-16 3Z" fill="#defefc" stroke="#304c56" stroke-linejoin="round" stroke-width="2.5" />
-  <path d="M24 32s-8-5.1-8-10a4.5 4.5 0 0 1 8-2.8 4.5 4.5 0 0 1 8 2.8c0 4.9-8 10-8 10Z" fill="#fad4e0" stroke="#304c56" stroke-linejoin="round" stroke-width="1.7" />
+  <defs>
+    <linearGradient id="favicon-background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#315863" />
+      <stop offset="38%" stop-color="#587774" />
+      <stop offset="68%" stop-color="#b18a4d" />
+      <stop offset="100%" stop-color="#8d6629" />
+    </linearGradient>
+    <linearGradient id="favicon-metallic-sheen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff" stop-opacity=".03" />
+      <stop offset="42%" stop-color="#fff" stop-opacity=".05" />
+      <stop offset="50%" stop-color="#fff4d1" stop-opacity=".28" />
+      <stop offset="58%" stop-color="#fff" stop-opacity=".05" />
+      <stop offset="100%" stop-color="#fff" stop-opacity=".12" />
+    </linearGradient>
+    <linearGradient id="favicon-book-outline" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#315863" />
+      <stop offset="12%" stop-color="#defefc" />
+      <stop offset="24%" stop-color="#dcd7f7" />
+      <stop offset="36%" stop-color="#fad4e0" />
+      <stop offset="48%" stop-color="#c85f5f" />
+      <stop offset="60%" stop-color="#fffecf" />
+      <stop offset="72%" stop-color="#d6f2b9" />
+      <stop offset="84%" stop-color="#72c6d3" />
+      <stop offset="92%" stop-color="#c7a95d" />
+      <stop offset="100%" stop-color="#a97c35" />
+    </linearGradient>
+  </defs>
+  <rect width="48" height="48" fill="url(#favicon-background)" />
+  <rect width="48" height="48" fill="url(#favicon-metallic-sheen)" />
+  <rect x="2.5" y="2.5" width="43" height="43" rx="12" fill="#defefc" />
+  <path d="M24 15c-4-4-10-5-16-3v24c6-2 12-1 16 3 4-4 10-5 16-3V12c-6-2-12-1-16 3Z" fill="#fffecf" stroke="url(#favicon-book-outline)" stroke-linejoin="round" stroke-width="2.5" />
+  <path d="M24 32s-8-5.1-8-10a4.5 4.5 0 0 1 8-2.8 4.5 4.5 0 0 1 8 2.8c0 4.9-8 10-8 10Z" fill="#fad4e0" stroke="none" />
 </svg>

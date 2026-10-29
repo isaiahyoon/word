@@ -25,6 +25,27 @@ describe("development server", () => {
     assert.match(await response.text(), /The Word — King James Version/);
   });
 
+  it("serves the teal and brass favicon gradient", async () => {
+    const response = await fetch(`${origin}/assets/favicon.svg`);
+    const favicon = await response.text();
+
+    assert.equal(response.status, 200);
+    assert.match(favicon, /<linearGradient id="favicon-background"/);
+    assert.match(favicon, /stop-color="#315863"/);
+    assert.match(favicon, /stop-color="#b18a4d"/);
+    assert.match(favicon, /stop-color="#8d6629"/);
+    assert.match(favicon, /id="favicon-metallic-sheen"/);
+    assert.match(favicon, /<rect width="48" height="48" fill="url\(#favicon-background\)"/);
+    assert.match(favicon, /rx="12" fill="#defefc"/);
+    assert.match(favicon, /<linearGradient id="favicon-book-outline"/);
+    assert.match(favicon, /fill="#fffecf" stroke="url\(#favicon-book-outline\)"/);
+    for (const color of ["#defefc", "#dcd7f7", "#fad4e0", "#c85f5f", "#fffecf", "#d6f2b9", "#72c6d3", "#c7a95d", "#a97c35"]) {
+      assert.ok(favicon.includes(`stop-color="${color}"`), `outline gradient includes ${color}`);
+    }
+    assert.match(favicon, /fill="#fad4e0" stroke="none"/);
+    assert.doesNotMatch(favicon, /stroke="#fad4e0"/);
+  });
+
   it("serves the app shell for scripture deep links", async () => {
     const response = await fetch(`${origin}/b/joshua/c/1/v/1-10`);
 
@@ -71,6 +92,23 @@ describe("development server", () => {
     assert.match(typographyCss, /--type-reading:\s*18px/);
     assert.match(typographyCss, /--serif:/);
     assert.match(typographyCss, /--sans:/);
+  });
+
+  it("uses deep teal and brass accents in chapter navigation", async () => {
+    const [themeResponse, stylesResponse] = await Promise.all([
+      fetch(`${origin}/theme.css`),
+      fetch(`${origin}/styles.css`),
+    ]);
+    const [theme, styles] = await Promise.all([
+      themeResponse.text(),
+      stylesResponse.text(),
+    ]);
+
+    assert.match(theme, /--deep-teal:/);
+    assert.match(theme, /--brass:/);
+    assert.match(styles, /\.chapter-kicker\s*\{[^}]*var\(--deep-teal\)/s);
+    assert.match(styles, /\.chapter-select:hover,[\s\S]*?var\(--brass\)/);
+    assert.match(styles, /\.kicker-dash\s*\{[^}]*var\(--brass\)/s);
   });
 
   it("serves the accessible chapter sparkle trigger and metallic animation", async () => {
