@@ -10,7 +10,11 @@ const BOOK_TITLES = [
 ];
 
 const CHAPTER_GRADIENT_COLORS = ["var(--chapter-blue)", "var(--chapter-lavender)", "var(--chapter-pink)", "var(--chapter-green)"];
+const LAST_READER_PATH_KEY = "the-word:last-reader-path";
 const state = { book: 1, chapter: 1, testament: "old", lastBookByTestament: { old: 1, new: 40 }, chapterRequestId: 0, searchTimer: null, searchRequestId: 0, searchMatches: [], searchQuery: "", searchShown: 0, searchActiveIndex: -1 };
+const basePath = new URL(document.baseURI).pathname;
+const slugifyBook = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const bookNumbersBySlug = new Map(BOOKS.map((name, index) => [slugifyBook(name), index + 1]));
 const elements = {
   bookList: document.querySelector("#book-list"),
   chapterSelect: document.querySelector("#chapter-select"),
@@ -38,6 +42,84 @@ const visualEffects = createVisualEffects({
 
 const testamentFor = (book) => book <= 39 ? "old" : "new";
 const bookName = (book) => BOOKS[book - 1];
+const bookSlug = (book) => slugifyBook(bookName(book));
+
+function normalizeVerseRange(range) {
+  if (range === null) return null;
+  return Number.isInteger(range) ? { start: range, end: range } : range;
+}
+
+function isValidVerseRange(range, verseCount) {
+  return Number.isInteger(range.start) &&
+    Number.isInteger(range.end) &&
+    range.start >= 1 &&
+    range.end >= range.start &&
+    range.end <= verseCount;
+}
+
+function parseScripturePath() {
+  if (!window.location.pathname.startsWith(basePath)) return null;
+  const path = window.location.pathname.slice(basePath.length).replace(/^\/+|\/+$/g, "");
+  if (!path || path === "index.html") return { home: true };
+
+  const segments = path.split("/");
+  if (![2, 4, 6].includes(segments.length) || segments[0] !== "b") return null;
+
+  let slug;
+  try {
+    slug = decodeURIComponent(segments[1]).toLowerCase();
+  } catch {
+    return null;
+  }
+  const book = bookNumbersBySlug.get(slug);
+  if (!book) return null;
+
+  let chapter = 1;
+  let range = { start: 1, end: 1 };
+  if (segments.length >= 4) {
+    if (segments[2] !== "c") return null;
+    chapter = Number(segments[3]);
+    if (!Number.isInteger(chapter) || chapter < 1) return null;
+  }
+
+  if (segments.length === 6) {
+    if (segments[4] !== "v") return null;
+    const match = segments[5].match(/^(\d+)(?:-(\d+))?$/);
+    if (!match) return null;
+    range = { start: Number(match[1]), end: Number(match[2] ?? match[1]) };
+  }
+
+  return { book, chapter, range };
+}
+
+function scripturePath(book, chapter, range) {
+  const path = `${basePath}b/${bookSlug(book)}/c/${chapter}`;
+  if (!range) return path;
+  const verses = range.start === range.end ? range.start : `${range.start}-${range.end}`;
+  return `${path}/v/${verses}`;
+}
+
+function rememberReaderPath(path) {
+  try {
+    window.sessionStorage.setItem(LAST_READER_PATH_KEY, path);
+  } catch {}
+}
+
+function showInvalidScripturePath() {
+  state.chapterRequestId += 1;
+  window.location.replace(new URL("404.html", document.baseURI).href);
+}
+
+async function restoreLocationFromPath() {
+  const route = parseScripturePath();
+  if (!route) {
+    showInvalidScripturePath();
+    return;
+  }
+
+  const reference = route.home ? { book: 1, chapter: 1, range: null } : route;
+  await openChapter(reference.book, reference.chapter, reference.range, { updateHistory: false });
+}
 
 function createChapterGradient() {
   const colors = [...CHAPTER_GRADIENT_COLORS];
@@ -67,10 +149,10 @@ async function initialize() {
   });
   visualEffects.bind();
   bindEvents();
-  await openChapter(state.book, state.chapter);
+  await restoreLocationFromPath();
 }
 
-async function openChapter(book, chapter, focusVerse = null) {
+async function openChapter(book, chapter, requestedRange = null, { updateHistory = true } = {}) {
   const requestId = ++state.chapterRequestId;
   state.book = book;
   state.chapter = chapter;
@@ -84,6 +166,10 @@ async function openChapter(book, chapter, focusVerse = null) {
     await scripture.loadChapter(book, chapter);
   } catch (error) {
     if (requestId !== state.chapterRequestId) return;
+    if (error instanceof RangeError) {
+      showInvalidScripturePath();
+      return;
+    }
     console.error(error);
     elements.verseList.removeAttribute("aria-busy");
     elements.verseList.textContent = "The chapter could not be loaded. Please try again.";
@@ -91,12 +177,18 @@ async function openChapter(book, chapter, focusVerse = null) {
   }
 
   if (requestId !== state.chapterRequestId) return;
+  const range = normalizeVerseRange(requestedRange) ?? (updateHistory ? { start: 1, end: 1 } : null);
+  const verses = scripture.getChapter(book, chapter);
+  if (range && !isValidVerseRange(range, verses.length)) {
+    showInvalidScripturePath();
+    return;
+  }
   elements.verseList.removeAttribute("aria-busy");
-  renderChapter(focusVerse);
-  if (focusVerse !== null) {
+  renderChapter(range);
+  if (range) {
     requestAnimationFrame(() => {
       if (requestId !== state.chapterRequestId) return;
-      document.querySelector(`#verse-${focusVerse}`)?.scrollIntoView({
+      document.querySelector(`#verse-${range.start}`)?.scrollIntoView({
         behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
         block: "center",
         inline: "nearest"
@@ -105,6 +197,11 @@ async function openChapter(book, chapter, focusVerse = null) {
     });
   } else {
     visualEffects.triggerChapterGlimmers();
+  }
+  const path = scripturePath(book, chapter, range);
+  rememberReaderPath(path);
+  if (updateHistory) {
+    if (window.location.pathname !== path) window.history.pushState(null, "", path);
   }
 }
 
@@ -138,7 +235,7 @@ function renderBookList() {
   }
 }
 
-function renderChapter(focusVerse = null) {
+function renderChapter(focusRange = null) {
   const name = bookName(state.book);
   const testament = testamentFor(state.book);
   const verses = scripture.getChapter(state.book, state.chapter);
@@ -163,7 +260,8 @@ function renderChapter(focusVerse = null) {
   elements.verseList.replaceChildren();
   for (const verse of verses) {
     const row = document.createElement("p");
-    row.className = `verse${verse.verse === focusVerse ? " is-focused" : ""}`;
+    const isFocused = focusRange && verse.verse >= focusRange.start && verse.verse <= focusRange.end;
+    row.className = `verse${isFocused ? " is-focused" : ""}`;
     row.id = `verse-${verse.verse}`;
     const number = document.createElement("span");
     number.className = "verse-number";
@@ -379,6 +477,7 @@ function bindEvents() {
   document.querySelector("#next-chapter").addEventListener("click", () => navigate(1));
   document.querySelector("#bottom-previous").addEventListener("click", () => navigate(-1));
   document.querySelector("#bottom-next").addEventListener("click", () => navigate(1));
+  window.addEventListener("popstate", () => void restoreLocationFromPath());
   elements.searchInput.addEventListener("input", () => {
     clearTimeout(state.searchTimer);
     const requestId = ++state.searchRequestId;

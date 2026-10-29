@@ -36,13 +36,22 @@ and without him was not any thing made that was made.
 
 ## Run locally
 
-Start a local web server from this directory so the reader can load `kjv.json`:
+Start the local server from this directory so the reader can load scripture data and open deep links:
 
 ```sh
-python3 -m http.server 8000
+node tools/dev-server.mjs
 ```
 
 Then open [http://localhost:8000](http://localhost:8000).
+When deploying, configure the host to internally serve `index.html` for `/b/*` paths while keeping the requested URL.
+
+Scripture links use book slugs and optional chapter and verse-range segments. Omitting the chapter or verses opens and highlights verse 1 by default:
+
+```text
+/b/john
+/b/john/c/3
+/b/john/c/3/v/16-18
+```
 
 ## Scripture data
 

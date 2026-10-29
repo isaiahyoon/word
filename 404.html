@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f6f4f9" />
+    <title>Page Not Found — The Word</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Gelasio:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #292b2a;
+        --muted: #777972;
+        --paper: #fbfaf6;
+        --canvas: #f6f4f9;
+        --line: #e9e6de;
+        --pink: #fad4e0;
+        --blue: #defefc;
+        --yellow: #fffecf;
+        --green: #d6f2b9;
+        --coral: #c85f5f;
+        --serif: "Gelasio", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+        --sans: "DM Sans", "Avenir Next", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        min-width: 320px;
+        min-height: 100vh;
+        margin: 0;
+        color: var(--ink);
+        background-color: var(--canvas);
+        background-image: radial-gradient(rgba(99, 95, 78, .075) .65px, transparent .65px);
+        background-size: 7px 7px;
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+      }
+      button, a { font: inherit; }
+      button:focus-visible, a:focus-visible { outline: 2px solid #799da8; outline-offset: 4px; }
+      .page-shell { width: min(1320px, 100%); min-height: 100vh; display: flex; flex-direction: column; margin: 0 auto; padding: 0 clamp(22px, 5vw, 72px); }
+      .masthead { min-height: 88px; display: flex; align-items: center; justify-content: space-between; gap: 20px; border-bottom: 1px solid rgba(71, 72, 67, .14); }
+      .brand { display: inline-flex; align-items: center; gap: 12px; color: inherit; text-decoration: none; }
+      .brand-mark { width: 31px; height: 31px; display: grid; grid-template-columns: 1fr 1fr; gap: 3px; transform: rotate(-7deg); }
+      .brand-mark i { display: block; border-radius: 2px; }
+      .brand-mark i:nth-child(1) { border-radius: 8px 3px 3px; background: var(--blue); }
+      .brand-mark i:nth-child(2) { border-radius: 3px 8px 3px 3px; background: #dcd7f7; }
+      .brand-mark i:nth-child(3) { border-radius: 3px 3px 3px 8px; background: var(--pink); }
+      .brand-mark i:nth-child(4) { border-radius: 3px 3px 8px; background: var(--green); }
+      .brand-name { display: flex; flex-direction: column; gap: 4px; }
+      .brand-name strong { font-family: var(--serif); font-size: 22px; font-weight: 500; line-height: 1; }
+      .brand-name small, .masthead-note, .eyebrow, .art-label, .page-footer { font-size: 9px; font-weight: 700; letter-spacing: 1.1px; }
+      .brand-name small { color: #777972; }
+      .masthead-note { display: flex; align-items: center; gap: 9px; color: #777972; }
+      .masthead-note span { width: 7px; height: 7px; border-radius: 50%; background: var(--coral); box-shadow: 0 0 0 3px rgba(200, 95, 95, .12); }
+      .main-content { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); align-items: center; gap: clamp(40px, 8vw, 112px); padding: 64px 0 72px; }
+      .error-art { position: relative; min-height: 390px; display: flex; flex-direction: column; justify-content: center; isolation: isolate; }
+      .error-art::before { position: absolute; z-index: -1; top: 50%; left: 3%; width: min(92%, 475px); height: 208px; border-top: 1px solid rgba(41, 43, 42, .24); border-bottom: 1px solid rgba(41, 43, 42, .24); content: ""; transform: translateY(-42%); }
+      .error-art::after { position: absolute; z-index: -1; top: 50%; left: 15%; width: 66%; height: 1px; background: rgba(41, 43, 42, .14); content: ""; transform: rotate(-13deg); }
+      .art-label { margin: 0 0 10px 8px; color: #777972; }
+      .error-number { display: block; width: fit-content; color: var(--coral); font-family: var(--serif); font-size: clamp(156px, 19vw, 248px); font-weight: 400; line-height: .8; letter-spacing: 0; text-shadow: 5px 6px 0 var(--pink); animation: arrive .65s cubic-bezier(.2, .8, .2, 1) both; }
+      .art-rule { width: 145px; height: 10px; margin: 25px 0 0 12px; background: var(--yellow); box-shadow: 12px 0 0 var(--blue); transform: rotate(-2deg); }
+      .art-caption { max-width: 250px; margin: 21px 0 0 12px; color: #777972; font-family: var(--serif); font-size: 14px; font-style: italic; line-height: 1.55; }
+      .message { max-width: 520px; padding: 18px 0; animation: arrive .65s .08s cubic-bezier(.2, .8, .2, 1) both; }
+      .eyebrow { display: flex; align-items: center; gap: 9px; margin: 0 0 20px; color: #777972; }
+      .eyebrow b { color: var(--coral); }
+      .eyebrow i { width: 4px; height: 4px; border-radius: 50%; background: var(--blue); box-shadow: 0 0 0 1px #78c4c6; }
+      h1 { max-width: 500px; margin: 0; font-family: var(--serif); font-size: 50px; font-weight: 400; line-height: 1.07; }
+      .description { max-width: 390px; margin: 20px 0 0; color: var(--muted); font-size: 15px; line-height: 1.75; }
+      .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 29px; }
+      .back-button, .reader-link { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 0 17px; border-radius: 4px; text-decoration: none; cursor: pointer; transition: transform .16s ease, box-shadow .16s ease, background .16s ease; }
+      .back-button { border: 1px solid #b65355; background: var(--coral); color: white; box-shadow: 0 3px 0 #9e494a; font-weight: 600; }
+      .back-button:hover { background: #b65355; box-shadow: 0 4px 0 #9e494a; transform: translateY(-1px); }
+      .back-button span { font-size: 18px; line-height: 1; }
+      .reader-link { border: 1px solid var(--line); background: rgba(251, 250, 246, .78); color: #4a4b45; font-size: 13px; font-weight: 600; }
+      .reader-link:hover { background: var(--paper); transform: translateY(-1px); }
+      .return-note { display: flex; align-items: center; gap: 8px; margin: 20px 0 0; color: #85857f; font-size: 11px; }
+      .return-note span { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 1px #8eaa6d; }
+      .page-footer { min-height: 54px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid rgba(71, 72, 67, .14); color: #85857f; }
+      .page-footer span:last-child { color: #a3a29a; }
+      @keyframes arrive { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
+      @media (max-width: 760px) {
+        .page-shell { padding-right: 22px; padding-left: 22px; }
+        .masthead { min-height: 72px; }
+        .masthead-note { font-size: 8px; letter-spacing: .8px; }
+        .main-content { grid-template-columns: 1fr; gap: 28px; padding: 32px 0 40px; }
+        .error-art { min-height: 0; }
+        .error-art::before { top: 45%; left: 4%; width: 75%; height: 112px; }
+        .error-art::after { top: 46%; left: 20%; width: 48%; }
+        .art-label { margin-left: 4px; font-size: 8px; }
+        .error-number { font-size: 138px; }
+        .art-rule { width: 92px; height: 7px; margin: 17px 0 0 7px; box-shadow: 8px 0 0 var(--blue); }
+        .art-caption { max-width: 220px; margin: 14px 0 0 7px; font-size: 12px; }
+        .message { padding: 0; }
+        .eyebrow { margin-bottom: 13px; font-size: 8px; }
+        h1 { max-width: 430px; font-size: 40px; }
+        .description { margin-top: 14px; font-size: 14px; }
+        .actions { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 23px; }
+        .back-button, .reader-link { width: 100%; min-height: 50px; }
+        .page-footer { min-height: 48px; font-size: 8px; letter-spacing: .7px; }
+      }
+      @media (max-width: 360px) {
+        .masthead-note { max-width: 112px; text-align: right; line-height: 1.5; }
+        .error-number { font-size: 120px; }
+        h1 { font-size: 36px; }
+        .art-caption { max-width: 110px; font-size: 11px; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="masthead">
+        <a class="brand" id="brand-link" href="/" aria-label="The Word home">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          <span class="brand-name"><strong>the word</strong><small>KING JAMES VERSION</small></span>
+        </a>
+        <div class="masthead-note"><span aria-hidden="true"></span> READER'S DESK / 404</div>
+      </header>
+      <main class="main-content">
+        <div class="error-art" aria-hidden="true">
+          <p class="art-label">REFERENCE NOT FOUND</p>
+          <span class="error-number">404</span>
+          <div class="art-rule"></div>
+          <p class="art-caption">“The next page is still waiting.”</p>
+        </div>
+        <section class="message" aria-labelledby="page-title">
+          <p class="eyebrow"><b>PAGE MISSING</b><i aria-hidden="true"></i> NOTHING LOST</p>
+          <h1 id="page-title">This page missed its place.</h1>
+          <p class="description">That address didn’t lead to a page. You can step back to where you were, or return to the reader.</p>
+          <div class="actions">
+            <button class="back-button" id="go-back" type="button"><span aria-hidden="true">←</span> Return to last place</button>
+            <a class="reader-link" id="reader-link" href="/">Open the reader</a>
+          </div>
+          <p class="return-note"><span aria-hidden="true"></span> Your reading place is only a step away.</p>
+        </section>
+      </main>
+      <footer class="page-footer"><span>THE WORD / KING JAMES VERSION</span><span>A QUIET PLACE TO RETURN</span></footer>
+    </div>
+    <script>
+      const readerLink = document.querySelector("#reader-link");
+      const brandLink = document.querySelector("#brand-link");
+      const currentPath = window.location.pathname;
+      const routeIndex = currentPath.indexOf("/b/");
+      const appRoot = routeIndex < 0
+        ? currentPath.slice(0, currentPath.lastIndexOf("/") + 1)
+        : currentPath.slice(0, routeIndex + 1);
+      const homeUrl = new URL(appRoot || "/", window.location.origin).href;
+      const lastReaderPathKey = "the-word:last-reader-path";
+      const readerRoot = appRoot.endsWith("/") ? appRoot : `${appRoot}/`;
+      let returnUrl = homeUrl;
+      try {
+        const lastReaderPath = window.sessionStorage.getItem(lastReaderPathKey);
+        if (lastReaderPath?.startsWith(`${readerRoot}b/`)) {
+          returnUrl = new URL(lastReaderPath, window.location.origin).href;
+        }
+      } catch {}
+      readerLink.href = homeUrl;
+      brandLink.href = homeUrl;
+      document.querySelector("#go-back").addEventListener("click", () => window.location.assign(returnUrl));
+    </script>
+  </body>
+</html>

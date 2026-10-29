@@ -1,0 +1,73 @@
+import { createReadStream, promises as fs } from "node:fs";
+import { createServer } from "node:http";
+import { dirname, extname, resolve, sep } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const port = Number(process.env.PORT ?? 8000);
+const contentTypes = new Map([
+  [".css", "text/css; charset=utf-8"],
+  [".gif", "image/gif"],
+  [".html", "text/html; charset=utf-8"],
+  [".js", "text/javascript; charset=utf-8"],
+  [".json", "application/json; charset=utf-8"],
+  [".mjs", "text/javascript; charset=utf-8"],
+  [".png", "image/png"],
+  [".svg", "image/svg+xml"]
+]);
+
+function isScriptureRoute(pathname) {
+  const routeIndex = pathname.indexOf("/b/");
+  if (routeIndex < 0) return false;
+  return /^\/b\/[^/]+(?:\/c\/\d+(?:\/v\/\d+(?:-\d+)?)?)?\/?$/.test(pathname.slice(routeIndex));
+}
+
+const server = createServer(async (request, response) => {
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    response.writeHead(405, { Allow: "GET, HEAD" }).end();
+    return;
+  }
+
+  let pathname;
+  try {
+    pathname = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
+  } catch {
+    response.writeHead(400).end("Bad request");
+    return;
+  }
+
+  let filePath = resolve(root, `.${pathname}`);
+  let statusCode = 200;
+  if (pathname === "/404.html") statusCode = 404;
+  if (filePath !== root && !filePath.startsWith(`${root}${sep}`)) {
+    response.writeHead(403).end("Forbidden");
+    return;
+  }
+
+  try {
+    let stats = await fs.stat(filePath);
+    if (stats.isDirectory()) {
+      filePath = resolve(filePath, "index.html");
+      stats = await fs.stat(filePath);
+    }
+    if (!stats.isFile()) throw new Error("Not a file");
+  } catch {
+    if (!isScriptureRoute(pathname)) {
+      filePath = resolve(root, "404.html");
+      statusCode = 404;
+    } else {
+      filePath = resolve(root, "index.html");
+    }
+  }
+
+  response.writeHead(statusCode, {
+    "Cache-Control": "no-cache",
+    "Content-Type": contentTypes.get(extname(filePath)) ?? "application/octet-stream"
+  });
+  if (request.method === "HEAD") response.end();
+  else createReadStream(filePath).pipe(response);
+});
+
+server.listen(port, "0.0.0.0", () => {
+  console.log(`The Word is available at http://localhost:${port}`);
+});

@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#f6f4f9" />
     <meta name="description" content="A quiet, searchable reader for the King James Version of the Bible." />
+    <script>
+      const currentPath = location.pathname;
+      const routeIndex = currentPath.indexOf("/b/");
+      const appRoot = routeIndex < 0
+        ? currentPath.slice(0, currentPath.lastIndexOf("/") + 1)
+        : currentPath.slice(0, routeIndex + 1);
+      const baseElement = document.createElement("base");
+      baseElement.href = appRoot || "/";
+      document.head.append(baseElement);
+    </script>
     <title>The Word — King James Version</title>
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
