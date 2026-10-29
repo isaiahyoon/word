@@ -111,7 +111,7 @@ async function openChapter(book, chapter, requestedRange = null, { updateHistory
   state.lastBookByTestament[state.testament] = book;
   renderBookList();
   elements.verseList.setAttribute("aria-busy", "true");
-  elements.verseList.textContent = "Loading chapter...";
+  elements.verseList.textContent = "Finding your place…";
 
   try {
     await scripture.loadChapter(book, chapter);
@@ -123,7 +123,7 @@ async function openChapter(book, chapter, requestedRange = null, { updateHistory
     }
     console.error(error);
     elements.verseList.removeAttribute("aria-busy");
-    elements.verseList.textContent = "The chapter could not be loaded. Please try again.";
+    elements.verseList.textContent = "We couldn’t open this book. Please check your network connection.";
     return;
   }
 
@@ -380,7 +380,7 @@ async function search(query, requestId) {
 
   const loading = document.createElement("div");
   loading.className = "search-summary";
-  loading.textContent = "Searching scripture...";
+  loading.textContent = "Looking through the verses…";
   elements.searchResults.append(loading);
 
   let matches;
@@ -396,7 +396,7 @@ async function search(query, requestId) {
     elements.searchResults.replaceChildren();
     const message = document.createElement("div");
     message.className = "search-empty";
-    message.textContent = "Scripture could not be loaded. Please try again.";
+    message.textContent = "The verses aren’t available just now. Please check your network connection.";
     elements.searchResults.append(message);
     return;
   }
@@ -404,7 +404,7 @@ async function search(query, requestId) {
   if (matches.length === 0) {
     const empty = document.createElement("div");
     empty.className = "search-empty";
-    empty.textContent = "No verses found. Try another word or phrase.";
+    empty.textContent = "No matching verses found. Try another word or reference.";
     elements.searchResults.append(empty);
     return;
   }
@@ -477,7 +477,7 @@ function bindEvents() {
     elements.searchInput.setAttribute("aria-expanded", "true");
     const loading = document.createElement("div");
     loading.className = "search-summary";
-    loading.textContent = "Searching scripture...";
+    loading.textContent = "Looking through the verses…";
     elements.searchResults.append(loading);
     state.searchTimer = setTimeout(() => void search(elements.searchInput.value, requestId), 120);
   });

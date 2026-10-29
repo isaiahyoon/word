@@ -1163,6 +1163,10 @@ a:focus-visible {
 }
 .verse-list {
   padding: 0 0 9px;
+  color: var(--muted);
+  font-family: var(--serif);
+  font-size: var(--type-reading);
+  line-height: var(--line-reading);
 }
 .verse {
   position: relative;
