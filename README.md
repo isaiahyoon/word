@@ -43,15 +43,19 @@ node tools/dev-server.mjs
 ```
 
 Then open [http://localhost:8000](http://localhost:8000).
-When deploying, configure the host to internally serve `index.html` for `/b/*` paths while keeping the requested URL.
+If port 8000 is occupied, choose another port with `PORT=8001 node tools/dev-server.mjs`.
+When deploying, configure the host to internally serve `index.html` for valid `/b/*` scripture routes while keeping the requested URL. Unknown paths should serve `404.html` with a 404 status.
 
-Scripture links use book slugs and optional chapter and verse-range segments. Omitting the chapter or verses opens and highlights verse 1 by default:
+Scripture links use short book slugs and optional chapter and verse-range segments. Omitting the chapter opens chapter 1; omitting the verse opens and highlights verse 1:
 
 ```text
 /b/john
 /b/john/c/3
+/b/john/c/3/v/16
 /b/john/c/3/v/16-18
 ```
+
+Valid verse links scroll to the requested verses and highlight them briefly. Invalid books, chapters, or verse ranges open the 404 page. **Return to last place** restores the latest valid reading location, including across tabs; **Open the reader** returns home.
 
 ## Scripture data
 
@@ -63,7 +67,7 @@ node tools/build-scripture-data.mjs
 
 ## Tests
 
-Run the route, scripture-store, and development-server tests with Node's built-in test runner:
+Run the 18 route, scripture-store, source-data parity, and development-server tests with Node's built-in test runner:
 
 ```sh
 node --test tests/*.test.mjs
@@ -71,7 +75,7 @@ node --test tests/*.test.mjs
 
 ## Customize the palette
 
-Edit the CSS custom properties at the top of `styles.css` to change the shared theme colors. The base pastels are `--blue`, `--lavender`, `--yellow`, `--pink`, and `--green`; the chapter number's higher-contrast gradient stops are `--chapter-blue`, `--chapter-lavender`, `--chapter-pink`, and `--chapter-green`.
+Edit the shared typography tokens in `typography.css` and the color custom properties at the top of `styles.css`. The app and 404 page share the Gelasio display/reading face and DM Sans interface face. The base pastels are `--blue`, `--lavender`, `--yellow`, `--pink`, and `--green`; the chapter number's higher-contrast gradient stops are `--chapter-blue`, `--chapter-lavender`, `--chapter-pink`, and `--chapter-green`.
 
 ## License
 
@@ -83,16 +87,6 @@ This project is jointly licensed under the terms of both of the following licens
 By using, copying, modifying, or distributing this software, you agree to comply with the terms, conditions, and restrictions of **both** licenses simultaneously.
 
 Please review the full text in the linked license file included in this repository for complete compliance details.
-
-## Demo
-
-![The Word application demo](assets/demo.gif)
-
-The demo shows a pointer searching `John 3:16`, opening the shortcut guide, navigating with arrow keys and the chapter picker, switching books with a soft transition, and manually scrolling to the highlighted verse without an automatic jump. To refresh it, replace the numbered `assets/demo-frame-*.png` captures, then run:
-
-```sh
-swift tools/build-demo.swift
-```
 
 ## Support the project
 
