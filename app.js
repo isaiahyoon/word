@@ -12,7 +12,7 @@ const BOOK_TITLES = [
 ];
 
 const CHAPTER_GRADIENT_COLORS = ["var(--chapter-blue)", "var(--chapter-lavender)", "var(--chapter-pink)", "var(--chapter-green)"];
-const state = { book: 1, chapter: 1, testament: "old", verses: [], chapters: new Map(), searchTimer: null, searchMatches: [], searchQuery: "", searchShown: 0 };
+const state = { book: 1, chapter: 1, testament: "old", verses: [], chapters: new Map(), searchTimer: null, searchMatches: [], searchQuery: "", searchShown: 0, searchActiveIndex: -1 };
 const elements = {
   bookList: document.querySelector("#book-list"),
   chapterSelect: document.querySelector("#chapter-select"),
@@ -194,13 +194,43 @@ function appendHighlighted(container, text, query) {
   container.append(mark, document.createTextNode(text.slice(index + query.length)));
 }
 
+function openSearchResult(verse) {
+  state.book = verse.book;
+  state.chapter = verse.chapter;
+  state.testament = testamentFor(verse.book);
+  state.searchActiveIndex = -1;
+  elements.searchResults.hidden = true;
+  elements.searchInput.value = "";
+  elements.searchInput.setAttribute("aria-expanded", "false");
+  elements.searchInput.removeAttribute("aria-activedescendant");
+  renderBookList();
+  renderChapter(verse.verse);
+}
+
+function setActiveSearchResult(index) {
+  const results = [...elements.searchResults.querySelectorAll(".search-result")];
+  if (results.length === 0) return;
+
+  state.searchActiveIndex = Math.max(0, Math.min(index, results.length - 1));
+  results.forEach((result, resultIndex) => {
+    result.setAttribute("aria-selected", String(resultIndex === state.searchActiveIndex));
+  });
+  const activeResult = results[state.searchActiveIndex];
+  elements.searchInput.setAttribute("aria-activedescendant", activeResult.id);
+  activeResult.scrollIntoView({ block: "nearest" });
+}
+
 function appendSearchResults() {
   const batch = state.searchMatches.slice(state.searchShown, state.searchShown + 12);
-  for (const verse of batch) {
+  for (const [batchIndex, verse] of batch.entries()) {
+    const resultIndex = state.searchShown + batchIndex;
     const button = document.createElement("button");
     button.type = "button";
     button.className = "search-result";
+    button.id = `search-result-${resultIndex}`;
+    button.tabIndex = -1;
     button.setAttribute("role", "option");
+    button.setAttribute("aria-selected", String(resultIndex === state.searchActiveIndex));
     const reference = document.createElement("span");
     reference.className = "result-reference";
     reference.textContent = `${bookName(verse.book)} ${verse.chapter}:${verse.verse}`;
@@ -208,15 +238,7 @@ function appendSearchResults() {
     text.className = "result-text";
     appendHighlighted(text, verse.text, state.searchQuery);
     button.append(reference, text);
-    button.addEventListener("click", () => {
-      state.book = verse.book;
-      state.chapter = verse.chapter;
-      state.testament = testamentFor(verse.book);
-      elements.searchResults.hidden = true;
-      elements.searchInput.value = "";
-      renderBookList();
-      renderChapter(verse.verse);
-    });
+    button.addEventListener("click", () => openSearchResult(verse));
     elements.searchResults.append(button);
   }
   state.searchShown += batch.length;
@@ -254,17 +276,21 @@ function findReferenceMatches(query) {
 function search(query) {
   const trimmed = query.trim();
   elements.searchResults.replaceChildren();
+  state.searchActiveIndex = -1;
+  elements.searchInput.removeAttribute("aria-activedescendant");
   if (trimmed.length < 2) {
     state.searchMatches = [];
     state.searchQuery = "";
     state.searchShown = 0;
     elements.searchResults.hidden = true;
+    elements.searchInput.setAttribute("aria-expanded", "false");
     return;
   }
   const matches = findReferenceMatches(trimmed) ?? state.verses.filter((verse) =>
     verse.text.toLowerCase().includes(trimmed.toLowerCase())
   );
   elements.searchResults.hidden = false;
+  elements.searchInput.setAttribute("aria-expanded", "true");
   state.searchMatches = matches;
   state.searchQuery = trimmed;
   state.searchShown = 0;
@@ -308,13 +334,48 @@ function bindEvents() {
   document.querySelector("#bottom-next").addEventListener("click", () => navigate(1));
   elements.searchInput.addEventListener("input", () => {
     clearTimeout(state.searchTimer);
+    state.searchActiveIndex = -1;
+    elements.searchInput.removeAttribute("aria-activedescendant");
     state.searchTimer = setTimeout(() => search(elements.searchInput.value), 120);
+  });
+  elements.searchInput.addEventListener("keydown", (event) => {
+    if (elements.searchResults.hidden) return;
+
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      const results = elements.searchResults.querySelectorAll(".search-result");
+      if (results.length === 0) return;
+
+      event.preventDefault();
+      const direction = event.key === "ArrowDown" ? 1 : -1;
+      let nextIndex = state.searchActiveIndex < 0
+        ? (direction > 0 ? 0 : results.length - 1)
+        : state.searchActiveIndex + direction;
+
+      if (direction > 0 && nextIndex >= results.length && state.searchShown < state.searchMatches.length) {
+        elements.searchResults.querySelector(".search-more")?.remove();
+        appendSearchResults();
+      }
+
+      if (nextIndex < elements.searchResults.querySelectorAll(".search-result").length) {
+        setActiveSearchResult(nextIndex);
+      }
+      return;
+    }
+
+    if (event.key === "Enter" && state.searchActiveIndex >= 0) {
+      event.preventDefault();
+      elements.searchResults.querySelectorAll(".search-result")[state.searchActiveIndex]?.click();
+    }
   });
   elements.searchInput.addEventListener("focus", () => {
     if (elements.searchInput.value.trim().length >= 2) search(elements.searchInput.value);
   });
   document.addEventListener("click", (event) => {
-    if (!event.target.closest(".search-wrap")) elements.searchResults.hidden = true;
+    if (!event.target.closest(".search-wrap")) {
+      elements.searchResults.hidden = true;
+      elements.searchInput.setAttribute("aria-expanded", "false");
+      elements.searchInput.removeAttribute("aria-activedescendant");
+    }
   });
   bindKeyboardShortcuts({
     dialog: document.querySelector("#shortcuts-dialog"),
@@ -327,6 +388,8 @@ function bindEvents() {
     onEscape: () => {
       chapterPicker.close(true);
       elements.searchResults.hidden = true;
+      elements.searchInput.setAttribute("aria-expanded", "false");
+      elements.searchInput.removeAttribute("aria-activedescendant");
       closeSidebar();
     }
   });
