@@ -16,6 +16,10 @@ export function createChapterPicker({ root, trigger, value, popover, heading, co
   }
 
   function open(chapter = Number(value.textContent)) {
+    popover.style.setProperty(
+      "--chapter-popover-top",
+      `${trigger.getBoundingClientRect().bottom + 9}px`
+    );
     popover.hidden = false;
     trigger.setAttribute("aria-expanded", "true");
     focusOption(chapter);

@@ -1077,6 +1077,16 @@ a:focus-visible {
 .chapter-popover[hidden] {
   display: none;
 }
+@media (max-width: 640px) {
+  .chapter-popover {
+    position: fixed;
+    top: var(--chapter-popover-top);
+    right: auto;
+    left: 50%;
+    translate: -50% 0;
+    transform-origin: top center;
+  }
+}
 .chapter-menu-heading {
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr) auto;
@@ -1290,6 +1300,8 @@ a:focus-visible {
   font-family: var(--serif);
   font-size: var(--type-reading);
   line-height: var(--line-reading);
+  cursor: pointer;
+  text-decoration: none;
   transition: background 0.45s;
   scroll-margin-top: 28px;
 }
