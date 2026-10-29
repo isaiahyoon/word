@@ -624,20 +624,6 @@ a:focus-visible {
 .search-result[aria-selected="true"]:focus-visible {
   background: var(--pink);
 }
-.search-more {
-  width: 100%;
-  padding: 11px 9px;
-  border: 0;
-  border-top: 1px solid #eeece6;
-  background: transparent;
-  color: #628694;
-  font-size: var(--type-control-small);
-  font-weight: var(--weight-semibold);
-  cursor: pointer;
-}
-.search-more:hover {
-  background: #f1f5f2;
-}
 .result-reference {
   display: block;
   margin-bottom: 4px;

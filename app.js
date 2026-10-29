@@ -27,6 +27,7 @@ const elements = {
   verseList: document.querySelector("#verse-list"),
   quietWelcome: document.querySelector("#quiet-welcome"),
   searchInput: document.querySelector("#search-input"),
+  searchWrap: document.querySelector(".search-wrap"),
   searchResults: document.querySelector("#search-results"),
   mobilePreviousChapter: document.querySelector("#mobile-previous-chapter"),
   mobileNextChapter: document.querySelector("#mobile-next-chapter"),
@@ -395,17 +396,6 @@ function appendSearchResults() {
   state.searchShown += batch.length;
   const summary = elements.searchResults.querySelector(".search-summary");
   summary.textContent = `${state.searchMatches.length.toLocaleString()} ${state.searchMatches.length === 1 ? "verse" : "verses"} found · Showing ${state.searchShown}`;
-  if (state.searchShown < state.searchMatches.length) {
-    const more = document.createElement("button");
-    more.type = "button";
-    more.className = "search-more";
-    more.textContent = "Show more results";
-    more.addEventListener("click", () => {
-      more.remove();
-      appendSearchResults();
-    });
-    elements.searchResults.append(more);
-  }
 }
 
 async function search(query, requestId) {
@@ -493,6 +483,13 @@ function bindMobileChapterButtons() {
 }
 
 function bindEvents() {
+  elements.searchResults.addEventListener("scroll", () => {
+    if (state.searchShown >= state.searchMatches.length) return;
+    const distanceToBottom = elements.searchResults.scrollHeight -
+      elements.searchResults.scrollTop -
+      elements.searchResults.clientHeight;
+    if (distanceToBottom <= 48) appendSearchResults();
+  });
   elements.verseList.addEventListener("click", (event) => {
     const verseLink = event.target.closest("a.verse");
     if (!verseLink || !elements.verseList.contains(verseLink)) return;
@@ -570,7 +567,7 @@ function bindEvents() {
     }
   });
   document.addEventListener("click", (event) => {
-    if (!event.target.closest(".search-wrap")) {
+    if (!event.composedPath().includes(elements.searchWrap)) {
       state.searchRequestId += 1;
       elements.searchResults.hidden = true;
       elements.searchInput.setAttribute("aria-expanded", "false");

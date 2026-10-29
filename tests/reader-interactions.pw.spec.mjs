@@ -59,6 +59,68 @@ test("uses the picker root to distinguish inside and outside clicks", async ({ p
   await expect(page.locator(".chapter-popover")).toBeHidden();
 });
 
+test("loads another search batch when the results panel scrolls to the bottom", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#verse-1").waitFor();
+  const searchInput = page.locator("#search-input");
+  const results = page.locator(".search-result");
+  const searchResults = page.locator("#search-results");
+
+  await searchInput.fill("john");
+  await expect(results).toHaveCount(12);
+
+  await searchResults.evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+
+  await expect(page.locator("#search-results")).toBeVisible();
+  await expect(searchInput).toHaveAttribute("aria-expanded", "true");
+  await expect(results).toHaveCount(24);
+
+  await searchResults.evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+  await expect(results).toHaveCount(36);
+  await expect(page.locator(".search-summary")).toContainText("130 verses found · Showing 36");
+
+  await searchInput.fill("John 3:16");
+  await expect(results).toHaveCount(1);
+});
+
+test("loads another search batch from a mobile touch scroll", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await page.locator("#verse-1").waitFor();
+  await page.locator("#search-input").fill("john");
+  await expect(page.locator(".search-result")).toHaveCount(12);
+
+  const searchResults = page.locator("#search-results");
+  const bounds = await searchResults.boundingBox();
+  expect(bounds).not.toBeNull();
+
+  const session = await page.context().newCDPSession(page);
+  await session.send("Emulation.setTouchEmulationEnabled", {
+    enabled: true,
+    maxTouchPoints: 1,
+  });
+  const x = Math.round(bounds.x + bounds.width / 2);
+  await session.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: [{ id: 1, x, y: Math.round(bounds.y + bounds.height - 24) }],
+  });
+  await session.send("Input.dispatchTouchEvent", {
+    type: "touchMove",
+    touchPoints: [{ id: 1, x, y: Math.round(bounds.y + 24) }],
+  });
+  await session.send("Input.dispatchTouchEvent", {
+    type: "touchEnd",
+    touchPoints: [],
+  });
+  await session.detach();
+
+  await expect(page.locator(".search-result")).toHaveCount(24);
+});
+
 for (const viewport of [
   { width: 390, height: 844, label: "mobile" },
   { width: 1280, height: 900, label: "desktop" },
