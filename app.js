@@ -28,6 +28,8 @@ const elements = {
   searchResults: document.querySelector("#search-results"),
   mobilePreviousChapter: document.querySelector("#mobile-previous-chapter"),
   mobileNextChapter: document.querySelector("#mobile-next-chapter"),
+  mobilePreviousTitle: document.querySelector("#mobile-previous-title"),
+  mobileNextTitle: document.querySelector("#mobile-next-title"),
   menuToggle: document.querySelector("#menu-toggle"),
   sidebar: document.querySelector("#sidebar"),
   sidebarScrim: document.querySelector("#sidebar-scrim")
@@ -96,16 +98,14 @@ async function initialize() {
     heading: elements.chapterOptionsTitle,
     count: elements.chapterOptionsCount,
     list: elements.chapterOptionsList,
-    onSelect: (chapter) => {
-      void openChapter(state.book, chapter);
-    }
+    onSelect: (chapter) => void openChapter(state.book, chapter, null, { direction: Math.sign(chapter - state.chapter) })
   });
   visualEffects.bind();
   bindEvents();
   await restoreLocationFromPath();
 }
 
-async function openChapter(book, chapter, requestedRange = null, { updateHistory = true } = {}) {
+async function openChapter(book, chapter, requestedRange = null, { updateHistory = true, direction = 0 } = {}) {
   const requestId = ++state.chapterRequestId;
   state.book = book;
   state.chapter = chapter;
@@ -138,6 +138,7 @@ async function openChapter(book, chapter, requestedRange = null, { updateHistory
   }
   elements.verseList.removeAttribute("aria-busy");
   renderChapter(range);
+  animateChapterTurn(direction, requestId);
   if (range) {
     requestAnimationFrame(() => {
       if (requestId !== state.chapterRequestId) return;
@@ -257,13 +258,38 @@ function adjacentChapter(offset) {
 function updateChapterLinks() {
   const previous = adjacentChapter(-1);
   const next = adjacentChapter(1);
-  document.querySelector("#previous-title").textContent = `${bookName(previous.book)} ${previous.chapter}`;
-  document.querySelector("#next-title").textContent = `${bookName(next.book)} ${next.chapter}`;
+  const previousTitle = `${bookName(previous.book)} ${previous.chapter}`;
+  const nextTitle = `${bookName(next.book)} ${next.chapter}`;
+  document.querySelector("#previous-title").textContent = previousTitle;
+  document.querySelector("#next-title").textContent = nextTitle;
+  document.querySelector("#previous-chapter").title = `Previous chapter: ${previousTitle}`;
+  document.querySelector("#previous-chapter").setAttribute("aria-label", `Previous chapter: ${previousTitle}`);
+  document.querySelector("#next-chapter").title = `Next chapter: ${nextTitle}`;
+  document.querySelector("#next-chapter").setAttribute("aria-label", `Next chapter: ${nextTitle}`);
+  elements.mobilePreviousTitle.textContent = previousTitle;
+  elements.mobileNextTitle.textContent = nextTitle;
+  elements.mobilePreviousChapter.setAttribute("aria-label", `Previous chapter: ${previousTitle}`);
+  elements.mobileNextChapter.setAttribute("aria-label", `Next chapter: ${nextTitle}`);
 }
 
 function navigate(offset) {
   const target = adjacentChapter(offset);
-  void openChapter(target.book, target.chapter);
+  void openChapter(target.book, target.chapter, null, { direction: offset });
+}
+
+function animateChapterTurn(direction, requestId) {
+  if (direction === 0 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  requestAnimationFrame(() => {
+    if (requestId !== state.chapterRequestId) return;
+    document.querySelector("#reader").animate(
+      [
+        { opacity: .82, transform: `translateX(${direction * 12}px) scale(.996)` },
+        { opacity: 1, transform: "translateX(0)" }
+      ],
+      { duration: 340, easing: "cubic-bezier(.22, 1, .36, 1)" }
+    );
+  });
 }
 
 function appendHighlighted(container, text, query) {

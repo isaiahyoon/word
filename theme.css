@@ -1,0 +1,27 @@
+:root {
+  color-scheme: light;
+
+  --ink: #292b2a;
+  --muted: #85857f;
+  --paper: #fbfaf6;
+  --canvas: #f6f4f9;
+  --line: #e9e6de;
+
+  --blue: #defefc;
+  --blue-strong: var(--blue);
+  --lavender: #dcd7f7;
+  --yellow: #fffecf;
+  --pink: #fad4e0;
+  --green: #d6f2b9;
+  --coral: #c85f5f;
+
+  --chapter-blue: #72c6d3;
+  --chapter-lavender: #dcd7f7;
+  --chapter-pink: #fad4e0;
+  --chapter-green: #d6f2b9;
+
+  --focus: #799da8;
+  --focus-border: #9ab8c0;
+  --focus-ring: rgba(141, 180, 196, 0.14);
+  --grain: rgba(99, 95, 78, 0.075);
+}

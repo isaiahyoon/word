@@ -20,6 +20,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Gelasio:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="theme.css" />
     <link rel="stylesheet" href="typography.css" />
     <link rel="stylesheet" href="styles.css" />
     <script src="app.js" type="module"></script>
@@ -71,7 +72,7 @@
           <div class="reader-topline">
             <div class="breadcrumbs"><span id="testament-name">OLD TESTAMENT</span><span class="crumb-slash">/</span><span id="book-crumb">GENESIS</span></div>
             <div class="chapter-navigation">
-              <button class="chapter-arrow" id="previous-chapter" type="button" aria-label="Previous chapter" title="Previous chapter">←</button>
+              <button class="chapter-arrow" id="previous-chapter" type="button" aria-label="Previous chapter" title="Previous chapter"><span aria-hidden="true">←</span></button>
               <div class="chapter-picker" id="chapter-picker">
                 <button class="chapter-select" id="chapter-select" type="button" aria-label="Choose chapter" aria-haspopup="listbox" aria-expanded="false" aria-controls="chapter-options-list">
                   <span id="chapter-select-value">1</span>
@@ -91,7 +92,7 @@
                 </div>
               </div>
               <span class="chapter-label">CHAPTER</span>
-              <button class="chapter-arrow" id="next-chapter" type="button" aria-label="Next chapter" title="Next chapter">→</button>
+              <button class="chapter-arrow" id="next-chapter" type="button" aria-label="Next chapter" title="Next chapter"><span aria-hidden="true">→</span></button>
             </div>
           </div>
 
@@ -121,9 +122,11 @@
     </div>
     <nav class="mobile-chapter-cues" id="mobile-chapter-cues" aria-label="Chapter navigation">
       <button class="mobile-chapter-button mobile-chapter-button--previous" id="mobile-previous-chapter" type="button" aria-label="Previous chapter" aria-controls="verse-list">
+        <span class="mobile-chapter-destination" id="mobile-previous-title" aria-hidden="true"></span>
         <span class="mobile-chapter-grip" aria-hidden="true"><i></i><i></i><i></i><b>‹</b></span>
       </button>
       <button class="mobile-chapter-button mobile-chapter-button--next" id="mobile-next-chapter" type="button" aria-label="Next chapter" aria-controls="verse-list">
+        <span class="mobile-chapter-destination" id="mobile-next-title" aria-hidden="true"></span>
         <span class="mobile-chapter-grip" aria-hidden="true"><i></i><i></i><i></i><b>›</b></span>
       </button>
     </nav>
