@@ -78,7 +78,7 @@ export function createChapterPicker({ root, trigger, value, popover, heading, co
     options[targetIndex]?.focus();
   });
   document.addEventListener("click", (event) => {
-    if (!event.target.closest("#chapter-picker")) close();
+    if (!root.contains(event.target)) close();
   });
 
   return { close, isOpen: () => !popover.hidden, render };

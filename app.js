@@ -231,12 +231,8 @@ function renderChapter(focusRange = null) {
     const isFocused = focusRange && verse.verse >= focusRange.start && verse.verse <= focusRange.end;
     row.className = `verse${isFocused ? " is-focused" : ""}`;
     row.id = `verse-${verse.verse}`;
+    row.dataset.verse = verse.verse;
     row.href = scriptureRoutes.buildPath(state.book, state.chapter, { start: verse.verse, end: verse.verse });
-    row.addEventListener("click", (event) => {
-      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-      event.preventDefault();
-      void openChapter(state.book, state.chapter, verse.verse);
-    });
     const number = document.createElement("span");
     number.className = "verse-number";
     number.textContent = verse.verse;
@@ -497,6 +493,14 @@ function bindMobileChapterButtons() {
 }
 
 function bindEvents() {
+  elements.verseList.addEventListener("click", (event) => {
+    const verseLink = event.target.closest("a.verse");
+    if (!verseLink || !elements.verseList.contains(verseLink)) return;
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+    event.preventDefault();
+    void openChapter(state.book, state.chapter, Number(verseLink.dataset.verse));
+  });
   elements.quietViewToggle.addEventListener("click", () => {
     toggleQuietReadingMode();
   });

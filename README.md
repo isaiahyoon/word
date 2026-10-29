@@ -67,12 +67,17 @@ node tools/build-scripture-data.mjs
 
 ## Tests
 
-Run the 34 route, keyboard-shortcut, scripture-store, source-data parity, and
-development-server tests with Node's built-in test runner:
+Run the route, keyboard-shortcut, scripture-store, source-data parity, and
+development-server tests with Node's built-in test runner, then install
+Chromium once and run the browser interaction tests:
 
 ```sh
-node --test tests/*.test.mjs
+npm test
+npx playwright install chromium
+npm run test:ui
 ```
+
+Run both test suites together with `npm run test:all`.
 
 ## Customize the palette
 
