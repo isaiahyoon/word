@@ -1,0 +1,29 @@
+:root {
+  --serif: "Gelasio", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --sans: "DM Sans", "Avenir Next", sans-serif;
+
+  --type-brand: 23px;
+  --type-display: clamp(42px, 5vw, 58px);
+  --type-error-title: 50px;
+  --type-section-title: 27px;
+  --type-reading: 18px;
+  --type-copy: 16px;
+  --type-small-copy: 14px;
+  --type-control: 13px;
+  --type-compact: 12px;
+  --type-control-small: 11px;
+  --type-caption: 10px;
+  --type-label: 9px;
+  --type-micro: 8px;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --line-display: 1.05;
+  --line-heading: 1.15;
+  --line-copy: 1.65;
+  --line-reading: 1.78;
+  --tracking-label: 1.1px;
+}

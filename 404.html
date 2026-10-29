@@ -5,9 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#f6f4f9" />
     <title>Page Not Found — The Word</title>
+    <script>
+      (() => {
+        const currentPath = window.location.pathname;
+        const routeIndex = currentPath.indexOf("/b/");
+        const appRoot = routeIndex < 0
+          ? currentPath.slice(0, currentPath.lastIndexOf("/") + 1)
+          : currentPath.slice(0, routeIndex + 1);
+        const baseElement = document.createElement("base");
+        baseElement.href = appRoot || "/";
+        document.head.append(baseElement);
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Gelasio:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="typography.css" />
     <style>
       :root {
         color-scheme: light;
@@ -21,8 +34,6 @@
         --yellow: #fffecf;
         --green: #d6f2b9;
         --coral: #c85f5f;
-        --serif: "Gelasio", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
-        --sans: "DM Sans", "Avenir Next", sans-serif;
       }
 
       * { box-sizing: border-box; }
@@ -35,6 +46,7 @@
         background-image: radial-gradient(rgba(99, 95, 78, .075) .65px, transparent .65px);
         background-size: 7px 7px;
         font-family: var(--sans);
+        font-size: var(--type-copy);
         -webkit-font-smoothing: antialiased;
       }
       button, a { font: inherit; }
@@ -49,8 +61,8 @@
       .brand-mark i:nth-child(3) { border-radius: 3px 3px 3px 8px; background: var(--pink); }
       .brand-mark i:nth-child(4) { border-radius: 3px 3px 8px; background: var(--green); }
       .brand-name { display: flex; flex-direction: column; gap: 4px; }
-      .brand-name strong { font-family: var(--serif); font-size: 22px; font-weight: 500; line-height: 1; }
-      .brand-name small, .masthead-note, .eyebrow, .art-label, .page-footer { font-size: 9px; font-weight: 700; letter-spacing: 1.1px; }
+      .brand-name strong { font-family: var(--serif); font-size: var(--type-brand); font-weight: var(--weight-medium); line-height: 1; }
+      .brand-name small, .masthead-note, .eyebrow, .art-label, .page-footer { font-size: var(--type-label); font-weight: var(--weight-bold); letter-spacing: var(--tracking-label); }
       .brand-name small { color: #777972; }
       .masthead-note { display: flex; align-items: center; gap: 9px; color: #777972; }
       .masthead-note span { width: 7px; height: 7px; border-radius: 50%; background: var(--coral); box-shadow: 0 0 0 3px rgba(200, 95, 95, .12); }
@@ -61,19 +73,19 @@
       .art-label { margin: 0 0 10px 8px; color: #777972; }
       .error-number { display: block; width: fit-content; color: var(--coral); font-family: var(--serif); font-size: clamp(156px, 19vw, 248px); font-weight: 400; line-height: .8; letter-spacing: 0; text-shadow: 5px 6px 0 var(--pink); animation: arrive .65s cubic-bezier(.2, .8, .2, 1) both; }
       .art-rule { width: 145px; height: 10px; margin: 25px 0 0 12px; background: var(--yellow); box-shadow: 12px 0 0 var(--blue); transform: rotate(-2deg); }
-      .art-caption { max-width: 250px; margin: 21px 0 0 12px; color: #777972; font-family: var(--serif); font-size: 14px; font-style: italic; line-height: 1.55; }
+      .art-caption { max-width: 250px; margin: 21px 0 0 12px; color: #777972; font-family: var(--serif); font-size: var(--type-small-copy); font-style: italic; line-height: var(--line-copy); }
       .message { max-width: 520px; padding: 18px 0; animation: arrive .65s .08s cubic-bezier(.2, .8, .2, 1) both; }
       .eyebrow { display: flex; align-items: center; gap: 9px; margin: 0 0 20px; color: #777972; }
       .eyebrow b { color: var(--coral); }
       .eyebrow i { width: 4px; height: 4px; border-radius: 50%; background: var(--blue); box-shadow: 0 0 0 1px #78c4c6; }
-      h1 { max-width: 500px; margin: 0; font-family: var(--serif); font-size: 50px; font-weight: 400; line-height: 1.07; }
-      .description { max-width: 390px; margin: 20px 0 0; color: var(--muted); font-size: 15px; line-height: 1.75; }
+      h1 { max-width: 500px; margin: 0; font-family: var(--serif); font-size: var(--type-error-title); font-weight: var(--weight-regular); line-height: var(--line-display); }
+      .description { max-width: 390px; margin: 20px 0 0; color: var(--muted); font-size: var(--type-copy); line-height: var(--line-copy); }
       .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 29px; }
       .back-button, .reader-link { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 0 17px; border-radius: 4px; text-decoration: none; cursor: pointer; transition: transform .16s ease, box-shadow .16s ease, background .16s ease; }
-      .back-button { border: 1px solid #b65355; background: var(--coral); color: white; box-shadow: 0 3px 0 #9e494a; font-weight: 600; }
+      .back-button { border: 1px solid #b65355; background: var(--coral); color: white; box-shadow: 0 3px 0 #9e494a; font-weight: var(--weight-semibold); }
       .back-button:hover { background: #b65355; box-shadow: 0 4px 0 #9e494a; transform: translateY(-1px); }
       .back-button span { font-size: 18px; line-height: 1; }
-      .reader-link { border: 1px solid var(--line); background: rgba(251, 250, 246, .78); color: #4a4b45; font-size: 13px; font-weight: 600; }
+      .reader-link { border: 1px solid var(--line); background: rgba(251, 250, 246, .78); color: #4a4b45; font-size: var(--type-control); font-weight: var(--weight-semibold); }
       .reader-link:hover { background: var(--paper); transform: translateY(-1px); }
       .return-note { display: flex; align-items: center; gap: 8px; margin: 20px 0 0; color: #85857f; font-size: 11px; }
       .return-note span { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 1px #8eaa6d; }
@@ -143,21 +155,30 @@
     <script>
       const readerLink = document.querySelector("#reader-link");
       const brandLink = document.querySelector("#brand-link");
-      const currentPath = window.location.pathname;
-      const routeIndex = currentPath.indexOf("/b/");
-      const appRoot = routeIndex < 0
-        ? currentPath.slice(0, currentPath.lastIndexOf("/") + 1)
-        : currentPath.slice(0, routeIndex + 1);
+      const appRoot = new URL(document.baseURI).pathname;
       const homeUrl = new URL(appRoot || "/", window.location.origin).href;
       const lastReaderPathKey = "the-word:last-reader-path";
       const readerRoot = appRoot.endsWith("/") ? appRoot : `${appRoot}/`;
       let returnUrl = homeUrl;
+      const returnCandidates = [new URLSearchParams(window.location.search).get("return")];
       try {
-        const lastReaderPath = window.sessionStorage.getItem(lastReaderPathKey);
-        if (lastReaderPath?.startsWith(`${readerRoot}b/`)) {
-          returnUrl = new URL(lastReaderPath, window.location.origin).href;
-        }
+        returnCandidates.push(window.localStorage.getItem(lastReaderPathKey));
       } catch {}
+      for (const candidate of returnCandidates) {
+        if (!candidate) continue;
+        try {
+          const candidateUrl = new URL(candidate, window.location.origin);
+          if (
+            candidateUrl.origin === window.location.origin &&
+            candidateUrl.pathname.startsWith(`${readerRoot}b/`) &&
+            !candidateUrl.search &&
+            !candidateUrl.hash
+          ) {
+            returnUrl = candidateUrl.href;
+            break;
+          }
+        } catch {}
+      }
       readerLink.href = homeUrl;
       brandLink.href = homeUrl;
       document.querySelector("#go-back").addEventListener("click", () => window.location.assign(returnUrl));

@@ -48,6 +48,26 @@ describe("development server", () => {
     assert.match(await response.text(), /id="reader-link"/);
   });
 
+  it("serves the shared typography sheet to the reader and error page", async () => {
+    const [readerResponse, errorResponse, typographyResponse] = await Promise.all([
+      fetch(origin),
+      fetch(`${origin}/404.html`),
+      fetch(`${origin}/typography.css`)
+    ]);
+    const [readerHtml, errorHtml, typographyCss] = await Promise.all([
+      readerResponse.text(),
+      errorResponse.text(),
+      typographyResponse.text()
+    ]);
+
+    assert.match(readerHtml, /href="typography\.css"/);
+    assert.match(errorHtml, /href="typography\.css"/);
+    assert.equal(typographyResponse.status, 200);
+    assert.match(typographyCss, /--type-reading:\s*18px/);
+    assert.match(typographyCss, /--serif:/);
+    assert.match(typographyCss, /--sans:/);
+  });
+
   it("rejects unsupported methods", async () => {
     const response = await fetch(origin, { method: "POST" });
 

@@ -123,4 +123,22 @@ describe("scripture store", () => {
     await assert.rejects(store.loadChapter(43, 4), RangeError);
     assert.equal(store.chapterCount(43), 3);
   });
+
+  it("retries a book after its first fetch fails", async () => {
+    const mock = createMockFetch();
+    let bookAttempts = 0;
+    const store = createScriptureStore({
+      fetchImpl: async (url) => {
+        if (url.endsWith("43_john.json") && ++bookAttempts === 1) return { ok: false };
+        return mock.fetchImpl(url);
+      }
+    });
+    await store.initialize();
+
+    await assert.rejects(store.loadChapter(43, 1), /Could not load John/);
+    const chapter = await store.loadChapter(43, 1);
+
+    assert.equal(bookAttempts, 2);
+    assert.equal(chapter[0].text, "In the beginning was the Word");
+  });
 });

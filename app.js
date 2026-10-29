@@ -44,13 +44,18 @@ const bookName = (book) => BOOKS[book - 1];
 
 function rememberReaderPath(path) {
   try {
-    window.sessionStorage.setItem(LAST_READER_PATH_KEY, path);
+    window.localStorage.setItem(LAST_READER_PATH_KEY, path);
   } catch {}
 }
 
 function showInvalidScripturePath() {
   state.chapterRequestId += 1;
-  window.location.replace(new URL("404.html", document.baseURI).href);
+  const errorUrl = new URL("404.html", document.baseURI);
+  try {
+    const lastReaderPath = window.localStorage.getItem(LAST_READER_PATH_KEY);
+    if (lastReaderPath) errorUrl.searchParams.set("return", lastReaderPath);
+  } catch {}
+  window.location.replace(errorUrl.href);
 }
 
 async function restoreLocationFromPath() {
