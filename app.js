@@ -23,6 +23,7 @@ const elements = {
   chapterOptionsCount: document.querySelector("#chapter-options-count"),
   chapterOptionsList: document.querySelector("#chapter-options-list"),
   verseList: document.querySelector("#verse-list"),
+  quietWelcome: document.querySelector("#quiet-welcome"),
   searchInput: document.querySelector("#search-input"),
   searchResults: document.querySelector("#search-results"),
   mobilePreviousChapter: document.querySelector("#mobile-previous-chapter"),
@@ -55,6 +56,7 @@ async function restoreLocationFromPath() {
     return;
   }
 
+  elements.quietWelcome.hidden = !route.home;
   const reference = route.home ? { book: 1, chapter: 1, range: null } : route;
   await openChapter(reference.book, reference.chapter, reference.range, { updateHistory: false });
 }
@@ -89,6 +91,7 @@ async function initialize() {
 }
 
 async function openChapter(book, chapter, requestedRange = null, { updateHistory = true, direction = 0 } = {}) {
+  if (updateHistory) elements.quietWelcome.hidden = true;
   const requestId = ++state.chapterRequestId;
   state.book = book;
   state.chapter = chapter;
