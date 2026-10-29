@@ -1916,6 +1916,14 @@ body.is-krv-edition .verse.is-copy-selected {
   display: none;
 }
 
+@media (min-width: 901px) {
+  #bmc-wbtn,
+  #bmc-iframe {
+    right: auto !important;
+    left: 18px !important;
+  }
+}
+
 .app-shell.is-quiet-reading {
   width: 100%;
   max-width: none;
