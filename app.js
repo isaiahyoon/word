@@ -1,10 +1,6 @@
 import { bindKeyboardShortcuts } from "./keyboard-shortcuts.js";
 import { createChapterPicker } from "./chapter-picker.js";
-
-const BOOKS = [
-  "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah", "Esther", "Job", "Psalms", "Proverbs", "Ecclesiastes", "Song of Solomon", "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi",
-  "Matthew", "Mark", "Luke", "John", "Acts", "Romans", "1 Corinthians", "2 Corinthians", "Galatians", "Ephesians", "Philippians", "Colossians", "1 Thessalonians", "2 Thessalonians", "1 Timothy", "2 Timothy", "Titus", "Philemon", "Hebrews", "James", "1 Peter", "2 Peter", "1 John", "2 John", "3 John", "Jude", "Revelation"
-];
+import { BOOKS, bookFileName } from "./books.mjs";
 
 const BOOK_TITLES = [
   "The First Book of Moses", "The Second Book of Moses", "The Third Book of Moses", "The Fourth Book of Moses", "The Fifth Book of Moses", "The Book of Joshua", "The Book of Judges", "The Book of Ruth", "The First Book of Samuel", "The Second Book of Samuel", "The First Book of the Kings", "The Second Book of the Kings", "The First Book of the Chronicles", "The Second Book of the Chronicles", "The Book of Ezra", "The Book of Nehemiah", "The Book of Esther", "The Book of Job", "The Book of Psalms", "The Proverbs", "Ecclesiastes", "The Song of Solomon", "The Book of the Prophet Isaiah", "The Book of the Prophet Jeremiah", "The Lamentations of Jeremiah", "The Book of the Prophet Ezekiel", "The Book of Daniel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi",
@@ -12,7 +8,7 @@ const BOOK_TITLES = [
 ];
 
 const CHAPTER_GRADIENT_COLORS = ["var(--chapter-blue)", "var(--chapter-lavender)", "var(--chapter-pink)", "var(--chapter-green)"];
-const state = { book: 1, chapter: 1, testament: "old", verses: [], chapters: new Map(), searchTimer: null, searchMatches: [], searchQuery: "", searchShown: 0, searchActiveIndex: -1 };
+const state = { book: 1, chapter: 1, testament: "old", chapters: new Map(), bookLoads: new Map(), chapterCounts: [], chapterRequestId: 0, searchTimer: null, searchRequestId: 0, searchMatches: [], searchQuery: "", searchShown: 0, searchActiveIndex: -1 };
 const elements = {
   bookList: document.querySelector("#book-list"),
   chapterSelect: document.querySelector("#chapter-select"),
@@ -35,6 +31,39 @@ const testamentFor = (book) => book <= 39 ? "old" : "new";
 const bookName = (book) => BOOKS[book - 1];
 const chapterKey = (book, chapter) => `${book}:${chapter}`;
 
+function loadBook(book) {
+  if (state.bookLoads.has(book)) return state.bookLoads.get(book);
+
+  const fileName = state.bookFiles[book - 1] ?? bookFileName(book);
+  const request = fetch(`./scripture/books/${fileName}`)
+    .then((response) => {
+      if (!response.ok) throw new Error(`Could not load ${bookName(book)}`);
+      return response.json();
+    })
+    .then((chapters) => {
+      for (const [chapter, records] of Object.entries(chapters)) {
+        const chapterNumber = Number(chapter);
+        state.chapters.set(chapterKey(book, chapterNumber), records.map(([verse, text]) => ({
+          book,
+          chapter: chapterNumber,
+          verse,
+          text
+        })));
+      }
+    })
+    .catch((error) => {
+      state.bookLoads.delete(book);
+      throw error;
+    });
+
+  state.bookLoads.set(book, request);
+  return request;
+}
+
+async function loadAllBooks() {
+  await Promise.all(BOOKS.map((_, index) => loadBook(index + 1)));
+}
+
 function createChapterGradient() {
   const colors = [...CHAPTER_GRADIENT_COLORS];
   for (let index = colors.length - 1; index > 0; index -= 1) {
@@ -47,15 +76,19 @@ function createChapterGradient() {
 }
 
 async function initialize() {
-  const response = await fetch("./kjv.json");
-  if (!response.ok) throw new Error("Could not load kjv.json");
-  const data = await response.json();
-  state.verses = data.contents.map(({ field }) => ({ book: field[1], chapter: field[2], verse: field[3], text: field[4] }));
-  for (const verse of state.verses) {
-    const key = chapterKey(verse.book, verse.chapter);
-    if (!state.chapters.has(key)) state.chapters.set(key, []);
-    state.chapters.get(key).push(verse);
+  const response = await fetch("./scripture/index.json");
+  if (!response.ok) throw new Error("Could not load scripture index");
+  const index = await response.json();
+  if (
+    !Array.isArray(index.chapterCounts) ||
+    index.chapterCounts.length !== BOOKS.length ||
+    !Array.isArray(index.bookFiles) ||
+    index.bookFiles.length !== BOOKS.length
+  ) {
+    throw new Error("The scripture index is invalid");
   }
+  state.chapterCounts = index.chapterCounts;
+  state.bookFiles = index.bookFiles;
   renderBookList();
   chapterPicker = createChapterPicker({
     root: elements.chapterPicker,
@@ -66,12 +99,35 @@ async function initialize() {
     count: elements.chapterOptionsCount,
     list: elements.chapterOptionsList,
     onSelect: (chapter) => {
-      state.chapter = chapter;
-      renderChapter();
+      void openChapter(state.book, chapter);
     }
   });
-  renderChapter();
   bindEvents();
+  await openChapter(state.book, state.chapter);
+}
+
+async function openChapter(book, chapter, focusVerse = null) {
+  const requestId = ++state.chapterRequestId;
+  state.book = book;
+  state.chapter = chapter;
+  state.testament = testamentFor(book);
+  renderBookList();
+  elements.verseList.setAttribute("aria-busy", "true");
+  elements.verseList.textContent = "Loading chapter...";
+
+  try {
+    await loadBook(book);
+  } catch (error) {
+    if (requestId !== state.chapterRequestId) return;
+    console.error(error);
+    elements.verseList.removeAttribute("aria-busy");
+    elements.verseList.textContent = "The chapter could not be loaded. Please try again.";
+    return;
+  }
+
+  if (requestId !== state.chapterRequestId) return;
+  elements.verseList.removeAttribute("aria-busy");
+  renderChapter(focusVerse);
 }
 
 function renderBookList() {
@@ -83,24 +139,22 @@ function renderBookList() {
     button.type = "button";
     button.className = `book-row${book === state.book ? " is-current" : ""}`;
     button.setAttribute("aria-current", book === state.book ? "page" : "false");
-    const chapters = [...state.chapters.keys()].filter((key) => key.startsWith(`${book}:`)).length;
+    const chapters = state.chapterCounts[book - 1];
     button.innerHTML = `<span class="book-index">${String(book).padStart(2, "0")}</span><span class="book-name">${bookName(book)}</span><span class="book-chapters">${chapters}</span>`;
     button.addEventListener("click", () => {
       const changedBook = book !== state.book;
-      state.book = book;
-      state.chapter = 1;
       closeSidebar();
-      renderBookList();
-      renderChapter();
-      if (changedBook && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        document.querySelector("#reader").animate(
-          [
-            { opacity: 0.55, transform: "translateY(8px)" },
-            { opacity: 1, transform: "translateY(0)" }
-          ],
-          { duration: 320, easing: "cubic-bezier(.22, 1, .36, 1)" }
-        );
-      }
+      void openChapter(book, 1).then(() => {
+        if (changedBook && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          document.querySelector("#reader").animate(
+            [
+              { opacity: 0.55, transform: "translateY(8px)" },
+              { opacity: 1, transform: "translateY(0)" }
+            ],
+            { duration: 320, easing: "cubic-bezier(.22, 1, .36, 1)" }
+          );
+        }
+      });
     });
     elements.bookList.append(button);
   }
@@ -121,7 +175,7 @@ function renderChapter(focusVerse = null) {
   document.querySelector("#testament-meta").textContent = `${testament === "old" ? "Old" : "New"} Testament`;
   document.title = `${name} ${state.chapter} — The Word`;
 
-  const chapterCount = [...state.chapters.keys()].filter((key) => key.startsWith(`${state.book}:`)).length;
+  const chapterCount = state.chapterCounts[state.book - 1];
   chapterPicker.render({ bookName: name, chapterCount, activeChapter: state.chapter });
 
   elements.verseList.replaceChildren();
@@ -150,11 +204,11 @@ function renderChapter(focusVerse = null) {
 function adjacentChapter(offset) {
   let book = state.book;
   let chapter = state.chapter + offset;
-  let total = [...state.chapters.keys()].filter((key) => key.startsWith(`${book}:`)).length;
+  let total = state.chapterCounts[book - 1];
   while (chapter < 1) {
     book -= 1;
     if (book < 1) return { book: 1, chapter: 1 };
-    total = [...state.chapters.keys()].filter((key) => key.startsWith(`${book}:`)).length;
+    total = state.chapterCounts[book - 1];
     chapter = total;
   }
   while (chapter > total) {
@@ -175,11 +229,7 @@ function updateChapterLinks() {
 
 function navigate(offset) {
   const target = adjacentChapter(offset);
-  state.book = target.book;
-  state.chapter = target.chapter;
-  state.testament = testamentFor(target.book);
-  renderBookList();
-  renderChapter();
+  void openChapter(target.book, target.chapter);
 }
 
 function appendHighlighted(container, text, query) {
@@ -195,16 +245,13 @@ function appendHighlighted(container, text, query) {
 }
 
 function openSearchResult(verse) {
-  state.book = verse.book;
-  state.chapter = verse.chapter;
-  state.testament = testamentFor(verse.book);
+  state.searchRequestId += 1;
   state.searchActiveIndex = -1;
   elements.searchResults.hidden = true;
   elements.searchInput.value = "";
   elements.searchInput.setAttribute("aria-expanded", "false");
   elements.searchInput.removeAttribute("aria-activedescendant");
-  renderBookList();
-  renderChapter(verse.verse);
+  void openChapter(verse.book, verse.chapter, verse.verse);
 }
 
 function setActiveSearchResult(index) {
@@ -257,23 +304,42 @@ function appendSearchResults() {
   }
 }
 
-function findReferenceMatches(query) {
+function parseReference(query) {
   const reference = query.match(/^(.+?)\s+(\d+)(?::(\d+))?$/);
   if (!reference) return null;
 
   const book = BOOKS.findIndex((name) => name.toLowerCase() === reference[1].toLowerCase()) + 1;
   if (book === 0) return null;
 
-  const chapter = Number(reference[2]);
-  const verseNumber = reference[3] === undefined ? null : Number(reference[3]);
-  return state.verses.filter((verse) =>
-    verse.book === book &&
-    verse.chapter === chapter &&
-    (verseNumber === null || verse.verse === verseNumber)
+  return {
+    book,
+    chapter: Number(reference[2]),
+    verse: reference[3] === undefined ? null : Number(reference[3])
+  };
+}
+
+async function findReferenceMatches(query) {
+  const reference = parseReference(query);
+  if (!reference) return null;
+  if (reference.chapter < 1 || reference.chapter > state.chapterCounts[reference.book - 1]) return [];
+
+  await loadBook(reference.book);
+  return (state.chapters.get(chapterKey(reference.book, reference.chapter)) ?? []).filter((verse) =>
+    (reference.verse === null || verse.verse === reference.verse)
   );
 }
 
-function search(query) {
+function getAllVerses() {
+  const verses = [];
+  for (let book = 1; book <= BOOKS.length; book += 1) {
+    for (let chapter = 1; chapter <= state.chapterCounts[book - 1]; chapter += 1) {
+      verses.push(...(state.chapters.get(chapterKey(book, chapter)) ?? []));
+    }
+  }
+  return verses;
+}
+
+async function search(query, requestId) {
   const trimmed = query.trim();
   elements.searchResults.replaceChildren();
   state.searchActiveIndex = -1;
@@ -286,14 +352,40 @@ function search(query) {
     elements.searchInput.setAttribute("aria-expanded", "false");
     return;
   }
-  const matches = findReferenceMatches(trimmed) ?? state.verses.filter((verse) =>
-    verse.text.toLowerCase().includes(trimmed.toLowerCase())
-  );
   elements.searchResults.hidden = false;
   elements.searchInput.setAttribute("aria-expanded", "true");
-  state.searchMatches = matches;
   state.searchQuery = trimmed;
   state.searchShown = 0;
+
+  const loading = document.createElement("div");
+  loading.className = "search-summary";
+  loading.textContent = "Searching scripture...";
+  elements.searchResults.append(loading);
+
+  let matches;
+  try {
+    matches = await findReferenceMatches(trimmed);
+    if (matches === null) {
+      await loadAllBooks();
+      matches = getAllVerses().filter((verse) =>
+        verse.text.toLowerCase().includes(trimmed.toLowerCase())
+      );
+    }
+    if (requestId !== state.searchRequestId || trimmed !== elements.searchInput.value.trim()) return;
+
+    elements.searchResults.replaceChildren();
+    state.searchMatches = matches;
+  } catch (error) {
+    if (requestId !== state.searchRequestId) return;
+    console.error(error);
+    elements.searchResults.replaceChildren();
+    const message = document.createElement("div");
+    message.className = "search-empty";
+    message.textContent = "Scripture could not be loaded. Please try again.";
+    elements.searchResults.append(message);
+    return;
+  }
+
   if (matches.length === 0) {
     const empty = document.createElement("div");
     empty.className = "search-empty";
@@ -322,11 +414,8 @@ function closeSidebar() {
 
 function bindEvents() {
   document.querySelectorAll(".testament-tab").forEach((tab) => tab.addEventListener("click", () => {
-    state.testament = tab.dataset.testament;
-    state.book = state.testament === "old" ? 1 : 40;
-    state.chapter = 1;
-    renderBookList();
-    renderChapter();
+    const book = tab.dataset.testament === "old" ? 1 : 40;
+    void openChapter(book, 1);
   }));
   document.querySelector("#previous-chapter").addEventListener("click", () => navigate(-1));
   document.querySelector("#next-chapter").addEventListener("click", () => navigate(1));
@@ -334,9 +423,10 @@ function bindEvents() {
   document.querySelector("#bottom-next").addEventListener("click", () => navigate(1));
   elements.searchInput.addEventListener("input", () => {
     clearTimeout(state.searchTimer);
+    const requestId = ++state.searchRequestId;
     state.searchActiveIndex = -1;
     elements.searchInput.removeAttribute("aria-activedescendant");
-    state.searchTimer = setTimeout(() => search(elements.searchInput.value), 120);
+    state.searchTimer = setTimeout(() => void search(elements.searchInput.value, requestId), 120);
   });
   elements.searchInput.addEventListener("keydown", (event) => {
     if (elements.searchResults.hidden) return;
@@ -368,10 +458,13 @@ function bindEvents() {
     }
   });
   elements.searchInput.addEventListener("focus", () => {
-    if (elements.searchInput.value.trim().length >= 2) search(elements.searchInput.value);
+    if (elements.searchInput.value.trim().length >= 2) {
+      void search(elements.searchInput.value, ++state.searchRequestId);
+    }
   });
   document.addEventListener("click", (event) => {
     if (!event.target.closest(".search-wrap")) {
+      state.searchRequestId += 1;
       elements.searchResults.hidden = true;
       elements.searchInput.setAttribute("aria-expanded", "false");
       elements.searchInput.removeAttribute("aria-activedescendant");
@@ -387,6 +480,7 @@ function bindEvents() {
     onNextChapter: () => navigate(1),
     onEscape: () => {
       chapterPicker.close(true);
+      state.searchRequestId += 1;
       elements.searchResults.hidden = true;
       elements.searchInput.setAttribute("aria-expanded", "false");
       elements.searchInput.removeAttribute("aria-activedescendant");
