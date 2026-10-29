@@ -259,7 +259,7 @@ test("Escape from the edition menu returns focus to the verse for arrow navigati
   await expect(page.locator("#verse-17")).toHaveClass(/is-focused/);
 });
 
-test("switches to KRV from the mobile navigation drawer", async ({ page }) => {
+test("keeps the mobile navigation drawer open and focused after switching to KRV", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/kjv/b/john/c/3/v/16");
   await page.locator("#menu-toggle").click();
@@ -267,8 +267,8 @@ test("switches to KRV from the mobile navigation drawer", async ({ page }) => {
   await page.locator("#edition-option-krv").click();
 
   await expect(page).toHaveURL(/\/krv\/b\/john\/c\/3\/v\/16$/);
-  await expect(page.locator("#sidebar")).not.toHaveClass(/is-open/);
-  await expect(page.locator("#verse-16")).toBeFocused();
+  await expect(page.locator("#sidebar")).toHaveClass(/is-open/);
+  await expect(page.locator('.book-row[aria-current="page"]')).toBeFocused();
   await expect(page.locator("#verse-list")).toHaveAttribute("lang", "ko");
   await expect(page.locator("#verse-16 .verse-text")).toContainText("하나님이 세상을 이처럼 사랑하사");
 });

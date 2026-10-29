@@ -103,6 +103,7 @@ async function activateEdition(editionId) {
 
 async function changeEdition(editionId) {
   if (!EDITIONS[editionId] || editionId === state.editionId) return;
+  const keepSidebarOpen = elements.sidebar.classList.contains("is-open");
   const { book, chapter, verse } = state;
   const searchQuery = state.searchQuery;
   state.searchRequestId += 1;
@@ -110,9 +111,12 @@ async function changeEdition(editionId) {
   const verses = await scripture.loadChapter(book, chapter);
   await openChapter(book, chapter, Math.min(verse, verses.length));
   animateEditionSwitch();
-  if (elements.sidebar.classList.contains("is-open")) closeSidebar();
   requestAnimationFrame(() => {
-    document.querySelector(`#verse-${state.verse}`)?.focus({ preventScroll: true });
+    if (keepSidebarOpen) {
+      elements.bookList.querySelector('.book-row[aria-current="page"]')?.focus();
+    } else {
+      document.querySelector(`#verse-${state.verse}`)?.focus({ preventScroll: true });
+    }
   });
   if (searchQuery.length >= 2) {
     void search(searchQuery, ++state.searchRequestId);
