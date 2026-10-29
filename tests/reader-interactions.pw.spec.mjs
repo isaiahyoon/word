@@ -131,6 +131,7 @@ test("switches editions at the same passage and canonicalizes legacy KJV links",
 
   await page.locator("#edition-select").selectOption("krv");
   await expect(page).toHaveURL(/\/krv\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("#verse-16")).toBeFocused();
   await page.reload();
   await expect(page).toHaveURL(/\/krv\/b\/john\/c\/3\/v\/16$/);
   await expect(page.locator("body")).toHaveClass(/is-krv-edition/);
@@ -141,8 +142,12 @@ test("switches editions at the same passage and canonicalizes legacy KJV links",
   await expect(page.locator("#verse-16 .verse-text")).toContainText("하나님이 세상을 이처럼 사랑하사");
   await expect(page.locator("#edition-attribution")).toContainText("대한성서공회");
 
+  await page.keyboard.press("ArrowDown");
+  await expect(page).toHaveURL(/\/krv\/b\/john\/c\/3\/v\/17$/);
+  await expect(page.locator("#verse-17")).toHaveClass(/is-focused/);
+
   await page.locator("#edition-select").selectOption("kjv");
-  await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/16$/);
+  await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/17$/);
   await expect(page.locator("body")).not.toHaveClass(/is-krv-edition/);
   await expect.poll(() => page.locator("body").evaluate((element) =>
     getComputedStyle(element, "::before").opacity,
@@ -158,6 +163,8 @@ test("switches to KRV from the mobile navigation drawer", async ({ page }) => {
   await page.locator("#edition-select").selectOption("krv");
 
   await expect(page).toHaveURL(/\/krv\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("#sidebar")).not.toHaveClass(/is-open/);
+  await expect(page.locator("#verse-16")).toBeFocused();
   await expect(page.locator("#verse-list")).toHaveAttribute("lang", "ko");
   await expect(page.locator("#verse-16 .verse-text")).toContainText("하나님이 세상을 이처럼 사랑하사");
 });

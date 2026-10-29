@@ -113,6 +113,10 @@ async function changeEdition(editionId) {
   await activateEdition(editionId);
   const verses = await scripture.loadChapter(book, chapter);
   await openChapter(book, chapter, Math.min(verse, verses.length));
+  if (elements.sidebar.classList.contains("is-open")) closeSidebar();
+  requestAnimationFrame(() => {
+    document.querySelector(`#verse-${state.verse}`)?.focus({ preventScroll: true });
+  });
   if (searchQuery.length >= 2) {
     void search(searchQuery, ++state.searchRequestId);
   }
