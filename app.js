@@ -86,11 +86,21 @@ function renderBookList() {
     const chapters = [...state.chapters.keys()].filter((key) => key.startsWith(`${book}:`)).length;
     button.innerHTML = `<span class="book-index">${String(book).padStart(2, "0")}</span><span class="book-name">${bookName(book)}</span><span class="book-chapters">${chapters}</span>`;
     button.addEventListener("click", () => {
+      const changedBook = book !== state.book;
       state.book = book;
       state.chapter = 1;
       closeSidebar();
       renderBookList();
       renderChapter();
+      if (changedBook && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        document.querySelector("#reader").animate(
+          [
+            { opacity: 0.55, transform: "translateY(8px)" },
+            { opacity: 1, transform: "translateY(0)" }
+          ],
+          { duration: 320, easing: "cubic-bezier(.22, 1, .36, 1)" }
+        );
+      }
     });
     elements.bookList.append(button);
   }

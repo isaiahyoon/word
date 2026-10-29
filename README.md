@@ -63,8 +63,12 @@ Please review the full text in the linked license file included in this reposito
 
 ![The Word application demo](assets/demo.gif)
 
-The demo shows a pointer searching `John 3:16`, opening the shortcut guide, navigating with arrow keys and the chapter picker, and manually scrolling to the highlighted verse without an automatic jump. To refresh it, replace the numbered `assets/demo-frame-*.png` captures, then run:
+The demo shows a pointer searching `John 3:16`, opening the shortcut guide, navigating with arrow keys and the chapter picker, switching books with a soft transition, and manually scrolling to the highlighted verse without an automatic jump. To refresh it, replace the numbered `assets/demo-frame-*.png` captures, then run:
 
 ```sh
 swift tools/build-demo.swift
 ```
+
+## Support the project
+
+If The Word has helped you find a verse faster than flipping pages, you can [buy me a coffee](https://www.buymeacoffee.com/isaiahyoon). The verses are free; caffeine, less so.
