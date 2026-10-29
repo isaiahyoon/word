@@ -218,7 +218,12 @@ async function initialize() {
     heading: elements.chapterOptionsTitle,
     count: elements.chapterOptionsCount,
     list: elements.chapterOptionsList,
-    onSelect: (chapter) => void openChapter(state.book, chapter, null, { direction: Math.sign(chapter - state.chapter) })
+    onSelect: (chapter) => openChapter(
+      state.book,
+      chapter,
+      null,
+      { direction: Math.sign(chapter - state.chapter) },
+    ).then(() => document.querySelector(`#verse-${state.verse}`)?.focus({ preventScroll: true }))
   });
   visualEffects.bind();
   bindEvents();

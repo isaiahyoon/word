@@ -65,7 +65,6 @@ export function createChapterPicker({ root, trigger, value, popover, heading, co
     if (!option) return;
     close();
     onSelect(Number(option.dataset.chapter));
-    trigger.focus();
   });
   list.addEventListener("keydown", (event) => {
     const options = optionButtons();

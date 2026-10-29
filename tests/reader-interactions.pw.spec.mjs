@@ -22,6 +22,20 @@ test("centers the chapter picker within a mobile viewport", async ({ page }) => 
   expect(Math.abs(bounds.y - triggerBounds.y - triggerBounds.height - 9)).toBeLessThan(1);
 });
 
+test("selecting a chapter focuses verse one for arrow navigation", async ({ page }) => {
+  await page.goto("/kjv/b/1-kings/c/18/v/2");
+  await page.locator("#chapter-select").click();
+  await page.locator('#chapter-options-list [data-chapter="9"]').click();
+
+  await expect(page).toHaveURL(/\/kjv\/b\/1-kings\/c\/9\/v\/1$/);
+  await expect(page.locator("#verse-1")).toBeFocused();
+
+  await page.keyboard.press("ArrowDown");
+
+  await expect(page).toHaveURL(/\/kjv\/b\/1-kings\/c\/9\/v\/2$/);
+  await expect(page.locator("#verse-2")).toHaveClass(/is-focused/);
+});
+
 test("renders the wordmark with a muted brass body and navy outline", async ({ page }) => {
   await page.goto("/");
   const wordmark = page.locator(".brand-copy strong");
