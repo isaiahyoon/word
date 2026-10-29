@@ -24,6 +24,8 @@ describe("development server", () => {
     assert.equal(response.status, 200);
     const html = await response.text();
     assert.match(html, /<title>The Word<\/title>/);
+    assert.ok(html.includes('data-glimmer="The Word"'));
+    assert.match(html, />\s*The Word<\/strong\s*>/);
     assert.match(html, /name="description"\s+content="A quiet, searchable reader for exploring Scripture at your own pace\./);
     assert.match(html, /property="og:title" content="The Word"/);
   });
@@ -69,6 +71,7 @@ describe("development server", () => {
 
     assert.equal(response.status, 404);
     assert.match(html, /Page Not Found — The Word/);
+    assert.match(html, /<strong>The Word<\/strong>/);
     assert.match(html, /Come back to the reading room/);
     assert.doesNotMatch(html, /id="go-back"/);
   });

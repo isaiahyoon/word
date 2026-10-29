@@ -22,6 +22,45 @@ test("centers the chapter picker within a mobile viewport", async ({ page }) => 
   expect(Math.abs(bounds.y - triggerBounds.y - triggerBounds.height - 9)).toBeLessThan(1);
 });
 
+test("renders the wordmark with a muted brass body and navy outline", async ({ page }) => {
+  await page.goto("/");
+  const wordmark = page.locator(".brand-copy strong");
+  await page.locator(".brand").hover();
+  await expect(wordmark).toHaveCSS("-webkit-text-stroke-color", "rgb(34, 59, 85)");
+  await expect(wordmark).toHaveCSS("-webkit-text-stroke-width", "0.45px");
+
+  const fill = await wordmark.evaluate((element) => getComputedStyle(element).backgroundImage);
+  expect(fill).toContain("linear-gradient");
+  expect(fill).toContain("rgb(188, 162, 106)");
+  await expect.poll(() => wordmark.evaluate((element) =>
+    getComputedStyle(element, "::after").animationName,
+  )).toBe("text-glimmer");
+});
+
+test("accents the four-color brand mark without changing its spin", async ({ page }) => {
+  await page.goto("/");
+  const mark = page.locator(".brand-mark");
+  const tiles = mark.locator("i");
+  await expect(tiles).toHaveCount(4);
+  expect(await tiles.evaluateAll((elements) => elements.map((element) => getComputedStyle(element).backgroundColor))).toEqual([
+    "rgb(222, 254, 252)",
+    "rgb(220, 215, 247)",
+    "rgb(250, 212, 224)",
+    "rgb(214, 242, 185)",
+  ]);
+  expect(await tiles.evaluateAll((elements) => elements.map((element) => getComputedStyle(element).borderTopLeftRadius))).toEqual([
+    "5px",
+    "1.5px",
+    "1.5px",
+    "1.5px",
+  ]);
+  await expect(tiles.first()).toHaveCSS("border-top-color", "rgba(34, 59, 85, 0.52)");
+  expect(await tiles.first().evaluate((element) => getComputedStyle(element).boxShadow)).toContain("169, 124, 53");
+
+  await mark.hover();
+  await expect(mark).toHaveCSS("animation-name", "logo-spin-settle");
+});
+
 test("keeps shortcut keycaps inside the dialog on short mobile screens", async ({ page }) => {
   await page.setViewportSize({ width: 402, height: 650 });
   await page.goto("/kjv/b/john/c/3/v/16");
@@ -174,6 +213,20 @@ test("switches editions at the same passage and canonicalizes legacy KJV links",
   )).toBe("0");
   await expect(page.locator("#verse-16 .verse-text")).toContainText("For God so loved the world");
   await expect(page.locator("#edition-attribution")).toBeHidden();
+});
+
+test("renders the KRV brand before its scripture index finishes loading", async ({ page }) => {
+  await page.route("**/scripture/krv/index.json", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    await route.continue();
+  });
+
+  await page.goto("/krv/b/john/c/3/v/16", { waitUntil: "domcontentloaded" });
+
+  await expect(page.locator("#brand-edition-primary")).toHaveText("개역한글");
+  await expect(page.locator("#brand-edition-secondary")).toHaveText("1961");
+  await expect(page.locator("#brand-edition-primary")).not.toHaveText("KING JAMES");
+  await expect(page.locator("#verse-16 .verse-text")).toContainText("하나님이 세상을 이처럼 사랑하사");
 });
 
 test("supports keyboard navigation in the edition menu", async ({ page }) => {

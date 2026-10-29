@@ -72,7 +72,6 @@ async function activateEdition(editionId) {
   const store = scriptureStores.get(editionId);
   if (!edition || !store) throw new RangeError(`Unknown edition: ${editionId}`);
 
-  await store.initialize();
   state.editionId = editionId;
   scripture = store;
   document.body.classList.toggle("is-krv-edition", editionId === "krv");
@@ -99,6 +98,7 @@ async function activateEdition(editionId) {
     link.textContent = edition.attribution;
     elements.editionAttribution.append(link);
   }
+  await store.initialize();
 }
 
 async function changeEdition(editionId) {
@@ -203,7 +203,8 @@ async function initialize() {
     onSelect: (editionId) => void changeEdition(editionId),
     onEscape: () => document.querySelector(`#verse-${state.verse}`)?.focus({ preventScroll: true }),
   });
-  await activateEdition(DEFAULT_EDITION);
+  const initialRoute = scriptureRoutes.parse(window.location.pathname);
+  await activateEdition(initialRoute?.editionId ?? DEFAULT_EDITION);
   renderBookList();
   chapterPicker = createChapterPicker({
     root: elements.chapterPicker,

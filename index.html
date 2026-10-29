@@ -14,6 +14,7 @@
     <script>
       const currentPath = location.pathname;
       const routeIndex = currentPath.search(/\/(?:(?:kjv|krv)\/)?b\//);
+      window.initialEditionId = currentPath.match(/\/(kjv|krv)\/b\//)?.[1] ?? "kjv";
       const appRoot =
         routeIndex < 0
           ? currentPath.slice(0, currentPath.lastIndexOf("/") + 1)
@@ -55,14 +56,15 @@
           <span class="brand-copy">
             <strong
               class="glimmer-text glimmer-gold"
-              data-glimmer="the word"
+              data-glimmer="The Word"
               aria-hidden="true"
-              >the word</strong
+              >The Word</strong
             >
             <small
               ><span
                 class="glimmer-text glimmer-blue"
                 id="brand-edition-primary"
+                data-krv-label="개역한글"
                 data-glimmer="KING JAMES"
                 aria-hidden="true"
                 >KING JAMES</span
@@ -70,6 +72,7 @@
               <span
                 class="glimmer-text glimmer-pink"
                 id="brand-edition-secondary"
+                data-krv-label="1961"
                 data-glimmer="VERSION"
                 aria-hidden="true"
                 >VERSION</span
@@ -77,6 +80,16 @@
             >
           </span>
         </a>
+        <script>
+          if (window.initialEditionId === "krv") {
+            for (const id of ["brand-edition-primary", "brand-edition-secondary"]) {
+              const label = document.getElementById(id);
+              label.textContent = label.dataset.krvLabel;
+              label.dataset.glimmer = label.dataset.krvLabel;
+              label.lang = "ko";
+            }
+          }
+        </script>
         <div class="search-wrap">
           <label class="search-box" for="search-input">
             <span class="search-icon" aria-hidden="true"></span>
