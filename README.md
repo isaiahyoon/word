@@ -44,26 +44,30 @@ node tools/dev-server.mjs
 
 Then open [http://localhost:8000](http://localhost:8000).
 If port 8000 is occupied, choose another port with `PORT=8001 node tools/dev-server.mjs`.
-When deploying, configure the host to internally serve `index.html` for valid `/b/*` scripture routes while keeping the requested URL. Unknown paths should serve `404.html` with a 404 status.
+When deploying, configure the host to internally serve `index.html` for valid `/kjv/b/*`, `/krv/b/*`, and legacy `/b/*` scripture routes while keeping the requested URL. Unknown paths should serve `404.html` with a 404 status.
 
-Scripture links use short book slugs and optional chapter and verse-range segments. Omitting the chapter opens chapter 1; omitting the verse opens and highlights verse 1:
+Scripture links identify their edition before the book route. Omitting the chapter opens chapter 1; omitting the verse opens and highlights verse 1:
 
 ```text
-/b/john
-/b/john/c/3
-/b/john/c/3/v/16
-/b/john/c/3/v/16-18
+/kjv/b/john
+/kjv/b/john/c/3
+/kjv/b/john/c/3/v/16
+/kjv/b/john/c/3/v/16-18
+/krv/b/john/c/3/v/16
 ```
 
-Valid verse links scroll to the requested verses and highlight them briefly. Invalid books, chapters, or verse ranges open the 404 page, which links back to the reading room.
+Existing unprefixed `/b/*` links continue to open KJV and are canonicalized to `/kjv/b/*`. Valid verse links scroll to the requested verses and highlight them briefly. Invalid books, chapters, or verse ranges open the 404 page, which links back to the reading room.
 
 ## Scripture data
 
-The reader loads the chapter-count index and current book first. Book files use canonical numbering, such as `1_genesis.json`; other books load when opened, and full-text search loads the remaining books when used. After updating `kjv.json`, rebuild the book files with:
+The reader loads the selected edition's chapter-count index and current book first. Each edition has its own files under `scripture/<edition>/books/`, named by the fixed canon, such as `1_genesis.json`. Other books load when opened, and full-text search loads the remaining books when used. Rebuild the editions with:
 
 ```sh
-node tools/build-scripture-data.mjs
+node tools/build-kjv-data.mjs
+node tools/build-krv-data.mjs
 ```
+
+The 1961 KRV source is pinned in `sources/krv-1961.json`; attribution is shown when KRV is selected. Its economic copyright term has expired according to the [Bible Society of Korea](https://www.bskorea.or.kr/bbs/board.php?bo_table=copyright_faq&wr_id=5); preserve the text and provide attribution.
 
 ## Tests
 

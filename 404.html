@@ -8,7 +8,7 @@
     <script>
       (() => {
         const currentPath = window.location.pathname;
-        const routeIndex = currentPath.indexOf("/b/");
+        const routeIndex = currentPath.search(/\/(?:(?:kjv|krv)\/)?b\//);
         const appRoot =
           routeIndex < 0
             ? currentPath.slice(0, currentPath.lastIndexOf("/") + 1)
@@ -37,7 +37,7 @@
             ><i></i><i></i><i></i><i></i
           ></span>
           <span class="brand-name"
-            ><strong>the word</strong><small>KING JAMES VERSION</small></span
+            ><strong>The Word</strong><small>BIBLE READER</small></span
           >
         </a>
         <div class="masthead-note">
@@ -69,7 +69,7 @@
         </section>
       </main>
       <footer class="page-footer">
-        <span>THE WORD / KING JAMES VERSION</span
+        <span>THE WORD / SCRIPTURE READER</span
         ><span>A QUIET PLACE TO RETURN</span>
       </footer>
     </div>

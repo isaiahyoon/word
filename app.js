@@ -2,8 +2,10 @@ import { bindKeyboardShortcuts } from "./keyboard-shortcuts.js";
 import { createChapterPicker } from "./chapter-picker.js";
 import { createScriptureStore } from "./scripture-store.js";
 import { createVisualEffects } from "./visual-effects.js";
+import { createEditionPicker } from "./edition-picker.js";
 import { createScriptureRoutes, getVerseStep, isValidVerseRange, normalizeVerseRange } from "./scripture-routes.mjs";
 import { BOOKS } from "./books.mjs";
+import { DEFAULT_EDITION, EDITIONS, EDITION_IDS } from "./editions.mjs";
 
 const BOOK_TITLES = [
   "The First Book of Moses", "The Second Book of Moses", "The Third Book of Moses", "The Fourth Book of Moses", "The Fifth Book of Moses", "The Book of Joshua", "The Book of Judges", "The Book of Ruth", "The First Book of Samuel", "The Second Book of Samuel", "The First Book of the Kings", "The Second Book of the Kings", "The First Book of the Chronicles", "The Second Book of the Chronicles", "The Book of Ezra", "The Book of Nehemiah", "The Book of Esther", "The Book of Job", "The Book of Psalms", "The Proverbs", "Ecclesiastes", "The Song of Solomon", "The Book of the Prophet Isaiah", "The Book of the Prophet Jeremiah", "The Lamentations of Jeremiah", "The Book of the Prophet Ezekiel", "The Book of Daniel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi",
@@ -11,9 +13,9 @@ const BOOK_TITLES = [
 ];
 
 const CHAPTER_GRADIENT_COLORS = ["var(--chapter-blue)", "var(--chapter-lavender)", "var(--chapter-pink)", "var(--chapter-green)"];
-const state = { book: 1, chapter: 1, verse: 1, testament: "old", lastBookByTestament: { old: 1, new: 40 }, chapterRequestId: 0, searchTimer: null, searchRequestId: 0, searchMatches: [], searchQuery: "", searchShown: 0, searchActiveIndex: -1 };
+const state = { editionId: DEFAULT_EDITION, book: 1, chapter: 1, verse: 1, testament: "old", lastBookByTestament: { old: 1, new: 40 }, chapterRequestId: 0, searchTimer: null, searchRequestId: 0, searchMatches: [], searchQuery: "", searchShown: 0, searchActiveIndex: -1 };
 const appBasePath = new URL(document.baseURI).pathname;
-const scriptureRoutes = createScriptureRoutes(BOOKS, appBasePath);
+const scriptureRoutes = createScriptureRoutes(BOOKS, appBasePath, EDITION_IDS);
 const elements = {
   bookList: document.querySelector("#book-list"),
   chapterSelect: document.querySelector("#chapter-select"),
@@ -35,18 +37,99 @@ const elements = {
   mobileNextTitle: document.querySelector("#mobile-next-title"),
   menuToggle: document.querySelector("#menu-toggle"),
   sidebar: document.querySelector("#sidebar"),
-  sidebarScrim: document.querySelector("#sidebar-scrim")
+  sidebarScrim: document.querySelector("#sidebar-scrim"),
+  editionPicker: document.querySelector("#edition-picker"),
+  editionSelect: document.querySelector("#edition-select"),
+  editionSelectCode: document.querySelector("#edition-select-code"),
+  editionSelectLabel: document.querySelector("#edition-select-label"),
+  editionOptions: document.querySelector("#edition-options"),
+  editionAttribution: document.querySelector("#edition-attribution"),
+  brandEditionPrimary: document.querySelector("#brand-edition-primary"),
+  brandEditionSecondary: document.querySelector("#brand-edition-secondary")
 };
 let chapterPicker;
+let editionPicker;
 let verseNavigationQueue = Promise.resolve();
-const scripture = createScriptureStore();
+const scriptureStores = new Map(EDITION_IDS.map((editionId) => {
+  const edition = EDITIONS[editionId];
+  return [editionId, createScriptureStore({
+    dataPath: edition.dataPath,
+    displayBookNames: edition.displayBookNames,
+    bookOrder: edition.bookOrder,
+  })];
+}));
+let scripture = scriptureStores.get(DEFAULT_EDITION);
 const visualEffects = createVisualEffects({
   shell: document.querySelector(".app-shell"),
   verseList: elements.verseList
 });
 
 const testamentFor = (book) => book <= 39 ? "old" : "new";
-const bookName = (book) => BOOKS[book - 1];
+const bookName = (book) => scripture.bookName(book);
+
+async function activateEdition(editionId) {
+  const edition = EDITIONS[editionId];
+  const store = scriptureStores.get(editionId);
+  if (!edition || !store) throw new RangeError(`Unknown edition: ${editionId}`);
+
+  state.editionId = editionId;
+  scripture = store;
+  document.body.classList.toggle("is-krv-edition", editionId === "krv");
+  editionPicker.render(EDITION_IDS, EDITIONS, editionId);
+  elements.editionSelect.disabled = false;
+  elements.editionSelect.removeAttribute("aria-busy");
+  elements.verseList.lang = edition.language;
+  elements.verseList.dir = edition.direction;
+  elements.searchResults.lang = edition.language;
+  elements.searchResults.dir = edition.direction;
+  elements.brandEditionPrimary.textContent = edition.brandPrimary;
+  elements.brandEditionPrimary.dataset.glimmer = edition.brandPrimary;
+  elements.brandEditionPrimary.lang = edition.language;
+  elements.brandEditionSecondary.textContent = edition.brandSecondary;
+  elements.brandEditionSecondary.dataset.glimmer = edition.brandSecondary;
+  elements.brandEditionSecondary.lang = edition.language;
+  elements.editionAttribution.replaceChildren();
+  elements.editionAttribution.hidden = !edition.attribution;
+  if (edition.attribution) {
+    const link = document.createElement("a");
+    link.href = edition.attributionUrl;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = edition.attribution;
+    elements.editionAttribution.append(link);
+  }
+  await store.initialize();
+}
+
+async function changeEdition(editionId) {
+  if (!EDITIONS[editionId] || editionId === state.editionId) return;
+  const { book, chapter, verse } = state;
+  const searchQuery = state.searchQuery;
+  state.searchRequestId += 1;
+  await activateEdition(editionId);
+  const verses = await scripture.loadChapter(book, chapter);
+  await openChapter(book, chapter, Math.min(verse, verses.length));
+  animateEditionSwitch();
+  if (elements.sidebar.classList.contains("is-open")) closeSidebar();
+  requestAnimationFrame(() => {
+    document.querySelector(`#verse-${state.verse}`)?.focus({ preventScroll: true });
+  });
+  if (searchQuery.length >= 2) {
+    void search(searchQuery, ++state.searchRequestId);
+  }
+}
+
+function animateEditionSwitch() {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  document.querySelector("#reader").animate(
+    [
+      { opacity: 0.68, transform: "translateY(8px) scale(0.995)", filter: "saturate(.82)" },
+      { opacity: 1, transform: "translateY(0) scale(1)", filter: "saturate(1)" },
+    ],
+    { duration: 620, easing: "cubic-bezier(.22, 1, .36, 1)" },
+  );
+}
 
 function setQuietReadingMode(enabled) {
   document.querySelector(".app-shell").classList.toggle("is-quiet-reading", enabled);
@@ -77,9 +160,19 @@ async function restoreLocationFromPath() {
     return;
   }
 
+  await activateEdition(route.editionId);
   elements.quietWelcome.hidden = !route.home;
   const reference = route.home ? { book: 1, chapter: 1, range: null } : route;
   await openChapter(reference.book, reference.chapter, reference.range, { updateHistory: false });
+  if (route.legacy) {
+    const canonicalPath = scriptureRoutes.buildPath(
+      reference.book,
+      reference.chapter,
+      reference.range,
+      route.editionId,
+    );
+    window.history.replaceState(null, "", canonicalPath);
+  }
 }
 
 function navigateHome() {
@@ -101,7 +194,17 @@ function createChapterGradient() {
 }
 
 async function initialize() {
-  await scripture.initialize();
+  editionPicker = createEditionPicker({
+    root: elements.editionPicker,
+    trigger: elements.editionSelect,
+    code: elements.editionSelectCode,
+    label: elements.editionSelectLabel,
+    menu: elements.editionOptions,
+    onSelect: (editionId) => void changeEdition(editionId),
+    onEscape: () => document.querySelector(`#verse-${state.verse}`)?.focus({ preventScroll: true }),
+  });
+  const initialRoute = scriptureRoutes.parse(window.location.pathname);
+  await activateEdition(initialRoute?.editionId ?? DEFAULT_EDITION);
   renderBookList();
   chapterPicker = createChapterPicker({
     root: elements.chapterPicker,
@@ -168,7 +271,7 @@ async function openChapter(book, chapter, requestedRange = null, { updateHistory
   } else {
     visualEffects.triggerChapterGlimmers();
   }
-  const path = scriptureRoutes.buildPath(book, chapter, range);
+  const path = scriptureRoutes.buildPath(book, chapter, range, state.editionId);
   if (updateHistory) {
     if (window.location.pathname !== path) window.history.pushState(null, "", path);
   }
@@ -176,15 +279,15 @@ async function openChapter(book, chapter, requestedRange = null, { updateHistory
 
 function renderBookList() {
   elements.bookList.replaceChildren();
-  const start = state.testament === "old" ? 1 : 40;
-  const end = state.testament === "old" ? 39 : 66;
-  for (let book = start; book <= end; book += 1) {
+  const books = scripture.bookOrder.filter((book) => testamentFor(book) === state.testament);
+  for (const book of books) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = `book-row${book === state.book ? " is-current" : ""}`;
     button.setAttribute("aria-current", book === state.book ? "page" : "false");
     const chapters = scripture.chapterCount(book);
     button.innerHTML = `<span class="book-index">${String(book).padStart(2, "0")}</span><span class="book-name">${bookName(book)}</span><span class="book-chapters">${chapters}</span>`;
+    button.querySelector(".book-name").lang = EDITIONS[state.editionId].language;
     button.addEventListener("click", () => {
       const changedBook = book !== state.book;
       closeSidebar();
@@ -210,20 +313,27 @@ function renderChapter(focusRange = null) {
   const verses = scripture.getChapter(state.book, state.chapter);
   document.querySelector("#testament-name").textContent = `${testament.toUpperCase()} TESTAMENT`;
   document.querySelector("#book-crumb").textContent = name.toUpperCase();
+  document.querySelector("#book-crumb").lang = EDITIONS[state.editionId].language;
   const headingBook = document.querySelector("#heading-book");
   headingBook.textContent = name;
   headingBook.dataset.glimmer = name;
+  headingBook.lang = EDITIONS[state.editionId].language;
   const chapterNumber = document.querySelector("#heading-chapter");
   chapterNumber.textContent = state.chapter;
   chapterNumber.dataset.glimmer = state.chapter;
   chapterNumber.style.setProperty("--chapter-gradient", createChapterGradient());
-  document.querySelector("#chapter-kicker").textContent = BOOK_TITLES[state.book - 1].toUpperCase();
+  const chapterKicker = document.querySelector("#chapter-kicker");
+  chapterKicker.textContent = state.editionId === "kjv"
+    ? BOOK_TITLES[state.book - 1].toUpperCase()
+    : name.toUpperCase();
+  chapterKicker.lang = EDITIONS[state.editionId].language;
   document.querySelector("#verse-count").textContent = `${verses.length} ${verses.length === 1 ? "verse" : "verses"}`;
   document.querySelector("#testament-meta").textContent = `${testament === "old" ? "Old" : "New"} Testament`;
-  document.title = `${name} ${state.chapter} — The Word`;
+  document.title = `${name} ${state.chapter} — ${state.editionId === "kjv" ? "The Word" : `${EDITIONS[state.editionId].name} · The Word`}`;
 
   const chapterCount = scripture.chapterCount(state.book);
   chapterPicker.render({ bookName: name, chapterCount, activeChapter: state.chapter });
+  document.querySelector("#chapter-options-title").lang = EDITIONS[state.editionId].language;
 
   visualEffects.clearScriptureGlow();
   elements.verseList.replaceChildren();
@@ -233,12 +343,21 @@ function renderChapter(focusRange = null) {
     row.className = `verse${isFocused ? " is-focused" : ""}`;
     row.id = `verse-${verse.verse}`;
     row.dataset.verse = verse.verse;
-    row.href = scriptureRoutes.buildPath(state.book, state.chapter, { start: verse.verse, end: verse.verse });
+    row.href = scriptureRoutes.buildPath(
+      state.book,
+      state.chapter,
+      { start: verse.verse, end: verse.verse },
+      state.editionId,
+    );
+    row.lang = EDITIONS[state.editionId].language;
+    row.dir = EDITIONS[state.editionId].direction;
     const number = document.createElement("span");
     number.className = "verse-number";
     number.textContent = verse.verse;
     const text = document.createElement("span");
     text.className = "verse-text";
+    text.lang = EDITIONS[state.editionId].language;
+    text.dir = EDITIONS[state.editionId].direction;
     text.textContent = verse.text;
     row.append(number, text);
     elements.verseList.append(row);
@@ -253,19 +372,26 @@ function renderChapter(focusRange = null) {
 }
 
 function adjacentChapter(offset) {
+  const order = scripture.bookOrder;
   let book = state.book;
+  let bookIndex = order.indexOf(book);
   let chapter = state.chapter + offset;
   let total = scripture.chapterCount(book);
   while (chapter < 1) {
-    book -= 1;
-    if (book < 1) return { book: 1, chapter: 1 };
+    bookIndex -= 1;
+    if (bookIndex < 0) return { book: order[0], chapter: 1 };
+    book = order[bookIndex];
     total = scripture.chapterCount(book);
     chapter = total;
   }
   while (chapter > total) {
-    book += 1;
-    if (book > 66) return { book: 66, chapter: 22 };
     chapter -= total;
+    bookIndex += 1;
+    if (bookIndex >= order.length) {
+      const lastBook = order[order.length - 1];
+      return { book: lastBook, chapter: scripture.chapterCount(lastBook) };
+    }
+    book = order[bookIndex];
     total = scripture.chapterCount(book);
   }
   return { book, chapter };
@@ -579,7 +705,7 @@ function bindEvents() {
     openButton: document.querySelector("#shortcuts-open"),
     closeButton: document.querySelector("#shortcuts-close"),
     searchInput: elements.searchInput,
-    isChapterPickerOpen: () => chapterPicker.isOpen(),
+    isChapterPickerOpen: () => chapterPicker.isOpen() || editionPicker.isOpen(),
     onPreviousChapter: () => navigate(-1),
     onNextChapter: () => navigate(1),
     onPreviousVerse: () => navigateVerse(-1),

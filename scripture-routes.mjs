@@ -2,17 +2,22 @@ function slugifyBook(name) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-export function createScriptureRoutes(books, basePath = "/") {
+export function createScriptureRoutes(books, basePath = "/", editionIds = ["kjv"]) {
   const baseSegments = basePath.split("/").filter(Boolean);
   const normalizedBasePath = baseSegments.length === 0 ? "/" : `/${baseSegments.join("/")}/`;
   const bookNumbersBySlug = new Map(books.map((name, index) => [slugifyBook(name), index + 1]));
+  const knownEditions = new Set(editionIds);
 
   function parse(pathname) {
     if (!pathname.startsWith(normalizedBasePath)) return null;
     const path = pathname.slice(normalizedBasePath.length).replace(/^\/+|\/+$/g, "");
-    if (!path || path === "index.html") return { home: true };
+    if (!path || path === "index.html") return { home: true, editionId: "kjv" };
 
-    const segments = path.split("/");
+    const pathSegments = path.split("/");
+    const legacy = pathSegments[0] === "b";
+    const editionId = legacy ? "kjv" : pathSegments[0];
+    if (!knownEditions.has(editionId)) return null;
+    const segments = legacy ? pathSegments : pathSegments.slice(1);
     if (![2, 4, 6].includes(segments.length) || segments[0] !== "b") return null;
 
     let slug;
@@ -28,9 +33,15 @@ export function createScriptureRoutes(books, basePath = "/") {
     let chapter = 1;
     let range = { start: 1, end: 1 };
     if (segments.length >= 4) {
-      if (segments[2] !== "c") return null;
-      chapter = Number(segments[3]);
+      const compactLegacy = legacy && segments[2] !== "c";
+      if (!compactLegacy && segments[2] !== "c") return null;
+      chapter = Number(segments[compactLegacy ? 2 : 3]);
       if (!Number.isSafeInteger(chapter) || chapter < 1) return null;
+      if (compactLegacy) {
+        const verse = Number(segments[3]);
+        if (!Number.isSafeInteger(verse) || verse < 1) return null;
+        range = { start: verse, end: verse };
+      }
     }
 
     if (segments.length === 6) {
@@ -40,16 +51,17 @@ export function createScriptureRoutes(books, basePath = "/") {
       range = { start: Number(match[1]), end: Number(match[2] ?? match[1]) };
     }
 
-    return { book, chapter, range };
+    return { editionId, book, chapter, range, legacy };
   }
 
-  function buildPath(book, chapter, range) {
+  function buildPath(book, chapter, range, editionId = "kjv") {
     const name = books[book - 1];
     if (!name || !Number.isSafeInteger(chapter) || chapter < 1) {
       throw new RangeError("Invalid scripture reference");
     }
+    if (!knownEditions.has(editionId)) throw new RangeError(`Unknown edition: ${editionId}`);
 
-    const path = `${normalizedBasePath}b/${slugifyBook(name)}/c/${chapter}`;
+    const path = `${normalizedBasePath}${editionId}/b/${slugifyBook(name)}/c/${chapter}`;
     if (!range) return path;
 
     const verses = range.start === range.end ? range.start : `${range.start}-${range.end}`;

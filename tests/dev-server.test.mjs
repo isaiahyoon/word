@@ -22,7 +22,12 @@ describe("development server", () => {
     const response = await fetch(origin);
 
     assert.equal(response.status, 200);
-    assert.match(await response.text(), /The Word — King James Version/);
+    const html = await response.text();
+    assert.match(html, /<title>The Word<\/title>/);
+    assert.ok(html.includes('data-glimmer="The Word"'));
+    assert.match(html, />\s*The Word<\/strong\s*>/);
+    assert.match(html, /name="description"\s+content="A quiet, searchable reader for exploring Scripture at your own pace\./);
+    assert.match(html, /property="og:title" content="The Word"/);
   });
 
   it("serves the teal and brass favicon gradient", async () => {
@@ -47,10 +52,17 @@ describe("development server", () => {
   });
 
   it("serves the app shell for scripture deep links", async () => {
-    const response = await fetch(`${origin}/b/joshua/c/1/v/1-10`);
+    for (const path of [
+      "/kjv/b/joshua/c/1/v/1-10",
+      "/krv/b/joshua/c/1/v/1-10",
+      "/b/joshua/c/1/v/1-10",
+      "/b/john/3/16",
+    ]) {
+      const response = await fetch(`${origin}${path}`);
 
-    assert.equal(response.status, 200);
-    assert.match(await response.text(), /id="verse-list"/);
+      assert.equal(response.status, 200, path);
+      assert.match(await response.text(), /id="verse-list"/, path);
+    }
   });
 
   it("serves the branded 404 document for unknown paths", async () => {
@@ -59,6 +71,7 @@ describe("development server", () => {
 
     assert.equal(response.status, 404);
     assert.match(html, /Page Not Found — The Word/);
+    assert.match(html, /<strong>The Word<\/strong>/);
     assert.match(html, /Come back to the reading room/);
     assert.doesNotMatch(html, /id="go-back"/);
   });

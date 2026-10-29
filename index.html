@@ -6,11 +6,15 @@
     <meta name="theme-color" content="#f6f4f9" />
     <meta
       name="description"
-      content="A quiet, searchable reader for the King James Version of the Bible."
+      content="A quiet, searchable reader for exploring Scripture at your own pace."
     />
+    <meta property="og:title" content="The Word" />
+    <meta property="og:description" content="A quiet, searchable reader for exploring Scripture at your own pace." />
+    <meta property="og:type" content="website" />
     <script>
       const currentPath = location.pathname;
-      const routeIndex = currentPath.indexOf("/b/");
+      const routeIndex = currentPath.search(/\/(?:(?:kjv|krv)\/)?b\//);
+      window.initialEditionId = currentPath.match(/\/(kjv|krv)\/b\//)?.[1] ?? "kjv";
       const appRoot =
         routeIndex < 0
           ? currentPath.slice(0, currentPath.lastIndexOf("/") + 1)
@@ -19,12 +23,12 @@
       baseElement.href = appRoot || "/";
       document.head.append(baseElement);
     </script>
-    <title>The Word — King James Version</title>
+    <title>The Word</title>
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Gelasio:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Gelasio:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="theme.css" />
@@ -52,19 +56,23 @@
           <span class="brand-copy">
             <strong
               class="glimmer-text glimmer-gold"
-              data-glimmer="the word"
+              data-glimmer="The Word"
               aria-hidden="true"
-              >the word</strong
+              >The Word</strong
             >
             <small
               ><span
                 class="glimmer-text glimmer-blue"
+                id="brand-edition-primary"
+                data-krv-label="개역한글"
                 data-glimmer="KING JAMES"
                 aria-hidden="true"
                 >KING JAMES</span
               >
               <span
                 class="glimmer-text glimmer-pink"
+                id="brand-edition-secondary"
+                data-krv-label="1961"
                 data-glimmer="VERSION"
                 aria-hidden="true"
                 >VERSION</span
@@ -72,6 +80,16 @@
             >
           </span>
         </a>
+        <script>
+          if (window.initialEditionId === "krv") {
+            for (const id of ["brand-edition-primary", "brand-edition-secondary"]) {
+              const label = document.getElementById(id);
+              label.textContent = label.dataset.krvLabel;
+              label.dataset.glimmer = label.dataset.krvLabel;
+              label.lang = "ko";
+            }
+          }
+        </script>
         <div class="search-wrap">
           <label class="search-box" for="search-input">
             <span class="search-icon" aria-hidden="true"></span>
@@ -124,6 +142,34 @@
           <div class="sidebar-heading">
             <span class="eyebrow">YOUR READING ROOM</span>
             <span class="book-total">66 <span>books</span></span>
+          </div>
+          <div class="edition-switcher">
+            <label id="edition-label">READING EDITION</label>
+            <div class="edition-picker" id="edition-picker">
+              <button
+                class="edition-trigger"
+                id="edition-select"
+                type="button"
+                aria-haspopup="listbox"
+                aria-expanded="false"
+                aria-controls="edition-options"
+                aria-labelledby="edition-label edition-select-label"
+                disabled
+                aria-busy="true"
+              >
+                <span class="edition-trigger-code" id="edition-select-code">…</span>
+                <span class="edition-trigger-label" id="edition-select-label">Loading editions…</span>
+                <span class="edition-select-caret" aria-hidden="true">⌄</span>
+              </button>
+              <div
+                class="edition-options"
+                id="edition-options"
+                role="listbox"
+                aria-labelledby="edition-label"
+                hidden
+              ></div>
+            </div>
+            <p class="edition-attribution" id="edition-attribution" hidden></p>
           </div>
           <div
             class="testament-tabs"

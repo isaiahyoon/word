@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test("centers the chapter picker within a mobile viewport", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/b/john/c/3/v/16");
+  await page.goto("/kjv/b/john/c/3/v/16");
   await page.locator("#chapter-select").click();
 
   const popover = page.locator(".chapter-popover");
@@ -22,9 +22,48 @@ test("centers the chapter picker within a mobile viewport", async ({ page }) => 
   expect(Math.abs(bounds.y - triggerBounds.y - triggerBounds.height - 9)).toBeLessThan(1);
 });
 
+test("renders the wordmark with a muted brass body and navy outline", async ({ page }) => {
+  await page.goto("/");
+  const wordmark = page.locator(".brand-copy strong");
+  await page.locator(".brand").hover();
+  await expect(wordmark).toHaveCSS("-webkit-text-stroke-color", "rgb(34, 59, 85)");
+  await expect(wordmark).toHaveCSS("-webkit-text-stroke-width", "0.45px");
+
+  const fill = await wordmark.evaluate((element) => getComputedStyle(element).backgroundImage);
+  expect(fill).toContain("linear-gradient");
+  expect(fill).toContain("rgb(188, 162, 106)");
+  await expect.poll(() => wordmark.evaluate((element) =>
+    getComputedStyle(element, "::after").animationName,
+  )).toBe("text-glimmer");
+});
+
+test("accents the four-color brand mark without changing its spin", async ({ page }) => {
+  await page.goto("/");
+  const mark = page.locator(".brand-mark");
+  const tiles = mark.locator("i");
+  await expect(tiles).toHaveCount(4);
+  expect(await tiles.evaluateAll((elements) => elements.map((element) => getComputedStyle(element).backgroundColor))).toEqual([
+    "rgb(222, 254, 252)",
+    "rgb(220, 215, 247)",
+    "rgb(250, 212, 224)",
+    "rgb(214, 242, 185)",
+  ]);
+  expect(await tiles.evaluateAll((elements) => elements.map((element) => getComputedStyle(element).borderTopLeftRadius))).toEqual([
+    "5px",
+    "1.5px",
+    "1.5px",
+    "1.5px",
+  ]);
+  await expect(tiles.first()).toHaveCSS("border-top-color", "rgba(34, 59, 85, 0.52)");
+  expect(await tiles.first().evaluate((element) => getComputedStyle(element).boxShadow)).toContain("169, 124, 53");
+
+  await mark.hover();
+  await expect(mark).toHaveCSS("animation-name", "logo-spin-settle");
+});
+
 test("keeps shortcut keycaps inside the dialog on short mobile screens", async ({ page }) => {
   await page.setViewportSize({ width: 402, height: 650 });
-  await page.goto("/b/john/c/3/v/16");
+  await page.goto("/kjv/b/john/c/3/v/16");
   await page.locator("#shortcuts-open").click();
 
   const dialog = page.locator("#shortcuts-dialog");
@@ -47,7 +86,7 @@ test("keeps shortcut keycaps inside the dialog on short mobile screens", async (
 
 test("uses the picker root to distinguish inside and outside clicks", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/b/john/c/3/v/16");
+  await page.goto("/kjv/b/john/c/3/v/16");
   await page.locator("#chapter-picker").evaluate((root) => {
     root.id = "custom-picker-root";
   });
@@ -106,11 +145,11 @@ test("loads another search batch from a mobile touch scroll", async ({ page }) =
   const x = Math.round(bounds.x + bounds.width / 2);
   await session.send("Input.dispatchTouchEvent", {
     type: "touchStart",
-    touchPoints: [{ id: 1, x, y: Math.round(bounds.y + bounds.height - 24) }],
+    touchPoints: [{ id: 1, x, y: Math.round(bounds.y + bounds.height - 12) }],
   });
   await session.send("Input.dispatchTouchEvent", {
     type: "touchMove",
-    touchPoints: [{ id: 1, x, y: Math.round(bounds.y + 24) }],
+    touchPoints: [{ id: 1, x, y: Math.max(1, Math.round(bounds.y - 120)) }],
   });
   await session.send("Input.dispatchTouchEvent", {
     type: "touchEnd",
@@ -121,16 +160,129 @@ test("loads another search batch from a mobile touch scroll", async ({ page }) =
   await expect(page.locator(".search-result")).toHaveCount(24);
 });
 
+test("switches editions at the same passage and canonicalizes legacy KJV links", async ({ page }) => {
+  await page.goto("/b/john/c/3/v/16");
+  await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/16$/);
+
+  await page.goto("/b/john/3/16");
+  await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("#verse-list")).toHaveAttribute("lang", "en");
+
+  await page.locator("#edition-select").click();
+  await expect(page.locator("#edition-options")).toBeVisible();
+  await page.locator("#edition-option-krv").click();
+  await expect(page).toHaveURL(/\/krv\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("#edition-options")).toBeHidden();
+  await expect.poll(() => page.locator("#reader").evaluate((reader) =>
+    reader.getAnimations().some((animation) => animation.effect.getTiming().duration === 620),
+  )).toBe(true);
+  await expect(page.locator("#verse-16")).toBeFocused();
+  await page.reload();
+  await expect(page).toHaveURL(/\/krv\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("body")).toHaveClass(/is-krv-edition/);
+  await expect.poll(() => page.locator("body").evaluate((element) =>
+    getComputedStyle(element, "::before").opacity,
+  )).toBe("1");
+  await expect(page.locator("#verse-list")).toHaveAttribute("lang", "ko");
+  await expect(page.locator("#verse-16 .verse-text")).toContainText("하나님이 세상을 이처럼 사랑하사");
+  await expect(page.locator("#verse-16 .verse-text")).toHaveJSProperty("lang", "ko");
+  expect(await page.locator("#verse-16 .verse-text").evaluate((element) =>
+    getComputedStyle(element).fontFamily.includes("Helvetica Neue"),
+  )).toBe(true);
+  expect(await page.locator(".edition-trigger-label").evaluate((element) =>
+    getComputedStyle(element).fontFamily.includes("Noto Serif KR"),
+  )).toBe(true);
+  expect(await page.locator(".book-name").first().evaluate((element) =>
+    getComputedStyle(element).fontFamily.includes("Noto Serif KR"),
+  )).toBe(true);
+  expect(await page.locator(".chapter-option").first().evaluate((element) =>
+    getComputedStyle(element).fontFamily.includes("Noto Serif KR"),
+  )).toBe(true);
+  await expect(page.locator("#edition-attribution")).toContainText("대한성서공회");
+
+  await page.keyboard.press("ArrowDown");
+  await expect(page).toHaveURL(/\/krv\/b\/john\/c\/3\/v\/17$/);
+  await expect(page.locator("#verse-17")).toHaveClass(/is-focused/);
+
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-option-kjv").click();
+  await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/17$/);
+  await expect(page.locator("body")).not.toHaveClass(/is-krv-edition/);
+  await expect.poll(() => page.locator("body").evaluate((element) =>
+    getComputedStyle(element, "::before").opacity,
+  )).toBe("0");
+  await expect(page.locator("#verse-16 .verse-text")).toContainText("For God so loved the world");
+  await expect(page.locator("#edition-attribution")).toBeHidden();
+});
+
+test("renders the KRV brand before its scripture index finishes loading", async ({ page }) => {
+  await page.route("**/scripture/krv/index.json", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    await route.continue();
+  });
+
+  await page.goto("/krv/b/john/c/3/v/16", { waitUntil: "domcontentloaded" });
+
+  await expect(page.locator("#brand-edition-primary")).toHaveText("개역한글");
+  await expect(page.locator("#brand-edition-secondary")).toHaveText("1961");
+  await expect(page.locator("#brand-edition-primary")).not.toHaveText("KING JAMES");
+  await expect(page.locator("#verse-16 .verse-text")).toContainText("하나님이 세상을 이처럼 사랑하사");
+});
+
+test("supports keyboard navigation in the edition menu", async ({ page }) => {
+  await page.goto("/");
+  const trigger = page.locator("#edition-select");
+  await trigger.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator("#edition-options")).toBeVisible();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator("#edition-option-krv")).toBeFocused();
+  await page.keyboard.press("Enter");
+
+  await expect(page).toHaveURL(/\/krv\/b\/genesis\/c\/1\/v\/1$/);
+  await expect(page.locator("#verse-list")).toHaveAttribute("lang", "ko");
+});
+
+test("Escape from the edition menu returns focus to the verse for arrow navigation", async ({ page }) => {
+  await page.goto("/kjv/b/john/c/3/v/16");
+  const trigger = page.locator("#edition-select");
+  await trigger.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator("#edition-options")).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  await expect(page.locator("#edition-options")).toBeHidden();
+  await expect(page.locator("#verse-16")).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+
+  await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/17$/);
+  await expect(page.locator("#verse-17")).toHaveClass(/is-focused/);
+});
+
+test("switches to KRV from the mobile navigation drawer", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/kjv/b/john/c/3/v/16");
+  await page.locator("#menu-toggle").click();
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-option-krv").click();
+
+  await expect(page).toHaveURL(/\/krv\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("#sidebar")).not.toHaveClass(/is-open/);
+  await expect(page.locator("#verse-16")).toBeFocused();
+  await expect(page.locator("#verse-list")).toHaveAttribute("lang", "ko");
+  await expect(page.locator("#verse-16 .verse-text")).toContainText("하나님이 세상을 이처럼 사랑하사");
+});
+
 for (const viewport of [
   { width: 390, height: 844, label: "mobile" },
   { width: 1280, height: 900, label: "desktop" },
 ]) {
   test(`clicking a verse updates the URL and highlights it on ${viewport.label}`, async ({ page }) => {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
-    await page.goto("/b/john/c/3/v/16");
+    await page.goto("/kjv/b/john/c/3/v/16");
     await page.locator("#verse-17").click();
 
-    await expect(page).toHaveURL(/\/b\/john\/c\/3\/v\/17$/);
+    await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/17$/);
     await expect(page.locator("#verse-17")).toHaveClass(/is-focused/);
     await expect(page.locator("#verse-17")).toHaveCSS("animation-name", "verse-glow");
   });
