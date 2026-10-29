@@ -994,11 +994,15 @@ body.is-krv-edition .chapter-options-count {
 .testament-tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 5px;
+  gap: 4px;
   margin: 0 5px 15px;
   padding: 4px;
+  border: 1px solid rgba(169, 124, 53, 0.4);
   border-radius: 5px;
-  background: var(--pink);
+  background: linear-gradient(135deg, #fff5d5, #f8f2e7 56%, #f5e6e9);
+  box-shadow:
+    0 2px 0 rgba(169, 124, 53, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
 }
 .testament-tab {
   --sheen-edge: rgba(209, 132, 153, 0.22);
@@ -1006,7 +1010,7 @@ body.is-krv-edition .chapter-options-count {
   position: relative;
   height: 34px;
   overflow: hidden;
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 3px;
   background: transparent;
   color: #777970;
@@ -1054,9 +1058,12 @@ body.is-krv-edition .chapter-options-count {
   font-size: 9px;
 }
 .testament-tab.is-active {
-  background: #fffefa;
-  color: #343631;
-  box-shadow: 0 1px 3px rgba(48, 47, 42, 0.08);
+  border-color: rgba(169, 124, 53, 0.35);
+  background: linear-gradient(145deg, #fffefa, #fff7df);
+  color: var(--navy-ink);
+  box-shadow:
+    0 2px 0 var(--brass-soft),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 .testament-tab.is-active span {
   color: #8e8d85;
@@ -1090,24 +1097,20 @@ body.is-krv-edition .chapter-options-count {
   color: var(--ink);
 }
 .book-row.is-current {
-  --sheen-edge: rgba(74, 145, 198, 0.2);
+  --sheen-edge: rgba(255, 255, 255, 0.48);
   --sheen-core: rgba(255, 255, 255, 0.94);
   position: relative;
   overflow: hidden;
   border: 1px solid transparent;
   border-radius: 4px;
   background:
-    linear-gradient(var(--blue), var(--blue)) padding-box,
-    linear-gradient(
-        120deg,
-        var(--blue-strong),
-        var(--lavender),
-        var(--pink),
-        var(--green)
-      )
-      border-box;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
-  color: #304c56;
+    linear-gradient(112deg, #c5e1e0 0%, #f7ffff 28%, #aad2d3 48%, #e6f7f5 68%, #c5e1e0 100%) padding-box,
+    linear-gradient(135deg, #587774, var(--brass-soft), #315863) border-box;
+  box-shadow:
+    0 2px 0 rgba(49, 88, 99, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.48);
+  color: var(--navy-ink);
 }
 .book-index {
   width: 19px;
@@ -1638,7 +1641,18 @@ body.is-krv-edition .chapter-options-count {
   animation: scripture-bloom 0.85s ease-out both;
 }
 .verse.is-focused {
-  background: var(--yellow);
+  isolation: isolate;
+  background: transparent;
+}
+.verse.is-focused::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: 6px;
+  background-image: linear-gradient(105deg, var(--yellow), var(--pink) 52%, var(--yellow));
+  content: "";
+  opacity: 0;
+  pointer-events: none;
   animation: verse-glow 2.2s ease both;
 }
 .chapter-footer {
@@ -2005,11 +2019,11 @@ body.is-quiet-reading #bmc-iframe {
 @keyframes verse-glow {
   0%,
   100% {
-    background: transparent;
+    opacity: 0;
   }
   20%,
   65% {
-    background: var(--yellow);
+    opacity: 1;
   }
 }
 

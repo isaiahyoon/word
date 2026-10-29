@@ -22,6 +22,47 @@ test("centers the chapter picker within a mobile viewport", async ({ page }) => 
   expect(Math.abs(bounds.y - triggerBounds.y - triggerBounds.height - 9)).toBeLessThan(1);
 });
 
+test("frames the testament tabs and gives the active tab a raised finish", async ({ page }) => {
+  await page.goto("/kjv/b/john/c/3/v/16");
+  const tabs = page.locator(".testament-tabs");
+  const activeTab = page.locator('.testament-tab[aria-selected="true"]');
+
+  await expect(tabs).toHaveCSS("border-top-color", "rgba(169, 124, 53, 0.4)");
+  await expect(tabs).toHaveCSS("box-shadow", /169, 124, 53/);
+  await expect(activeTab).toHaveCSS("border-top-color", "rgba(169, 124, 53, 0.35)");
+  await expect(activeTab).toHaveCSS("box-shadow", /223, 198, 129/);
+});
+
+test("uses a yellow-pink gradient for focused verses", async ({ page }) => {
+  await page.goto("/kjv/b/john/c/3/v/16");
+  const verse = page.locator("#verse-16");
+  await expect(verse).toHaveClass(/is-focused/);
+  await expect(verse).toHaveCSS("animation-name", "none");
+  const highlight = await verse.evaluate((element) => ({
+    animation: getComputedStyle(element, "::before").animationName,
+    radius: getComputedStyle(element, "::before").borderRadius,
+    gradient: getComputedStyle(element, "::before").backgroundImage,
+  }));
+  expect(highlight.animation).toBe("verse-glow");
+  expect(highlight.radius).toBe("6px");
+  expect(highlight.gradient).toContain("rgb(255, 254, 207)");
+  expect(highlight.gradient).toContain("rgb(250, 212, 224)");
+});
+
+test("styles the active book row with a metallic blue finish", async ({ page }) => {
+  await page.goto("/kjv/b/john/c/3/v/16");
+  const activeBook = page.locator('.book-row[aria-current="page"]');
+  const style = await activeBook.evaluate((element) => ({
+    background: getComputedStyle(element).backgroundImage,
+    shadow: getComputedStyle(element).boxShadow,
+    text: getComputedStyle(element).color,
+  }));
+  expect(style.background).toContain("linear-gradient");
+  expect(style.background).toContain("rgb(223, 198, 129)");
+  expect(style.shadow).toContain("49, 88, 99");
+  expect(style.text).toBe("rgb(34, 59, 85)");
+});
+
 test("selecting a chapter focuses verse one for arrow navigation", async ({ page }) => {
   await page.goto("/kjv/b/1-kings/c/18/v/2");
   await page.locator("#chapter-select").click();
@@ -298,6 +339,8 @@ for (const viewport of [
 
     await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/17$/);
     await expect(page.locator("#verse-17")).toHaveClass(/is-focused/);
-    await expect(page.locator("#verse-17")).toHaveCSS("animation-name", "verse-glow");
+    await expect.poll(() => page.locator("#verse-17").evaluate((element) =>
+      getComputedStyle(element, "::before").animationName,
+    )).toBe("verse-glow");
   });
 }
