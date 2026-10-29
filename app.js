@@ -10,7 +10,7 @@ const BOOK_TITLES = [
 ];
 
 const CHAPTER_GRADIENT_COLORS = ["var(--chapter-blue)", "var(--chapter-lavender)", "var(--chapter-pink)", "var(--chapter-green)"];
-const state = { book: 1, chapter: 1, testament: "old", chapterRequestId: 0, searchTimer: null, searchRequestId: 0, searchMatches: [], searchQuery: "", searchShown: 0, searchActiveIndex: -1 };
+const state = { book: 1, chapter: 1, testament: "old", lastBookByTestament: { old: 1, new: 40 }, chapterRequestId: 0, searchTimer: null, searchRequestId: 0, searchMatches: [], searchQuery: "", searchShown: 0, searchActiveIndex: -1 };
 const elements = {
   bookList: document.querySelector("#book-list"),
   chapterSelect: document.querySelector("#chapter-select"),
@@ -75,6 +75,7 @@ async function openChapter(book, chapter, focusVerse = null) {
   state.book = book;
   state.chapter = chapter;
   state.testament = testamentFor(book);
+  state.lastBookByTestament[state.testament] = book;
   renderBookList();
   elements.verseList.setAttribute("aria-busy", "true");
   elements.verseList.textContent = "Loading chapter...";
@@ -371,7 +372,7 @@ function bindMobileChapterButtons() {
 
 function bindEvents() {
   document.querySelectorAll(".testament-tab").forEach((tab) => tab.addEventListener("click", () => {
-    const book = tab.dataset.testament === "old" ? 1 : 40;
+    const book = state.lastBookByTestament[tab.dataset.testament];
     void openChapter(book, 1);
   }));
   document.querySelector("#previous-chapter").addEventListener("click", () => navigate(-1));
