@@ -49,6 +49,37 @@ test("uses a yellow-pink gradient for focused verses", async ({ page }) => {
   expect(highlight.gradient).toContain("rgb(250, 212, 224)");
 });
 
+test("renders edition-colored dotted scripture pages without mobile overflow", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/kjv/b/john/c/3/v/16");
+  const verseList = page.locator("#verse-list");
+  const getPageStyle = () => verseList.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      dot: style.getPropertyValue("--journal-dot").trim(),
+      paper: style.getPropertyValue("--journal-paper").trim(),
+      background: style.backgroundImage,
+      clientWidth: element.clientWidth,
+      scrollWidth: element.scrollWidth,
+    };
+  });
+
+  const kjvPage = await getPageStyle();
+  expect(kjvPage.background).toContain("radial-gradient");
+  expect(kjvPage.background).toContain("linear-gradient");
+  expect(kjvPage.paper).toBe("#f6f5ff");
+  expect(kjvPage.scrollWidth).toBe(kjvPage.clientWidth);
+
+  await page.locator("#menu-toggle").click();
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-option-krv").click();
+  await expect(page.locator("body")).toHaveClass(/is-krv-edition/);
+  const krvPage = await getPageStyle();
+  expect(krvPage.paper).toBe("#f1faf5");
+  expect(krvPage.dot).not.toBe(kjvPage.dot);
+  expect(krvPage.scrollWidth).toBe(krvPage.clientWidth);
+});
+
 test("styles the active book row with a metallic blue finish", async ({ page }) => {
   await page.goto("/kjv/b/john/c/3/v/16");
   const activeBook = page.locator('.book-row[aria-current="page"]');
