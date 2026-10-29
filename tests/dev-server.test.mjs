@@ -38,14 +38,18 @@ describe("development server", () => {
 
     assert.equal(response.status, 404);
     assert.match(html, /Page Not Found — The Word/);
-    assert.match(html, /id="go-back"/);
+    assert.match(html, /Come back to the reading room/);
+    assert.doesNotMatch(html, /id="go-back"/);
   });
 
   it("preserves a 404 status for the standalone error document", async () => {
     const response = await fetch(`${origin}/404.html`);
+    const html = await response.text();
 
     assert.equal(response.status, 404);
-    assert.match(await response.text(), /id="reader-link"/);
+    assert.match(html, /Come back to the reading room/);
+    assert.match(html, /id="reader-link"/);
+    assert.doesNotMatch(html, /id="go-back"/);
   });
 
   it("serves the shared typography sheet to the reader and error page", async () => {

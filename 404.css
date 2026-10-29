@@ -259,7 +259,6 @@ h1 {
   margin-top: 29px;
 }
 
-.back-button,
 .reader-link {
   min-height: 48px;
   display: inline-flex;
@@ -267,62 +266,41 @@ h1 {
   justify-content: center;
   gap: 10px;
   padding: 0 17px;
+  border: 1px solid #e2c36d;
   border-radius: 4px;
+  background: linear-gradient(125deg, #fff2c5 0%, #fff8e4 54%, #fbe3e9 100%);
+  color: #514833;
+  box-shadow: 0 3px 0 #d4b86e;
+  font-size: var(--type-control);
+  font-weight: var(--weight-semibold);
   text-decoration: none;
   cursor: pointer;
   transition:
     transform 0.16s ease,
     box-shadow 0.16s ease,
-    background 0.16s ease;
-}
-
-.back-button {
-  border: 1px solid #b65355;
-  background: var(--coral);
-  color: white;
-  box-shadow: 0 3px 0 #9e494a;
-  font-weight: var(--weight-semibold);
-}
-
-.back-button:hover {
-  background: #b65355;
-  box-shadow: 0 4px 0 #9e494a;
-  transform: translateY(-1px);
-}
-
-.back-button span {
-  font-size: 18px;
-  line-height: 1;
-}
-
-.reader-link {
-  border: 1px solid var(--line);
-  background: rgba(251, 250, 246, 0.78);
-  color: #4a4b45;
-  font-size: var(--type-control);
-  font-weight: var(--weight-semibold);
+    background 0.16s ease,
+    border-color 0.16s ease;
 }
 
 .reader-link:hover {
-  background: var(--paper);
+  border-color: #cda94e;
+  background: linear-gradient(125deg, #ffedaa 0%, #fff4d2 54%, #f8d7e2 100%);
+  box-shadow: 0 4px 0 #c9aa60;
   transform: translateY(-1px);
 }
 
-.return-note {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 20px 0 0;
-  color: #85857f;
-  font-size: var(--type-control-small);
+.reader-link:active {
+  box-shadow: 0 1px 0 #c9aa60;
+  transform: translateY(2px);
 }
 
-.return-note span {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--green);
-  box-shadow: 0 0 0 1px #8eaa6d;
+.reader-link span {
+  font-size: 17px;
+  transition: transform 0.16s ease;
+}
+
+.reader-link:hover span {
+  transform: translateX(3px);
 }
 
 .page-footer {
@@ -435,7 +413,6 @@ h1 {
     margin-top: 23px;
   }
 
-  .back-button,
   .reader-link {
     width: 100%;
     min-height: 50px;

@@ -2,7 +2,7 @@ import { bindKeyboardShortcuts } from "./keyboard-shortcuts.js";
 import { createChapterPicker } from "./chapter-picker.js";
 import { createScriptureStore } from "./scripture-store.js";
 import { createVisualEffects } from "./visual-effects.js";
-import { createScriptureRoutes, isValidVerseRange, normalizeVerseRange, parseScriptureLocation } from "./scripture-routes.mjs";
+import { createScriptureRoutes, isValidVerseRange, normalizeVerseRange } from "./scripture-routes.mjs";
 import { BOOKS } from "./books.mjs";
 
 const BOOK_TITLES = [
@@ -11,7 +11,6 @@ const BOOK_TITLES = [
 ];
 
 const CHAPTER_GRADIENT_COLORS = ["var(--chapter-blue)", "var(--chapter-lavender)", "var(--chapter-pink)", "var(--chapter-green)"];
-const LAST_READER_PATH_KEY = "the-word:last-reader-path";
 const state = { book: 1, chapter: 1, testament: "old", lastBookByTestament: { old: 1, new: 40 }, chapterRequestId: 0, searchTimer: null, searchRequestId: 0, searchMatches: [], searchQuery: "", searchShown: 0, searchActiveIndex: -1 };
 const scriptureRoutes = createScriptureRoutes(BOOKS, new URL(document.baseURI).pathname);
 const elements = {
@@ -44,36 +43,20 @@ const visualEffects = createVisualEffects({
 const testamentFor = (book) => book <= 39 ? "old" : "new";
 const bookName = (book) => BOOKS[book - 1];
 
-function rememberReaderPath(path) {
-  try {
-    window.localStorage.setItem(LAST_READER_PATH_KEY, path);
-  } catch {}
-}
-
 function showInvalidScripturePath() {
   state.chapterRequestId += 1;
-  const errorUrl = new URL("404.html", document.baseURI);
-  try {
-    const lastReaderPath = window.localStorage.getItem(LAST_READER_PATH_KEY);
-    if (lastReaderPath) errorUrl.searchParams.set("return", lastReaderPath);
-  } catch {}
-  window.location.replace(errorUrl.href);
+  window.location.replace(new URL("404.html", document.baseURI).href);
 }
 
 async function restoreLocationFromPath() {
-  const { route, returnPath } = parseScriptureLocation(
-    scriptureRoutes,
-    window.location.pathname,
-    window.location.search
-  );
+  const route = scriptureRoutes.parse(window.location.pathname);
   if (!route) {
     showInvalidScripturePath();
     return;
   }
 
   const reference = route.home ? { book: 1, chapter: 1, range: null } : route;
-  const opened = await openChapter(reference.book, reference.chapter, reference.range, { updateHistory: false });
-  if (returnPath && opened) window.history.replaceState(null, "", returnPath);
+  await openChapter(reference.book, reference.chapter, reference.range, { updateHistory: false });
 }
 
 function createChapterGradient() {
@@ -118,23 +101,23 @@ async function openChapter(book, chapter, requestedRange = null, { updateHistory
   try {
     await scripture.loadChapter(book, chapter);
   } catch (error) {
-    if (requestId !== state.chapterRequestId) return false;
+    if (requestId !== state.chapterRequestId) return;
     if (error instanceof RangeError) {
       showInvalidScripturePath();
-      return false;
+      return;
     }
     console.error(error);
     elements.verseList.removeAttribute("aria-busy");
     elements.verseList.textContent = "The chapter could not be loaded. Please try again.";
-    return false;
+    return;
   }
 
-  if (requestId !== state.chapterRequestId) return false;
+  if (requestId !== state.chapterRequestId) return;
   const range = normalizeVerseRange(requestedRange) ?? (updateHistory ? { start: 1, end: 1 } : null);
   const verses = scripture.getChapter(book, chapter);
   if (range && !isValidVerseRange(range, verses.length)) {
     showInvalidScripturePath();
-    return false;
+    return;
   }
   elements.verseList.removeAttribute("aria-busy");
   renderChapter(range);
@@ -153,11 +136,9 @@ async function openChapter(book, chapter, requestedRange = null, { updateHistory
     visualEffects.triggerChapterGlimmers();
   }
   const path = scriptureRoutes.buildPath(book, chapter, range);
-  rememberReaderPath(path);
   if (updateHistory) {
     if (window.location.pathname !== path) window.history.pushState(null, "", path);
   }
-  return true;
 }
 
 function renderBookList() {

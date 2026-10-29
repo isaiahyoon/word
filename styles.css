@@ -269,6 +269,9 @@ a:focus-visible {
   background: #a9bd9a;
 }
 .shortcuts-trigger {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   min-height: 36px;
   display: inline-flex;
   align-items: center;
@@ -284,14 +287,49 @@ a:focus-visible {
   letter-spacing: 0.75px;
   cursor: pointer;
   transition:
-    background 0.16s,
-    border-color 0.16s;
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.22s ease,
+    color 0.2s ease,
+    transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.shortcuts-trigger:hover {
-  border-color: #d3ccec;
-  background: var(--lavender);
+.shortcuts-trigger::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(
+    112deg,
+    transparent 26%,
+    rgba(255, 255, 255, 0.82) 48%,
+    transparent 68%
+  );
+  background-size: 230% 100%;
+  background-position: 135% 0;
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+}
+.shortcuts-trigger:hover,
+.shortcuts-trigger:focus-visible {
+  border-color: #9acbd0;
+  background: linear-gradient(125deg, #ddf5f6 0%, #e5f4ed 62%, #e6eff8 100%);
+  color: #3f626b;
+  box-shadow:
+    0 3px 0 #b5d9d9,
+    0 8px 18px rgba(67, 132, 147, 0.16);
+  transform: translateY(-2px);
+}
+.shortcuts-trigger:hover::before,
+.shortcuts-trigger:focus-visible::before {
+  animation: shortcuts-sheen 0.72s ease-out both;
+}
+.shortcuts-trigger:active {
+  box-shadow: 0 1px 0 #b5d9d9;
+  transform: translateY(1px) scale(0.98);
 }
 .shortcuts-trigger > span:first-child {
+  position: relative;
+  z-index: 1;
   width: 18px;
   height: 18px;
   display: grid;
@@ -302,9 +340,24 @@ a:focus-visible {
   font-family: var(--serif);
   font-size: 12px;
   font-weight: 600;
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease,
+    transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.shortcuts-trigger:hover > span:first-child {
-  background: var(--yellow);
+.shortcuts-trigger > span:last-child {
+  position: relative;
+  z-index: 1;
+}
+.shortcuts-trigger:hover > span:first-child,
+.shortcuts-trigger:focus-visible > span:first-child {
+  background: linear-gradient(145deg, #f4ffff, #c9eff1);
+  box-shadow:
+    0 1px 0 #a9d8db,
+    0 0 10px rgba(190, 239, 241, 0.72);
+  color: #3f626b;
+  transform: rotate(12deg) scale(1.12);
 }
 .shortcuts-dialog {
   width: min(440px, calc(100vw - 32px));
@@ -1287,6 +1340,20 @@ a:focus-visible {
     box-shadow:
       0 2px 0 #e9aebf,
       0 0 0 0 rgba(209, 132, 153, 0);
+  }
+}
+@keyframes shortcuts-sheen {
+  0% {
+    opacity: 0;
+    background-position: 135% 0;
+  }
+  18%,
+  72% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    background-position: -35% 0;
   }
 }
 @keyframes mobile-chapter-sweep-previous {

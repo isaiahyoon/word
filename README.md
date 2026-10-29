@@ -55,7 +55,7 @@ Scripture links use short book slugs and optional chapter and verse-range segmen
 /b/john/c/3/v/16-18
 ```
 
-Valid verse links scroll to the requested verses and highlight them briefly. Invalid books, chapters, or verse ranges open the 404 page. **Return to last place** restores the latest valid reading location, including across tabs; **Open the reader** returns home.
+Valid verse links scroll to the requested verses and highlight them briefly. Invalid books, chapters, or verse ranges open the 404 page, which links back to the reading room.
 
 ## Scripture data
 

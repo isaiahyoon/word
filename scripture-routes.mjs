@@ -59,14 +59,6 @@ export function createScriptureRoutes(books, basePath = "/") {
   return { parse, buildPath };
 }
 
-export function parseScriptureLocation(routes, pathname, search) {
-  const returnPath = new URLSearchParams(search).get("return");
-  return {
-    route: routes.parse(returnPath ?? pathname),
-    returnPath
-  };
-}
-
 export function normalizeVerseRange(range) {
   if (range === null) return null;
   return Number.isSafeInteger(range) ? { start: range, end: range } : range;

@@ -9,9 +9,10 @@
       (() => {
         const currentPath = window.location.pathname;
         const routeIndex = currentPath.indexOf("/b/");
-        const appRoot = routeIndex < 0
-          ? currentPath.slice(0, currentPath.lastIndexOf("/") + 1)
-          : currentPath.slice(0, routeIndex + 1);
+        const appRoot =
+          routeIndex < 0
+            ? currentPath.slice(0, currentPath.lastIndexOf("/") + 1)
+            : currentPath.slice(0, routeIndex + 1);
         const baseElement = document.createElement("base");
         baseElement.href = appRoot || "/";
         document.head.append(baseElement);
@@ -19,7 +20,10 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Gelasio:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Gelasio:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="theme.css" />
     <link rel="stylesheet" href="typography.css" />
     <link rel="stylesheet" href="404.css" />
@@ -28,10 +32,16 @@
     <div class="page-shell">
       <header class="masthead">
         <a class="brand" id="brand-link" href="/" aria-label="The Word home">
-          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-          <span class="brand-name"><strong>the word</strong><small>KING JAMES VERSION</small></span>
+          <span class="brand-mark" aria-hidden="true"
+            ><i></i><i></i><i></i><i></i
+          ></span>
+          <span class="brand-name"
+            ><strong>the word</strong><small>KING JAMES VERSION</small></span
+          >
         </a>
-        <div class="masthead-note"><span aria-hidden="true"></span> READER'S DESK / 404</div>
+        <div class="masthead-note">
+          <span aria-hidden="true"></span> READER'S DESK / 404
+        </div>
       </header>
       <main class="main-content">
         <div class="error-art" aria-hidden="true">
@@ -41,42 +51,26 @@
           <p class="art-caption">“The next page is still waiting.”</p>
         </div>
         <section class="message" aria-labelledby="page-title">
-          <p class="eyebrow"><b>PAGE MISSING</b><i aria-hidden="true"></i> NOTHING LOST</p>
+          <p class="eyebrow">
+            <b>PAGE MISSING</b><i aria-hidden="true"></i> NOTHING LOST
+          </p>
           <h1 id="page-title">This page missed its place.</h1>
-          <p class="description">That address didn’t lead to a page. You can step back to where you were, or return to the reader.</p>
+          <p class="description">
+            That address wandered off the page. The reading room is still here
+            whenever you need it.
+          </p>
           <div class="actions">
-            <button class="back-button" id="go-back" type="button"><span aria-hidden="true">←</span> Return to last place</button>
-            <a class="reader-link" id="reader-link" href="/">Open the reader</a>
+            <a class="reader-link" id="reader-link" href="/">
+              Come back to the reading room
+              <span aria-hidden="true">→</span>
+            </a>
           </div>
-          <p class="return-note"><span aria-hidden="true"></span> Your reading place is only a step away.</p>
         </section>
       </main>
-      <footer class="page-footer"><span>THE WORD / KING JAMES VERSION</span><span>A QUIET PLACE TO RETURN</span></footer>
+      <footer class="page-footer">
+        <span>THE WORD / KING JAMES VERSION</span
+        ><span>A QUIET PLACE TO RETURN</span>
+      </footer>
     </div>
-    <script>
-      const readerLink = document.querySelector("#reader-link");
-      const brandLink = document.querySelector("#brand-link");
-      const appRoot = new URL(document.baseURI).pathname;
-      const homeUrl = new URL(appRoot || "/", window.location.origin).href;
-      const lastReaderPathKey = "the-word:last-reader-path";
-      const readerRoot = appRoot.endsWith("/") ? appRoot : `${appRoot}/`;
-      let returnUrl = homeUrl;
-      const returnCandidates = [new URLSearchParams(window.location.search).get("return")];
-      try {
-        returnCandidates.push(window.localStorage.getItem(lastReaderPathKey));
-      } catch {}
-      for (const candidate of returnCandidates) {
-        if (!candidate) continue;
-        try {
-          const candidateUrl = new URL(candidate, window.location.origin);
-          if (
-            candidateUrl.origin === window.location.origin &&
-            candidateUrl.pathname.startsWith(`${readerRoot}b/`) &&
-            !candidateUrl.search &&
-            !candidateUrl.hash
-          ) {
-            const recoveryUrl = new URL(homeUrl);
-            recoveryUrl.searchParams.set("return", candidateUrl.pathname);
-            returnUrl = recoveryUrl.href;
-            break;
-          }
+  </body>
+</html>

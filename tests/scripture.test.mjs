@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { BOOKS, bookFileName } from "../books.mjs";
-import { createScriptureRoutes, isValidVerseRange, normalizeVerseRange, parseScriptureLocation } from "../scripture-routes.mjs";
+import { createScriptureRoutes, isValidVerseRange, normalizeVerseRange } from "../scripture-routes.mjs";
 import { createScriptureStore } from "../scripture-store.js";
 
 function createMockFetch() {
@@ -61,14 +61,6 @@ describe("scripture routes", () => {
       range: { start: 16, end: 18 }
     });
     assert.equal(mountedRoutes.parse("/other/b/john/c/3"), null);
-  });
-
-  it("restores a scripture route passed through the app root", () => {
-    const returnPath = "/b/john/c/3/v/16";
-    const location = parseScriptureLocation(routes, "/", `?return=${encodeURIComponent(returnPath)}`);
-
-    assert.equal(location.returnPath, returnPath);
-    assert.deepEqual(location.route, { book: 43, chapter: 3, range: { start: 16, end: 16 } });
   });
 
   it("rejects malformed or unknown routes", () => {
