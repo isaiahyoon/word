@@ -902,6 +902,16 @@ body.is-krv-edition .edition-option.is-selected {
 body.is-krv-edition .edition-option.is-selected .edition-option-check {
   color: var(--deep-teal);
 }
+body.is-krv-edition .edition-trigger-label,
+body.is-krv-edition .edition-option-description,
+body.is-krv-edition .edition-attribution,
+body.is-krv-edition .book-name,
+body.is-krv-edition .chapter-select,
+body.is-krv-edition .chapter-menu-heading h2,
+body.is-krv-edition .chapter-option,
+body.is-krv-edition .chapter-options-count {
+  font-family: var(--serif-korean-ui);
+}
 .edition-picker:has(.edition-options:not([hidden])) {
   z-index: 13;
 }
@@ -1547,10 +1557,13 @@ body.is-krv-edition .edition-option.is-selected .edition-option-check {
 }
 #heading-book:lang(ko),
 #book-crumb:lang(ko),
-#chapter-kicker:lang(ko),
+#chapter-kicker:lang(ko) {
+  font-family: var(--serif-korean-ui);
+  letter-spacing: 0;
+}
 .verse-text:lang(ko),
 .result-text:lang(ko) {
-  font-family: "Noto Serif KR", "AppleMyungjo", "Batang", serif;
+  font-family: var(--sans-korean-scripture);
   letter-spacing: 0;
 }
 .scripture-glow {

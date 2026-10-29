@@ -146,6 +146,19 @@ test("switches editions at the same passage and canonicalizes legacy KJV links",
   )).toBe("1");
   await expect(page.locator("#verse-list")).toHaveAttribute("lang", "ko");
   await expect(page.locator("#verse-16 .verse-text")).toContainText("하나님이 세상을 이처럼 사랑하사");
+  await expect(page.locator("#verse-16 .verse-text")).toHaveJSProperty("lang", "ko");
+  expect(await page.locator("#verse-16 .verse-text").evaluate((element) =>
+    getComputedStyle(element).fontFamily.includes("Helvetica Neue"),
+  )).toBe(true);
+  expect(await page.locator(".edition-trigger-label").evaluate((element) =>
+    getComputedStyle(element).fontFamily.includes("Noto Serif KR"),
+  )).toBe(true);
+  expect(await page.locator(".book-name").first().evaluate((element) =>
+    getComputedStyle(element).fontFamily.includes("Noto Serif KR"),
+  )).toBe(true);
+  expect(await page.locator(".chapter-option").first().evaluate((element) =>
+    getComputedStyle(element).fontFamily.includes("Noto Serif KR"),
+  )).toBe(true);
   await expect(page.locator("#edition-attribution")).toContainText("대한성서공회");
 
   await page.keyboard.press("ArrowDown");

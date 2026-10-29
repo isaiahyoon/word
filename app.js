@@ -286,6 +286,7 @@ function renderBookList() {
     button.setAttribute("aria-current", book === state.book ? "page" : "false");
     const chapters = scripture.chapterCount(book);
     button.innerHTML = `<span class="book-index">${String(book).padStart(2, "0")}</span><span class="book-name">${bookName(book)}</span><span class="book-chapters">${chapters}</span>`;
+    button.querySelector(".book-name").lang = EDITIONS[state.editionId].language;
     button.addEventListener("click", () => {
       const changedBook = book !== state.book;
       closeSidebar();
@@ -331,6 +332,7 @@ function renderChapter(focusRange = null) {
 
   const chapterCount = scripture.chapterCount(state.book);
   chapterPicker.render({ bookName: name, chapterCount, activeChapter: state.chapter });
+  document.querySelector("#chapter-options-title").lang = EDITIONS[state.editionId].language;
 
   visualEffects.clearScriptureGlow();
   elements.verseList.replaceChildren();
@@ -353,6 +355,8 @@ function renderChapter(focusRange = null) {
     number.textContent = verse.verse;
     const text = document.createElement("span");
     text.className = "verse-text";
+    text.lang = EDITIONS[state.editionId].language;
+    text.dir = EDITIONS[state.editionId].direction;
     text.textContent = verse.text;
     row.append(number, text);
     elements.verseList.append(row);
