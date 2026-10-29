@@ -2,6 +2,7 @@ import { createReadStream, promises as fs } from "node:fs";
 import { createServer } from "node:http";
 import { dirname, extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { EDITION_IDS } from "../editions.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const port = Number(process.env.PORT ?? 8000);
@@ -15,8 +16,11 @@ const contentTypes = new Map([
   [".png", "image/png"],
   [".svg", "image/svg+xml"]
 ]);
+const knownEditions = new Set(EDITION_IDS);
 
 function isScriptureRoute(pathname) {
+  const pathSegments = pathname.split("/").filter(Boolean);
+  if (knownEditions.has(pathSegments.at(-1))) return true;
   const routeIndex = pathname.indexOf("/b/");
   if (routeIndex < 0) return false;
   return /^\/b\/[^/]+(?:\/(?:c\/\d+(?:\/v\/\d+(?:-\d+)?)?|\d+\/\d+))?\/?$/.test(pathname.slice(routeIndex));

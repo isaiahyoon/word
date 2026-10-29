@@ -55,6 +55,8 @@ describe("development server", () => {
     for (const path of [
       "/kjv/b/joshua/c/1/v/1-10",
       "/krv/b/joshua/c/1/v/1-10",
+      "/kjv",
+      "/krv",
       "/b/joshua/c/1/v/1-10",
       "/b/john/3/16",
     ]) {

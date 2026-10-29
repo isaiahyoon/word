@@ -315,6 +315,14 @@ test("renders the KRV brand before its scripture index finishes loading", async 
   await expect(page.locator("#verse-16 .verse-text")).toContainText("하나님이 세상을 이처럼 사랑하사");
 });
 
+test("routes an edition-only URL to Genesis 1:1 in that edition", async ({ page }) => {
+  await page.goto("/krv");
+
+  await expect(page).toHaveURL(/\/krv\/?$/);
+  await expect(page.locator("body")).toHaveClass(/is-krv-edition/);
+  await expect(page.locator("#verse-1 .verse-text")).toContainText("태초에 하나님이 천지를 창조하시니라");
+});
+
 test("supports keyboard navigation in the edition menu", async ({ page }) => {
   await page.goto("/");
   const trigger = page.locator("#edition-select");

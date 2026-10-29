@@ -56,6 +56,22 @@ describe("scripture routes", () => {
     assert.deepEqual(routes.parse("/"), { home: true, editionId: "kjv" });
   });
 
+  it("defaults an edition-only route to Genesis 1:1", () => {
+    for (const editionId of ["kjv", "krv"]) {
+      assert.deepEqual(routes.parse(`/${editionId}`), {
+        editionId,
+        book: 1,
+        chapter: 1,
+        range: { start: 1, end: 1 },
+        legacy: false,
+      });
+    }
+
+    const futureEditionRoutes = createScriptureRoutes(BOOKS, "/", ["kjv", "future-edition"]);
+    assert.equal(futureEditionRoutes.parse("/future-edition").book, 1);
+    assert.equal(futureEditionRoutes.parse("/future-edition").editionId, "future-edition");
+  });
+
   it("defaults legacy KJV routes to verse one", () => {
     assert.deepEqual(routes.parse("/b/john"), {
       editionId: "kjv",

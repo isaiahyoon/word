@@ -13,8 +13,10 @@
     <meta property="og:type" content="website" />
     <script>
       const currentPath = location.pathname;
-      const routeIndex = currentPath.search(/\/(?:(?:kjv|krv)\/)?b\//);
-      window.initialEditionId = currentPath.match(/\/(kjv|krv)\/b\//)?.[1] ?? "kjv";
+      const routeIndex = currentPath.search(/\/(?:[^/]+\/)?b\//);
+      const pathSegments = currentPath.split("/").filter(Boolean);
+      window.initialEditionId =
+        currentPath.match(/\/([^/]+)\/b\//)?.[1] ?? pathSegments.at(-1) ?? "kjv";
       const appRoot =
         routeIndex < 0
           ? currentPath.slice(0, currentPath.lastIndexOf("/") + 1)

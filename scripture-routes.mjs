@@ -17,6 +17,15 @@ export function createScriptureRoutes(books, basePath = "/", editionIds = ["kjv"
     const legacy = pathSegments[0] === "b";
     const editionId = legacy ? "kjv" : pathSegments[0];
     if (!knownEditions.has(editionId)) return null;
+    if (!legacy && pathSegments.length === 1) {
+      return {
+        editionId,
+        book: 1,
+        chapter: 1,
+        range: { start: 1, end: 1 },
+        legacy: false,
+      };
+    }
     const segments = legacy ? pathSegments : pathSegments.slice(1);
     if (![2, 4, 6].includes(segments.length) || segments[0] !== "b") return null;
 
