@@ -503,6 +503,69 @@ function closeSidebar() {
   elements.menuToggle.setAttribute("aria-expanded", "false");
 }
 
+function bindMobileSwipeNavigation() {
+  const cues = document.querySelector("#mobile-swipe-cues");
+  if (!cues) return;
+
+  let gesture = null;
+  cues.addEventListener("pointerdown", (event) => {
+    if (event.pointerType !== "touch") return;
+    const zone = event.target instanceof Element ? event.target.closest(".mobile-swipe-zone") : null;
+    if (!zone) return;
+
+    gesture = {
+      pointerId: event.pointerId,
+      direction: zone.dataset.swipeDirection,
+      startX: event.clientX,
+      startY: event.clientY,
+      startedAt: performance.now(),
+      zone
+    };
+    event.preventDefault();
+    zone.setPointerCapture(event.pointerId);
+  });
+  cues.addEventListener("pointermove", (event) => {
+    if (!gesture || event.pointerId !== gesture.pointerId) return;
+    const deltaX = event.clientX - gesture.startX;
+    const deltaY = event.clientY - gesture.startY;
+    const towardCenter = gesture.direction === "previous" ? deltaX > 0 : deltaX < 0;
+    gesture.zone.classList.toggle("is-swiping", towardCenter && Math.abs(deltaX) > Math.abs(deltaY));
+  });
+  cues.addEventListener("pointerup", (event) => {
+    if (!gesture || event.pointerId !== gesture.pointerId) return;
+    const completedGesture = gesture;
+    gesture = null;
+    const deltaX = event.clientX - completedGesture.startX;
+    const deltaY = event.clientY - completedGesture.startY;
+    const elapsed = performance.now() - completedGesture.startedAt;
+    const towardCenter = completedGesture.direction === "previous" ? deltaX > 0 : deltaX < 0;
+    completedGesture.zone.classList.remove("is-swiping");
+
+    if (
+      towardCenter &&
+      Math.abs(deltaX) >= 56 &&
+      Math.abs(deltaX) > Math.abs(deltaY) * 1.25 &&
+      elapsed < 1000
+    ) {
+      navigate(completedGesture.direction === "previous" ? -1 : 1);
+      completedGesture.zone.classList.remove("did-swipe");
+      void completedGesture.zone.offsetWidth;
+      completedGesture.zone.classList.add("did-swipe");
+    }
+  });
+  const clearGesture = (event) => {
+    if (gesture && (!event.pointerId || event.pointerId === gesture.pointerId)) {
+      gesture.zone.classList.remove("is-swiping");
+      gesture = null;
+    }
+  };
+  cues.addEventListener("pointercancel", clearGesture);
+  cues.addEventListener("lostpointercapture", clearGesture);
+  cues.addEventListener("animationend", (event) => {
+    if (event.animationName === "swipe-confirm") event.target.classList.remove("did-swipe");
+  });
+}
+
 function bindEvents() {
   elements.verseList.addEventListener("pointermove", glowScriptureCharacter);
   elements.verseList.addEventListener("pointerleave", clearScriptureGlow);
@@ -585,6 +648,7 @@ function bindEvents() {
     else openSidebar();
   });
   elements.sidebarScrim.addEventListener("click", closeSidebar);
+  bindMobileSwipeNavigation();
 }
 
 initialize().catch((error) => {
