@@ -5,6 +5,7 @@ export function createChapterPicker({ root, trigger, value, popover, heading, co
 
   function close(returnFocus = false) {
     popover.hidden = true;
+    if (popover.parentElement !== root) root.append(popover);
     trigger.setAttribute("aria-expanded", "false");
     if (returnFocus) trigger.focus();
   }
@@ -16,6 +17,9 @@ export function createChapterPicker({ root, trigger, value, popover, heading, co
   }
 
   function open(chapter = Number(value.textContent)) {
+    if (window.matchMedia("(max-width: 640px)").matches) {
+      document.body.append(popover);
+    }
     popover.style.setProperty(
       "--chapter-popover-top",
       `${trigger.getBoundingClientRect().bottom + 9}px`
@@ -78,7 +82,7 @@ export function createChapterPicker({ root, trigger, value, popover, heading, co
     options[targetIndex]?.focus();
   });
   document.addEventListener("click", (event) => {
-    if (!root.contains(event.target)) close();
+    if (!root.contains(event.target) && !popover.contains(event.target)) close();
   });
 
   return { close, isOpen: () => !popover.hidden, render };

@@ -362,8 +362,10 @@ a:focus-visible {
 .shortcuts-dialog {
   width: min(440px, calc(100vw - 32px));
   max-width: none;
+  max-height: calc(100dvh - 32px);
   padding: 0;
-  overflow: visible;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--paper);
