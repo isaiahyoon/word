@@ -30,6 +30,83 @@ let chapterPicker;
 const testamentFor = (book) => book <= 39 ? "old" : "new";
 const bookName = (book) => BOOKS[book - 1];
 const chapterKey = (book, chapter) => `${book}:${chapter}`;
+const scriptureSegmenter = typeof Intl.Segmenter === "function"
+  ? new Intl.Segmenter(undefined, { granularity: "grapheme" })
+  : null;
+let activeScriptureGlow = null;
+
+function clearScriptureGlow() {
+  if (!activeScriptureGlow) return;
+
+  const parent = activeScriptureGlow.parentNode;
+  if (parent) {
+    parent.replaceChild(document.createTextNode(activeScriptureGlow.textContent), activeScriptureGlow);
+    parent.normalize();
+  }
+  activeScriptureGlow = null;
+}
+
+function scriptureCharacterAt(text, offset) {
+  let lastSegment = null;
+  if (scriptureSegmenter) {
+    for (const segment of scriptureSegmenter.segment(text)) {
+      lastSegment = segment;
+      if (offset >= segment.index && offset < segment.index + segment.segment.length) {
+        return segment.segment.trim() ? segment : null;
+      }
+    }
+    return offset >= text.length && lastSegment?.segment.trim() ? lastSegment : null;
+  }
+
+  let index = 0;
+  for (const segment of text) {
+    lastSegment = { index, segment };
+    if (offset >= index && offset < index + segment.length) {
+      return segment.trim() ? lastSegment : null;
+    }
+    index += segment.length;
+  }
+  return offset >= text.length && lastSegment?.segment.trim() ? lastSegment : null;
+}
+
+function caretAtPoint(event) {
+  if (document.caretPositionFromPoint) {
+    const position = document.caretPositionFromPoint(event.clientX, event.clientY);
+    return position && { node: position.offsetNode, offset: position.offset };
+  }
+  const range = document.caretRangeFromPoint?.(event.clientX, event.clientY);
+  return range && { node: range.startContainer, offset: range.startOffset };
+}
+
+function glowScriptureCharacter(event) {
+  if (event.pointerType === "touch") {
+    clearScriptureGlow();
+    return;
+  }
+
+  const textElement = event.target instanceof Element ? event.target.closest(".verse-text") : null;
+  if (!textElement) {
+    clearScriptureGlow();
+    return;
+  }
+  if (activeScriptureGlow?.contains(event.target)) return;
+
+  clearScriptureGlow();
+  const caret = caretAtPoint(event);
+  if (!caret || caret.node.nodeType !== Node.TEXT_NODE || !textElement.contains(caret.node)) return;
+
+  const character = scriptureCharacterAt(caret.node.textContent, caret.offset);
+  if (!character) return;
+
+  const range = document.createRange();
+  range.setStart(caret.node, character.index);
+  range.setEnd(caret.node, character.index + character.segment.length);
+  const glow = document.createElement("span");
+  glow.className = "scripture-glow";
+  glow.style.setProperty("--rainbow-hue", `${Math.floor(Math.random() * 360)}deg`);
+  range.surroundContents(glow);
+  activeScriptureGlow = glow;
+}
 
 function loadBook(book) {
   if (state.bookLoads.has(book)) return state.bookLoads.get(book);
@@ -166,9 +243,12 @@ function renderChapter(focusVerse = null) {
   const verses = state.chapters.get(chapterKey(state.book, state.chapter)) ?? [];
   document.querySelector("#testament-name").textContent = `${testament.toUpperCase()} TESTAMENT`;
   document.querySelector("#book-crumb").textContent = name.toUpperCase();
-  document.querySelector("#heading-book").textContent = name;
+  const headingBook = document.querySelector("#heading-book");
+  headingBook.textContent = name;
+  headingBook.dataset.glimmer = name;
   const chapterNumber = document.querySelector("#heading-chapter");
   chapterNumber.textContent = state.chapter;
+  chapterNumber.dataset.glimmer = state.chapter;
   chapterNumber.style.setProperty("--chapter-gradient", createChapterGradient());
   document.querySelector("#chapter-kicker").textContent = BOOK_TITLES[state.book - 1].toUpperCase();
   document.querySelector("#verse-count").textContent = `${verses.length} ${verses.length === 1 ? "verse" : "verses"}`;
@@ -178,6 +258,7 @@ function renderChapter(focusVerse = null) {
   const chapterCount = state.chapterCounts[state.book - 1];
   chapterPicker.render({ bookName: name, chapterCount, activeChapter: state.chapter });
 
+  clearScriptureGlow();
   elements.verseList.replaceChildren();
   for (const verse of verses) {
     const row = document.createElement("p");
@@ -413,6 +494,8 @@ function closeSidebar() {
 }
 
 function bindEvents() {
+  elements.verseList.addEventListener("pointermove", glowScriptureCharacter);
+  elements.verseList.addEventListener("pointerleave", clearScriptureGlow);
   document.querySelectorAll(".testament-tab").forEach((tab) => tab.addEventListener("click", () => {
     const book = tab.dataset.testament === "old" ? 1 : 40;
     void openChapter(book, 1);

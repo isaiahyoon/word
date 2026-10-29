@@ -59,6 +59,15 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .brand-copy { display: flex; flex-direction: column; gap: 2px; }
 .brand-copy strong { font-family: var(--serif); font-size: 23px; font-weight: 500; line-height: 1; }
 .brand-copy small { color: #777972; font-size: 8px; font-weight: 700; letter-spacing: 1.25px; }
+.glimmer-text { position: relative; display: inline-block; isolation: isolate; }
+.glimmer-text::after { position: absolute; inset: 0; overflow: hidden; color: transparent; background-image: linear-gradient(108deg, transparent 40%, var(--glimmer-edge) 46%, var(--glimmer-shine) 50%, var(--glimmer-edge) 54%, transparent 60%); background-position: 135% 0; background-size: 240% 100%; background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; content: attr(data-glimmer); opacity: 0; pointer-events: none; }
+.glimmer-gold { --glimmer-edge: #d29a28; --glimmer-shine: #fff1b8; }
+.glimmer-blue { --glimmer-edge: #4a91c6; --glimmer-shine: #c8efff; }
+.glimmer-pink { --glimmer-edge: #d56f9c; --glimmer-shine: #ffe0ed; }
+.glimmer-white { --glimmer-edge: #b7c5d0; --glimmer-shine: #fff; }
+.brand:hover .glimmer-text::after, .brand:focus-visible .glimmer-text::after, .topbar-note:hover .glimmer-text::after { animation: text-glimmer .95s ease-out both; }
+.chapter-heading .glimmer-text:hover::after { animation: text-glimmer .9s ease-out both; }
+.brand-mark:hover, .brand:focus-visible .brand-mark { animation: logo-spin-settle 1.05s both; }
 .search-wrap { position: relative; z-index: 5; }
 .search-box { height: 46px; display: flex; align-items: center; gap: 12px; padding: 0 13px 0 16px; border: 1px solid #e5e2da; border-radius: 5px; background: rgba(255,255,255,.62); transition: border-color .2s, box-shadow .2s, background .2s; }
 .search-box:focus-within { border-color: var(--focus-border); background: #fff; box-shadow: 0 0 0 3px var(--focus-ring); }
@@ -118,14 +127,17 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .book-total { color: #4a4b45; font-family: var(--serif); font-size: 18px; }
 .book-total span { color: #8a8b83; font-family: var(--sans); font-size: 10px; }
 .testament-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin: 0 5px 15px; padding: 4px; border-radius: 5px; background: var(--pink); }
-.testament-tab { height: 34px; border: 0; border-radius: 3px; background: transparent; color: #777970; font-size: 11px; font-weight: 600; cursor: pointer; transition: background .18s, color .18s; }
+.testament-tab { --sheen-edge: rgba(209,132,153,.22); --sheen-core: rgba(255,247,250,.96); position: relative; height: 34px; overflow: hidden; border: 0; border-radius: 3px; background: transparent; color: #777970; font-size: 11px; font-weight: 600; cursor: pointer; transition: background .18s, color .18s; }
+.testament-tab::after, .book-row.is-current::after { position: absolute; z-index: 1; inset: 0; border-radius: inherit; background: linear-gradient(108deg, transparent 34%, var(--sheen-edge) 46%, var(--sheen-core) 50%, var(--sheen-edge) 54%, transparent 66%); background-size: 240% 100%; background-position: 135% 0; content: ""; opacity: 0; pointer-events: none; }
+.testament-tab > *, .book-row.is-current > * { position: relative; z-index: 2; }
+.testament-tab:hover::after, .testament-tab:focus-visible::after, .book-row.is-current:hover::after, .book-row.is-current:focus-visible::after { animation: control-glimmer .8s ease-out both; }
 .testament-tab span { margin-left: 4px; color: #a09f97; font-size: 9px; }
 .testament-tab.is-active { background: #fffefa; color: #343631; box-shadow: 0 1px 3px rgba(48,47,42,.08); }
 .testament-tab.is-active span { color: #8e8d85; }
 .book-list { flex: 1; overflow: auto; padding: 0 5px 15px; scrollbar-color: #d5d2c9 transparent; scrollbar-width: thin; }
 .book-row { width: 100%; min-height: 34px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 3px; background: transparent; color: #676860; text-align: left; cursor: pointer; transition: background .16s, color .16s; }
 .book-row:hover { background: rgba(255,255,255,.58); color: var(--ink); }
-.book-row.is-current { border: 1px solid transparent; border-radius: 4px; background: linear-gradient(var(--blue), var(--blue)) padding-box, linear-gradient(120deg, var(--blue-strong), var(--lavender), var(--pink), var(--green)) border-box; box-shadow: inset 0 0 0 1px rgba(255,255,255,.55); color: #304c56; }
+.book-row.is-current { --sheen-edge: rgba(74,145,198,.2); --sheen-core: rgba(255,255,255,.94); position: relative; overflow: hidden; border: 1px solid transparent; border-radius: 4px; background: linear-gradient(var(--blue), var(--blue)) padding-box, linear-gradient(120deg, var(--blue-strong), var(--lavender), var(--pink), var(--green)) border-box; box-shadow: inset 0 0 0 1px rgba(255,255,255,.55); color: #304c56; }
 .book-index { width: 19px; color: #a09f97; font-size: 9px; font-variant-numeric: tabular-nums; }
 .book-row.is-current .book-index { color: #708f99; }
 .book-name { flex: 1; font-size: 12px; font-weight: 500; }
@@ -184,6 +196,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .verse { position: relative; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 7px; margin: 0; padding: 8px 10px 8px 0; border-radius: 3px; color: #40413c; font-family: var(--serif); font-size: 18px; line-height: 1.78; transition: background .45s; scroll-margin-top: 28px; }
 .verse-number { padding-top: 5px; color: #a7a49a; font-family: var(--sans); font-size: 9px; font-weight: 600; text-align: right; }
 .verse-text { min-width: 0; }
+.scripture-glow { border-radius: .08em; background-image: linear-gradient(108deg, hsl(var(--rainbow-hue) 100% 62%), hsl(calc(var(--rainbow-hue) + 72deg) 100% 66%), hsl(calc(var(--rainbow-hue) + 144deg) 100% 58%), hsl(calc(var(--rainbow-hue) + 216deg) 100% 62%), hsl(calc(var(--rainbow-hue) + 288deg) 100% 66%)); background-size: 220% 100%; background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 3px hsl(var(--rainbow-hue) 100% 68% / .8)) drop-shadow(0 0 9px hsl(calc(var(--rainbow-hue) + 145deg) 100% 67% / .52)); animation: scripture-bloom .85s ease-out both; }
 .verse.is-focused { background: var(--yellow); animation: verse-glow 2.2s ease both; }
 .chapter-footer { display: flex; align-items: center; justify-content: center; gap: 11px; padding: 23px 0 28px; color: #a2a198; font-size: 8px; font-weight: 700; letter-spacing: 1.3px; }
 .footer-ornament { color: var(--lavender); font-size: 11px; }
@@ -203,6 +216,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .mobile-menu, .sidebar-scrim { display: none; }
 
 @keyframes page-in { from { opacity: .4; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes text-glimmer { 0% { background-position: 135% 0; opacity: 0; } 16%, 70% { opacity: .95; } 100% { background-position: -35% 0; opacity: 0; } }
+@keyframes scripture-bloom { 0% { filter: drop-shadow(0 0 1px hsl(var(--rainbow-hue) 100% 68% / .3)); } 38% { filter: drop-shadow(0 0 7px hsl(var(--rainbow-hue) 100% 68% / .95)) drop-shadow(0 0 19px hsl(calc(var(--rainbow-hue) + 145deg) 100% 67% / .75)); } 100% { filter: drop-shadow(0 0 3px hsl(var(--rainbow-hue) 100% 68% / .8)) drop-shadow(0 0 9px hsl(calc(var(--rainbow-hue) + 145deg) 100% 67% / .52)); } }
+@keyframes logo-spin-settle { 0% { transform: rotate(-7deg); } 44% { transform: rotate(1073deg); } 59% { transform: rotate(1099deg); } 71% { transform: rotate(1067deg); } 82% { transform: rotate(1081deg); } 92% { transform: rotate(1070deg); } 100% { transform: rotate(1073deg); } }
+@keyframes control-glimmer { 0% { opacity: 0; background-position: 135% 0; } 16%, 72% { opacity: .9; } 100% { opacity: 0; background-position: -35% 0; } }
 @keyframes dialog-in { from { opacity: 0; transform: translateY(8px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes chapter-menu-in { from { opacity: 0; transform: translateY(-4px) scale(.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes verse-glow { 0%, 100% { background: transparent; } 20%, 65% { background: var(--yellow); } }
