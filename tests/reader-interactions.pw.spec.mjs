@@ -363,15 +363,121 @@ for (const viewport of [
   { width: 390, height: 844, label: "mobile" },
   { width: 1280, height: 900, label: "desktop" },
 ]) {
-  test(`clicking a verse updates the URL and highlights it on ${viewport.label}`, async ({ page }) => {
+  test(`toggles independent verse selections on ${viewport.label}`, async ({ page }) => {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
     await page.goto("/kjv/b/john/c/3/v/16");
     await page.locator("#verse-17").click();
+    await page.locator("#verse-21").click();
 
-    await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/17$/);
-    await expect(page.locator("#verse-17")).toHaveClass(/is-focused/);
-    await expect.poll(() => page.locator("#verse-17").evaluate((element) =>
-      getComputedStyle(element, "::before").animationName,
-    )).toBe("verse-glow");
+    await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/16$/);
+    await expect(page.locator("#verse-17")).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator("#verse-21")).toHaveAttribute("aria-pressed", "true");
+    const copyControl = page.locator("#copy-selected-verses");
+    const clearControl = page.locator("#clear-selected-verses");
+    await expect(copyControl).toHaveText("Copy 2 verses");
+    await expect(copyControl).toBeVisible();
+    await expect(clearControl).toBeVisible();
+    const bounds = await copyControl.boundingBox();
+    const viewportBounds = page.viewportSize();
+    expect(bounds.x).toBeGreaterThanOrEqual(0);
+    expect(bounds.y).toBeGreaterThanOrEqual(0);
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(viewportBounds.width);
+    expect(bounds.y + bounds.height).toBeLessThanOrEqual(viewportBounds.height);
+
+    await page.locator("#verse-17").click();
+    await expect(page.locator("#verse-17")).toHaveAttribute("aria-pressed", "false");
+    await expect(copyControl).toHaveText("Copy 1 verse");
+    await page.locator("#verse-21").click();
+    await expect(copyControl).toBeHidden();
+    await expect(clearControl).toBeHidden();
+
+    await page.locator("#verse-17").click();
+    await page.locator("#verse-21").click();
+    await clearControl.click();
+    await expect(page.locator("#verse-17")).toHaveAttribute("aria-pressed", "false");
+    await expect(page.locator("#verse-21")).toHaveAttribute("aria-pressed", "false");
+    await expect(copyControl).toBeHidden();
+    await expect(clearControl).toBeHidden();
   });
 }
+
+test("copies consecutive verses as plain text with a compressed citation", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/kjv/b/john/c/3/v/16");
+  const verses = [19, 17, 16, 18];
+  const expectedText = (await Promise.all(verses.map(async (number) => ({
+    number,
+    text: await page.locator(`#verse-${number} .verse-text`).textContent(),
+  })))).sort((left, right) => left.number - right.number).map((verse) => verse.text).join(" ");
+
+  for (const number of verses) await page.locator(`#verse-${number}`).click();
+  await page.locator("#copy-selected-verses").click();
+
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toBe(`${expectedText}\n\n- John 3:16-19`);
+});
+
+test("copies selected verses with Command+C", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/kjv/b/isaiah/c/3/v/10");
+  const verses = [21, 10];
+  const expectedText = (await Promise.all(verses.map(async (number) => ({
+    number,
+    text: await page.locator(`#verse-${number} .verse-text`).textContent(),
+  })))).sort((left, right) => left.number - right.number).map((verse) => verse.text).join(" ");
+
+  for (const number of verses) await page.locator(`#verse-${number}`).click();
+  await page.keyboard.press("Meta+C");
+
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toBe(`${expectedText}\n\n- Isaiah 3:10, 21`);
+});
+
+test("copies selected verses with Control+C", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/kjv/b/isaiah/c/3/v/10");
+  const verses = [21, 10];
+  const expectedText = (await Promise.all(verses.map(async (number) => ({
+    number,
+    text: await page.locator(`#verse-${number} .verse-text`).textContent(),
+  })))).sort((left, right) => left.number - right.number).map((verse) => verse.text).join(" ");
+
+  for (const number of verses) await page.locator(`#verse-${number}`).click();
+  await page.keyboard.press("Control+C");
+
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toBe(`${expectedText}\n\n- Isaiah 3:10, 21`);
+});
+
+test("fills the currently focused verse when it is selected for copying", async ({ page }) => {
+  await page.goto("/kjv/b/john/c/3/v/16");
+  const focusedVerse = page.locator("#verse-16");
+  const otherVerse = page.locator("#verse-17");
+  await otherVerse.click();
+  await focusedVerse.click();
+
+  await expect(focusedVerse).toHaveAttribute("aria-pressed", "true");
+  await expect(focusedVerse).toHaveCSS("background-color", "rgba(169, 124, 53, 0.09)");
+  await expect(otherVerse).toHaveCSS("background-color", "rgba(169, 124, 53, 0.09)");
+});
+
+test("copies staggered verses in chapter order with separated reference ranges", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/kjv/b/isaiah/c/3/v/10");
+  const verses = [22, 10, 21];
+  const expectedText = (await Promise.all(verses.map(async (number) => ({
+    number,
+    text: await page.locator(`#verse-${number} .verse-text`).textContent(),
+  })))).sort((left, right) => left.number - right.number).map((verse) => verse.text).join(" ");
+
+  for (const number of verses) await page.locator(`#verse-${number}`).click();
+  await page.locator("#copy-selected-verses").click();
+
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toBe(`${expectedText}\n\n- Isaiah 3:10, 21-22`);
+});
+
+test("positions the Buy Me a Coffee widget on the left", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator('script[data-name="BMC-Widget"]')).toHaveAttribute("data-position", "Left");
+});

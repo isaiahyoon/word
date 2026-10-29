@@ -360,6 +360,29 @@
           </footer>
         </main>
       </div>
+      <div
+        class="verse-actions"
+        id="verse-actions"
+        role="group"
+        aria-label="Selected verse actions"
+        aria-hidden="true"
+        inert
+      >
+        <button class="verse-copy-control" id="copy-selected-verses" type="button">
+          <span class="copy-control-icon" aria-hidden="true"></span>
+          <span id="copy-selected-label">Copy text</span>
+        </button>
+        <button
+          class="verse-clear-control"
+          id="clear-selected-verses"
+          type="button"
+          title="Clear all selected verses"
+        >
+          <span class="clear-control-icon" aria-hidden="true">×</span>
+          <span>Clear all</span>
+        </button>
+      </div>
+      <span class="sr-only" id="copy-status" aria-live="polite" aria-atomic="true"></span>
     </div>
     <nav
       class="mobile-chapter-cues"
@@ -477,7 +500,7 @@
       data-id="isaiahyoon"
       data-description="Support me on Buy me a coffee!"
       data-color="#FF813F"
-      data-position="Right"
+      data-position="Left"
       data-x_margin="18"
       data-y_margin="18"
     ></script>

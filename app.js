@@ -13,10 +13,11 @@ const BOOK_TITLES = [
 ];
 
 const CHAPTER_GRADIENT_COLORS = ["var(--chapter-blue)", "var(--chapter-lavender)", "var(--chapter-pink)", "var(--chapter-green)"];
-const state = { editionId: DEFAULT_EDITION, book: 1, chapter: 1, verse: 1, testament: "old", lastBookByTestament: { old: 1, new: 40 }, chapterRequestId: 0, searchTimer: null, searchRequestId: 0, searchMatches: [], searchQuery: "", searchShown: 0, searchActiveIndex: -1 };
+const state = { editionId: DEFAULT_EDITION, book: 1, chapter: 1, verse: 1, selectedVerses: new Set(), testament: "old", lastBookByTestament: { old: 1, new: 40 }, chapterRequestId: 0, searchTimer: null, searchRequestId: 0, searchMatches: [], searchQuery: "", searchShown: 0, searchActiveIndex: -1 };
 const appBasePath = new URL(document.baseURI).pathname;
 const scriptureRoutes = createScriptureRoutes(BOOKS, appBasePath, EDITION_IDS);
 const elements = {
+  appShell: document.querySelector(".app-shell"),
   bookList: document.querySelector("#book-list"),
   chapterSelect: document.querySelector("#chapter-select"),
   chapterSelectValue: document.querySelector("#chapter-select-value"),
@@ -27,6 +28,11 @@ const elements = {
   chapterOptionsList: document.querySelector("#chapter-options-list"),
   quietViewToggle: document.querySelector("#quiet-view-toggle"),
   verseList: document.querySelector("#verse-list"),
+  verseActions: document.querySelector("#verse-actions"),
+  copyControl: document.querySelector("#copy-selected-verses"),
+  copyControlLabel: document.querySelector("#copy-selected-label"),
+  clearControl: document.querySelector("#clear-selected-verses"),
+  copyStatus: document.querySelector("#copy-status"),
   quietWelcome: document.querySelector("#quiet-welcome"),
   searchInput: document.querySelector("#search-input"),
   searchWrap: document.querySelector(".search-wrap"),
@@ -50,6 +56,7 @@ const elements = {
 let chapterPicker;
 let editionPicker;
 let verseNavigationQueue = Promise.resolve();
+let copyFeedbackTimer;
 const scriptureStores = new Map(EDITION_IDS.map((editionId) => {
   const edition = EDITIONS[editionId];
   return [editionId, createScriptureStore({
@@ -66,6 +73,100 @@ const visualEffects = createVisualEffects({
 
 const testamentFor = (book) => book <= 39 ? "old" : "new";
 const bookName = (book) => scripture.bookName(book);
+
+function updateCopyControl() {
+  const count = state.selectedVerses.size;
+  const visible = count > 0;
+  elements.verseActions.classList.toggle("is-visible", visible);
+  elements.verseActions.setAttribute("aria-hidden", String(!visible));
+  elements.verseActions.inert = !visible;
+  elements.appShell.classList.toggle("has-copy-selection", visible);
+  elements.copyControlLabel.textContent = visible
+    ? `Copy ${count} ${count === 1 ? "verse" : "verses"}`
+    : "Copy text";
+  elements.copyStatus.textContent = "";
+  clearTimeout(copyFeedbackTimer);
+}
+
+function clearVerseSelection() {
+  for (const verseNumber of state.selectedVerses) {
+    const row = elements.verseList.querySelector(`[data-verse="${verseNumber}"]`);
+    row?.classList.remove("is-copy-selected");
+    row?.setAttribute("aria-pressed", "false");
+  }
+  state.selectedVerses.clear();
+  updateCopyControl();
+}
+
+function toggleVerseSelection(row) {
+  const verseNumber = Number(row.dataset.verse);
+  if (state.selectedVerses.has(verseNumber)) {
+    state.selectedVerses.delete(verseNumber);
+  } else {
+    state.selectedVerses.add(verseNumber);
+  }
+  const selected = state.selectedVerses.has(verseNumber);
+  row.classList.toggle("is-copy-selected", selected);
+  row.setAttribute("aria-pressed", String(selected));
+  updateCopyControl();
+}
+
+function formatSelectedVerseReference(verseNumbers) {
+  const ranges = [];
+  let start = verseNumbers[0];
+  let end = start;
+
+  for (const verseNumber of verseNumbers.slice(1)) {
+    if (verseNumber === end + 1) {
+      end = verseNumber;
+      continue;
+    }
+    ranges.push(start === end ? String(start) : `${start}-${end}`);
+    start = end = verseNumber;
+  }
+  ranges.push(start === end ? String(start) : `${start}-${end}`);
+  return `${bookName(state.book)} ${state.chapter}:${ranges.join(", ")}`;
+}
+
+async function writeClipboardText(text) {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+  } catch {
+    // Fall through to the compatibility path for browsers that deny clipboard access.
+  }
+
+  const input = document.createElement("textarea");
+  input.value = text;
+  input.setAttribute("readonly", "");
+  input.style.position = "fixed";
+  input.style.opacity = "0";
+  document.body.append(input);
+  input.select();
+  const copied = document.execCommand("copy");
+  input.remove();
+  if (!copied) throw new Error("Clipboard copy failed");
+}
+
+async function copySelectedVerses() {
+  const selectedVerses = scripture.getChapter(state.book, state.chapter)
+    .filter((verse) => state.selectedVerses.has(verse.verse));
+  if (selectedVerses.length === 0) return;
+
+  const reference = formatSelectedVerseReference(selectedVerses.map((verse) => verse.verse));
+  const text = `${selectedVerses.map((verse) => verse.text.trim()).join(" ")}\n\n- ${reference}`;
+  try {
+    await writeClipboardText(text);
+    elements.copyControlLabel.textContent = "Copied";
+    elements.copyStatus.textContent = `Copied ${reference} to clipboard.`;
+    copyFeedbackTimer = setTimeout(updateCopyControl, 1600);
+  } catch (error) {
+    console.error(error);
+    elements.copyStatus.textContent = "Could not copy. Check clipboard permissions and try again.";
+  }
+}
 
 async function activateEdition(editionId) {
   const edition = EDITIONS[editionId];
@@ -232,6 +333,8 @@ async function initialize() {
 
 async function openChapter(book, chapter, requestedRange = null, { updateHistory = true, direction = 0 } = {}) {
   if (updateHistory) elements.quietWelcome.hidden = true;
+  state.selectedVerses.clear();
+  updateCopyControl();
   const requestId = ++state.chapterRequestId;
   const normalizedRange = normalizeVerseRange(requestedRange);
   state.book = book;
@@ -347,17 +450,13 @@ function renderChapter(focusRange = null) {
   visualEffects.clearScriptureGlow();
   elements.verseList.replaceChildren();
   for (const verse of verses) {
-    const row = document.createElement("a");
+    const row = document.createElement("button");
+    row.type = "button";
     const isFocused = focusRange && verse.verse >= focusRange.start && verse.verse <= focusRange.end;
     row.className = `verse${isFocused ? " is-focused" : ""}`;
     row.id = `verse-${verse.verse}`;
     row.dataset.verse = verse.verse;
-    row.href = scriptureRoutes.buildPath(
-      state.book,
-      state.chapter,
-      { start: verse.verse, end: verse.verse },
-      state.editionId,
-    );
+    row.setAttribute("aria-pressed", "false");
     row.lang = EDITIONS[state.editionId].language;
     row.dir = EDITIONS[state.editionId].direction;
     const number = document.createElement("span");
@@ -618,6 +717,16 @@ function bindMobileChapterButtons() {
 }
 
 function bindEvents() {
+  document.addEventListener("keydown", (event) => {
+    if (!(event.metaKey || event.ctrlKey) || event.altKey || event.key.toLowerCase() !== "c") return;
+    if (state.selectedVerses.size === 0) return;
+    if (event.target instanceof Element && event.target.closest("input, textarea, select, [contenteditable='true']")) return;
+    const selection = window.getSelection();
+    if (selection && !selection.isCollapsed) return;
+
+    event.preventDefault();
+    void copySelectedVerses();
+  });
   elements.searchResults.addEventListener("scroll", () => {
     if (state.searchShown >= state.searchMatches.length) return;
     const distanceToBottom = elements.searchResults.scrollHeight -
@@ -626,13 +735,13 @@ function bindEvents() {
     if (distanceToBottom <= 48) appendSearchResults();
   });
   elements.verseList.addEventListener("click", (event) => {
-    const verseLink = event.target.closest("a.verse");
-    if (!verseLink || !elements.verseList.contains(verseLink)) return;
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const verseButton = event.target.closest("button.verse");
+    if (!verseButton || !elements.verseList.contains(verseButton)) return;
 
-    event.preventDefault();
-    void openChapter(state.book, state.chapter, Number(verseLink.dataset.verse));
+    toggleVerseSelection(verseButton);
   });
+  elements.copyControl.addEventListener("click", () => void copySelectedVerses());
+  elements.clearControl.addEventListener("click", clearVerseSelection);
   elements.quietViewToggle.addEventListener("click", () => {
     toggleQuietReadingMode();
   });
