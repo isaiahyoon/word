@@ -22,7 +22,10 @@ describe("development server", () => {
     const response = await fetch(origin);
 
     assert.equal(response.status, 200);
-    assert.match(await response.text(), /The Word — King James Version/);
+    const html = await response.text();
+    assert.match(html, /<title>The Word<\/title>/);
+    assert.match(html, /name="description"\s+content="A quiet, searchable reader for exploring Scripture at your own pace\./);
+    assert.match(html, /property="og:title" content="The Word"/);
   });
 
   it("serves the teal and brass favicon gradient", async () => {

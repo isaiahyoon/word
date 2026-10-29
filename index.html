@@ -6,8 +6,11 @@
     <meta name="theme-color" content="#f6f4f9" />
     <meta
       name="description"
-      content="A quiet, searchable Bible reader with English and Korean editions."
+      content="A quiet, searchable reader for exploring Scripture at your own pace."
     />
+    <meta property="og:title" content="The Word" />
+    <meta property="og:description" content="A quiet, searchable reader for exploring Scripture at your own pace." />
+    <meta property="og:type" content="website" />
     <script>
       const currentPath = location.pathname;
       const routeIndex = currentPath.search(/\/(?:(?:kjv|krv)\/)?b\//);
@@ -19,7 +22,7 @@
       baseElement.href = appRoot || "/";
       document.head.append(baseElement);
     </script>
-    <title>The Word — King James Version</title>
+    <title>The Word</title>
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
