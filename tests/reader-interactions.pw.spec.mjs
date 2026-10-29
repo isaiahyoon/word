@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test("centers the chapter picker within a mobile viewport", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/b/john/c/3/v/16");
+  await page.goto("/kjv/b/john/c/3/v/16");
   await page.locator("#chapter-select").click();
 
   const popover = page.locator(".chapter-popover");
@@ -24,7 +24,7 @@ test("centers the chapter picker within a mobile viewport", async ({ page }) => 
 
 test("keeps shortcut keycaps inside the dialog on short mobile screens", async ({ page }) => {
   await page.setViewportSize({ width: 402, height: 650 });
-  await page.goto("/b/john/c/3/v/16");
+  await page.goto("/kjv/b/john/c/3/v/16");
   await page.locator("#shortcuts-open").click();
 
   const dialog = page.locator("#shortcuts-dialog");
@@ -47,7 +47,7 @@ test("keeps shortcut keycaps inside the dialog on short mobile screens", async (
 
 test("uses the picker root to distinguish inside and outside clicks", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/b/john/c/3/v/16");
+  await page.goto("/kjv/b/john/c/3/v/16");
   await page.locator("#chapter-picker").evaluate((root) => {
     root.id = "custom-picker-root";
   });
@@ -121,16 +121,49 @@ test("loads another search batch from a mobile touch scroll", async ({ page }) =
   await expect(page.locator(".search-result")).toHaveCount(24);
 });
 
+test("switches editions at the same passage and canonicalizes legacy KJV links", async ({ page }) => {
+  await page.goto("/b/john/c/3/v/16");
+  await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/16$/);
+
+  await page.goto("/b/john/3/16");
+  await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("#verse-list")).toHaveAttribute("lang", "en");
+
+  await page.locator("#edition-select").selectOption("krv");
+  await expect(page).toHaveURL(/\/krv\/b\/john\/c\/3\/v\/16$/);
+  await page.reload();
+  await expect(page).toHaveURL(/\/krv\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("#verse-list")).toHaveAttribute("lang", "ko");
+  await expect(page.locator("#verse-16 .verse-text")).toContainText("하나님이 세상을 이처럼 사랑하사");
+  await expect(page.locator("#edition-attribution")).toContainText("대한성서공회");
+
+  await page.locator("#edition-select").selectOption("kjv");
+  await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("#verse-16 .verse-text")).toContainText("For God so loved the world");
+  await expect(page.locator("#edition-attribution")).toBeHidden();
+});
+
+test("switches to KRV from the mobile navigation drawer", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/kjv/b/john/c/3/v/16");
+  await page.locator("#menu-toggle").click();
+  await page.locator("#edition-select").selectOption("krv");
+
+  await expect(page).toHaveURL(/\/krv\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("#verse-list")).toHaveAttribute("lang", "ko");
+  await expect(page.locator("#verse-16 .verse-text")).toContainText("하나님이 세상을 이처럼 사랑하사");
+});
+
 for (const viewport of [
   { width: 390, height: 844, label: "mobile" },
   { width: 1280, height: 900, label: "desktop" },
 ]) {
   test(`clicking a verse updates the URL and highlights it on ${viewport.label}`, async ({ page }) => {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
-    await page.goto("/b/john/c/3/v/16");
+    await page.goto("/kjv/b/john/c/3/v/16");
     await page.locator("#verse-17").click();
 
-    await expect(page).toHaveURL(/\/b\/john\/c\/3\/v\/17$/);
+    await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/17$/);
     await expect(page.locator("#verse-17")).toHaveClass(/is-focused/);
     await expect(page.locator("#verse-17")).toHaveCSS("animation-name", "verse-glow");
   });

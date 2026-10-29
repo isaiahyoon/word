@@ -47,10 +47,17 @@ describe("development server", () => {
   });
 
   it("serves the app shell for scripture deep links", async () => {
-    const response = await fetch(`${origin}/b/joshua/c/1/v/1-10`);
+    for (const path of [
+      "/kjv/b/joshua/c/1/v/1-10",
+      "/krv/b/joshua/c/1/v/1-10",
+      "/b/joshua/c/1/v/1-10",
+      "/b/john/3/16",
+    ]) {
+      const response = await fetch(`${origin}${path}`);
 
-    assert.equal(response.status, 200);
-    assert.match(await response.text(), /id="verse-list"/);
+      assert.equal(response.status, 200, path);
+      assert.match(await response.text(), /id="verse-list"/, path);
+    }
   });
 
   it("serves the branded 404 document for unknown paths", async () => {

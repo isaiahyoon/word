@@ -2,8 +2,8 @@ import { mkdir, readdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { BOOKS, bookFileName } from "../books.mjs";
 
 const sourceUrl = new URL("../kjv.json", import.meta.url);
-const outputUrl = new URL("../scripture/books/", import.meta.url);
-const manifestUrl = new URL("../scripture/index.json", import.meta.url);
+const outputUrl = new URL("../scripture/kjv/books/", import.meta.url);
+const manifestUrl = new URL("../scripture/kjv/index.json", import.meta.url);
 const source = JSON.parse(await readFile(sourceUrl, "utf8"));
 const books = Array.from({ length: BOOKS.length }, () => new Map());
 
@@ -32,7 +32,7 @@ for (const [index, chapters] of books.entries()) {
   if (chapters.size === 0) throw new Error(`No scripture records found for book ${index + 1}`);
 
   const bookData = Object.fromEntries(
-    [...chapters.entries()].sort(([left], [right]) => left - right)
+    [...chapters.entries()].sort(([left], [right]) => left - right),
   );
   const fileName = bookFileName(index + 1);
   await writeFile(new URL(fileName, outputUrl), JSON.stringify(bookData));
@@ -40,5 +40,5 @@ for (const [index, chapters] of books.entries()) {
   bookFiles.push(fileName);
 }
 
-await writeFile(manifestUrl, JSON.stringify({ chapterCounts, bookFiles }));
-console.log(`Wrote ${books.length} book files and a chapter-count manifest.`);
+await writeFile(manifestUrl, JSON.stringify({ edition: "kjv", chapterCounts, bookFiles }));
+console.log(`Wrote KJV data for ${books.length} books.`);

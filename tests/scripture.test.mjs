@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { BOOKS, bookFileName } from "../books.mjs";
+import { KRV_BOOK_NAMES } from "../editions.mjs";
 import {
   createScriptureRoutes,
   getVerseStep,
@@ -9,7 +10,7 @@ import {
 } from "../scripture-routes.mjs";
 import { createScriptureStore } from "../scripture-store.js";
 
-function createMockFetch() {
+function createMockFetch(dataPath = "./scripture/kjv") {
   const requests = [];
   const chapterCounts = BOOKS.map((_, index) => (index === 42 ? 3 : 1));
   const bookFiles = BOOKS.map((_, index) => bookFileName(index + 1));
@@ -39,7 +40,7 @@ function createMockFetch() {
     fetchImpl: async (url) => {
       requests.push(url);
       const value =
-        url === "./scripture/index.json"
+        url === `${dataPath}/index.json`
           ? { chapterCounts, bookFiles }
           : books[bookFiles.indexOf(url.split("/").at(-1))];
       if (!value) return { ok: false };
@@ -49,63 +50,87 @@ function createMockFetch() {
 }
 
 describe("scripture routes", () => {
-  const routes = createScriptureRoutes(BOOKS);
+  const routes = createScriptureRoutes(BOOKS, "/", ["kjv", "krv"]);
 
   it("identifies the reader root as the home route", () => {
-    assert.deepEqual(routes.parse("/"), { home: true });
+    assert.deepEqual(routes.parse("/"), { home: true, editionId: "kjv" });
   });
 
-  it("defaults book-only and chapter-only routes to verse one", () => {
+  it("defaults legacy KJV routes to verse one", () => {
     assert.deepEqual(routes.parse("/b/john"), {
+      editionId: "kjv",
       book: 43,
       chapter: 1,
       range: { start: 1, end: 1 },
+      legacy: true,
     });
     assert.deepEqual(routes.parse("/b/john/c/3"), {
+      editionId: "kjv",
       book: 43,
       chapter: 3,
       range: { start: 1, end: 1 },
+      legacy: true,
     });
-  });
-
-  it("parses and builds single-verse and inclusive range routes", () => {
-    assert.deepEqual(routes.parse("/b/john/c/3/v/16"), {
+    assert.deepEqual(routes.parse("/b/john/3/16"), {
+      editionId: "kjv",
       book: 43,
       chapter: 3,
       range: { start: 16, end: 16 },
+      legacy: true,
     });
-    assert.deepEqual(routes.parse("/b/john/c/3/v/16-18"), {
+  });
+
+  it("parses and builds edition-prefixed verse routes", () => {
+    assert.deepEqual(routes.parse("/b/john/c/3/v/16"), {
+      editionId: "kjv",
+      book: 43,
+      chapter: 3,
+      range: { start: 16, end: 16 },
+      legacy: true,
+    });
+    assert.deepEqual(routes.parse("/kjv/b/john/c/3/v/16-18"), {
+      editionId: "kjv",
       book: 43,
       chapter: 3,
       range: { start: 16, end: 18 },
+      legacy: false,
+    });
+    assert.deepEqual(routes.parse("/krv/b/john/c/3/v/16"), {
+      editionId: "krv",
+      book: 43,
+      chapter: 3,
+      range: { start: 16, end: 16 },
+      legacy: false,
     });
     assert.equal(
-      routes.buildPath(43, 3, { start: 16, end: 16 }),
-      "/b/john/c/3/v/16",
+      routes.buildPath(43, 3, { start: 16, end: 16 }, "kjv"),
+      "/kjv/b/john/c/3/v/16",
     );
     assert.equal(
-      routes.buildPath(43, 3, { start: 16, end: 18 }),
-      "/b/john/c/3/v/16-18",
+      routes.buildPath(43, 3, { start: 16, end: 18 }, "krv"),
+      "/krv/b/john/c/3/v/16-18",
     );
   });
 
   it("round-trips numbered and multiword book slugs", () => {
     for (const [book, name] of BOOKS.entries()) {
-      const path = routes.buildPath(book + 1, 1, { start: 1, end: 1 });
+      const path = routes.buildPath(book + 1, 1, { start: 1, end: 1 }, "kjv");
       assert.equal(routes.parse(path).book, book + 1, name);
     }
   });
 
   it("supports an application mounted below the domain root", () => {
-    const mountedRoutes = createScriptureRoutes(BOOKS, "/reader/");
+    const mountedRoutes = createScriptureRoutes(BOOKS, "/reader/", ["kjv", "krv"]);
     assert.equal(
-      mountedRoutes.buildPath(43, 3, { start: 16, end: 18 }),
-      "/reader/b/john/c/3/v/16-18",
+      mountedRoutes.buildPath(43, 3, { start: 16, end: 18 }, "kjv"),
+      "/reader/kjv/b/john/c/3/v/16-18",
     );
-    assert.deepEqual(mountedRoutes.parse("/reader/b/john/c/3/v/16-18"), {
+    assert.deepEqual(mountedRoutes.parse("/reader/kjv/b/john/c/3/v/16-18"), {
+      editionId: "kjv",
       book: 43,
       chapter: 3,
       range: { start: 16, end: 18 },
+      legacy: false,
     });
     assert.equal(mountedRoutes.parse("/other/b/john/c/3"), null);
   });
@@ -117,6 +142,8 @@ describe("scripture routes", () => {
       "/b/john/c/3/v/18-16",
       "/b/john/c/3/v/1-2-3",
       "/b/john/3",
+      "/unknown/b/john/c/3",
+      "/kjv/b/not-a-book",
     ]) {
       const route = routes.parse(path);
       assert.ok(
@@ -166,6 +193,24 @@ describe("scripture store", () => {
     );
   });
 
+  it("loads localized KRV references from the KRV edition path", async () => {
+    const mock = createMockFetch("./scripture/krv");
+    const store = createScriptureStore({
+      fetchImpl: mock.fetchImpl,
+      dataPath: "./scripture/krv",
+      displayBookNames: KRV_BOOK_NAMES,
+    });
+    await store.initialize();
+
+    assert.equal(store.bookName(43), "요한복음");
+    assert.deepEqual(
+      (await store.search("요한복음 3:16")).map(({ book, chapter, verse }) => ({ book, chapter, verse })),
+      [{ book: 43, chapter: 3, verse: 16 }],
+    );
+    assert.ok(mock.requests.includes("./scripture/krv/index.json"));
+    assert.ok(mock.requests.includes("./scripture/krv/books/43_john.json"));
+  });
+
   it("searches exact references and rejects missing verses", async () => {
     const store = createScriptureStore({
       fetchImpl: createMockFetch().fetchImpl,
@@ -197,6 +242,18 @@ describe("scripture store", () => {
         { book: 1, chapter: 1, verse: 1 },
         { book: 43, chapter: 1, verse: 1 },
       ],
+    );
+  });
+
+  it("searches in the selected edition's book order", async () => {
+    const mock = createMockFetch();
+    const bookOrder = Array.from({ length: BOOKS.length }, (_, index) => BOOKS.length - index);
+    const store = createScriptureStore({ fetchImpl: mock.fetchImpl, bookOrder });
+    await store.initialize();
+
+    assert.deepEqual(
+      (await store.search("in the beginning")).map(({ book }) => book),
+      [43, 1],
     );
   });
 

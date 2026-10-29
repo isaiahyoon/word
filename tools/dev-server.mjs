@@ -19,7 +19,7 @@ const contentTypes = new Map([
 function isScriptureRoute(pathname) {
   const routeIndex = pathname.indexOf("/b/");
   if (routeIndex < 0) return false;
-  return /^\/b\/[^/]+(?:\/c\/\d+(?:\/v\/\d+(?:-\d+)?)?)?\/?$/.test(pathname.slice(routeIndex));
+  return /^\/b\/[^/]+(?:\/(?:c\/\d+(?:\/v\/\d+(?:-\d+)?)?|\d+\/\d+))?\/?$/.test(pathname.slice(routeIndex));
 }
 
 export function createDevServer(projectRoot = root) {
