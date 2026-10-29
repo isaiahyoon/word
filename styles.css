@@ -68,6 +68,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .search-box input::placeholder { color: #999991; }
 .search-box kbd { padding: 4px 6px; border: 1px solid #e8e5de; border-radius: 3px; color: #96958e; font-size: 9px; white-space: nowrap; }
 .topbar-note { justify-self: end; display: flex; align-items: center; gap: 9px; color: #777a72; font-size: 9px; font-weight: 700; letter-spacing: 1.1px; }
+.theme-dots { display: flex; align-items: center; gap: 4px; }
+.theme-dots i { width: 7px; height: 7px; display: block; border-radius: 50%; }
+.theme-dots i:nth-child(1) { background: var(--blue-strong); }
+.theme-dots i:nth-child(2) { background: var(--lavender); }
+.theme-dots i:nth-child(3) { background: var(--pink); }
+.theme-dots i:nth-child(4) { background: var(--green); }
 .live-dot, .meta-dot { width: 6px; height: 6px; display: inline-block; border-radius: 50%; background: #a9bd9a; }
 .shortcuts-trigger { min-height: 36px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 10px; border: 1px solid var(--line); border-radius: 4px; background: rgba(255,255,255,.48); color: #777970; font-size: 8px; font-weight: 700; letter-spacing: .75px; cursor: pointer; transition: background .16s, border-color .16s; }
 .shortcuts-trigger:hover { border-color: #d3ccec; background: var(--lavender); }
