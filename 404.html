@@ -174,7 +174,9 @@
             !candidateUrl.search &&
             !candidateUrl.hash
           ) {
-            returnUrl = candidateUrl.href;
+            const recoveryUrl = new URL(homeUrl);
+            recoveryUrl.searchParams.set("return", candidateUrl.pathname);
+            returnUrl = recoveryUrl.href;
             break;
           }
         } catch {}

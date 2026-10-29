@@ -2,7 +2,7 @@ import { bindKeyboardShortcuts } from "./keyboard-shortcuts.js";
 import { createChapterPicker } from "./chapter-picker.js";
 import { createScriptureStore } from "./scripture-store.js";
 import { createVisualEffects } from "./visual-effects.js";
-import { createScriptureRoutes, isValidVerseRange, normalizeVerseRange } from "./scripture-routes.mjs";
+import { createScriptureRoutes, isValidVerseRange, normalizeVerseRange, parseScriptureLocation } from "./scripture-routes.mjs";
 import { BOOKS } from "./books.mjs";
 
 const BOOK_TITLES = [
@@ -59,14 +59,19 @@ function showInvalidScripturePath() {
 }
 
 async function restoreLocationFromPath() {
-  const route = scriptureRoutes.parse(window.location.pathname);
+  const { route, returnPath } = parseScriptureLocation(
+    scriptureRoutes,
+    window.location.pathname,
+    window.location.search
+  );
   if (!route) {
     showInvalidScripturePath();
     return;
   }
 
   const reference = route.home ? { book: 1, chapter: 1, range: null } : route;
-  await openChapter(reference.book, reference.chapter, reference.range, { updateHistory: false });
+  const opened = await openChapter(reference.book, reference.chapter, reference.range, { updateHistory: false });
+  if (returnPath && opened) window.history.replaceState(null, "", returnPath);
 }
 
 function createChapterGradient() {
@@ -113,23 +118,23 @@ async function openChapter(book, chapter, requestedRange = null, { updateHistory
   try {
     await scripture.loadChapter(book, chapter);
   } catch (error) {
-    if (requestId !== state.chapterRequestId) return;
+    if (requestId !== state.chapterRequestId) return false;
     if (error instanceof RangeError) {
       showInvalidScripturePath();
-      return;
+      return false;
     }
     console.error(error);
     elements.verseList.removeAttribute("aria-busy");
     elements.verseList.textContent = "The chapter could not be loaded. Please try again.";
-    return;
+    return false;
   }
 
-  if (requestId !== state.chapterRequestId) return;
+  if (requestId !== state.chapterRequestId) return false;
   const range = normalizeVerseRange(requestedRange) ?? (updateHistory ? { start: 1, end: 1 } : null);
   const verses = scripture.getChapter(book, chapter);
   if (range && !isValidVerseRange(range, verses.length)) {
     showInvalidScripturePath();
-    return;
+    return false;
   }
   elements.verseList.removeAttribute("aria-busy");
   renderChapter(range);
@@ -151,6 +156,7 @@ async function openChapter(book, chapter, requestedRange = null, { updateHistory
   if (updateHistory) {
     if (window.location.pathname !== path) window.history.pushState(null, "", path);
   }
+  return true;
 }
 
 function renderBookList() {
