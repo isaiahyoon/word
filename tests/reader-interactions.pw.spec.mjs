@@ -67,6 +67,7 @@ test("renders edition-colored dotted scripture pages without mobile overflow", a
   const kjvPage = await getPageStyle();
   expect(kjvPage.background).toContain("radial-gradient");
   expect(kjvPage.background).toContain("linear-gradient");
+  expect(kjvPage.background).not.toContain("189, 121, 152");
   expect(kjvPage.paper).toBe("#f6f5ff");
   expect(kjvPage.scrollWidth).toBe(kjvPage.clientWidth);
 
@@ -77,6 +78,7 @@ test("renders edition-colored dotted scripture pages without mobile overflow", a
   const krvPage = await getPageStyle();
   expect(krvPage.paper).toBe("#f1faf5");
   expect(krvPage.dot).not.toBe(kjvPage.dot);
+  expect(krvPage.background).not.toContain("196, 123, 139");
   expect(krvPage.scrollWidth).toBe(krvPage.clientWidth);
 });
 
