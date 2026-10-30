@@ -220,10 +220,21 @@ describe("scripture store", () => {
     await store.initialize();
 
     assert.equal(store.bookName(43), "요한복음");
-    assert.deepEqual(
-      (await store.search("요한복음 3:16")).map(({ book, chapter, verse }) => ({ book, chapter, verse })),
-      [{ book: 43, chapter: 3, verse: 16 }],
-    );
+    const bookMatches = await store.search("요한복음");
+    assert.equal(bookMatches[0].searchType, "book");
+    assert.equal(bookMatches[0].book, 43);
+    const chapterMatches = await store.search("요한복음 3장");
+    assert.equal(chapterMatches[0].searchType, "chapter");
+    assert.equal(chapterMatches[0].chapter, 3);
+    for (const query of ["요한복음 3:16", "요한복음3:16", "요한복음 ３：１６", "요한복음 3장 16절"]) {
+      const matches = await store.search(query);
+      assert.equal(matches[0].searchType, "reference", query);
+      assert.deepEqual(
+        { book: matches[0].book, chapter: matches[0].chapter, verse: matches[0].verse },
+        { book: 43, chapter: 3, verse: 16 },
+        query,
+      );
+    }
     assert.ok(mock.requests.includes("./scripture/krv/index.json"));
     assert.ok(mock.requests.includes("./scripture/krv/books/43_john.json"));
   });
@@ -234,16 +245,60 @@ describe("scripture store", () => {
     });
     await store.initialize();
 
+    const exactReference = await store.search("John 3:16");
+    assert.equal(exactReference[0].searchType, "reference");
     assert.deepEqual(
-      (await store.search("John 3:16")).map(({ book, chapter, verse }) => ({
-        book,
-        chapter,
-        verse,
-      })),
-      [{ book: 43, chapter: 3, verse: 16 }],
+      { book: exactReference[0].book, chapter: exactReference[0].chapter, verse: exactReference[0].verse },
+      { book: 43, chapter: 3, verse: 16 },
     );
-    assert.deepEqual(await store.search("John 3:99"), []);
-    assert.deepEqual(await store.search("John 22:1"), []);
+    assert.ok(exactReference.slice(1).every((match) => match.searchType === "text"));
+    assert.equal(exactReference.filter(({ book, chapter, verse }) => book === 43 && chapter === 3 && verse === 16).length, 1);
+
+    for (const query of ["John 3:99", "John 22:1"]) {
+      const matches = await store.search(query);
+      assert.ok(matches.every((match) => match.searchType === "text"));
+    }
+  });
+
+  it("prioritizes one book, chapter, or verse destination before text matches", async () => {
+    const mock = createMockFetch();
+    const fetchImpl = async (url) => {
+      if (url.endsWith("1_genesis.json")) {
+        return { ok: true, json: async () => ({ 1: [[1, "John appears in this verse"]] }) };
+      }
+      if (url.endsWith("43_john.json")) {
+        return {
+          ok: true,
+          json: async () => ({
+            1: [[1, "John opens this chapter"], [2, "John appears again"]],
+            2: [[1, "John chapter two"]],
+            3: Array.from({ length: 16 }, (_, index) => [
+              index + 1,
+              index === 15 ? "For God so loved the world" : `John chapter three verse ${index + 1}`,
+            ]),
+          }),
+        };
+      }
+      return mock.fetchImpl(url);
+    };
+    const store = createScriptureStore({ fetchImpl });
+    await store.initialize();
+
+    const bookMatches = await store.search("John");
+    assert.equal(bookMatches[0].searchType, "book");
+    assert.equal(bookMatches[0].book, 43);
+    assert.ok(bookMatches.some((match) => match.searchType === "text"));
+
+    const chapterMatches = await store.search("John 1");
+    assert.equal(chapterMatches[0].searchType, "chapter");
+    assert.equal(chapterMatches[0].chapter, 1);
+    assert.ok(chapterMatches.some((match) => match.searchType === "text"));
+
+    const verseMatches = await store.search("John 1:1");
+    assert.equal(verseMatches[0].searchType, "reference");
+    assert.equal(verseMatches[0].verse, 1);
+    assert.equal(verseMatches.filter(({ book, chapter, verse }) => book === 43 && chapter === 1 && verse === 1).length, 1);
+    assert.ok(verseMatches.some((match) => match.searchType === "text" && match.book === 1));
   });
 
   it("searches verse text across books", async () => {

@@ -729,19 +729,47 @@ function appendSearchResults() {
     button.tabIndex = -1;
     button.setAttribute("role", "option");
     button.setAttribute("aria-selected", String(resultIndex === state.searchActiveIndex));
+    button.dataset.searchType = verse.searchType ?? "text";
+    if (verse.searchType && verse.searchType !== "text") {
+      button.classList.add("search-result--navigation");
+    }
     const reference = document.createElement("span");
     reference.className = "result-reference";
-    reference.textContent = `${bookName(verse.book)} ${verse.chapter}:${verse.verse}`;
+    if (verse.searchType === "book") {
+      reference.textContent = `BOOK · ${bookName(verse.book)}`;
+    } else if (verse.searchType === "chapter") {
+      reference.textContent = `CHAPTER · ${bookName(verse.book)} ${verse.chapter}`;
+    } else if (verse.searchType === "reference") {
+      reference.textContent = `EXACT PASSAGE · ${bookName(verse.book)} ${verse.chapter}:${verse.verse}`;
+    } else {
+      reference.textContent = `${bookName(verse.book)} ${verse.chapter}:${verse.verse}`;
+    }
     const text = document.createElement("span");
     text.className = "result-text";
-    appendHighlighted(text, verse.text, verse.matchedTerms);
+    if (verse.searchType === "book") {
+      text.textContent = `Open ${bookName(verse.book)} from chapter 1`;
+    } else if (verse.searchType === "chapter") {
+      text.textContent = `Open ${bookName(verse.book)} ${verse.chapter}`;
+    } else {
+      appendHighlighted(text, verse.text, verse.matchedTerms);
+    }
     button.append(reference, text);
     button.addEventListener("click", () => openSearchResult(verse));
     elements.searchResults.append(button);
   }
   state.searchShown += batch.length;
   const summary = elements.searchResults.querySelector(".search-summary");
-  summary.textContent = `${state.searchMatches.length.toLocaleString()} ${state.searchMatches.length === 1 ? "verse" : "verses"} found · Showing ${state.searchShown}`;
+  const navigationCount = state.searchMatches.filter((match) => match.searchType !== "text").length;
+  const verseCount = state.searchMatches.length - navigationCount;
+  const summaryParts = [];
+  if (navigationCount > 0) {
+    summaryParts.push(`${navigationCount} ${navigationCount === 1 ? "navigation suggestion" : "navigation suggestions"}`);
+  }
+  if (verseCount > 0) {
+    summaryParts.push(`${verseCount.toLocaleString()} ${verseCount === 1 ? "verse" : "verses"} found`);
+  }
+  summaryParts.push(`Showing ${state.searchShown}`);
+  summary.textContent = summaryParts.join(" · ");
 }
 
 async function search(query, requestId) {
@@ -794,7 +822,17 @@ async function search(query, requestId) {
   }
   const summary = document.createElement("div");
   summary.className = "search-summary";
-  summary.textContent = `${matches.length.toLocaleString()} ${matches.length === 1 ? "verse" : "verses"} found · Showing ${Math.min(matches.length, 12)}`;
+  const navigationCount = matches.filter((match) => match.searchType !== "text").length;
+  const verseCount = matches.length - navigationCount;
+  const summaryParts = [];
+  if (navigationCount > 0) {
+    summaryParts.push(`${navigationCount} ${navigationCount === 1 ? "navigation suggestion" : "navigation suggestions"}`);
+  }
+  if (verseCount > 0) {
+    summaryParts.push(`${verseCount.toLocaleString()} ${verseCount === 1 ? "verse" : "verses"} found`);
+  }
+  summaryParts.push(`Showing ${Math.min(matches.length, 12)}`);
+  summary.textContent = summaryParts.join(" · ");
   elements.searchResults.append(summary);
   appendSearchResults();
 }

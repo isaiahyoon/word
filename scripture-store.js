@@ -27,6 +27,7 @@ export function createScriptureStore({
     const bookIndex = index % canonicalBookNames.length;
     bookIndexes.set(normalizeBookName(name), bookIndex + 1);
   });
+  const bookNamesByLength = [...bookIndexes.keys()].sort((left, right) => right.length - left.length);
   let chapterCounts = [];
   let bookFiles = [];
   let initialization;
@@ -133,18 +134,60 @@ export function createScriptureStore({
     return chapters.get(chapterKey(book, chapter)) ?? [];
   }
 
-  function parseReference(query) {
-    const match = query.match(/^(.+?)\s+(\d+)(?::(\d+))?$/);
-    if (!match) return null;
+  function resolveBookName(name) {
+    const normalizedName = normalizeBookName(name);
+    const exactBook = bookIndexes.get(normalizedName);
+    if (exactBook) return { book: exactBook, name: normalizedName };
 
-    const book = bookIndexes.get(normalizeBookName(match[1]));
-    if (!book) return null;
+    const matches = bookNamesByLength.filter((bookName) => bookName.startsWith(normalizedName));
+    const matchingBooks = [...new Set(matches.map((bookName) => bookIndexes.get(bookName)))];
+    if (matchingBooks.length !== 1) return null;
+    return { book: matchingBooks[0], name: matches[0] };
+  }
 
-    return {
-      book,
-      chapter: Number(match[2]),
-      verse: match[3] === undefined ? null : Number(match[3])
-    };
+  function parseNavigationQuery(query) {
+    const normalizedQuery = normalizeBookName(query);
+    const exactBook = resolveBookName(normalizedQuery);
+    if (exactBook?.name === normalizedQuery) {
+      return { searchType: "book", ...exactBook, bookQuery: normalizedQuery };
+    }
+
+    const match = normalizedQuery.match(/^(.*?)\s*(\d+)(?::(\d+)|\s*장(?:\s*(\d+)\s*절?)?)?$/u);
+    if (match) {
+      const resolvedBook = resolveBookName(match[1]);
+      if (resolvedBook) {
+        const verse = match[3] ?? match[4];
+        return {
+          searchType: verse === undefined ? "chapter" : "reference",
+          book: resolvedBook.book,
+          chapter: Number(match[2]),
+          verse: verse === undefined ? null : Number(verse),
+          bookQuery: match[1].trim(),
+        };
+      }
+    }
+
+    return exactBook
+      ? { searchType: "book", ...exactBook, bookQuery: normalizedQuery }
+      : null;
+  }
+
+  async function getNavigationResult(navigationQuery) {
+    if (!navigationQuery) return null;
+    const { searchType, book, chapter, verse } = navigationQuery;
+
+    if (searchType === "book") {
+      return { searchType, book, chapter: 1, verse: 1, text: "", matchedTerms: [] };
+    }
+    if (chapter < 1 || chapter > chapterCount(book)) return null;
+
+    const verses = await loadChapter(book, chapter);
+    if (searchType === "chapter") {
+      return { searchType, book, chapter, verse: 1, text: "", matchedTerms: [] };
+    }
+
+    const exactVerse = verses.find((item) => item.verse === verse);
+    return exactVerse ? { ...exactVerse, searchType, matchedTerms: [] } : null;
   }
 
   async function getTextSearchIndex() {
@@ -183,18 +226,16 @@ export function createScriptureStore({
   }
 
   async function search(query) {
-    const normalizedQuery = query.trim().toLowerCase();
+    const normalizedQuery = query.normalize("NFKC").trim();
     if (normalizedQuery.length < 2) return [];
 
-    const reference = parseReference(query.trim());
-    if (reference) {
-      if (reference.chapter < 1 || reference.chapter > chapterCount(reference.book)) return [];
-      const verses = await loadChapter(reference.book, reference.chapter);
-      return verses.filter((verse) => reference.verse === null || verse.verse === reference.verse);
-    }
+    await initialize();
+    const navigationQuery = parseNavigationQuery(normalizedQuery);
+    const navigationResult = await getNavigationResult(navigationQuery);
+    const textQuery = navigationQuery?.bookQuery ?? normalizedQuery;
 
     const index = await getTextSearchIndex();
-    const matches = index.search(query.trim(), {
+    const matches = index.search(textQuery, {
       combineWith: "AND",
       prefix: (term) => term.length >= 3 || /\p{Script=Hangul}/u.test(term),
       fuzzy: (term) => term.length >= 6 ? 0.15 : false,
@@ -211,18 +252,27 @@ export function createScriptureStore({
         leftVerse - rightVerse;
     });
 
-    return matches.map((match) => {
+    const verseMatches = matches.map((match) => {
       const [book, chapter, verseNumber] = match.id.split(":").map(Number);
       return {
         ...getChapter(book, chapter)[verseNumber - 1],
+        searchType: "text",
         matchedTerms: Object.keys(match.match),
       };
     });
+
+    const duplicateReference = navigationResult?.searchType === "reference"
+      ? `${navigationResult.book}:${navigationResult.chapter}:${navigationResult.verse}`
+      : null;
+    const textResults = verseMatches.filter((verse) =>
+      `${verse.book}:${verse.chapter}:${verse.verse}` !== duplicateReference
+    );
+    return navigationResult ? [navigationResult, ...textResults] : textResults;
   }
 
   return { initialize, chapterCount, bookName, bookOrder, loadChapter, getChapter, search };
 }
 
 function normalizeBookName(name) {
-  return name.trim().toLocaleLowerCase();
+  return name.normalize("NFKC").trim().toLocaleLowerCase();
 }
