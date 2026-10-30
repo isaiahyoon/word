@@ -2176,23 +2176,12 @@ body.is-krv-edition .bottom-chapter strong {
 .site-footer a.site-footer-github:hover {
   color: #0c2340;
 }
-.site-footer-coffee {
-  display: none !important;
-}
 .mobile-chapter-cues {
   display: none;
 }
 .mobile-menu,
 .sidebar-scrim {
   display: none;
-}
-
-@media (min-width: 901px) {
-  #bmc-wbtn,
-  #bmc-iframe {
-    right: auto !important;
-    left: 18px !important;
-  }
 }
 
 .app-shell.is-quiet-reading {
@@ -2209,10 +2198,6 @@ body.is-krv-edition .bottom-chapter strong {
 .app-shell.is-quiet-reading .chapter-footer,
 .app-shell.is-quiet-reading .bottom-navigation,
 .app-shell.is-quiet-reading .site-footer {
-  display: none !important;
-}
-body.is-quiet-reading #bmc-wbtn,
-body.is-quiet-reading #bmc-iframe {
   display: none !important;
 }
 .app-shell.is-quiet-reading .workspace {
@@ -2486,13 +2471,6 @@ body.is-quiet-reading #bmc-iframe {
 }
 
 @media (max-width: 900px) {
-  #bmc-wbtn,
-  #bmc-iframe {
-    display: none !important;
-  }
-  .site-footer-coffee {
-    display: inline-flex !important;
-  }
   .app-shell {
     padding: 0 24px;
   }

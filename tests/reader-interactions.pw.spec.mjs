@@ -487,43 +487,22 @@ test("copies staggered verses in chapter order with separated reference ranges",
     .toBe(`${expectedText}\n\n- Isaiah 3:10, 21-22`);
 });
 
-test("positions the Buy Me a Coffee widget on the left", async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto("/");
-  await expect(page.locator('script[data-name="BMC-Widget"]')).toHaveAttribute("data-position", "Left");
-  const position = await page.evaluate(() => {
-    let widget = document.querySelector("#bmc-wbtn");
-    const isTestWidget = !widget;
-    if (!widget) {
-      widget = document.createElement("div");
-      widget.id = "bmc-wbtn";
-      widget.style.cssText = "position: fixed; left: 1200px; right: 18px; width: 64px; height: 64px";
-      document.body.append(widget);
-    }
-    const style = getComputedStyle(widget);
-    const result = { left: style.left, bounds: widget.getBoundingClientRect().toJSON() };
-    if (isTestWidget) widget.remove();
-    return result;
-  });
-  expect(position.left).toBe("18px");
-  expect(position.bounds.left).toBe(18);
+for (const viewport of [
+  { width: 390, height: 844, label: "mobile" },
+  { width: 1280, height: 900, label: "desktop" },
+]) {
+  test(`links Buy Me a Coffee directly from the footer on ${viewport.label}`, async ({ page }) => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto("/");
+    const supportLink = page.locator(".site-footer-coffee");
 
-  const formPosition = await page.evaluate(() => {
-    let form = document.querySelector("#bmc-iframe");
-    const isTestForm = !form;
-    if (!form) {
-      form = document.createElement("iframe");
-      form.id = "bmc-iframe";
-      form.style.cssText = "position: fixed; left: 1002px; right: 18px; width: 420px; height: 780px";
-      document.body.append(form);
-    }
-    const style = getComputedStyle(form);
-    const result = { left: style.left };
-    if (isTestForm) form.remove();
-    return result;
+    await expect(supportLink).toBeVisible();
+    await expect(supportLink).toHaveAttribute("href", "https://buymeacoffee.com/isaiahyoon");
+    await expect(supportLink).toHaveAttribute("target", "_blank");
+    await expect(supportLink).toHaveAttribute("rel", "noopener noreferrer");
+    await expect(page.locator('script[data-name="BMC-Widget"]')).toHaveCount(0);
   });
-  expect(formPosition.left).toBe("18px");
-});
+}
 
 for (const shortcut of ["Meta+X", "Control+X"]) {
   test(`copies and clears selected verses with ${shortcut}`, async ({ page }) => {
