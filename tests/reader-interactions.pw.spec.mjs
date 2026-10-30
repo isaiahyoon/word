@@ -487,43 +487,31 @@ test("copies staggered verses in chapter order with separated reference ranges",
     .toBe(`${expectedText}\n\n- Isaiah 3:10, 21-22`);
 });
 
-test("positions the Buy Me a Coffee widget on the left", async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto("/");
-  await expect(page.locator('script[data-name="BMC-Widget"]')).toHaveAttribute("data-position", "Left");
-  const position = await page.evaluate(() => {
-    let widget = document.querySelector("#bmc-wbtn");
-    const isTestWidget = !widget;
-    if (!widget) {
-      widget = document.createElement("div");
-      widget.id = "bmc-wbtn";
-      widget.style.cssText = "position: fixed; left: 1200px; right: 18px; width: 64px; height: 64px";
-      document.body.append(widget);
-    }
-    const style = getComputedStyle(widget);
-    const result = { left: style.left, bounds: widget.getBoundingClientRect().toJSON() };
-    if (isTestWidget) widget.remove();
-    return result;
-  });
-  expect(position.left).toBe("18px");
-  expect(position.bounds.left).toBe(18);
+for (const viewport of [
+  { width: 390, height: 844, label: "mobile" },
+  { width: 1280, height: 900, label: "desktop" },
+]) {
+  test(`links Buy Me a Coffee directly from the footer on ${viewport.label}`, async ({ page }) => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto("/");
+    const supportLink = page.locator(".site-footer-coffee");
 
-  const formPosition = await page.evaluate(() => {
-    let form = document.querySelector("#bmc-iframe");
-    const isTestForm = !form;
-    if (!form) {
-      form = document.createElement("iframe");
-      form.id = "bmc-iframe";
-      form.style.cssText = "position: fixed; left: 1002px; right: 18px; width: 420px; height: 780px";
-      document.body.append(form);
-    }
-    const style = getComputedStyle(form);
-    const result = { left: style.left };
-    if (isTestForm) form.remove();
-    return result;
+    await expect(supportLink).toBeVisible();
+    await expect(supportLink).toHaveAttribute("href", "https://buymeacoffee.com/isaiahyoon");
+    await expect(supportLink).toHaveAttribute("target", "_blank");
+    await expect(supportLink).toHaveAttribute("rel", "noopener noreferrer");
+    await expect(page.locator('script[data-name="BMC-Widget"]')).toHaveCount(0);
+    const footerLinks = page.locator(".site-footer a");
+    await expect(footerLinks.locator(".external-link-icon svg")).toHaveCount(3);
+    expect((await footerLinks.allTextContents()).join(" ")).not.toContain("↗");
+    const iconGaps = await footerLinks.evaluateAll((links) => links.map((link) => {
+      const label = link.querySelector(".footer-link-label").getBoundingClientRect();
+      const icon = link.querySelector(".external-link-icon svg").getBoundingClientRect();
+      return icon.left - label.right;
+    }));
+    expect(iconGaps).toEqual([4, 4, 4]);
   });
-  expect(formPosition.left).toBe("18px");
-});
+}
 
 for (const shortcut of ["Meta+X", "Control+X"]) {
   test(`copies and clears selected verses with ${shortcut}`, async ({ page }) => {
@@ -559,4 +547,55 @@ test("uses the Korean UI font for KRV bottom chapter navigation", async ({ page 
 
   expect(kjvFont).toContain("Gelasio");
   expect(krvFont).not.toBe(kjvFont);
+});
+
+test("submits reader feedback through Netlify with passage context only by consent", async ({ page }) => {
+  let submittedForm;
+  await page.route("**/*", async (route) => {
+    if (route.request().method() !== "POST") {
+      await route.continue();
+      return;
+    }
+    submittedForm = new URLSearchParams(route.request().postData() ?? "");
+    await route.fulfill({ status: 200, contentType: "text/plain", body: "ok" });
+  });
+  await page.goto("/kjv/b/john/c/3/v/16");
+  await page.locator("#feedback-open").click();
+
+  const dialog = page.locator("#feedback-dialog");
+  await expect(dialog).toBeVisible();
+  await expect(page.locator("#feedback-include-passage")).not.toBeChecked();
+  await expect(page.locator("#feedback-category-trigger")).toBeFocused();
+  await page.locator("#feedback-close").focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/16$/);
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+
+  await page.locator("#feedback-open").click();
+  await page.locator("#feedback-message").fill("The KRV page feels lovely on mobile.");
+  await page.locator("#feedback-submit").click();
+  await expect(page.locator("#feedback-category-error")).toBeVisible();
+  await expect(page.locator("#feedback-category-trigger")).toHaveAttribute("aria-invalid", "true");
+
+  const categoryTrigger = page.locator("#feedback-category-trigger");
+  const categoryOptions = page.locator("#feedback-category-options");
+  await categoryTrigger.click();
+  await expect(categoryOptions).toBeVisible();
+  await expect(categoryOptions).toHaveCSS("background-color", "rgb(255, 254, 240)");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await expect(categoryTrigger).toContainText("A bright idea");
+  await expect(categoryOptions).toBeHidden();
+  await page.locator("#feedback-include-passage").check();
+  await page.locator("#feedback-submit").click();
+
+  await expect(page.locator("#feedback-success")).toBeVisible();
+  expect(submittedForm.get("form-name")).toBe("reader-feedback");
+  expect(submittedForm.get("category")).toBe("idea");
+  expect(submittedForm.get("message")).toBe("The KRV page feels lovely on mobile.");
+  expect(submittedForm.get("email")).toBe("");
+  expect(submittedForm.get("passage")).toBe("John 3:16");
+  expect(submittedForm.get("bot-field")).toBe("");
 });

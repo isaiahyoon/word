@@ -28,6 +28,26 @@ describe("development server", () => {
     assert.match(html, />\s*The Word<\/strong\s*>/);
     assert.match(html, /name="description"\s+content="A quiet, searchable reader for exploring Scripture at your own pace\./);
     assert.match(html, /property="og:title" content="The Word"/);
+    assert.match(html, /class="site-footer-instagram"\s+href="https:\/\/www\.instagram\.com\/theamazingwordapp\/"\s+target="_blank"\s+rel="noopener noreferrer"/);
+    assert.match(html, /aria-label="Visit The Word on Instagram, opens in a new tab"/);
+  });
+
+  it("includes a statically detectable Netlify reader feedback form", async () => {
+    const response = await fetch(origin);
+    const html = await response.text();
+    const formTag = html.match(/<form\b[^>]*id="reader-feedback-form"[^>]*>/s)?.[0];
+
+    assert.equal(response.status, 200);
+    assert.ok(formTag, "feedback form is present in the static HTML");
+    assert.match(formTag, /name="reader-feedback"/);
+    assert.match(formTag, /method="POST"/);
+    assert.match(formTag, /(?:\s|^)netlify(?:\s|$)/);
+    assert.match(formTag, /data-netlify="true"/);
+    assert.match(formTag, /netlify-honeypot="bot-field"/);
+    assert.match(html, /name="form-name" value="reader-feedback"/);
+    assert.match(html, /name="message"/);
+    assert.match(html, /name="email"/);
+    assert.match(html, /name="passage"/);
   });
 
   it("serves the Prismbrand sword favicon", async () => {

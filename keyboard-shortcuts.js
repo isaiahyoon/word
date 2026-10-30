@@ -41,6 +41,7 @@ export function bindKeyboardShortcuts({
   closeButton,
   searchInput,
   isChapterPickerOpen,
+  isOtherDialogOpen = () => false,
   onPreviousChapter,
   onNextChapter,
   onPreviousVerse,
@@ -63,11 +64,12 @@ export function bindKeyboardShortcuts({
         dialog.close();
         return;
       }
+      if (isOtherDialogOpen()) return;
       onEscape();
       return;
     }
     const chapterPickerOpen = isChapterPickerOpen();
-    if (dialog.open || chapterPickerOpen) return;
+    if (dialog.open || chapterPickerOpen || isOtherDialogOpen()) return;
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
       event.preventDefault();
       searchInput.focus();
