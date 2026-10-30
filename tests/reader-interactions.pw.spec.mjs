@@ -560,3 +560,54 @@ test("uses the Korean UI font for KRV bottom chapter navigation", async ({ page 
   expect(kjvFont).toContain("Gelasio");
   expect(krvFont).not.toBe(kjvFont);
 });
+
+test("submits reader feedback through Netlify with passage context only by consent", async ({ page }) => {
+  let submittedForm;
+  await page.route("**/*", async (route) => {
+    if (route.request().method() !== "POST") {
+      await route.continue();
+      return;
+    }
+    submittedForm = new URLSearchParams(route.request().postData() ?? "");
+    await route.fulfill({ status: 200, contentType: "text/plain", body: "ok" });
+  });
+  await page.goto("/kjv/b/john/c/3/v/16");
+  await page.locator("#feedback-open").click();
+
+  const dialog = page.locator("#feedback-dialog");
+  await expect(dialog).toBeVisible();
+  await expect(page.locator("#feedback-include-passage")).not.toBeChecked();
+  await expect(page.locator("#feedback-category-trigger")).toBeFocused();
+  await page.locator("#feedback-close").focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/16$/);
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+
+  await page.locator("#feedback-open").click();
+  await page.locator("#feedback-message").fill("The KRV page feels lovely on mobile.");
+  await page.locator("#feedback-submit").click();
+  await expect(page.locator("#feedback-category-error")).toBeVisible();
+  await expect(page.locator("#feedback-category-trigger")).toHaveAttribute("aria-invalid", "true");
+
+  const categoryTrigger = page.locator("#feedback-category-trigger");
+  const categoryOptions = page.locator("#feedback-category-options");
+  await categoryTrigger.click();
+  await expect(categoryOptions).toBeVisible();
+  await expect(categoryOptions).toHaveCSS("background-color", "rgb(255, 254, 240)");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await expect(categoryTrigger).toContainText("A bright idea");
+  await expect(categoryOptions).toBeHidden();
+  await page.locator("#feedback-include-passage").check();
+  await page.locator("#feedback-submit").click();
+
+  await expect(page.locator("#feedback-success")).toBeVisible();
+  expect(submittedForm.get("form-name")).toBe("reader-feedback");
+  expect(submittedForm.get("category")).toBe("idea");
+  expect(submittedForm.get("message")).toBe("The KRV page feels lovely on mobile.");
+  expect(submittedForm.get("email")).toBe("");
+  expect(submittedForm.get("passage")).toBe("John 3:16");
+  expect(submittedForm.get("bot-field")).toBe("");
+});

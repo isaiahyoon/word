@@ -343,6 +343,21 @@
             </button>
           </div>
           <footer class="site-footer">
+            <button
+              class="site-footer-feedback"
+              id="feedback-open"
+              type="button"
+              aria-haspopup="dialog"
+              aria-controls="feedback-dialog"
+            >Share feedback</button>
+            <a
+              class="site-footer-instagram"
+              href="https://www.instagram.com/theamazingwordapp/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Visit The Word on Instagram, opens in a new tab"
+              >Instagram <span aria-hidden="true">↗</span></a
+            >
             <a
               class="site-footer-coffee"
               href="https://www.buymeacoffee.com/isaiahyoon"
@@ -493,6 +508,117 @@
           Shortcuts pause while you’re typing or choosing a chapter. Escape also
           closes open panels.
         </p>
+      </div>
+    </dialog>
+    <dialog
+      class="feedback-dialog"
+      id="feedback-dialog"
+      aria-labelledby="feedback-title"
+      aria-describedby="feedback-intro"
+    >
+      <div class="feedback-panel">
+        <div class="feedback-heading">
+          <div>
+            <span class="feedback-eyebrow">A NOTE FROM THE READING ROOM</span>
+            <h2 id="feedback-title">Leave me a note</h2>
+          </div>
+          <button
+            class="feedback-close"
+            id="feedback-close"
+            type="button"
+            aria-label="Close feedback form"
+          >×</button>
+        </div>
+        <p class="feedback-intro" id="feedback-intro">
+          A hot take, a tiny typo, a hopeful idea—there’s room for all three.
+        </p>
+        <form
+          class="feedback-form"
+          id="reader-feedback-form"
+          name="reader-feedback"
+          method="POST"
+          action="./"
+          netlify
+          data-netlify="true"
+          netlify-honeypot="bot-field"
+        >
+          <input type="hidden" name="form-name" value="reader-feedback" />
+          <input type="hidden" id="feedback-passage" name="passage" value="" />
+          <div class="feedback-honeypot" aria-hidden="true">
+            <label>Leave this field empty<input name="bot-field" type="text" tabindex="-1" autocomplete="off" /></label>
+          </div>
+          <div class="feedback-field feedback-category-field" id="feedback-category-field">
+            <span id="feedback-category-label">What kind of note?</span>
+            <input type="hidden" id="feedback-category" name="category" value="" />
+            <button
+              class="feedback-category-trigger"
+              id="feedback-category-trigger"
+              type="button"
+              role="combobox"
+              aria-labelledby="feedback-category-label feedback-category-value"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+              aria-controls="feedback-category-options"
+              aria-describedby="feedback-category-error"
+              aria-required="true"
+            >
+              <span id="feedback-category-value">Choose a topic</span>
+              <span class="feedback-category-caret" aria-hidden="true">⌄</span>
+            </button>
+            <div class="feedback-category-menu" id="feedback-category-options" role="listbox" aria-labelledby="feedback-category-label" hidden>
+              <button class="feedback-category-option" type="button" role="option" data-value="bug" aria-selected="false" tabindex="-1">
+                <span class="feedback-option-swatch feedback-option-swatch--rosewater" aria-hidden="true">!</span>
+                <span class="feedback-option-copy"><strong class="feedback-option-title">A small snag</strong><small>Something isn’t working</small></span>
+                <span class="feedback-option-check" aria-hidden="true">✓</span>
+              </button>
+              <button class="feedback-category-option" type="button" role="option" data-value="correction" aria-selected="false" tabindex="-1">
+                <span class="feedback-option-swatch feedback-option-swatch--sage" aria-hidden="true">✎</span>
+                <span class="feedback-option-copy"><strong class="feedback-option-title">A careful correction</strong><small>Scripture text or data</small></span>
+                <span class="feedback-option-check" aria-hidden="true">✓</span>
+              </button>
+              <button class="feedback-category-option" type="button" role="option" data-value="idea" aria-selected="false" tabindex="-1">
+                <span class="feedback-option-swatch feedback-option-swatch--honey" aria-hidden="true">✦</span>
+                <span class="feedback-option-copy"><strong class="feedback-option-title">A bright idea</strong><small>A thought for the reader</small></span>
+                <span class="feedback-option-check" aria-hidden="true">✓</span>
+              </button>
+              <button class="feedback-category-option" type="button" role="option" data-value="other" aria-selected="false" tabindex="-1">
+                <span class="feedback-option-swatch feedback-option-swatch--iris" aria-hidden="true">✧</span>
+                <span class="feedback-option-copy"><strong class="feedback-option-title">Something else</strong><small>A note from your corner</small></span>
+                <span class="feedback-option-check" aria-hidden="true">✓</span>
+              </button>
+            </div>
+            <small id="feedback-category-error" class="feedback-category-error" role="status" hidden>Choose a note type to send your message.</small>
+          </div>
+          <label class="feedback-field" for="feedback-message">
+            <span>What happened, or what would you love to see?</span>
+            <textarea id="feedback-message" name="message" rows="5" maxlength="3000" required></textarea>
+            <small>Short or detailed, both are welcome.</small>
+          </label>
+          <label class="feedback-field" for="feedback-email">
+            <span>Email <em>(optional)</em></span>
+            <input id="feedback-email" name="email" type="email" autocomplete="email" />
+            <small>Only included if you’d like a reply.</small>
+          </label>
+          <label class="feedback-passage-option" for="feedback-include-passage">
+            <input id="feedback-include-passage" name="include-passage" type="checkbox" value="yes" />
+            <span>Include the passage I’m reading</span>
+          </label>
+          <p class="feedback-privacy">
+            Passage details stay off unless you choose to include them. Please leave private or sensitive details out.
+          </p>
+          <p class="feedback-error" id="feedback-error" role="alert" tabindex="-1" hidden>
+            Your note didn’t send. Please try again in a moment.
+          </p>
+          <div class="feedback-actions">
+            <button class="feedback-submit" id="feedback-submit" type="submit">Send note</button>
+          </div>
+        </form>
+        <div class="feedback-success" id="feedback-success" role="status" tabindex="-1" hidden>
+          <span aria-hidden="true">✦</span>
+          <h3>Your note found its way to the reading room.</h3>
+          <p>Thank you for helping this little corner of the world grow.</p>
+          <button class="feedback-done" id="feedback-done" type="button">Done</button>
+        </div>
       </div>
     </dialog>
     <script
