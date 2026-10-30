@@ -501,6 +501,15 @@ for (const viewport of [
     await expect(supportLink).toHaveAttribute("target", "_blank");
     await expect(supportLink).toHaveAttribute("rel", "noopener noreferrer");
     await expect(page.locator('script[data-name="BMC-Widget"]')).toHaveCount(0);
+    const footerLinks = page.locator(".site-footer a");
+    await expect(footerLinks.locator(".external-link-icon svg")).toHaveCount(3);
+    expect((await footerLinks.allTextContents()).join(" ")).not.toContain("↗");
+    const iconGaps = await footerLinks.evaluateAll((links) => links.map((link) => {
+      const label = link.querySelector(".footer-link-label").getBoundingClientRect();
+      const icon = link.querySelector(".external-link-icon svg").getBoundingClientRect();
+      return icon.left - label.right;
+    }));
+    expect(iconGaps).toEqual([4, 4, 4]);
   });
 }
 

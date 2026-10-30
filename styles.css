@@ -1408,7 +1408,11 @@ body.is-krv-edition .chapter-options-count {
 }
 .foot-flower {
   color: var(--lavender);
-  font-size: 14px;
+}
+.foot-flower svg {
+  width: 14px;
+  height: 14px;
+  display: block;
   font-style: normal;
 }
 
@@ -2091,7 +2095,11 @@ body.is-krv-edition .verse.is-copy-selected {
 }
 .footer-ornament {
   color: var(--lavender);
-  font-size: 11px;
+}
+.footer-ornament svg {
+  width: 11px;
+  height: 11px;
+  display: block;
 }
 .bottom-navigation {
   display: flex;
@@ -2153,11 +2161,20 @@ body.is-krv-edition .bottom-chapter strong {
 .site-footer button {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   color: #92928a;
   font-size: 10px;
   text-decoration: none;
   transition: color 0.16s;
+}
+.external-link-icon {
+  display: inline-flex;
+  align-items: center;
+}
+.external-link-icon svg {
+  width: 9px;
+  height: 9px;
+  display: block;
 }
 .site-footer button {
   padding: 0;
