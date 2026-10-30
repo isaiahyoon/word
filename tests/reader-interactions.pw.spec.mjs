@@ -543,3 +543,18 @@ for (const shortcut of ["Meta+X", "Control+X"]) {
     await expect(page.locator("#verse-actions")).toBeHidden();
   });
 }
+
+test("uses the Korean UI font for KRV bottom chapter navigation", async ({ page }) => {
+  await page.goto("/kjv/b/john/c/3/v/16");
+  const kjvFont = await page.locator("#bottom-next strong").evaluate((element) =>
+    getComputedStyle(element).fontFamily,
+  );
+
+  await page.goto("/krv/b/john/c/3/v/16");
+  const krvTitle = page.locator("#bottom-next strong");
+  await expect(krvTitle).toHaveCSS("font-family", /Noto Serif KR/);
+  const krvFont = await krvTitle.evaluate((element) => getComputedStyle(element).fontFamily);
+
+  expect(kjvFont).toContain("Gelasio");
+  expect(krvFont).not.toBe(kjvFont);
+});

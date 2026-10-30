@@ -1884,6 +1884,10 @@ body.is-krv-edition .verse.is-copy-selected {
   font-size: 13px;
   font-weight: 500;
 }
+body.is-krv-edition .bottom-chapter strong {
+  font-family: var(--serif-korean-ui);
+  letter-spacing: 0;
+}
 .site-footer {
   display: flex;
   justify-content: center;
