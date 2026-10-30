@@ -30,25 +30,18 @@ describe("development server", () => {
     assert.match(html, /property="og:title" content="The Word"/);
   });
 
-  it("serves the teal and brass favicon gradient", async () => {
-    const response = await fetch(`${origin}/assets/favicon.svg`);
-    const favicon = await response.text();
+  it("serves the Prismbrand sword favicon", async () => {
+    const faviconResponse = await fetch(`${origin}/assets/favicon.svg`);
+    const favicon = await faviconResponse.text();
 
-    assert.equal(response.status, 200);
-    assert.match(favicon, /<linearGradient id="favicon-background"/);
-    assert.match(favicon, /stop-color="#315863"/);
-    assert.match(favicon, /stop-color="#b18a4d"/);
-    assert.match(favicon, /stop-color="#8d6629"/);
-    assert.match(favicon, /id="favicon-metallic-sheen"/);
-    assert.match(favicon, /<rect width="48" height="48" fill="url\(#favicon-background\)"/);
-    assert.match(favicon, /rx="12" fill="#defefc"/);
-    assert.match(favicon, /<linearGradient id="favicon-book-outline"/);
-    assert.match(favicon, /fill="#fffecf" stroke="url\(#favicon-book-outline\)"/);
-    for (const color of ["#defefc", "#dcd7f7", "#fad4e0", "#c85f5f", "#fffecf", "#d6f2b9", "#72c6d3", "#c7a95d", "#a97c35"]) {
-      assert.ok(favicon.includes(`stop-color="${color}"`), `outline gradient includes ${color}`);
-    }
-    assert.match(favicon, /fill="#fad4e0" stroke="none"/);
-    assert.doesNotMatch(favicon, /stroke="#fad4e0"/);
+    assert.equal(faviconResponse.status, 200);
+    assert.match(favicon, /viewBox="0 0 64 64"/);
+    assert.match(favicon, /id="prism-steel"/);
+    assert.match(favicon, /id="seraphic-fire"/);
+    assert.match(favicon, /id="radiant-dawn"/);
+    assert.match(favicon, /M32 2 36 10 44 5/);
+    assert.match(favicon, /M32 5 39 28 35 35/);
+    assert.match(favicon, /<circle cx="20" cy="12"/);
   });
 
   it("serves the app shell for scripture deep links", async () => {
