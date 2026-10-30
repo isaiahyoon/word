@@ -220,6 +220,14 @@ describe("scripture store", () => {
     await store.initialize();
 
     assert.equal(store.bookName(43), "요한복음");
+    const koreanPrefixMatches = await store.search("요한");
+    assert.deepEqual(
+      koreanPrefixMatches
+        .filter((match) => match.searchType === "book")
+        .map(({ book }) => book),
+      [43, 62, 63, 64, 66],
+    );
+    assert.equal(koreanPrefixMatches[0].book, 43);
     const bookMatches = await store.search("요한복음");
     assert.equal(bookMatches[0].searchType, "book");
     assert.equal(bookMatches[0].book, 43);

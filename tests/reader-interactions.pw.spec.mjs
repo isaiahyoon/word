@@ -229,6 +229,11 @@ test("prioritizes Korean book, chapter, and exact-verse suggestions", async ({ p
   await expect(firstResult).toHaveAttribute("data-search-type", "chapter");
   await expect(firstResult).toContainText("CHAPTER · 요한복음 1");
 
+  await searchInput.fill("요한");
+  await expect(firstResult).toHaveAttribute("data-search-type", "book");
+  await expect(firstResult).toContainText("BOOK · 요한복음");
+  await expect(page.locator(".search-result--navigation")).toHaveCount(5);
+
   await searchInput.fill("요한복음 １：１");
   await expect(firstResult).toHaveAttribute("data-search-type", "reference");
   await expect(firstResult).toContainText("EXACT PASSAGE · 요한복음 1:1");
