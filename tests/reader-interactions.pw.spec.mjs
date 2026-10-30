@@ -214,6 +214,22 @@ test("loads another search batch when the results panel scrolls to the bottom", 
   await expect(results).toHaveCount(1);
 });
 
+test("finds separated and misspelled words and highlights the matched verse terms", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#verse-1").waitFor();
+  const searchInput = page.locator("#search-input");
+
+  await searchInput.fill("piercing sword");
+  let result = page.locator(".search-result").filter({ hasText: "Hebrews 4:12" });
+  await expect(result).toHaveCount(1);
+  await expect(result.locator("mark")).toHaveText(["sword", "piercing"]);
+
+  await searchInput.fill("piercin sword");
+  result = page.locator(".search-result").filter({ hasText: "Hebrews 4:12" });
+  await expect(result).toHaveCount(1);
+  await expect(result.locator("mark")).toHaveText(["sword", "piercing"]);
+});
+
 test("loads another search batch from a mobile touch scroll", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");

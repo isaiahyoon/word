@@ -676,16 +676,23 @@ function animateChapterTurn(direction, requestId) {
   });
 }
 
-function appendHighlighted(container, text, query) {
-  const index = text.toLowerCase().indexOf(query.toLowerCase());
-  if (index < 0) {
-    container.textContent = text;
-    return;
+function appendHighlighted(container, text, matchedTerms = []) {
+  const terms = new Set(matchedTerms.map((term) => term.toLocaleLowerCase()));
+  const wordPattern = /[\p{L}\p{N}]+/gu;
+  let cursor = 0;
+
+  for (const match of text.matchAll(wordPattern)) {
+    const word = match[0];
+    if (!terms.has(word.toLocaleLowerCase())) continue;
+
+    container.append(document.createTextNode(text.slice(cursor, match.index)));
+    const mark = document.createElement("mark");
+    mark.textContent = word;
+    container.append(mark);
+    cursor = match.index + word.length;
   }
-  container.append(document.createTextNode(text.slice(0, index)));
-  const mark = document.createElement("mark");
-  mark.textContent = text.slice(index, index + query.length);
-  container.append(mark, document.createTextNode(text.slice(index + query.length)));
+
+  container.append(document.createTextNode(text.slice(cursor)));
 }
 
 function openSearchResult(verse) {
@@ -727,7 +734,7 @@ function appendSearchResults() {
     reference.textContent = `${bookName(verse.book)} ${verse.chapter}:${verse.verse}`;
     const text = document.createElement("span");
     text.className = "result-text";
-    appendHighlighted(text, verse.text, state.searchQuery);
+    appendHighlighted(text, verse.text, verse.matchedTerms);
     button.append(reference, text);
     button.addEventListener("click", () => openSearchResult(verse));
     elements.searchResults.append(button);

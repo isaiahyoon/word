@@ -1,6 +1,9 @@
 import { BOOKS, bookFileName } from "./books.mjs";
+import MiniSearch from "./vendor/minisearch.js";
 
 const chapterKey = (book, chapter) => `${book}:${chapter}`;
+const searchBatchSize = 2048;
+const yieldToBrowser = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 export function createScriptureStore({
   fetchImpl = fetch,
@@ -12,6 +15,7 @@ export function createScriptureStore({
   const chapters = new Map();
   const bookLoads = new Map();
   const bookIndexes = new Map();
+  const bookOrderIndexes = new Map(bookOrder.map((book, index) => [book, index]));
   if (
     bookOrder.length !== canonicalBookNames.length ||
     new Set(bookOrder).size !== canonicalBookNames.length ||
@@ -26,6 +30,8 @@ export function createScriptureStore({
   let chapterCounts = [];
   let bookFiles = [];
   let initialization;
+  let textSearchIndex;
+  let textSearchIndexPromise;
 
   function initialize() {
     if (!initialization) {
@@ -141,6 +147,41 @@ export function createScriptureStore({
     };
   }
 
+  async function getTextSearchIndex() {
+    if (textSearchIndex) return textSearchIndex;
+    if (!textSearchIndexPromise) {
+      textSearchIndexPromise = (async () => {
+        await loadAllBooks();
+        const index = new MiniSearch({ fields: ["text"] });
+        let batch = [];
+
+        for (const book of bookOrder) {
+          for (let chapter = 1; chapter <= chapterCount(book); chapter += 1) {
+            for (const verse of getChapter(book, chapter)) {
+              batch.push({
+                id: `${book}:${chapter}:${verse.verse}`,
+                text: verse.text,
+              });
+              if (batch.length < searchBatchSize) continue;
+
+              index.addAll(batch);
+              batch = [];
+              await yieldToBrowser();
+            }
+          }
+        }
+
+        if (batch.length > 0) index.addAll(batch);
+        textSearchIndex = index;
+        return index;
+      })().catch((error) => {
+        textSearchIndexPromise = null;
+        throw error;
+      });
+    }
+    return textSearchIndexPromise;
+  }
+
   async function search(query) {
     const normalizedQuery = query.trim().toLowerCase();
     if (normalizedQuery.length < 2) return [];
@@ -152,16 +193,31 @@ export function createScriptureStore({
       return verses.filter((verse) => reference.verse === null || verse.verse === reference.verse);
     }
 
-    await loadAllBooks();
-    const matches = [];
-    for (const book of bookOrder) {
-      for (let chapter = 1; chapter <= chapterCount(book); chapter += 1) {
-        matches.push(...getChapter(book, chapter).filter((verse) =>
-          verse.text.toLowerCase().includes(normalizedQuery)
-        ));
-      }
-    }
-    return matches;
+    const index = await getTextSearchIndex();
+    const matches = index.search(query.trim(), {
+      combineWith: "AND",
+      prefix: (term) => term.length >= 3 || /\p{Script=Hangul}/u.test(term),
+      fuzzy: (term) => term.length >= 6 ? 0.15 : false,
+    });
+
+    matches.sort((left, right) => {
+      const scoreDifference = right.score - left.score;
+      if (scoreDifference !== 0) return scoreDifference;
+
+      const [leftBook, leftChapter, leftVerse] = left.id.split(":").map(Number);
+      const [rightBook, rightChapter, rightVerse] = right.id.split(":").map(Number);
+      return bookOrderIndexes.get(leftBook) - bookOrderIndexes.get(rightBook) ||
+        leftChapter - rightChapter ||
+        leftVerse - rightVerse;
+    });
+
+    return matches.map((match) => {
+      const [book, chapter, verseNumber] = match.id.split(":").map(Number);
+      return {
+        ...getChapter(book, chapter)[verseNumber - 1],
+        matchedTerms: Object.keys(match.match),
+      };
+    });
   }
 
   return { initialize, chapterCount, bookName, bookOrder, loadChapter, getChapter, search };

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { performance } from "node:perf_hooks";
 import { describe, it } from "node:test";
 import { BOOKS, bookFileName } from "../books.mjs";
 import { KRV_BOOK_NAMES } from "../editions.mjs";
@@ -255,10 +256,99 @@ describe("scripture store", () => {
     assert.deepEqual(
       matches.map(({ book, chapter, verse }) => ({ book, chapter, verse })),
       [
-        { book: 1, chapter: 1, verse: 1 },
         { book: 43, chapter: 1, verse: 1 },
+        { book: 1, chapter: 1, verse: 1 },
       ],
     );
+  });
+
+  it("matches separated and misspelled words without fuzzy short-word collisions", async () => {
+    const mock = createMockFetch();
+    const fetchImpl = async (url) => {
+      if (url.endsWith("1_genesis.json")) {
+        return { ok: true, json: async () => ({ 1: [[1, "the word is good"]] }) };
+      }
+      if (url.endsWith("58_hebrews.json")) {
+        return { ok: true, json: async () => ({ 1: [[1, "a piercing sword"]] }) };
+      }
+      return mock.fetchImpl(url);
+    };
+    const store = createScriptureStore({ fetchImpl });
+    await store.initialize();
+
+    const separated = await store.search("piercing sword");
+    assert.deepEqual(
+      separated.map(({ book, chapter, verse }) => ({ book, chapter, verse })),
+      [{ book: 58, chapter: 1, verse: 1 }],
+    );
+    assert.deepEqual(separated[0].matchedTerms.sort(), ["piercing", "sword"]);
+
+    const misspelled = await store.search("piercin sword");
+    assert.deepEqual(
+      misspelled.map(({ book, chapter, verse }) => ({ book, chapter, verse })),
+      [{ book: 58, chapter: 1, verse: 1 }],
+    );
+    assert.deepEqual(await store.search("piercing word"), []);
+  });
+
+  it("searches KRV text with the edition-specific index", async () => {
+    const mock = createMockFetch("./scripture/krv");
+    const fetchImpl = async (url) => {
+      if (url.endsWith("58_hebrews.json")) {
+        return { ok: true, json: async () => ({ 1: [[1, "날선 검으로"]] }) };
+      }
+      return mock.fetchImpl(url);
+    };
+    const store = createScriptureStore({
+      fetchImpl,
+      dataPath: "./scripture/krv",
+      displayBookNames: KRV_BOOK_NAMES,
+    });
+    await store.initialize();
+
+    const matches = await store.search("날선 검");
+    assert.deepEqual(
+      matches.map(({ book, chapter, verse }) => ({ book, chapter, verse })),
+      [{ book: 58, chapter: 1, verse: 1 }],
+    );
+    assert.deepEqual(matches[0].matchedTerms.sort(), ["검으로", "날선"]);
+  });
+
+  it("keeps warm searches responsive for a Bible-sized index", async () => {
+    const verseCount = 31_000;
+    const verses = Array.from({ length: verseCount }, (_, index) => [
+      index + 1,
+      index === verseCount - 1 ? "piercing sword" : `verse text ${index + 1}`,
+    ]);
+    const fetchImpl = async (url) => {
+      if (url === "./scripture/kjv/index.json") {
+        return { ok: true, json: async () => ({ chapterCounts: [1], bookFiles: ["1_genesis.json"] }) };
+      }
+      if (url === "./scripture/kjv/books/1_genesis.json") {
+        return { ok: true, json: async () => ({ 1: verses }) };
+      }
+      return { ok: false };
+    };
+    const store = createScriptureStore({
+      fetchImpl,
+      canonicalBookNames: ["Genesis"],
+      displayBookNames: ["Genesis"],
+      bookOrder: [1],
+    });
+    await store.initialize();
+
+    const coldStart = performance.now();
+    const firstSearch = await store.search("piercing sword");
+    const coldSearchDuration = performance.now() - coldStart;
+    assert.equal(firstSearch.length, 1);
+    assert.ok(coldSearchDuration < 5000, `Cold index build took ${coldSearchDuration.toFixed(1)} ms`);
+
+    const warmStart = performance.now();
+    for (let count = 0; count < 30; count += 1) {
+      assert.equal((await store.search("piercing sword")).length, 1);
+    }
+    const warmSearchDuration = performance.now() - warmStart;
+    assert.ok(warmSearchDuration < 1500, `Thirty warm searches took ${warmSearchDuration.toFixed(1)} ms`);
   });
 
   it("searches in the selected edition's book order", async () => {
