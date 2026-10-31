@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 import {
   bindKeyboardShortcuts,
   getNavigationAction,
-} from "../keyboard-shortcuts.js";
+} from "../js/keyboard-shortcuts.js";
 
 function createKeyboardHarness(testContext) {
   const previousDocument = globalThis.document;

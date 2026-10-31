@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { describe, it } from "node:test";
-import { BOOKS, bookFileName } from "../books.mjs";
+import { BOOKS, bookFileName } from "../js/books.mjs";
 
 describe("generated scripture data", () => {
   it("preserves every verse in the KJV source", async () => {
-    const source = JSON.parse(await readFile(new URL("../kjv.json", import.meta.url), "utf8"));
+    const source = JSON.parse(await readFile(new URL("../sources/kjv.json", import.meta.url), "utf8"));
     const manifest = JSON.parse(await readFile(new URL("../scripture/kjv/index.json", import.meta.url), "utf8"));
     const expectedBooks = Array.from({ length: BOOKS.length }, () => new Map());
 
