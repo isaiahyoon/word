@@ -28,6 +28,9 @@ describe("development server", () => {
     assert.match(html, />\s*The Word<\/strong\s*>/);
     assert.match(html, /name="description"\s+content="A quiet, searchable reader for exploring Scripture at your own pace\./);
     assert.match(html, /property="og:title" content="The Word"/);
+    assert.match(html, /property="og:image" content="https:\/\/theamazingword\.org\/assets\/social-preview\.png"/);
+    assert.match(html, /name="twitter:card" content="summary_large_image"/);
+    assert.match(html, /name="twitter:image" content="https:\/\/theamazingword\.org\/assets\/social-preview\.png"/);
     assert.match(html, /class="site-footer-instagram"\s+href="https:\/\/www\.instagram\.com\/theamazingwordapp\/"\s+target="_blank"\s+rel="noopener noreferrer"/);
     assert.match(html, /aria-label="Visit The Word on Instagram, opens in a new tab"/);
   });
@@ -62,6 +65,18 @@ describe("development server", () => {
     assert.match(favicon, /M32 2 36 10 44 5/);
     assert.match(favicon, /M32 5 39 28 35 35/);
     assert.match(favicon, /<circle cx="20" cy="12"/);
+  });
+
+  it("serves the high-resolution social preview image", async () => {
+    const response = await fetch(`${origin}/assets/social-preview.png`);
+    const image = new Uint8Array(await response.arrayBuffer());
+
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get("content-type"), /image\/png/);
+    assert.deepEqual([...image.slice(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+    const dimensions = new DataView(image.buffer, image.byteOffset, image.byteLength);
+    assert.equal(dimensions.getUint32(16), 1200);
+    assert.equal(dimensions.getUint32(20), 630);
   });
 
   it("serves the app shell for scripture deep links", async () => {

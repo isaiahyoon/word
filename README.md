@@ -42,6 +42,7 @@ and without him was not any thing made that was made.
 - Open the shortcut guide with `/` to see Mac and Windows keys for refresh, search, navigation, Quiet Mode, and verse copying.
 - Enter Quiet Mode for a calmer reading view, with subtle glimmer details throughout the interface.
 - Select verses and copy the formatted text with its passage reference. Clicking a verse also updates its direct link. The feedback form lets readers send a note, with passage details included only by choice.
+- Shared links use a high-resolution branded preview featuring The Word's sword emblem.
 - Install it as a standalone web app on Mac, iPhone, Android, or Windows using the browser's install option.
 
 ## App Installation
