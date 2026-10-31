@@ -4,7 +4,17 @@ import MiniSearch from "./vendor/minisearch.js";
 const chapterKey = (book, chapter) => `${book}:${chapter}`;
 const searchBatchSize = 2048;
 const maxBookSuggestions = 5;
+const hangulTermPattern = /\p{Script=Hangul}/u;
+const koreanParticlePattern = /(?:께서|에서|으로|에게|한테|부터|까지|처럼|보다|은|는|이|가|을|를|의|에|로|와|과|도|만|께)$/u;
 const yieldToBrowser = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+function normalizeSearchTerm(term) {
+  const normalizedTerm = term.normalize("NFKC").toLocaleLowerCase();
+  if (!hangulTermPattern.test(normalizedTerm)) return normalizedTerm;
+
+  const stem = normalizedTerm.replace(koreanParticlePattern, "");
+  return stem.length >= 2 ? stem : normalizedTerm;
+}
 
 export function createScriptureStore({
   fetchImpl = fetch,
@@ -204,7 +214,7 @@ export function createScriptureStore({
     if (!textSearchIndexPromise) {
       textSearchIndexPromise = (async () => {
         await loadAllBooks();
-        const index = new MiniSearch({ fields: ["text"] });
+        const index = new MiniSearch({ fields: ["text"], processTerm: normalizeSearchTerm });
         let batch = [];
 
         for (const book of bookOrder) {
@@ -247,7 +257,10 @@ export function createScriptureStore({
     const matches = index.search(textQuery, {
       combineWith: "AND",
       prefix: (term) => term.length >= 3 || /\p{Script=Hangul}/u.test(term),
-      fuzzy: (term) => term.length >= 6 ? 0.15 : false,
+      fuzzy: (term) => {
+        if (hangulTermPattern.test(term)) return term.length >= 3 ? 1 / term.length : false;
+        return term.length >= 6 ? 0.15 : false;
+      },
     });
 
     matches.sort((left, right) => {

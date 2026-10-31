@@ -678,12 +678,17 @@ function animateChapterTurn(direction, requestId) {
 
 function appendHighlighted(container, text, matchedTerms = []) {
   const terms = new Set(matchedTerms.map((term) => term.toLocaleLowerCase()));
+  const hangulTerm = /\p{Script=Hangul}/u;
   const wordPattern = /[\p{L}\p{N}]+/gu;
   let cursor = 0;
 
   for (const match of text.matchAll(wordPattern)) {
     const word = match[0];
-    if (!terms.has(word.toLocaleLowerCase())) continue;
+    const normalizedWord = word.toLocaleLowerCase();
+    const isMatched = terms.has(normalizedWord) || [...terms].some((term) =>
+      hangulTerm.test(term) && normalizedWord.startsWith(term)
+    );
+    if (!isMatched) continue;
 
     container.append(document.createTextNode(text.slice(cursor, match.index)));
     const mark = document.createElement("mark");

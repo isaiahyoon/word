@@ -377,6 +377,37 @@ describe("scripture store", () => {
     assert.deepEqual(matches[0].matchedTerms.sort(), ["검으로", "날선"]);
   });
 
+  it("fuzzy-matches KRV typos after common Korean particles", async () => {
+    const mock = createMockFetch("./scripture/krv");
+    const fetchImpl = async (url) => {
+      if (url.endsWith("58_hebrews.json")) {
+        return {
+          ok: true,
+          json: async () => ({ 1: [[1, "하나님이 세상을 사랑하사"], [2, "하나님께서 말씀하시니"]] }),
+        };
+      }
+      return mock.fetchImpl(url);
+    };
+    const store = createScriptureStore({
+      fetchImpl,
+      dataPath: "./scripture/krv",
+      displayBookNames: KRV_BOOK_NAMES,
+    });
+    await store.initialize();
+
+    const matches = await store.search("하느님");
+    assert.deepEqual(
+      matches.map(({ book, chapter, verse }) => ({ book, chapter, verse }))
+        .sort((left, right) => left.verse - right.verse),
+      [
+        { book: 58, chapter: 1, verse: 1 },
+        { book: 58, chapter: 1, verse: 2 },
+      ],
+    );
+    assert.deepEqual(matches[0].matchedTerms, ["하나님"]);
+    assert.deepEqual(await store.search("하느"), []);
+  });
+
   it("keeps warm searches responsive for a Bible-sized index", async () => {
     const verseCount = 31_000;
     const verses = Array.from({ length: verseCount }, (_, index) => [

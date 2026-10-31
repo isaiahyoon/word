@@ -239,6 +239,10 @@ test("prioritizes Korean book, chapter, and exact-verse suggestions", async ({ p
   await expect(firstResult).toContainText("EXACT PASSAGE · 요한복음 1:1");
   await firstResult.click();
   await expect(page).toHaveURL(/\/krv\/b\/john\/c\/1\/v\/1$/);
+
+  await searchInput.fill("하느님");
+  const normalizedKoreanMatch = page.locator(".search-result mark").filter({ hasText: /하나님/ }).first();
+  await expect(normalizedKoreanMatch).toBeVisible();
 });
 
 test("finds separated and misspelled words and highlights the matched verse terms", async ({ page }) => {

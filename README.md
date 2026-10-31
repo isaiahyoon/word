@@ -75,7 +75,7 @@ Search applies to the selected edition. Scripture text matching requires every q
 
 Book and passage queries also provide one direct navigation suggestion at the top of the list, followed by matching verse text. For example, `John` offers an option to open John before verses containing “John”; `John 1` offers a chapter link; and `John 1:1` places that exact verse first. The exact passage is not repeated in the text results. Book-name prefixes work when they identify a single book.
 
-KRV search accepts Korean book names and references such as `요한복음`, `요한복음 1:1`, and `요한복음 1장 1절`. A shared prefix such as `요한` offers matching book suggestions in canon order, with text matches after them. Full-width digits and punctuation are normalized, and spaces between the book name and reference are optional.
+KRV search accepts Korean book names and references such as `요한복음`, `요한복음 1:1`, and `요한복음 1장 1절`. A shared prefix such as `요한` offers matching book suggestions in canon order, with text matches after them. Hangul terms of at least three syllables tolerate one-syllable typos, and common particles are normalized for matching; for example, `하느님` can find `하나님이`. Full-width digits and punctuation are normalized, and spaces between the book name and reference are optional.
 
 The first text search loads and indexes the selected edition's verses in the browser. The index is reused for later searches in that edition; no search query is sent to an external search service. Results are shown 12 at a time as the list is scrolled. The index is separate for each edition.
 
