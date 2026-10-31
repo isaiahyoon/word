@@ -690,20 +690,27 @@ for (const viewport of [
   });
 }
 
-test("copies consecutive verses as plain text with a compressed citation", async ({ page }) => {
+test("copies consecutive verses on every edition as separate lines with a compressed citation", async ({ page }) => {
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
-  await page.goto("/kjv/b/john/c/3/v/16");
-  const verses = [19, 17, 16, 18];
-  const expectedText = (await Promise.all(verses.map(async (number) => ({
-    number,
-    text: await page.locator(`#verse-${number} .verse-text`).textContent(),
-  })))).sort((left, right) => left.number - right.number).map((verse) => verse.text).join(" ");
+  const editions = [
+    ["kjv", "John"],
+    ["krv", "요한복음"],
+    ["japbungo", "ヨハネの福音書"],
+  ];
 
-  for (const number of verses) await page.locator(`#verse-${number}`).click();
-  await page.locator("#copy-selected-verses").click();
+  for (const [edition, displayBook] of editions) {
+    await page.goto(`/${edition}/b/john/c/3/v/16`);
+    const verses = [16, 17, 18];
+    const expectedLines = await Promise.all(verses.map(async (number) =>
+      (await page.locator(`#verse-${number} .verse-text`).textContent()).trim(),
+    ));
 
-  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
-    .toBe(`${expectedText}\n\n- John 3:16-19`);
+    for (const number of verses) await page.locator(`#verse-${number}`).click();
+    await page.locator("#copy-selected-verses").click();
+
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
+      .toBe(`${expectedLines.join("\n\n")}\n\n- ${displayBook} 3:16-18`);
+  }
 });
 
 test("copies selected verses with Command+C", async ({ page }) => {
@@ -713,7 +720,7 @@ test("copies selected verses with Command+C", async ({ page }) => {
   const expectedText = (await Promise.all(verses.map(async (number) => ({
     number,
     text: await page.locator(`#verse-${number} .verse-text`).textContent(),
-  })))).sort((left, right) => left.number - right.number).map((verse) => verse.text).join(" ");
+  })))).sort((left, right) => left.number - right.number).map((verse) => verse.text).join("\n\n");
 
   for (const number of verses) await page.locator(`#verse-${number}`).click();
   await page.keyboard.press("Meta+C");
@@ -729,7 +736,7 @@ test("copies selected verses with Control+C", async ({ page }) => {
   const expectedText = (await Promise.all(verses.map(async (number) => ({
     number,
     text: await page.locator(`#verse-${number} .verse-text`).textContent(),
-  })))).sort((left, right) => left.number - right.number).map((verse) => verse.text).join(" ");
+  })))).sort((left, right) => left.number - right.number).map((verse) => verse.text).join("\n\n");
 
   for (const number of verses) await page.locator(`#verse-${number}`).click();
   await page.keyboard.press("Control+C");
@@ -757,7 +764,7 @@ test("copies staggered verses in chapter order with separated reference ranges",
   const expectedText = (await Promise.all(verses.map(async (number) => ({
     number,
     text: await page.locator(`#verse-${number} .verse-text`).textContent(),
-  })))).sort((left, right) => left.number - right.number).map((verse) => verse.text).join(" ");
+  })))).sort((left, right) => left.number - right.number).map((verse) => verse.text).join("\n\n");
 
   for (const number of verses) await page.locator(`#verse-${number}`).click();
   await page.locator("#copy-selected-verses").click();
@@ -800,7 +807,7 @@ for (const shortcut of ["Meta+X", "Control+X"]) {
     const expectedText = (await Promise.all(verses.map(async (number) => ({
       number,
       text: await page.locator(`#verse-${number} .verse-text`).textContent(),
-    })))).sort((left, right) => left.number - right.number).map((verse) => verse.text).join(" ");
+    })))).sort((left, right) => left.number - right.number).map((verse) => verse.text).join("\n\n");
 
     for (const number of verses) await page.locator(`#verse-${number}`).click();
     await page.keyboard.press(shortcut);

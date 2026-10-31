@@ -188,13 +188,12 @@ async function copySelectedVerses({ clearAfter = false } = {}) {
   if (selectedVerses.length === 0) return;
 
   const reference = formatSelectedVerseReference(selectedVerses.map((verse) => verse.verse));
-  const includesFallback = selectedVerses.some((verse) => verse.sourceEdition === "krv");
   const copiedVerses = selectedVerses.map((verse) => {
     const sourceLabel = verse.sourceEdition === "krv" ? " [KRV fallback]" : "";
     const verseText = `${verse.text.trim()}${sourceLabel}`;
     if (!verse.referenceText) return verseText;
     return `${verseText}\n\n${verse.referenceText.trim()} [KJV reference]`;
-  }).join(includesFallback ? "\n\n" : " ");
+  }).join("\n\n");
   const text = `${copiedVerses}\n\n- ${reference}`;
   try {
     await writeClipboardText(text);
