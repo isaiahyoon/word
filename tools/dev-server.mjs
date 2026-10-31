@@ -2,7 +2,7 @@ import { createReadStream, promises as fs } from "node:fs";
 import { createServer } from "node:http";
 import { dirname, extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { EDITION_IDS } from "../editions.mjs";
+import { EDITION_IDS } from "../js/editions.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const port = Number(process.env.PORT ?? 8000);

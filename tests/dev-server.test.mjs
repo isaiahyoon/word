@@ -106,7 +106,7 @@ describe("development server", () => {
       await Promise.all([
         fetch(origin),
         fetch(`${origin}/404.html`),
-        fetch(`${origin}/typography.css`),
+        fetch(`${origin}/styles/typography.css`),
       ]);
     const [readerHtml, errorHtml, typographyCss] = await Promise.all([
       readerResponse.text(),
@@ -114,8 +114,8 @@ describe("development server", () => {
       typographyResponse.text(),
     ]);
 
-    assert.match(readerHtml, /href="typography\.css"/);
-    assert.match(errorHtml, /href="typography\.css"/);
+    assert.match(readerHtml, /href="\/styles\/typography\.css"/);
+    assert.match(errorHtml, /href="\/styles\/typography\.css"/);
     assert.equal(typographyResponse.status, 200);
     assert.match(typographyCss, /--type-reading:\s*18px/);
     assert.match(typographyCss, /--serif:/);
@@ -124,8 +124,8 @@ describe("development server", () => {
 
   it("uses deep teal and brass accents in chapter navigation", async () => {
     const [themeResponse, stylesResponse] = await Promise.all([
-      fetch(`${origin}/theme.css`),
-      fetch(`${origin}/styles.css`),
+      fetch(`${origin}/styles/theme.css`),
+      fetch(`${origin}/styles/styles.css`),
     ]);
     const [theme, styles] = await Promise.all([
       themeResponse.text(),
@@ -140,7 +140,7 @@ describe("development server", () => {
   });
 
   it("reduces the verse loading message size", async () => {
-    const response = await fetch(`${origin}/styles.css`);
+    const response = await fetch(`${origin}/styles/styles.css`);
     const styles = await response.text();
 
     assert.equal(response.status, 200);
@@ -150,7 +150,7 @@ describe("development server", () => {
   it("serves the accessible chapter sparkle trigger and metallic animation", async () => {
     const [readerResponse, stylesResponse] = await Promise.all([
       fetch(origin),
-      fetch(`${origin}/styles.css`),
+      fetch(`${origin}/styles/styles.css`),
     ]);
     const [readerHtml, stylesCss] = await Promise.all([
       readerResponse.text(),
@@ -169,7 +169,7 @@ describe("development server", () => {
   it("documents testament shortcuts with their theme gradients", async () => {
     const [readerResponse, stylesResponse] = await Promise.all([
       fetch(origin),
-      fetch(`${origin}/styles.css`),
+      fetch(`${origin}/styles/styles.css`),
     ]);
     const [html, styles] = await Promise.all([
       readerResponse.text(),
@@ -249,7 +249,7 @@ describe("development server", () => {
   it("serves the quiet reading toggle and focus-mode styles", async () => {
     const [readerResponse, stylesResponse] = await Promise.all([
       fetch(origin),
-      fetch(`${origin}/styles.css`),
+      fetch(`${origin}/styles/styles.css`),
     ]);
     const [readerHtml, stylesCss] = await Promise.all([
       readerResponse.text(),

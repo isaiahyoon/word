@@ -1,15 +1,15 @@
 import assert from "node:assert/strict";
 import { performance } from "node:perf_hooks";
 import { describe, it } from "node:test";
-import { BOOKS, bookFileName } from "../books.mjs";
-import { KRV_BOOK_NAMES } from "../editions.mjs";
+import { BOOKS, bookFileName } from "../js/books.mjs";
+import { KRV_BOOK_NAMES } from "../js/editions.mjs";
 import {
   createScriptureRoutes,
   getVerseStep,
   isValidVerseRange,
   normalizeVerseRange,
-} from "../scripture-routes.mjs";
-import { createScriptureStore } from "../scripture-store.js";
+} from "../js/scripture-routes.mjs";
+import { createScriptureStore } from "../js/scripture-store.js";
 
 function createMockFetch(dataPath = "./scripture/kjv") {
   const requests = [];

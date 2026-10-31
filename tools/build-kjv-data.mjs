@@ -1,7 +1,7 @@
 import { mkdir, readdir, readFile, unlink, writeFile } from "node:fs/promises";
-import { BOOKS, bookFileName } from "../books.mjs";
+import { BOOKS, bookFileName } from "../js/books.mjs";
 
-const sourceUrl = new URL("../kjv.json", import.meta.url);
+const sourceUrl = new URL("../sources/kjv.json", import.meta.url);
 const outputUrl = new URL("../scripture/kjv/books/", import.meta.url);
 const manifestUrl = new URL("../scripture/kjv/index.json", import.meta.url);
 const source = JSON.parse(await readFile(sourceUrl, "utf8"));
