@@ -117,7 +117,7 @@ Run the CSS lint and both test suites together with `npm run test:all`.
 
 ## Customize the palette
 
-Edit the shared typography tokens in `styles/typography.css` and the color custom properties at the top of `styles/styles.css`. The app and 404 page share the Gelasio display/reading face and DM Sans interface face. The base pastels are `--blue`, `--lavender`, `--yellow`, `--pink`, and `--green`; the chapter number's higher-contrast gradient stops are `--chapter-blue`, `--chapter-lavender`, `--chapter-pink`, and `--chapter-green`.
+Edit the shared typography tokens in `styles/typography.css`, the base color tokens in `styles/theme.css`, and component colors in `styles/styles.css`. The app and 404 page share the Gelasio display/reading face and DM Sans interface face. The base pastels are `--blue`, `--lavender`, `--yellow`, `--pink`, and `--green`; the chapter number's higher-contrast gradient stops are `--chapter-blue`, `--chapter-lavender`, `--chapter-pink`, and `--chapter-green`.
 
 ## License
 

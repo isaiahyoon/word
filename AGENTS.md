@@ -19,3 +19,7 @@
 - Keep root-level files for HTML entry points, deployment and package-manager configuration, project documentation, and repository instructions.
 - Put browser JavaScript modules in `js/`, stylesheets in `styles/`, images and icons in `assets/`, translation source data in `sources/`, generated scripture data in `scripture/`, tests in `tests/`, and build or development scripts in `tools/`.
 - Keep vendored JavaScript dependencies under `js/vendor/`; do not add duplicate runtime modules at the repository root.
+
+# Edition Themes
+
+- When adding the Japanese `japbungo` edition, give it a green background theme without changing the existing KJV/KRV background.
