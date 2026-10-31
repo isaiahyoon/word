@@ -1115,6 +1115,22 @@ a:focus-visible {
   --shortcut-key-ink: #435953;
   --shortcut-key-edge: #b7cec5;
 }
+.shortcut-row--edition-next {
+  --shortcut-key-color: linear-gradient(135deg, #fff1bd, #f3c58f 48%, #d97968);
+  --shortcut-key-ink: #563e38;
+  --shortcut-key-edge: #dfa987;
+}
+.shortcut-row--edition-previous {
+  --shortcut-key-color: linear-gradient(135deg, #c8e5e5, #d8d0ec 52%, #adacd1);
+  --shortcut-key-ink: #42435f;
+  --shortcut-key-edge: #b1b8d2;
+}
+.shortcut-row--edition-previous kbd {
+  width: 58px;
+  flex: 0 0 58px;
+  padding: 0 4px;
+  font-size: 12px;
+}
 .shortcut-row--previous > span {
   color: #4b5a40;
 }

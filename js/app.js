@@ -76,6 +76,7 @@ const elements = {
 let chapterPicker;
 let editionPicker;
 let verseNavigationQueue = Promise.resolve();
+let editionCycleQueue = Promise.resolve();
 let copyFeedbackTimer;
 const scriptureStores = new Map(EDITION_IDS.map((editionId) => {
   const edition = EDITIONS[editionId];
@@ -351,7 +352,7 @@ async function activateEdition(editionId) {
   await store.initialize();
 }
 
-async function changeEdition(editionId) {
+async function changeEdition(editionId, { preserveFocus = false } = {}) {
   if (!EDITIONS[editionId] || editionId === state.editionId) return;
   const keepSidebarOpen = elements.sidebar.classList.contains("is-open");
   const { book, chapter, verse } = state;
@@ -364,13 +365,24 @@ async function changeEdition(editionId) {
   requestAnimationFrame(() => {
     if (keepSidebarOpen) {
       elements.bookList.querySelector('.book-row[aria-current="page"]')?.focus();
-    } else {
+    } else if (!preserveFocus) {
       document.querySelector(`#verse-${state.verse}`)?.focus({ preventScroll: true });
     }
   });
   if (searchQuery.length >= 2) {
     void search(searchQuery, ++state.searchRequestId);
   }
+}
+
+function cycleEdition(direction) {
+  editionCycleQueue = editionCycleQueue
+    .catch((error) => console.error(error))
+    .then(() => {
+      const currentIndex = EDITION_IDS.indexOf(state.editionId);
+      const nextIndex = (currentIndex + direction + EDITION_IDS.length) % EDITION_IDS.length;
+      return changeEdition(EDITION_IDS[nextIndex], { preserveFocus: true });
+    });
+  return editionCycleQueue;
 }
 
 function animateEditionSwitch() {
@@ -1324,7 +1336,10 @@ function bindEvents() {
     onOldTestament: () => selectTestament("old"),
     onNewTestament: () => selectTestament("new"),
     onToggleQuietReading: toggleQuietReadingMode,
+    onPreviousEdition: () => void cycleEdition(-1),
+    onNextEdition: () => void cycleEdition(1),
     onHome: navigateHome,
+    isSidebarOpen: () => elements.sidebar.classList.contains("is-open"),
     onEscape: () => {
       const returnFocusToChapterPicker = chapterPicker.isOpen();
       setQuietReadingMode(false);

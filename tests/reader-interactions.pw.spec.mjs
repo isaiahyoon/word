@@ -197,6 +197,67 @@ test("shines shortcut keycaps on hover", async ({ page }) => {
   )).toBe("shortcut-keycap-glint");
 });
 
+test("cycles editions with Tab and Shift+Tab and wraps at both ends", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#verse-1").waitFor();
+  await page.evaluate(() => document.activeElement?.blur());
+  await expect.poll(() => page.evaluate(() => document.activeElement.tagName)).toBe("BODY");
+
+  for (const [route, language] of [
+    ["/krv", "ko"],
+    ["/diodati", "it"],
+    ["/licht", "de"],
+    ["/japbungo", "ja"],
+    ["/kjv", "en"],
+  ]) {
+    await page.keyboard.press("Tab");
+    await expect(page).toHaveURL(new RegExp(`${route}/b/genesis/c/1/v/1$`));
+    await expect(page.locator("#verse-list")).toHaveAttribute("lang", language);
+    await expect.poll(() => page.evaluate(() => document.activeElement.tagName)).toBe("BODY");
+  }
+
+  for (const [route, language] of [
+    ["/japbungo", "ja"],
+    ["/licht", "de"],
+    ["/diodati", "it"],
+  ]) {
+    await page.keyboard.press("Shift+Tab");
+    await expect(page).toHaveURL(new RegExp(`${route}/b/genesis/c/1/v/1$`));
+    await expect(page.locator("#verse-list")).toHaveAttribute("lang", language);
+  }
+});
+
+test("styles edition cycling keycaps distinctly and preserves native Tab in controls", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#shortcuts-open").click();
+  const nextRow = page.locator(".shortcut-row--edition-next");
+  const previousRow = page.locator(".shortcut-row--edition-previous");
+  const slashRow = page.locator(".shortcut-row--shortcuts");
+  await expect(nextRow.locator("kbd")).toHaveText("Tab");
+  await expect(previousRow.locator("kbd")).toHaveText("⇧ Tab");
+  expect(await nextRow.evaluate((element) => element.nextElementSibling.classList.contains("shortcut-row--edition-previous"))).toBe(true);
+  expect(await previousRow.evaluate((element) => element.nextElementSibling.classList.contains("shortcut-row--shortcuts"))).toBe(true);
+  const nextKeyColor = await nextRow.locator("kbd").evaluate((element) => getComputedStyle(element).backgroundImage);
+  const previousKeyColor = await previousRow.locator("kbd").evaluate((element) => getComputedStyle(element).backgroundImage);
+  expect(nextKeyColor).toContain("linear-gradient");
+  expect(previousKeyColor).toContain("linear-gradient");
+  expect(nextKeyColor).not.toBe(previousKeyColor);
+  await page.locator("#shortcuts-close").click();
+
+  const searchInput = page.locator("#search-input");
+  await searchInput.focus();
+  await page.keyboard.press("Tab");
+  await expect.poll(() => searchInput.evaluate((element) => document.activeElement === element)).toBe(false);
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.locator("#edition-select-code")).toHaveText("KJV");
+
+  await page.locator("#edition-select").click();
+  await page.keyboard.press("Tab");
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.locator("#edition-select-code")).toHaveText("KJV");
+  await expect(slashRow).toHaveCount(1);
+});
+
 test("keeps all editable text fields at 16px on touch devices", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");

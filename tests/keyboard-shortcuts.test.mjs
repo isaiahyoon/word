@@ -14,12 +14,15 @@ function createKeyboardHarness(testContext) {
   let searchInputBounds = { top: 0, bottom: 40 };
 
   globalThis.Element = class TestElement {
-    constructor(isEditing = false) {
+    constructor(isEditing = false, isFocusableControl = false) {
       this.isEditing = isEditing;
+      this.isFocusableControl = isFocusableControl;
     }
 
-    closest() {
-      return this.isEditing ? this : null;
+    closest(selector) {
+      if (this.isEditing && selector.includes("input")) return this;
+      if (this.isFocusableControl && selector.includes("button")) return this;
+      return null;
     }
   };
   globalThis.document = {
@@ -51,6 +54,7 @@ function createKeyboardHarness(testContext) {
   }
 
   let chapterPickerOpen = false;
+  let sidebarOpen = false;
   const openButton = createButton(
     () => dialog.showModal(),
     () => calls.push("shortcutsButtonFocus"),
@@ -71,8 +75,11 @@ function createKeyboardHarness(testContext) {
     onOldTestament: () => calls.push("oldTestament"),
     onNewTestament: () => calls.push("newTestament"),
     onToggleQuietReading: () => calls.push("quietReading"),
+    onPreviousEdition: () => calls.push("previousEdition"),
+    onNextEdition: () => calls.push("nextEdition"),
     onHome: () => calls.push("home"),
     onEscape: () => calls.push("escape"),
+    isSidebarOpen: () => sidebarOpen,
   });
 
   testContext.after(() => {
@@ -89,6 +96,7 @@ function createKeyboardHarness(testContext) {
       altKey: options.altKey ?? false,
       ctrlKey: options.ctrlKey ?? false,
       metaKey: options.metaKey ?? false,
+      shiftKey: options.shiftKey ?? false,
       preventDefault() {
         defaultPrevented = true;
       },
@@ -102,6 +110,9 @@ function createKeyboardHarness(testContext) {
     press,
     setChapterPickerOpen: (open) => {
       chapterPickerOpen = open;
+    },
+    setSidebarOpen: (open) => {
+      sidebarOpen = open;
     },
     setSearchInputBounds: (bounds) => {
       searchInputBounds = bounds;
@@ -138,6 +149,11 @@ describe("keyboard navigation shortcuts", () => {
     assert.equal(getNavigationAction("/"), "openShortcuts");
   });
 
+  it("maps Tab and Shift+Tab to forward and backward edition cycling", () => {
+    assert.equal(getNavigationAction("Tab"), "nextEdition");
+    assert.equal(getNavigationAction("Tab", { shiftKey: true }), "previousEdition");
+  });
+
   it("instantly scrolls the page to the top for Cmd/Ctrl+K before focusing an offscreen search input", (testContext) => {
     const { calls, press, setSearchInputBounds } = createKeyboardHarness(testContext);
     setSearchInputBounds({ top: -50, bottom: -4 });
@@ -172,6 +188,8 @@ describe("keyboard navigation shortcuts", () => {
       assert.equal(getNavigationAction("q", context), null);
       assert.equal(getNavigationAction("h", context), null);
       assert.equal(getNavigationAction("/", context), null);
+      assert.equal(getNavigationAction("Tab", context), null);
+      assert.equal(getNavigationAction("Tab", { ...context, shiftKey: true }), null);
     }
   });
 
@@ -191,6 +209,7 @@ describe("keyboard navigation shortcuts", () => {
       ["n", "newTestament"],
       ["q", "quietReading"],
       ["h", "home"],
+      ["Tab", "nextEdition"],
     ];
 
     for (const [key] of shortcuts) assert.equal(press(key), true);
@@ -198,21 +217,18 @@ describe("keyboard navigation shortcuts", () => {
       calls,
       shortcuts.map(([, action]) => action),
     );
+    assert.equal(press("Tab", { shiftKey: true }), true);
+    assert.equal(calls.at(-1), "previousEdition");
+    const dispatchedActions = [...shortcuts.map(([, action]) => action), "previousEdition"];
 
     assert.equal(press("/"), true);
     assert.equal(dialog.open, true);
     assert.equal(press("h"), false);
-    assert.deepEqual(
-      calls,
-      shortcuts.map(([, action]) => action),
-    );
+    assert.deepEqual(calls, dispatchedActions);
 
     assert.equal(press("Escape"), false);
     assert.equal(dialog.open, false);
-    assert.deepEqual(
-      calls,
-      shortcuts.map(([, action]) => action),
-    );
+    assert.deepEqual(calls, dispatchedActions);
 
     assert.equal(press("Escape"), false);
     assert.equal(calls.at(-1), "escape");
@@ -239,6 +255,19 @@ describe("keyboard navigation shortcuts", () => {
     setChapterPickerOpen(true);
     assert.equal(press("ArrowDown"), false);
     assert.equal(press("o"), false);
+    assert.deepEqual(calls, []);
+  });
+
+  it("preserves native Tab navigation from controls and the open sidebar", (testContext) => {
+    const { calls, press, setSidebarOpen } = createKeyboardHarness(testContext);
+    const button = new globalThis.Element(false, true);
+
+    assert.equal(press("Tab", { target: button }), false);
+    assert.equal(press("Tab", { target: button, shiftKey: true }), false);
+
+    setSidebarOpen(true);
+    assert.equal(press("Tab"), false);
+    assert.equal(press("Tab", { shiftKey: true }), false);
     assert.deepEqual(calls, []);
   });
 });
