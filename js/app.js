@@ -18,6 +18,8 @@ const appBasePath = new URL(document.baseURI).pathname;
 const scriptureRoutes = createScriptureRoutes(BOOKS, appBasePath, EDITION_IDS);
 const elements = {
   appShell: document.querySelector(".app-shell"),
+  pullRefreshIndicator: document.querySelector("#pull-refresh-indicator"),
+  pullRefreshLabel: document.querySelector("#pull-refresh-label"),
   bookList: document.querySelector("#book-list"),
   chapterSelect: document.querySelector("#chapter-select"),
   chapterSelectValue: document.querySelector("#chapter-select-value"),
@@ -889,6 +891,88 @@ function bindMobileChapterButtons() {
   }
 }
 
+function bindMobilePullToRefresh() {
+  const threshold = 72;
+  const maxDistance = 96;
+  const excludedTargets = "button, a, input, textarea, select, [contenteditable='true'], dialog[open], .search-results, .sidebar, .chapter-popover, .edition-options, .mobile-chapter-cues";
+  let startX = null;
+  let startY = null;
+  let distance = 0;
+
+  const reset = () => {
+    startX = null;
+    startY = null;
+    distance = 0;
+    document.body.classList.remove("is-pull-refreshing", "is-pull-refresh-ready");
+    elements.pullRefreshIndicator.setAttribute("aria-hidden", "true");
+    elements.pullRefreshIndicator.style.removeProperty("--pull-refresh-offset");
+    elements.pullRefreshIndicator.style.removeProperty("--pull-refresh-progress");
+  };
+  const isAtTop = () => window.scrollY <= 0 && (document.scrollingElement?.scrollTop ?? 0) <= 0;
+
+  document.addEventListener("touchstart", (event) => {
+    if (
+      event.touches.length !== 1 ||
+      !isAtTop() ||
+      (event.target instanceof Element && event.target.closest(excludedTargets))
+    ) {
+      reset();
+      return;
+    }
+
+    startX = event.touches[0].clientX;
+    startY = event.touches[0].clientY;
+  }, { passive: true });
+
+  document.addEventListener("touchmove", (event) => {
+    if (startY === null || event.touches.length !== 1 || !isAtTop()) {
+      reset();
+      return;
+    }
+
+    const touch = event.touches[0];
+    const deltaX = touch.clientX - startX;
+    const deltaY = touch.clientY - startY;
+    if (deltaY <= 0 || Math.abs(deltaX) > Math.abs(deltaY)) {
+      reset();
+      return;
+    }
+
+    if (event.cancelable) event.preventDefault();
+    distance = Math.min(deltaY * 0.6, maxDistance);
+    const ready = distance >= threshold;
+    document.body.classList.toggle("is-pull-refreshing", distance > 0);
+    document.body.classList.toggle("is-pull-refresh-ready", ready);
+    elements.pullRefreshIndicator.setAttribute("aria-hidden", "false");
+    elements.pullRefreshLabel.textContent = ready ? "Release to refresh" : "Pull down to refresh";
+    elements.pullRefreshIndicator.style.setProperty("--pull-refresh-offset", `${distance}px`);
+    elements.pullRefreshIndicator.style.setProperty(
+      "--pull-refresh-progress",
+      `${Math.min(distance / threshold, 1) * 360}deg`,
+    );
+  }, { passive: false });
+
+  document.addEventListener("touchend", () => {
+    if (startY === null) return;
+    const shouldRefresh = distance >= threshold;
+    startX = null;
+    startY = null;
+    if (!shouldRefresh) {
+      reset();
+      return;
+    }
+
+    document.body.classList.add("is-refreshing");
+    document.body.classList.remove("is-pull-refresh-ready");
+    elements.pullRefreshLabel.textContent = "Refreshing…";
+    elements.pullRefreshIndicator.setAttribute("aria-label", "Refreshing");
+    elements.pullRefreshIndicator.style.setProperty("--pull-refresh-offset", "88px");
+    requestAnimationFrame(() => window.location.reload());
+  }, { passive: true });
+
+  document.addEventListener("touchcancel", reset, { passive: true });
+}
+
 function bindEvents() {
   document.addEventListener("keydown", (event) => {
     const key = event.key.toLowerCase();
@@ -1088,6 +1172,7 @@ function bindEvents() {
   });
   elements.sidebarScrim.addEventListener("click", closeSidebar);
   bindMobileChapterButtons();
+  bindMobilePullToRefresh();
 }
 
 initialize().catch((error) => {

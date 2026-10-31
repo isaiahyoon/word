@@ -336,6 +336,42 @@ test("loads another search batch from a mobile touch scroll", async ({ page }) =
   await expect(page.locator(".search-result")).toHaveCount(24);
 });
 
+test("refreshes the current passage only after a pull past the mobile threshold", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/kjv/b/john/c/3/v/16");
+  await page.locator("#verse-16").waitFor();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+
+  const session = await page.context().newCDPSession(page);
+  await session.send("Emulation.setTouchEmulationEnabled", {
+    enabled: true,
+    maxTouchPoints: 1,
+  });
+  const dispatchTouch = (type, y) => session.send("Input.dispatchTouchEvent", {
+    type,
+    touchPoints: type === "touchEnd" ? [] : [{ id: 1, x: 5, y }],
+  });
+
+  await dispatchTouch("touchStart", 50);
+  await dispatchTouch("touchMove", 90);
+  await expect(page.locator("#pull-refresh-indicator")).toHaveAttribute("aria-hidden", "false");
+  await expect(page.locator("#pull-refresh-label")).toHaveText("Pull down to refresh");
+  await dispatchTouch("touchEnd", 90);
+  await expect(page.locator("#pull-refresh-indicator")).toHaveAttribute("aria-hidden", "true");
+  await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/16$/);
+
+  await dispatchTouch("touchStart", 50);
+  await dispatchTouch("touchMove", 190);
+  await expect(page.locator("#pull-refresh-label")).toHaveText("Release to refresh");
+  const reloaded = page.waitForEvent("load");
+  await dispatchTouch("touchEnd", 190);
+  await reloaded;
+  await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/16$/);
+  await session.detach();
+});
+
 test("switches editions at the same passage and canonicalizes legacy KJV links", async ({ page }) => {
   await page.goto("/b/john/c/3/v/16");
   await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/16$/);
