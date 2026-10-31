@@ -68,7 +68,7 @@ export const EDITIONS = {
     displayBookNames: [],
     themeColor: "#fff8df",
     attribution: "Luther Bible (1912) · Public Domain",
-    attributionUrl: "http://unbound.biola.edu/",
+    attributionUrl: "https://ebible.org/details.php?id=deu1912",
   },
   japbungo: {
     id: "japbungo",

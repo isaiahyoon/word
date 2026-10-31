@@ -67,6 +67,39 @@ body.is-diodati-edition::before {
     linear-gradient(312deg, rgba(148, 106, 67, 0.12), transparent 48%),
     repeating-linear-gradient(45deg, transparent 0 34px, rgba(103, 66, 81, 0.025) 34px 35px);
 }
+body.is-luther1912-edition {
+  --canvas: #fff8df;
+  --paper: #fffdf6;
+  --line: #eadfc1;
+  --blue: #dcebed;
+  --blue-strong: #9dc5c8;
+  --lavender: #e6dfeb;
+  --yellow: #fff1bd;
+  --pink: #f4d3c7;
+  --green: #e0e8d1;
+  --coral: #b9534b;
+  --deep-teal: #654840;
+  --navy-ink: #413631;
+  --brass: #9b6841;
+  --brass-soft: #ddc18d;
+  --brass-shadow: #b69a68;
+  --chapter-blue: #8dbfc5;
+  --chapter-lavender: #c8b7d3;
+  --chapter-pink: #e8a88f;
+  --chapter-green: #d9cf9d;
+  --focus: #a5534a;
+  --focus-border: #c28174;
+  --focus-ring: rgba(185, 83, 75, 0.17);
+  --grain: rgba(103, 72, 53, 0.06);
+}
+body.is-luther1912-edition::before {
+  opacity: 1;
+  background-color: #fff5d3;
+  background-image:
+    linear-gradient(132deg, rgba(255, 239, 185, 0.82), transparent 55%),
+    linear-gradient(312deg, rgba(185, 83, 75, 0.15), transparent 54%),
+    repeating-linear-gradient(45deg, transparent 0 34px, rgba(103, 72, 53, 0.025) 34px 35px);
+}
 body.is-japbungo-edition {
   --canvas: #edf5eb;
   --serif: var(--serif-japanese);
@@ -1539,6 +1572,31 @@ body.is-diodati-edition .edition-option.is-selected {
 body.is-diodati-edition .edition-option.is-selected .edition-option-check {
   color: #674251;
 }
+body.is-luther1912-edition .edition-switcher {
+  border-color: rgba(163, 91, 69, 0.3);
+  background: linear-gradient(145deg, rgba(255, 253, 245, 0.94), rgba(255, 239, 202, 0.88));
+  box-shadow: 0 2px 0 rgba(163, 91, 69, 0.18);
+}
+body.is-luther1912-edition .edition-switcher label,
+body.is-luther1912-edition .edition-select-caret,
+body.is-luther1912-edition .edition-trigger-code,
+body.is-luther1912-edition .edition-option-mark {
+  color: #9b5147;
+}
+body.is-luther1912-edition .edition-switcher label::before {
+  background: linear-gradient(90deg, #b9534b, transparent);
+}
+body.is-luther1912-edition .edition-trigger,
+body.is-luther1912-edition .edition-options {
+  border-color: rgba(163, 91, 69, 0.3);
+}
+body.is-luther1912-edition .edition-trigger,
+body.is-luther1912-edition .edition-option.is-selected {
+  background: linear-gradient(120deg, rgba(255, 248, 223, 0.98), rgba(255, 253, 246, 0.9));
+}
+body.is-luther1912-edition .edition-option.is-selected .edition-option-check {
+  color: #654840;
+}
 .edition-picker:has(.edition-options:not([hidden])) {
   z-index: 13;
 }
@@ -1709,6 +1767,21 @@ body.is-diodati-edition .book-row.is-current {
 }
 body.is-diodati-edition .book-row.is-current .book-index {
   color: #945d70;
+}
+body.is-luther1912-edition .book-row.is-current {
+  --sheen-edge: rgba(255, 255, 255, 0.58);
+  --sheen-core: rgba(255, 255, 255, 0.96);
+  background:
+    linear-gradient(112deg, #f8e6ab 0%, #fffaf0 28%, #f5d7c6 48%, #fff4d8 68%, #f8e6ab 100%) padding-box,
+    linear-gradient(135deg, #ad5b4b, var(--brass-soft), #81533e) border-box;
+  box-shadow:
+    0 2px 0 rgba(129, 83, 62, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.52);
+  color: #413631;
+}
+body.is-luther1912-edition .book-row.is-current .book-index {
+  color: #96594d;
 }
 .book-name {
   flex: 1;

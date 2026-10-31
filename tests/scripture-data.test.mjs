@@ -169,6 +169,64 @@ describe("generated scripture data", () => {
     await assertEditionMatchesSource(manifest, expectedBooks, "diodati");
   });
 
+  it("preserves Luther text, German book labels, and KJV verse numbering", async () => {
+    const source = JSON.parse(await readFile(new URL("../sources/luther_1912.json", import.meta.url), "utf8"));
+    const manifest = JSON.parse(await readFile(new URL("../scripture/luther1912/index.json", import.meta.url), "utf8"));
+    const canonicalIndex = JSON.parse(await readFile(new URL("../scripture/kjv/index.json", import.meta.url), "utf8"));
+    const expectedBooks = Array.from({ length: BOOKS.length }, () => new Map());
+    const displayBookNames = Array(BOOKS.length);
+
+    assert.equal(source.metadata.module, "luther_1912");
+    assert.equal(source.metadata.lang_short, "de");
+    assert.equal(source.metadata.year, "1912");
+    assert.equal(source.metadata.copyright, 0);
+
+    for (const record of source.verses) {
+      const { book, book_name: displayName, chapter, verse, text } = record;
+      const bookIndex = book - 1;
+      assert.ok(bookIndex >= 0 && bookIndex < BOOKS.length);
+      assert.ok(displayName);
+      assert.equal(typeof text, "string");
+      if (displayBookNames[bookIndex] === undefined) displayBookNames[bookIndex] = displayName;
+      assert.equal(displayBookNames[bookIndex], displayName);
+      if (!expectedBooks[bookIndex].has(chapter)) expectedBooks[bookIndex].set(chapter, new Map());
+      const chapterVerses = expectedBooks[bookIndex].get(chapter);
+      assert.equal(chapterVerses.has(verse), false, `${displayName} ${chapter}:${verse} is unique`);
+      chapterVerses.set(verse, [verse, text]);
+    }
+
+    assert.equal(displayBookNames.length, BOOKS.length);
+    let sourceVerseCount = 0;
+    for (const [bookIndex, chapters] of expectedBooks.entries()) {
+      assert.ok(displayBookNames[bookIndex]);
+      assert.equal(manifest.displayBookNames[bookIndex], displayBookNames[bookIndex]);
+      assert.equal(chapters.size, canonicalIndex.chapterCounts[bookIndex]);
+      const canonical = JSON.parse(await readFile(
+        new URL(`../scripture/kjv/books/${canonicalIndex.bookFiles[bookIndex]}`, import.meta.url),
+        "utf8",
+      ));
+      for (let chapter = 1; chapter <= canonicalIndex.chapterCounts[bookIndex]; chapter += 1) {
+        const verses = chapters.get(chapter);
+        assert.ok(verses, `${displayBookNames[bookIndex]} chapter ${chapter} exists`);
+        assert.equal(verses.size, canonical[chapter].length);
+        const orderedVerses = Array.from({ length: canonical[chapter].length }, (_, index) => {
+          const record = verses.get(index + 1);
+          assert.ok(record, `${displayBookNames[bookIndex]} ${chapter}:${index + 1} exists`);
+          return record;
+        });
+        chapters.set(chapter, orderedVerses);
+        sourceVerseCount += orderedVerses.length;
+      }
+    }
+
+    assert.equal(sourceVerseCount, source.verses.length);
+    assert.equal(manifest.sourceVerseCount, sourceVerseCount);
+    assert.equal(manifest.language, "de");
+    assert.equal(manifest.versification, "KJV");
+    assert.equal(manifest.rightsUrl, "https://ebible.org/details.php?id=deu1912");
+    await assertEditionMatchesSource(manifest, expectedBooks, "luther1912");
+  });
+
   async function assertEditionMatchesSource(manifest, expectedBooks, edition) {
     assert.equal(manifest.edition, edition);
     assert.equal(manifest.bookFiles.length, BOOKS.length);

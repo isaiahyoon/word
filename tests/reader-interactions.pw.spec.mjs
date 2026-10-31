@@ -483,6 +483,13 @@ test("switches editions at the same passage and canonicalizes legacy KJV links",
   )).toBe("0");
   await expect(page.locator("#verse-16 .verse-text")).toContainText("For God so loved the world");
   await expect(page.locator("#edition-attribution")).toBeHidden();
+
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-option-luther1912").click();
+  await expect(page).toHaveURL(/\/licht\/b\/john\/c\/3\/v\/17$/);
+  await expect(page.locator("body")).toHaveClass(/is-luther1912-edition/);
+  await expect(page.locator("#verse-list")).toHaveAttribute("lang", "de");
+  await expect(page.locator("#verse-17 .verse-text")).toContainText("Denn Gott hat seinen Sohn nicht gesandt");
 });
 
 test("renders the KRV brand before its scripture index finishes loading", async ({ page }) => {
@@ -554,6 +561,62 @@ test("loads Diodati with the DIO code, Italian typography, and pink theme", asyn
   await expect(fuzzyResult).toContainText("NEL principio");
 });
 
+test("loads Luther with the LUX code, German search, and yellow-red theme", async ({ page }) => {
+  await page.goto("/licht/b/genesis/c/1/v/1");
+
+  await expect(page).toHaveURL(/\/licht\/b\/genesis\/c\/1\/v\/1$/);
+  await expect(page.locator("#edition-select-code")).toHaveText("LUX");
+  await expect(page.locator("#edition-select-label")).toHaveText("Lutherbibel · Licht im Wort");
+  await page.locator("#edition-select").click();
+  await expect(page.locator("#edition-option-luther1912 .edition-option-mark")).toHaveText("LUX");
+  await expect(page.locator("#edition-option-luther1912 .edition-option-description small")).toHaveText("Luther Bible (1912)");
+  await page.locator("#edition-select").click();
+
+  await expect(page.locator("html")).toHaveAttribute("lang", "de");
+  await expect(page.locator("body")).toHaveClass(/is-luther1912-edition/);
+  await expect(page.locator("#verse-1 .verse-text")).toHaveText("Am Anfang schuf Gott Himmel und Erde.");
+  await expect(page.locator("#edition-attribution a")).toHaveAttribute(
+    "href",
+    "https://ebible.org/details.php?id=deu1912",
+  );
+  expect(await page.locator("#verse-1 .verse-text").evaluate((element) =>
+    getComputedStyle(element).fontFamily.includes("Gelasio"),
+  )).toBe(true);
+  expect(await page.locator("body").evaluate((element) =>
+    getComputedStyle(element).getPropertyValue("--canvas").trim(),
+  )).toBe("#fff8df");
+  const backdrop = await page.locator("body").evaluate((element) =>
+    getComputedStyle(element, "::before").backgroundImage,
+  );
+  expect(backdrop).toContain("linear-gradient");
+  expect(backdrop).toContain("185, 83, 75");
+
+  const searchInput = page.locator("#search-input");
+  const firstResult = page.locator("#search-results .search-result").first();
+  await searchInput.fill("1 Mo");
+  await expect(firstResult).toHaveAttribute("data-search-type", "book");
+  await expect(firstResult).toContainText("BOOK · 1 Mose");
+
+  await searchInput.fill("Johannes 3");
+  await expect(firstResult).toHaveAttribute("data-search-type", "chapter");
+  await expect(firstResult).toContainText("CHAPTER · Johannes 3");
+
+  await searchInput.fill("Johannes 3:16");
+  await expect(firstResult).toHaveAttribute("data-search-type", "reference");
+  await expect(firstResult).toContainText("EXACT PASSAGE · Johannes 3:16");
+  await firstResult.click();
+  await expect(page).toHaveURL(/\/licht\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("#verse-16 .verse-text")).toContainText("Also hat Gott die Welt geliebt");
+
+  await searchInput.fill("wüst schwebte");
+  await expect(page.locator("#search-results .search-result").filter({ hasText: "1 Mose 1:2" }).first())
+    .toContainText("wüst und leer");
+
+  await searchInput.fill("Anfangg Erde");
+  await expect(page.locator("#search-results .search-result").filter({ hasText: "1 Mose 1:1" }))
+    .toHaveCount(1);
+});
+
 test("supports Japanese JapBungo search", async ({ page }) => {
   await page.goto("/japbungo");
   await expect(page.locator("html")).toHaveAttribute("lang", "ja");
@@ -616,6 +679,11 @@ test("routes an edition-only URL to Genesis 1:1 in that edition", async ({ page 
   await expect(page).toHaveURL(/\/diodati\/?$/);
   await expect(page.locator("body")).toHaveClass(/is-diodati-edition/);
   await expect(page.locator("#verse-1 .verse-text")).toContainText("NEL principio Iddio creò il cielo e la terra.");
+
+  await page.goto("/licht");
+  await expect(page).toHaveURL(/\/licht\/?$/);
+  await expect(page.locator("body")).toHaveClass(/is-luther1912-edition/);
+  await expect(page.locator("#verse-1 .verse-text")).toContainText("Am Anfang schuf Gott Himmel und Erde.");
 });
 
 test("omits 3 John 1:15 from the KJV edition", async ({ page }) => {
@@ -653,6 +721,21 @@ test("selects Diodati from the edition menu with the keyboard", async ({ page })
   await expect(page).toHaveURL(/\/diodati\/b\/john\/c\/3\/v\/16$/);
   await expect(page.locator("#verse-list")).toHaveAttribute("lang", "it");
   await expect(page.locator("#edition-select-code")).toHaveText("DIO");
+});
+
+test("selects Luther from the edition menu with the keyboard", async ({ page }) => {
+  await page.goto("/kjv/b/john/c/3/v/16");
+  await page.locator("#edition-select").focus();
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator("#edition-option-luther1912")).toBeFocused();
+  await page.keyboard.press("Enter");
+
+  await expect(page).toHaveURL(/\/licht\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("#verse-list")).toHaveAttribute("lang", "de");
+  await expect(page.locator("#edition-select-code")).toHaveText("LUX");
 });
 
 test("Escape from the edition menu returns focus to the verse for arrow navigation", async ({ page }) => {
@@ -766,11 +849,11 @@ for (const viewport of [
   { width: 390, height: 844, label: "mobile" },
   { width: 1280, height: 900, label: "desktop" },
 ]) {
-  for (const edition of ["kjv", "diodati"]) {
+  for (const [edition, routeSegment] of [["kjv", "kjv"], ["diodati", "diodati"], ["luther1912", "licht"]]) {
     test(`toggles independent verse selections on ${viewport.label} in ${edition}`, async ({ page }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
-      await page.goto(`/${edition}/b/john/c/3/v/16`);
-      const passageUrl = (verse) => new RegExp(`/${edition}/b/john/c/3/v/${verse}$`);
+      await page.goto(`/${routeSegment}/b/john/c/3/v/16`);
+      const passageUrl = (verse) => new RegExp(`/${routeSegment}/b/john/c/3/v/${verse}$`);
       await page.locator("#verse-17").click();
       await expect(page).toHaveURL(passageUrl(17));
       await page.locator("#verse-21").click();
@@ -816,6 +899,7 @@ test("copies consecutive verses on every edition as separate lines with a compre
     ["kjv", "John"],
     ["krv", "요한복음"],
     ["diodati", "Giovanni"],
+    ["licht", "Johannes"],
     ["japbungo", "ヨハネの福音書"],
   ];
 
