@@ -8,8 +8,10 @@ import {
 function createKeyboardHarness(testContext) {
   const previousDocument = globalThis.document;
   const previousElement = globalThis.Element;
+  const previousWindow = globalThis.window;
   const documentListeners = new Map();
   const calls = [];
+  let searchInputBounds = { top: 0, bottom: 40 };
 
   globalThis.Element = class TestElement {
     constructor(isEditing = false) {
@@ -22,6 +24,10 @@ function createKeyboardHarness(testContext) {
   };
   globalThis.document = {
     addEventListener: (type, listener) => documentListeners.set(type, listener),
+  };
+  globalThis.window = {
+    innerHeight: 800,
+    scrollTo: (options) => calls.push(["pageScroll", options]),
   };
 
   const dialog = {
@@ -53,7 +59,10 @@ function createKeyboardHarness(testContext) {
     dialog,
     openButton,
     closeButton: createButton(() => dialog.close()),
-    searchInput: { focus: () => calls.push("search") },
+    searchInput: {
+      getBoundingClientRect: () => searchInputBounds,
+      focus: (options) => calls.push(["search", options]),
+    },
     isChapterPickerOpen: () => chapterPickerOpen,
     onPreviousChapter: () => calls.push("previousChapter"),
     onNextChapter: () => calls.push("nextChapter"),
@@ -69,6 +78,7 @@ function createKeyboardHarness(testContext) {
   testContext.after(() => {
     globalThis.document = previousDocument;
     globalThis.Element = previousElement;
+    globalThis.window = previousWindow;
   });
 
   function press(key, options = {}) {
@@ -92,6 +102,9 @@ function createKeyboardHarness(testContext) {
     press,
     setChapterPickerOpen: (open) => {
       chapterPickerOpen = open;
+    },
+    setSearchInputBounds: (bounds) => {
+      searchInputBounds = bounds;
     },
   };
 }
@@ -123,6 +136,24 @@ describe("keyboard navigation shortcuts", () => {
 
   it("maps slash to opening the shortcuts dialog", () => {
     assert.equal(getNavigationAction("/"), "openShortcuts");
+  });
+
+  it("instantly scrolls the page to the top for Cmd/Ctrl+K before focusing an offscreen search input", (testContext) => {
+    const { calls, press, setSearchInputBounds } = createKeyboardHarness(testContext);
+    setSearchInputBounds({ top: -50, bottom: -4 });
+
+    assert.equal(press("k", { metaKey: true }), true);
+    assert.deepEqual(calls, [
+      ["pageScroll", { top: 0, behavior: "instant" }],
+      ["search", { preventScroll: true }],
+    ]);
+
+    calls.length = 0;
+    assert.equal(press("k", { ctrlKey: true }), true);
+    assert.deepEqual(calls, [
+      ["pageScroll", { top: 0, behavior: "instant" }],
+      ["search", { preventScroll: true }],
+    ]);
   });
 
   it("does not intercept typing, dialogs, pickers, or modified keys", () => {

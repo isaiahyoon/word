@@ -317,6 +317,26 @@ test("highlights the first search result and opens it with Enter", async ({ page
   await expect(page).toHaveURL(/\/kjv\/b\/isaiah\/c\/27\/v\/1$/);
 });
 
+test("Cmd+K scrolls all the way to the top when the focused search bar is offscreen", async ({ page }) => {
+  await page.goto("/");
+  const searchInput = page.locator("#search-input");
+  await searchInput.focus();
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await expect(searchInput).not.toBeInViewport();
+
+  await page.keyboard.press("Meta+k");
+
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+  await expect(searchInput).toBeFocused();
+  await expect(searchInput).toBeInViewport();
+  const searchBox = page.locator(".search-box");
+  await expect(searchBox).toHaveCSS("animation-name", "search-focus-glow");
+  await expect(searchBox).toHaveCSS("animation-iteration-count", "infinite");
+
+  await searchInput.evaluate((input) => input.blur());
+  await expect(searchBox).toHaveCSS("animation-name", "none");
+});
+
 test("loads another search batch from a mobile touch scroll", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");

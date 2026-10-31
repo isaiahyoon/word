@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#e9eff4" />
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+    <title>KRV Regal Background Studies</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #26323a;
+        --muted: #64717a;
+        --line: #d7dce0;
+        --paper: #f4f3ef;
+        --brass: #9c7534;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(rgba(67, 76, 80, 0.045) 0.65px, transparent 0.65px) 0 0 / 8px 8px,
+          var(--paper);
+        color: var(--ink);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      main {
+        width: min(1380px, 100%);
+        margin: 0 auto;
+        padding: 48px clamp(18px, 4vw, 52px) 64px;
+      }
+
+      header {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .eyebrow {
+        margin: 0 0 8px;
+        color: var(--brass);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+        font-size: clamp(28px, 4vw, 42px);
+        font-weight: 500;
+        line-height: 1.08;
+      }
+
+      .intro {
+        max-width: 430px;
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .options {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px;
+      }
+
+      .option {
+        min-width: 0;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.76);
+      }
+
+      .preview {
+        min-height: 148px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 19px 21px 17px;
+        color: #25333d;
+        border-bottom: 1px solid rgba(37, 51, 61, 0.1);
+      }
+
+      .sample-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .sample-edition {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+      }
+
+      .sample-reference {
+        color: rgba(38, 50, 58, 0.72);
+        font-size: 10px;
+      }
+
+      .sample-verse {
+        margin: 22px 0 0;
+        font-family: "Noto Serif CJK KR", "AppleMyungjo", "Batang", Georgia, serif;
+        font-size: 17px;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+      }
+
+      .details {
+        padding: 13px 15px 15px;
+      }
+
+      .details h2 {
+        display: flex;
+        align-items: baseline;
+        gap: 9px;
+        margin: 0 0 8px;
+        font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .number {
+        color: var(--brass);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 10px;
+        font-weight: 700;
+      }
+
+      code {
+        display: block;
+        color: #58646b;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 10px;
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+      }
+
+      @media (max-width: 900px) {
+        .options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+
+      @media (max-width: 580px) {
+        main { padding-top: 30px; }
+        header { align-items: start; flex-direction: column; gap: 12px; }
+        .options { grid-template-columns: 1fr; gap: 14px; }
+        .preview { min-height: 136px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <p class="eyebrow">The Amazing Word · KRV</p>
+          <h1>Regal blue background studies</h1>
+        </div>
+        <p class="intro">Twenty-two blue-led gradients inspired by porcelain, indigo silk, celadon, lacquer, and courtly brass. The app has not been changed.</p>
+      </header>
+
+      <section class="options" aria-label="KRV background gradient options">
+        <article class="option">
+          <div class="preview" style="background: linear-gradient(128deg, #C5D8E9, #E9F0F4 54%, #E4D3A6)">
+            <div class="sample-heading"><span class="sample-edition">KRV · 개역한글</span><span class="sample-reference">요한복음 1:1</span></div>
+            <p class="sample-verse" lang="ko">태초에 말씀이 계시니라</p>
+          </div>
+          <div class="details"><h2><span class="number">01</span>Royal Porcelain</h2><code>linear-gradient(128deg, #C5D8E9, #E9F0F4 54%, #E4D3A6)</code></div>
+        </article>
+        <article class="option">
+          <div class="preview" style="background: linear-gradient(128deg, #BFCFE2, #E9EFF4 55%, #C5D6E7)">
+            <div class="sample-heading"><span class="sample-edition">KRV · 개역한글</span><span class="sample-reference">요한복음 1:1</span></div>
+            <p class="sample-verse" lang="ko">태초에 말씀이 계시니라</p>
+          </div>
+          <div class="details"><h2><span class="number">02</span>Sapphire Court</h2><code>linear-gradient(128deg, #BFCFE2, #E9EFF4 55%, #C5D6E7)</code></div>
+        </article>
+        <article class="option">
+          <div class="preview" style="background: linear-gradient(128deg, #C5D2DF, #E8EDF1 52%, #D0DCE5)">
+            <div class="sample-heading"><span class="sample-edition">KRV · 개역한글</span><span class="sample-reference">요한복음 1:1</span></div>
+            <p class="sample-verse" lang="ko">태초에 말씀이 계시니라</p>
+          </div>
+          <div class="details"><h2><span class="number">03</span>Inkstone &amp; Silver</h2><code>linear-gradient(128deg, #C5D2DF, #E8EDF1 52%, #D0DCE5)</code></div>
+        </article>
+        <article class="option">
+          <div class="preview" style="background: linear-gradient(128deg, #C9D4E8, #EFF1F3 55%, #D9C27D)">
+            <div class="sample-heading"><span class="sample-edition">KRV · 개역한글</span><span class="sample-reference">요한복음 1:1</span></div>
+            <p class="sample-verse" lang="ko">태초에 말씀이 계시니라</p>
+          </div>
+          <div class="details"><h2><span class="number">04</span>Indigo Silk &amp; Brass</h2><code>linear-gradient(128deg, #C9D4E8, #EFF1F3 55%, #D9C27D)</code></div>
+        </article>
+        <article class="option">
+          <div class="preview" style="background: linear-gradient(128deg, #BFD6DD, #E7F0ED 54%, #C5D7E2)">
+            <div class="sample-heading"><span class="sample-edition">KRV · 개역한글</span><span class="sample-reference">요한복음 1:1</span></div>
+            <p class="sample-verse" lang="ko">태초에 말씀이 계시니라</p>
+          </div>
+          <div class="details"><h2><span class="number">05</span>Blue Celadon</h2><code>linear-gradient(128deg, #BFD6DD, #E7F0ED 54%, #C5D7E2)</code></div>
+        </article>
+        <article class="option">
+          <div class="preview" style="background: linear-gradient(128deg, #BED8EA, #E8F1F4 58%, #C3D3E5)">
+            <div class="sample-heading"><span class="sample-edition">KRV · 개역한글</span><span class="sample-reference">요한복음 1:1</span></div>
+            <p class="sample-verse" lang="ko">태초에 말씀이 계시니라</p>
+          </div>
+          <div class="details"><h2><span class="number">06</span>Cobalt Roof Tile</h2><code>linear-gradient(128deg, #BED8EA, #E8F1F4 58%, #C3D3E5)</code></div>
+        </article>
+        <article class="option">
+          <div class="preview" style="background: linear-gradient(128deg, #C5D7E8, #F1F3F1 55%, #D8E1D8)">
+            <div class="sample-heading"><span class="sample-edition">KRV · 개역한글</span><span class="sample-reference">요한복음 1:1</span></div>
+            <p class="sample-verse" lang="ko">태초에 말씀이 계시니라</p>
+          </div>
+          <div class="details"><h2><span class="number">07</span>Moon Palace</h2><code>linear-gradient(128deg, #C5D7E8, #F1F3F1 55%, #D8E1D8)</code></div>
+        </article>
+        <article class="option">
+          <div class="preview" style="background: linear-gradient(128deg, #C1D8E8, #EAF1F2 55%, #E3C9BB)">
+            <div class="sample-heading"><span class="sample-edition">KRV · 개역한글</span><span class="sample-reference">요한복음 1:1</span></div>
+            <p class="sample-verse" lang="ko">태초에 말씀이 계시니라</p>
+          </div>
+          <div class="details"><h2><span class="number">08</span>Dancheong Azure</h2><code>linear-gradient(128deg, #C1D8E8, #EAF1F2 55%, #E3C9BB)</code></div>
+        </article>
+        <article class="option">
+          <div class="preview" style="background: linear-gradient(128deg, #BBD3E0, #E6EFEE 52%, #D0DDEC)">
+            <div class="sample-heading"><span class="sample-edition">KRV · 개역한글</span><span class="sample-reference">요한복음 1:1</span></div>
+            <p class="sample-verse" lang="ko">태초에 말씀이 계시니라</p>
+          </div>
+          <div class="details"><h2><span class="number">09</span>Blue Jade Court</h2><code>linear-gradient(128deg, #BBD3E0, #E6EFEE 52%, #D0DDEC)</code></div>
+        </article>
+        <article class="option">
+          <div class="preview" style="background: linear-gradient(128deg, #C2D5E8, #EAF0F2 55%, #DCC98F)">
+            <div class="sample-heading"><span class="sample-edition">KRV · 개역한글</span><span class="sample-reference">요한복음 1:1</span></div>
+            <p class="sample-verse" lang="ko">태초에 말씀이 계시니라</p>
+          </div>
+          <div class="details"><h2><span class="number">10</span>Crown Blue &amp; Gold</h2><code>linear-gradient(128deg, #C2D5E8, #EAF0F2 55%, #DCC98F)</code></div>
+        </article>
+        <article class="option">
+          <div class="preview" style="background: linear-gradient(128deg, #C8D2E8, #ECEEF4 52%, #D3D9E8)">
+            <div class="sample-heading"><span class="sample-edition">KRV · 개역한글</span><span class="sample-reference">요한복음 1:1</span></div>
+            <p class="sample-verse" lang="ko">태초에 말씀이 계시니라</p>
+          </div>
+          <div class="details"><h2><span class="number">11</span>Royal Indigo Mist</h2><code>linear-gradient(128deg, #C8D2E8, #ECEEF4 52%, #D3D9E8)</code></div>
+        </article>
+        <article class="option">
+          <div class="preview" style="background: linear-gradient(128deg, #C1D0DE, #E8EDF0 55%, #DDD6C7)">
+            <div class="sample-heading"><span class="sample-edition">KRV · 개역한글</span><span class="sample-reference">요한복음 1:1</span></div>
+            <p class="sample-verse" lang="ko">태초에 말씀이 계시니라</p>
+          </div>
+          <div class="details"><h2><span class="number">12</span>Lacquered Blue</h2><code>linear-gradient(128deg, #C1D0DE, #E8EDF0 55%, #DDD6C7)</code></div>
+        </article>
+        <article class="option">
+          <div class="preview" style="background: linear-gradient(128deg, #BDD4DF, #E7EFED 55%, #CADBD3)">
+            <div class="sample-heading"><span class="sample-edition">KRV · 개역한글</span><span class="sample-reference">요한복음 1:1</span></div>
+            <p class="sample-verse" lang="ko">태초에 말씀이 계시니라</p>
+          </div>
+          <div class="details"><h2><span class="number">13</span>Pine-Shadow Blue</h2><code>linear-gradient(128deg, #BDD4DF, #E7EFED 55%, #CADBD3)</code></div>
+        </article>
+        <article class="option">
+          <div class="preview" style="background: linear-gradient(128deg, #C3D8EA, #F0F4F5 56%, #D4E1E9)">
+            <div class="sample-heading"><span class="sample-edition">KRV · 개역한글</span><span class="sample-reference">요한복음 1:1</span></div>
+            <p class="sample-verse" lang="ko">태초에 말씀이 계시니라</p>
+          </div>
+          <div class="details"><h2><span class="number">14</span>Winter Palace</h2><code>linear-gradient(128deg, #C3D8EA, #F0F4F5 56%, #D4E1E9)</code></div>
+        </article>
+        <article class="option">
+          <div class="preview" style="background: linear-gradient(128deg, #C4D2E1, #E9EFF2 55%, #D5D5E1)">
+            <div class="sample-heading"><span class="sample-edition">KRV · 개역한글</span><span class="sample-reference">요한복음 1:1</span></div>
+            <p class="sample-verse" lang="ko">태초에 말씀이 계시니라</p>
+          </div>
+          <div class="details"><h2><span class="number">15</span>Dragon Cloud</h2><code>linear-gradient(128deg, #C4D2E1, #E9EFF2 55%, #D5D5E1)</code></div>
+        </article>
+        <article class="option">
+          <div class="preview" style="background: linear-gradient(128deg, #BBD3E8, #E6EEF3 54%, #E2D6B5)">
+            <div class="sample-heading"><span class="sample-edition">KRV · 개역한글</span><span class="sample-reference">요한복음 1:1</span></div>
+            <p class="sample-verse" lang="ko">태초에 말씀이 계시니라</p>
+          </div>
+          <div class="details"><h2><span class="number">16</span>Ceremonial Cobalt</h2><code>linear-gradient(128deg, #BBD3E8, #E6EEF3 54%, #E2D6B5)</code></div>
+        </article>
+        <article class="option">
+          <div class="preview" style="background: linear-gradient(128deg, #BBD7E1, #E8F1EF 52%, #D0E0E9)">
+            <div class="sample-heading"><span class="sample-edition">KRV · 개역한글</span><span class="sample-reference">요한복음 1:1</span></div>
+            <p class="sample-verse" lang="ko">태초에 말씀이 계시니라</p>
+          </div>
+          <div class="details"><h2><span class="number">17</span>Palace Lake</h2><code>linear-gradient(128deg, #BBD7E1, #E8F1EF 52%, #D0E0E9)</code></div>
+        </article>
+        <article class="option">
+          <div class="preview" style="background: linear-gradient(128deg, #B9C9DB, #E5EBF0 55%, #CDD8E4)">
+            <div class="sample-heading"><span class="sample-edition">KRV · 개역한글</span><span class="sample-reference">요한복음 1:1</span></div>
+            <p class="sample-verse" lang="ko">태초에 말씀이 계시니라</p>
+          </div>
+          <div class="details"><h2><span class="number">18</span>Midnight Silk</h2><code>linear-gradient(128deg, #B9C9DB, #E5EBF0 55%, #CDD8E4)</code></div>
+        </article>
+        <article class="option">
+          <div class="preview" style="background: linear-gradient(128deg, #C5D5E2, #F0F2EF 54%, #E4DDC9)">
+            <div class="sample-heading"><span class="sample-edition">KRV · 개역한글</span><span class="sample-reference">요한복음 1:1</span></div>
+            <p class="sample-verse" lang="ko">태초에 말씀이 계시니라</p>
+          </div>
+          <div class="details"><h2><span class="number">19</span>Crane Feather</h2><code>linear-gradient(128deg, #C5D5E2, #F0F2EF 54%, #E4DDC9)</code></div>
+        </article>
+        <article class="option">
+          <div class="preview" style="background: linear-gradient(128deg, #C5D2E5, #ECEEF2 56%, #DDD5E0)">
+            <div class="sample-heading"><span class="sample-edition">KRV · 개역한글</span><span class="sample-reference">요한복음 1:1</span></div>
+            <p class="sample-verse" lang="ko">태초에 말씀이 계시니라</p>
+          </div>
+          <div class="details"><h2><span class="number">20</span>Blue Plum Court</h2><code>linear-gradient(128deg, #C5D2E5, #ECEEF2 56%, #DDD5E0)</code></div>
+        </article>
+        <article class="option">
+          <div class="preview" style="background: linear-gradient(128deg, #BBD5E4, #E8F0EE 54%, #C6D9D1)">
+            <div class="sample-heading"><span class="sample-edition">KRV · 개역한글</span><span class="sample-reference">요한복음 1:1</span></div>
+            <p class="sample-verse" lang="ko">태초에 말씀이 계시니라</p>
+          </div>
+          <div class="details"><h2><span class="number">21</span>Celestial Blue &amp; Jade</h2><code>linear-gradient(128deg, #BBD5E4, #E8F0EE 54%, #C6D9D1)</code></div>
+        </article>
+        <article class="option">
+          <div class="preview" style="background: linear-gradient(128deg, #C1D5E8, #EEF1F1 52%, #E0C982)">
+            <div class="sample-heading"><span class="sample-edition">KRV · 개역한글</span><span class="sample-reference">요한복음 1:1</span></div>
+            <p class="sample-verse" lang="ko">태초에 말씀이 계시니라</p>
+          </div>
+          <div class="details"><h2><span class="number">22</span>Throne-Room Dawn</h2><code>linear-gradient(128deg, #C1D5E8, #EEF1F1 52%, #E0C982)</code></div>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

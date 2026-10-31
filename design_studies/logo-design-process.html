@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f6f4f9" />
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+    <title>The Word | Logo Design Process</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #292b2a;
+        --muted: #777972;
+        --paper: #fbfaf6;
+        --canvas: #f6f4f9;
+        --line: #dedbd2;
+        --blue: #defefc;
+        --lavender: #dcd7f7;
+        --yellow: #fffecf;
+        --pink: #fad4e0;
+        --green: #d6f2b9;
+        --deep-teal: #315863;
+        --navy-ink: #223b55;
+        --brass: #a97c35;
+        --brass-soft: #dfc681;
+        --measure: 1120px;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(rgba(99, 95, 78, 0.075) 0.65px, transparent 0.65px) 0 0 / 7px 7px,
+          var(--canvas);
+        color: var(--ink);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 15px;
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      main {
+        width: min(var(--measure), 100%);
+        margin: 0 auto;
+        padding: 38px clamp(20px, 5vw, 64px) 80px;
+      }
+
+      .masthead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .masthead span:last-child { color: var(--brass); }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 0.78fr);
+        align-items: center;
+        gap: clamp(32px, 7vw, 88px);
+        padding: 58px 0 62px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .eyebrow {
+        margin: 0 0 12px;
+        color: var(--brass);
+        font-size: 11px;
+        font-weight: 750;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1, h2, h3, p { margin-top: 0; }
+
+      h1 {
+        max-width: 620px;
+        margin-bottom: 18px;
+        font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+        font-size: clamp(38px, 6vw, 66px);
+        font-weight: 500;
+        line-height: 1.02;
+      }
+
+      .hero-copy {
+        max-width: 590px;
+        margin-bottom: 0;
+        color: #555b59;
+        font-size: 16px;
+      }
+
+      .identity-specimen {
+        position: relative;
+        min-height: 230px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 30px;
+        border: 1px solid rgba(49, 88, 99, 0.2);
+        background: linear-gradient(132deg, #fffefa, #eaf3f0 60%, #f5e9d8);
+        box-shadow: 0 8px 26px rgba(34, 59, 85, 0.07);
+      }
+
+      .identity-specimen::before,
+      .identity-specimen::after {
+        position: absolute;
+        width: 28px;
+        height: 28px;
+        content: "";
+      }
+
+      .identity-specimen::before {
+        top: 10px;
+        left: 10px;
+        border-top: 1px solid var(--brass-soft);
+        border-left: 1px solid var(--brass-soft);
+      }
+
+      .identity-specimen::after {
+        right: 10px;
+        bottom: 10px;
+        border-right: 1px solid var(--brass-soft);
+        border-bottom: 1px solid var(--brass-soft);
+      }
+
+      .brand-lockup {
+        display: flex;
+        align-items: center;
+        gap: 17px;
+      }
+
+      .brand-mark {
+        width: 66px;
+        height: 66px;
+        flex: 0 0 66px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 5px;
+        transform: rotate(-7deg);
+      }
+
+      .brand-mark i {
+        display: block;
+        border: 1px solid rgba(34, 59, 85, 0.52);
+        border-radius: 2px;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.44), 0 1px 0 rgba(169, 124, 53, 0.72);
+      }
+
+      .brand-mark i:nth-child(1) { border-radius: 9px 2px 2px; background: var(--blue); }
+      .brand-mark i:nth-child(2) { border-radius: 2px 9px 2px 2px; background: var(--lavender); }
+      .brand-mark i:nth-child(3) { border-radius: 2px 2px 2px 9px; background: var(--pink); }
+      .brand-mark i:nth-child(4) { border-radius: 2px 2px 9px; background: var(--green); }
+
+      .wordmark {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .wordmark strong {
+        color: #a4864d;
+        background-image: linear-gradient(165deg, #d5c596 0%, #bca26a 17%, #856a3f 34%, #e1d2aa 49%, #a4864d 65%, #cebb8a 82%, #785e38 100%);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        -webkit-text-stroke: 0.45px var(--navy-ink);
+        font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+        font-size: clamp(30px, 5vw, 44px);
+        font-weight: 500;
+        line-height: 1;
+      }
+
+      .wordmark small {
+        color: #777972;
+        font-size: 9px;
+        font-weight: 750;
+        letter-spacing: 0.16em;
+      }
+
+      .specimen-note {
+        margin: 28px 0 0;
+        padding-top: 13px;
+        border-top: 1px solid rgba(49, 88, 99, 0.16);
+        color: #69716f;
+        font-size: 11px;
+      }
+
+      section { padding: 50px 0; border-bottom: 1px solid var(--line); }
+
+      .section-head {
+        display: grid;
+        grid-template-columns: 90px minmax(0, 1fr);
+        gap: 20px;
+        margin-bottom: 28px;
+      }
+
+      .section-number {
+        padding-top: 7px;
+        color: var(--brass);
+        font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+        font-size: 20px;
+      }
+
+      h2 {
+        max-width: 780px;
+        margin-bottom: 8px;
+        font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+        font-size: clamp(27px, 4vw, 39px);
+        font-weight: 500;
+        line-height: 1.1;
+      }
+
+      .section-intro {
+        max-width: 710px;
+        margin-bottom: 0;
+        color: var(--muted);
+      }
+
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0 42px;
+      }
+
+      .step {
+        display: grid;
+        grid-template-columns: 36px minmax(0, 1fr);
+        gap: 14px;
+        padding: 19px 0 21px;
+        border-top: 1px solid var(--line);
+      }
+
+      .step-index {
+        color: var(--deep-teal);
+        font-size: 11px;
+        font-weight: 750;
+      }
+
+      .step h3,
+      .trait-group h3,
+      .gate h3 {
+        margin-bottom: 6px;
+        font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+        font-size: 20px;
+        font-weight: 600;
+        line-height: 1.2;
+      }
+
+      .step p,
+      .gate p {
+        margin-bottom: 0;
+        color: #5e6462;
+        font-size: 13px;
+      }
+
+      .trait-groups {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 28px;
+      }
+
+      .trait-group {
+        padding-top: 14px;
+        border-top: 2px solid var(--deep-teal);
+      }
+
+      .trait-group:nth-child(2) { border-color: #b87979; }
+      .trait-group:nth-child(3) { border-color: var(--brass); }
+
+      .trait-group h3 { margin-bottom: 12px; }
+
+      .trait-group ul {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px 13px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .trait-group li {
+        color: #505856;
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .trait-group li::before {
+        margin-right: 6px;
+        color: var(--brass);
+        content: "·";
+        font-weight: 800;
+      }
+
+      .decision-strip {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin-top: 30px;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .decision {
+        padding: 17px 18px 17px 0;
+      }
+
+      .decision + .decision {
+        padding-left: 18px;
+        border-left: 1px solid var(--line);
+      }
+
+      .decision strong {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--deep-teal);
+        font-size: 12px;
+      }
+
+      .decision span {
+        display: block;
+        color: #656b68;
+        font-size: 12px;
+      }
+
+      .gates {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px 44px;
+      }
+
+      .gate {
+        padding-left: 16px;
+        border-left: 2px solid var(--brass-soft);
+      }
+
+      .closing {
+        padding: 43px 0 0;
+        color: #59615e;
+        font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+        font-size: 22px;
+        line-height: 1.4;
+      }
+
+      .closing strong { color: var(--deep-teal); font-weight: 600; }
+
+      @media (max-width: 760px) {
+        main { padding-top: 25px; }
+        .hero { grid-template-columns: 1fr; gap: 28px; padding: 42px 0; }
+        .identity-specimen { min-height: 205px; }
+        .steps, .trait-groups, .gates { grid-template-columns: 1fr; }
+        .section-head { grid-template-columns: 50px minmax(0, 1fr); gap: 12px; }
+        .decision-strip { grid-template-columns: 1fr; }
+        .decision, .decision + .decision { padding: 14px 0; border-left: 0; }
+        .decision + .decision { border-top: 1px solid var(--line); }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="masthead"><span>Identity notes · 01</span><span>The Word / Logo process</span></div>
+
+      <header class="hero">
+        <div>
+          <p class="eyebrow">A small mark with a generous spirit</p>
+          <h1>Designing a logo that feels like welcome.</h1>
+          <p class="hero-copy">The process begins with the identity already in place: four softly rounded panes, a slight turn, a brass-edged serif wordmark, and an open page of color. The work is to make that mark feel unmistakably The Word: warm without being sentimental, regal without being distant, and playful without losing reverence.</p>
+        </div>
+        <div class="identity-specimen" role="img" aria-label="The Word logo concept: four pastel panes beside a brass serif wordmark">
+          <div class="brand-lockup" aria-hidden="true">
+            <span class="brand-mark"><i></i><i></i><i></i><i></i></span>
+            <span class="wordmark"><strong>The Word</strong><small>READ · REFLECT · RETURN</small></span>
+          </div>
+          <p class="specimen-note">A familiar four-part sign: distinct colors held together as one quiet, luminous whole.</p>
+        </div>
+      </header>
+
+      <section aria-labelledby="process-title">
+        <div class="section-head">
+          <span class="section-number">01—06</span>
+          <div>
+            <h2 id="process-title">The design process</h2>
+            <p class="section-intro">A disciplined sequence keeps the identity meaningful at every size and honest in every context. Each decision has a reason; decoration earns its place.</p>
+          </div>
+        </div>
+        <div class="steps">
+          <article class="step">
+            <span class="step-index">01</span>
+            <div><h3>Listen before drawing</h3><p>Gather the full character brief and the existing brand. Find its productive tensions: authority with tenderness, beauty with usefulness, sacred purpose with everyday ease. Do not reduce the identity to a single mood word.</p></div>
+          </article>
+          <article class="step">
+            <span class="step-index">02</span>
+            <div><h3>Choose a durable idea</h3><p>Use the four-pane mark as a compact image of a page, a window, and a place gathered around shared words. Let the open, balanced geometry communicate welcome; keep its meaning suggestive rather than over-explained.</p></div>
+          </article>
+          <article class="step">
+            <span class="step-index">03</span>
+            <div><h3>Refine the silhouette</h3><p>Set a consistent 2 × 2 grid, tune corner radii optically, and give every pane enough room to remain distinct at favicon size. Keep the slight rotation energetic, but ensure the mark still sits steadily beside the wordmark.</p></div>
+          </article>
+          <article class="step">
+            <span class="step-index">04</span>
+            <div><h3>Make color carry meaning</h3><p>Keep blue as the anchor for trust and clear thought. Let celadon, rose, and lavender add tenderness and wit. Use brass as a measured note of warmth and regal craft, not as a substitute for contrast.</p></div>
+          </article>
+          <article class="step">
+            <span class="step-index">05</span>
+            <div><h3>Pair sign with word</h3><p>Give the serif wordmark enough presence to feel literary and elegant. Balance it with a restrained interface face for edition labels. Test the lockup as a unit, then test the symbol alone where space is scarce.</p></div>
+          </article>
+          <article class="step">
+            <span class="step-index">06</span>
+            <div><h3>Test, simplify, and sign off</h3><p>Review in color, one color, tiny sizes, on light and dark surfaces, and alongside real scripture text. Ask readers whether it feels kind, reliable, beautiful, and clear. Remove any flourish that makes the mark harder to recognize or use.</p></div>
+          </article>
+        </div>
+      </section>
+
+      <section aria-labelledby="brief-title">
+        <div class="section-head">
+          <span class="section-number">BRIEF</span>
+          <div>
+            <h2 id="brief-title">The character to preserve</h2>
+            <p class="section-intro">These qualities are translated into visual behavior. They are not 37 separate decorations; they are one coherent personality expressed through shape, color, type, motion, and restraint.</p>
+          </div>
+        </div>
+        <div class="trait-groups">
+          <article class="trait-group">
+            <h3>Warmth &amp; belonging</h3>
+            <ul>
+              <li>Grounded</li><li>Kind</li><li>Welcoming</li><li>Safe</li><li>Lovable</li><li>Pleasant</li><li>Honest</li><li>Thoughtful</li><li>Gentle</li><li>Comforting</li><li>Familial</li><li>Homely</li>
+            </ul>
+          </article>
+          <article class="trait-group">
+            <h3>Charm &amp; delight</h3>
+            <ul>
+              <li>Witty</li><li>Hot</li><li>Entertaining</li><li>Playful</li><li>Romantic</li><li>Happy</li><li>Artistic</li><li>Fashionable</li><li>Makes surroundings beautiful = Amazing</li><li>Funny</li><li>Pretty</li><li>Dope</li>
+            </ul>
+          </article>
+          <article class="trait-group">
+            <h3>Craft &amp; reverence</h3>
+            <ul>
+              <li>Talented</li><li>Reliable</li><li>Hardworking</li><li>Intelligent</li><li>Elegant</li><li>Innovative</li><li>Marvelous</li><li>Graceful</li><li>Regal</li><li>God-fearing</li><li>Wise</li><li>merciful</li><li>great in power</li>
+            </ul>
+          </article>
+        </div>
+        <div class="decision-strip" aria-label="How the brief guides the visual design">
+          <div class="decision"><strong>Hot, not loud</strong><span>Confident appeal through proportion, polish, and one memorable glint.</span></div>
+          <div class="decision"><strong>Power, not intimidation</strong><span>Strong structure and clear contrast, held in a calm and merciful tone.</span></div>
+          <div class="decision"><strong>Play, not gimmick</strong><span>A little wit in the color and tilt; no joke that outlives the purpose.</span></div>
+        </div>
+      </section>
+
+      <section aria-labelledby="checks-title">
+        <div class="section-head">
+          <span class="section-number">PROOF</span>
+          <div>
+            <h2 id="checks-title">How the mark earns trust</h2>
+            <p class="section-intro">A beautiful logo should be dependable in ordinary use. These checks turn the intention into practical standards.</p>
+          </div>
+        </div>
+        <div class="gates">
+          <article class="gate"><h3>Recognition</h3><p>At 16–32 pixels, the four panes still read as one mark. At larger sizes, their subtle differences reward a closer look.</p></article>
+          <article class="gate"><h3>Accessibility</h3><p>Small labels remain legible; meaning never depends on color alone. The silhouette stays clear in grayscale and for low-vision readers.</p></article>
+          <article class="gate"><h3>Reverence</h3><p>Faith is treated with humility. The identity suggests reflection and welcome without using sacred symbols as ornament or making promises the product cannot keep.</p></article>
+          <article class="gate"><h3>Reliability</h3><p>Spacing, clear space, color values, and minimum size are documented. The same lockup works in the app, on a home screen, and in print.</p></article>
+          <article class="gate"><h3>Motion</h3><p>A brief, gentle turn or glimmer may add delight on interaction. Motion is never required to understand the mark and is removed for reduced-motion preferences.</p></article>
+          <article class="gate"><h3>Honest craft</h3><p>Gradients enhance the finish but do not carry the identity. The mark remains recognizable as flat color, monochrome, or a simple outline.</p></article>
+        </div>
+      </section>
+
+      <p class="closing">The finished identity should feel <strong>like a treasured book opened at home</strong>: considered enough to be regal, kind enough to be shared, and joyful enough to return to.</p>
+    </main>
+  </body>
+</html>

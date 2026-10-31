@@ -291,9 +291,18 @@ a:focus-visible {
     background 0.2s;
 }
 .search-box:focus-within {
-  border-color: var(--focus-border);
+  border-color: var(--brass);
   background: #fff;
-  box-shadow: 0 0 0 3px var(--focus-ring);
+  animation: search-focus-glow 2.4s ease-in-out infinite;
+}
+@keyframes search-focus-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgba(199, 169, 93, 0.2), 0 0 12px rgba(191, 142, 49, 0.16);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(199, 169, 93, 0.38), 0 0 23px rgba(191, 142, 49, 0.34);
+  }
 }
 .search-icon {
   position: relative;
@@ -3114,6 +3123,10 @@ body.is-krv-edition .bottom-chapter strong {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .search-box:focus-within {
+    animation: none;
+    box-shadow: 0 0 0 3px rgba(199, 169, 93, 0.3), 0 0 16px rgba(191, 142, 49, 0.24);
+  }
   *,
   *::before,
   *::after {
