@@ -1028,6 +1028,26 @@ a:focus-visible {
   --shortcut-key-ink: #50564b;
   --shortcut-key-edge: #c3cfb6;
 }
+.shortcut-row--refresh {
+  --shortcut-key-color: linear-gradient(135deg, var(--coral), var(--pink), var(--brass-soft));
+  --shortcut-key-ink: #563f3d;
+  --shortcut-key-edge: #d7aaa0;
+}
+.shortcut-row--search-focus {
+  --shortcut-key-color: linear-gradient(135deg, var(--blue), var(--lavender));
+  --shortcut-key-ink: #465361;
+  --shortcut-key-edge: #b7cbd7;
+}
+.shortcut-row--copy {
+  --shortcut-key-color: linear-gradient(135deg, var(--pink), var(--yellow));
+  --shortcut-key-ink: #64504e;
+  --shortcut-key-edge: #e2c3b9;
+}
+.shortcut-row--cut {
+  --shortcut-key-color: linear-gradient(135deg, var(--green), var(--blue), var(--lavender));
+  --shortcut-key-ink: #435953;
+  --shortcut-key-edge: #b7cec5;
+}
 .shortcut-row--previous > span {
   color: #4b5a40;
 }
@@ -1046,6 +1066,16 @@ a:focus-visible {
   font-family: var(--sans);
   font-size: 16px;
   box-shadow: 0 2px 0 var(--shortcut-key-edge);
+}
+.shortcut-row--refresh kbd,
+.shortcut-row--search-focus kbd,
+.shortcut-row--copy kbd,
+.shortcut-row--cut kbd {
+  width: 116px;
+  flex: 0 0 116px;
+  padding: 0 5px;
+  font-size: 10px;
+  white-space: nowrap;
 }
 .shortcut-row kbd::after {
   position: absolute;

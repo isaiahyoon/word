@@ -215,6 +215,14 @@ describe("development server", () => {
     assert.match(html, /<span>Toggle quiet reading<\/span>/);
     assert.match(html, /<kbd aria-label="Escape key">Esc<\/kbd>/);
     assert.match(html, /<span>Exit quiet reading<\/span>/);
+    assert.match(html, /<kbd aria-label="Command R or Control R">⌘R \/ Ctrl\+R<\/kbd>/);
+    assert.match(html, /<span>Refresh page<\/span>/);
+    assert.match(html, /<kbd aria-label="Command K or Control K">⌘K \/ Ctrl\+K<\/kbd>/);
+    assert.match(html, /<span>Focus search<\/span>/);
+    assert.match(html, /<kbd aria-label="Command C or Control C">⌘C \/ Ctrl\+C<\/kbd>/);
+    assert.match(html, /<span>Copy selected verses<\/span>/);
+    assert.match(html, /<kbd aria-label="Command X or Control X">⌘X \/ Ctrl\+X<\/kbd>/);
+    assert.match(html, /<span>Copy and clear selection<\/span>/);
     assert.match(html, /<kbd aria-label="Slash key">\/<\/kbd>/);
     assert.match(html, /<span>Show keyboard shortcuts<\/span>/);
     assert.match(
@@ -246,10 +254,18 @@ describe("development server", () => {
       "<span>Show keyboard shortcuts</span>",
       shortcutListStart,
     );
+    const refreshShortcut = html.indexOf("<span>Refresh page</span>", shortcutListStart);
+    const focusSearchShortcut = html.indexOf("<span>Focus search</span>", shortcutListStart);
+    const copyShortcut = html.indexOf("<span>Copy selected verses</span>", shortcutListStart);
+    const cutShortcut = html.indexOf("<span>Copy and clear selection</span>", shortcutListStart);
     assert.ok(shortcutListStart >= 0);
     assert.ok(
       homeShortcut > shortcutListStart && homeShortcut < firstTestamentShortcut,
     );
+    assert.ok(refreshShortcut < focusSearchShortcut);
+    assert.ok(focusSearchShortcut < copyShortcut);
+    assert.ok(copyShortcut < cutShortcut);
+    assert.ok(cutShortcut < openShortcutsEntry);
     assert.ok(openShortcutsEntry > lastChapterShortcut);
     assert.match(
       styles,
