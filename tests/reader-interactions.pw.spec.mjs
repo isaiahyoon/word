@@ -172,6 +172,47 @@ test("keeps shortcut keycaps inside the dialog on short mobile screens", async (
   expect(scrollTop).toBeGreaterThan(0);
 });
 
+test("shines shortcut keycaps on hover", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#shortcuts-open").click();
+  const keycap = page.locator(".shortcut-row kbd").first();
+  await keycap.hover();
+
+  await expect.poll(() => keycap.evaluate((element) =>
+    getComputedStyle(element, "::after").animationName,
+  )).toBe("shortcut-keycap-glint");
+});
+
+test("keeps all editable text fields at 16px on touch devices", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  const textControls = page.locator('input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), textarea, select, [contenteditable="true"]');
+  const fontSizes = await textControls.evaluateAll((elements) => elements.map((element) =>
+    Number.parseFloat(getComputedStyle(element).fontSize),
+  ));
+  expect(fontSizes.length).toBeGreaterThan(0);
+  expect(fontSizes.every((size) => size >= 16)).toBe(true);
+});
+
+test("frames the shortcut question mark and styles the close control on hover", async ({ page }) => {
+  await page.goto("/");
+  const shortcutButton = page.locator("#shortcuts-open");
+  const questionMark = shortcutButton.locator("span").first();
+  await expect(questionMark).toHaveCSS("border-top-width", "1px");
+  await expect(questionMark).toHaveCSS("border-top-color", "rgb(183, 147, 82)");
+
+  await shortcutButton.hover();
+  await expect(questionMark).toHaveCSS("border-top-color", "rgb(110, 159, 168)");
+  await expect(questionMark).toHaveCSS("box-shadow", /169, 124, 53/);
+
+  await shortcutButton.click();
+  const closeButton = page.locator("#shortcuts-close");
+  await closeButton.hover();
+  await expect(closeButton).toHaveCSS("border-radius", "50%");
+  await expect(closeButton).toHaveCSS("border-top-color", "rgb(169, 124, 53)");
+  await expect(closeButton).toHaveCSS("box-shadow", /169, 124, 53/);
+});
+
 test("uses the picker root to distinguish inside and outside clicks", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/kjv/b/john/c/3/v/16");
