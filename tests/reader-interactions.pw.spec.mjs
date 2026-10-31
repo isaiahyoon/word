@@ -711,6 +711,36 @@ test("opens the mobile navigation drawer with a right swipe from the left edge",
   await session.detach();
 });
 
+test("closes the mobile navigation drawer with a left swipe", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await page.locator("#menu-toggle").click();
+  await expect(page.locator("#sidebar")).toHaveClass(/is-open/);
+  await expect.poll(() => page.locator("#sidebar").evaluate((element) =>
+    getComputedStyle(element).transform,
+  )).toBe("matrix(1, 0, 0, 1, 0, 0)");
+
+  const session = await page.context().newCDPSession(page);
+  await session.send("Emulation.setTouchEmulationEnabled", {
+    enabled: true,
+    maxTouchPoints: 1,
+  });
+  const dispatchTouch = (type, x, y) => session.send("Input.dispatchTouchEvent", {
+    type,
+    touchPoints: type === "touchEnd" ? [] : [{ id: 1, x, y }],
+  });
+
+  await dispatchTouch("touchStart", 260, 350);
+  await dispatchTouch("touchMove", 180, 354);
+  await dispatchTouch("touchMove", 100, 358);
+  await dispatchTouch("touchEnd", 100, 358);
+
+  await expect(page.locator("#sidebar")).not.toHaveClass(/is-open/);
+  await expect(page.locator("#sidebar-scrim")).not.toHaveClass(/is-open/);
+  await expect(page.locator("#menu-toggle")).toHaveAttribute("aria-expanded", "false");
+  await session.detach();
+});
+
 test("shows a back-to-top button on mobile and desktop", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");

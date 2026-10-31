@@ -38,7 +38,7 @@ and without him was not any thing made that was made.
 
 - Read the King James Version (KJV), Korean Revised Version (KRV), Japanese Bungo-yaku (JapBungo), and Italian Giovanni Diodati (1649), with edition-aware book navigation and direct links to passages. JapBungo has a green reading theme; Diodati has a pink gradient reading theme.
 - Search scripture by phrase or separate terms, with relevance ranking, fuzzy typo matching, and direct suggestions for books, chapters, and verses. Korean and Japanese searches support localized book names and references; Korean searches also support common spelling variations.
-- Choose chapters with the whimsical chapter picker, or move through the text with navigation buttons and keyboard shortcuts. On mobile, swipe right from the left screen edge to open book navigation. A discreet back-to-top button appears while scrolling.
+- Choose chapters with the whimsical chapter picker, or move through the text with navigation buttons and keyboard shortcuts. On mobile, swipe right from the left screen edge to open book navigation, or swipe left across the open drawer to close it. A discreet back-to-top button appears while scrolling.
 - Open the shortcut guide with `/` to see Mac and Windows keys for refresh, search, navigation, Quiet Mode, and verse copying.
 - Enter Quiet Mode for a calmer reading view, with subtle glimmer details throughout the interface.
 - Select verses and copy each selected verse on its own line, in chapter order, followed by a compressed passage reference. Clicking a verse also updates its direct link. The feedback form lets readers send a note, with passage details included only by choice.

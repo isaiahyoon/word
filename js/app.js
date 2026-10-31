@@ -1046,14 +1046,16 @@ function bindMobilePullToRefresh() {
 
 function bindMobileSidebarSwipe() {
   const edgeWidth = 28;
-  const openThreshold = 72;
+  const swipeThreshold = 72;
   const excludedTargets = "button, a, input, textarea, select, [contenteditable='true'], dialog[open], .search-wrap, .sidebar, .sidebar-scrim, .chapter-popover, .edition-options, .mobile-chapter-cues";
   let startX = null;
   let startY = null;
+  let gesture = null;
 
   const reset = () => {
     startX = null;
     startY = null;
+    gesture = null;
   };
 
   document.addEventListener("touchstart", (event) => {
@@ -1061,20 +1063,34 @@ function bindMobileSidebarSwipe() {
     if (
       window.innerWidth > 640 ||
       event.touches.length !== 1 ||
-      elements.sidebar.classList.contains("is-open") ||
       elements.appShell.classList.contains("is-quiet-reading") ||
-      elements.feedbackDialog.open ||
-      (target instanceof Element && target.closest(excludedTargets))
+      elements.feedbackDialog.open
     ) {
       reset();
       return;
     }
 
     const touch = event.touches[0];
+    if (elements.sidebar.classList.contains("is-open")) {
+      if (!(target instanceof Element) || !elements.sidebar.contains(target)) {
+        reset();
+        return;
+      }
+      gesture = "close";
+      startX = touch.clientX;
+      startY = touch.clientY;
+      return;
+    }
+
+    if (target instanceof Element && target.closest(excludedTargets)) {
+      reset();
+      return;
+    }
     if (touch.clientX > edgeWidth) {
       reset();
       return;
     }
+    gesture = "open";
     startX = touch.clientX;
     startY = touch.clientY;
   }, { passive: true });
@@ -1084,9 +1100,10 @@ function bindMobileSidebarSwipe() {
     const touch = event.touches[0];
     const deltaX = touch.clientX - startX;
     const deltaY = touch.clientY - startY;
-    if (deltaX > 12 && deltaX > Math.abs(deltaY)) {
+    const directionalDeltaX = gesture === "close" ? -deltaX : deltaX;
+    if (directionalDeltaX > 12 && directionalDeltaX > Math.abs(deltaY)) {
       if (event.cancelable) event.preventDefault();
-    } else if (Math.abs(deltaY) > 32 || deltaX < 0) {
+    } else if (Math.abs(deltaY) > 32 || directionalDeltaX < 0) {
       reset();
     }
   }, { passive: false });
@@ -1096,9 +1113,12 @@ function bindMobileSidebarSwipe() {
     const touch = event.changedTouches[0];
     const deltaX = touch ? touch.clientX - startX : 0;
     const deltaY = touch ? touch.clientY - startY : 0;
-    const shouldOpen = deltaX >= openThreshold && deltaX > Math.abs(deltaY) * 1.25;
+    const isHorizontalSwipe = Math.abs(deltaX) >= swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY) * 1.25;
+    const shouldOpen = gesture === "open" && isHorizontalSwipe && deltaX > 0;
+    const shouldClose = gesture === "close" && isHorizontalSwipe && deltaX < 0;
     reset();
     if (shouldOpen) openSidebar();
+    if (shouldClose) closeSidebar();
   }, { passive: true });
 
   document.addEventListener("touchcancel", reset, { passive: true });
