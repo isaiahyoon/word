@@ -1104,10 +1104,10 @@ function bindMobileSidebarSwipe() {
   document.addEventListener("touchcancel", reset, { passive: true });
 }
 
-function bindMobileScrollToTop() {
+function bindScrollToTop() {
   function updateVisibility() {
     const scrollTop = Math.max(window.scrollY, document.scrollingElement?.scrollTop ?? 0);
-    elements.scrollToTop.hidden = !window.matchMedia("(max-width: 640px)").matches || scrollTop <= 420;
+    elements.scrollToTop.hidden = scrollTop <= 420;
   }
 
   window.addEventListener("scroll", updateVisibility, { passive: true });
@@ -1323,7 +1323,7 @@ function bindEvents() {
   bindMobileChapterButtons();
   bindMobilePullToRefresh();
   bindMobileSidebarSwipe();
-  bindMobileScrollToTop();
+  bindScrollToTop();
 }
 
 initialize().catch((error) => {

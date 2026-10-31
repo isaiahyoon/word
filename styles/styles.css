@@ -2245,6 +2245,28 @@ body.is-krv-edition .verse.is-copy-selected {
 .scroll-to-top[hidden] {
   display: none;
 }
+.scroll-to-top {
+  position: fixed;
+  z-index: 8;
+  right: clamp(18px, 5vw, 72px);
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(169, 124, 53, 0.3);
+  border-radius: 50%;
+  background: rgba(251, 250, 246, 0.92);
+  box-shadow: 0 3px 12px rgba(34, 59, 85, 0.12), inset 0 1px 0 #fff;
+  color: var(--deep-teal);
+  font-family: var(--serif);
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
+}
+.scroll-to-top:active {
+  transform: translateY(1px);
+}
 .verse-actions.is-visible {
   opacity: 1;
   visibility: visible;
@@ -3093,26 +3115,8 @@ body.is-krv-edition .bottom-chapter strong {
     gap: 6px;
   }
   .scroll-to-top {
-    position: fixed;
-    z-index: 8;
     right: max(14px, env(safe-area-inset-right));
     bottom: calc(70px + env(safe-area-inset-bottom));
-    width: 42px;
-    height: 42px;
-    display: grid;
-    place-items: center;
-    border: 1px solid rgba(169, 124, 53, 0.3);
-    border-radius: 50%;
-    background: rgba(251, 250, 246, 0.92);
-    box-shadow: 0 3px 12px rgba(34, 59, 85, 0.12), inset 0 1px 0 #fff;
-    color: var(--deep-teal);
-    font-family: var(--serif);
-    font-size: 19px;
-    line-height: 1;
-    cursor: pointer;
-  }
-  .scroll-to-top:active {
-    transform: translateY(1px);
   }
   .verse-copy-control {
     min-height: 44px;

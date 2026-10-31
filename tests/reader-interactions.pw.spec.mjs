@@ -624,7 +624,7 @@ test("opens the mobile navigation drawer with a right swipe from the left edge",
   await session.detach();
 });
 
-test("shows a mobile back-to-top button after scrolling and returns to the top", async ({ page }) => {
+test("shows a back-to-top button on mobile and desktop", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   await page.locator("#verse-1").waitFor();
@@ -639,6 +639,9 @@ test("shows a mobile back-to-top button after scrolling and returns to the top",
 
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await expect(scrollToTop).toBeVisible();
+  await scrollToTop.click();
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
   await expect(scrollToTop).toBeHidden();
 });
 
