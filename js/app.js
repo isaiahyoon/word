@@ -320,6 +320,7 @@ async function activateEdition(editionId) {
   state.editionId = editionId;
   scripture = store;
   document.body.classList.toggle("is-krv-edition", editionId === "krv");
+  document.body.classList.toggle("is-diodati-edition", editionId === "diodati");
   document.body.classList.toggle("is-japbungo-edition", editionId === "japbungo");
   document.documentElement.lang = edition.language;
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", edition.themeColor ?? "#f6f4f9");

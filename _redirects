@@ -1,6 +1,7 @@
 /:edition /index.html 200
 /kjv/b/*  /index.html  200
 /krv/b/*  /index.html  200
+/diodati/b/*  /index.html  200
 /japbungo/b/*  /index.html  200
 /b/*      /index.html  200
 /*        /404.html    404

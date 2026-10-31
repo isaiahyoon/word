@@ -102,7 +102,7 @@ describe("development server", () => {
 
     assert.equal(response.status, 200);
     assert.notEqual(fallbackIndex, -1);
-    for (const route of ["/kjv/b/*", "/krv/b/*", "/japbungo/b/*", "/b/*"]) {
+    for (const route of ["/kjv/b/*", "/krv/b/*", "/diodati/b/*", "/japbungo/b/*", "/b/*"]) {
       assert.ok(redirects.indexOf(route) < fallbackIndex, `${route} precedes the 404 fallback`);
     }
   });

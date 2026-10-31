@@ -96,6 +96,20 @@ test("styles the active book row with a metallic blue finish", async ({ page }) 
   expect(style.text).toBe("rgb(34, 59, 85)");
 });
 
+test("styles the active Diodati book row with a rose gradient", async ({ page }) => {
+  await page.goto("/diodati/b/genesis/c/1/v/1");
+  const activeBook = page.locator('.book-row[aria-current="page"]');
+  const style = await activeBook.evaluate((element) => ({
+    background: getComputedStyle(element).backgroundImage,
+    shadow: getComputedStyle(element).boxShadow,
+    text: getComputedStyle(element).color,
+  }));
+  expect(style.background).toContain("linear-gradient");
+  expect(style.background).toContain("rgb(239, 205, 216)");
+  expect(style.shadow).toContain("103, 66, 81");
+  expect(style.text).toBe("rgb(64, 53, 62)");
+});
+
 test("selecting a chapter focuses verse one for arrow navigation", async ({ page }) => {
   await page.goto("/kjv/b/1-kings/c/18/v/2");
   await page.locator("#chapter-select").click();
@@ -228,32 +242,41 @@ test("uses the picker root to distinguish inside and outside clicks", async ({ p
 });
 
 test("loads another search batch when the results panel scrolls to the bottom", async ({ page }) => {
-  await page.goto("/");
-  await page.locator("#verse-1").waitFor();
-  const searchInput = page.locator("#search-input");
-  const results = page.locator(".search-result");
-  const searchResults = page.locator("#search-results");
+  const searchCases = [
+    ["kjv", "john", "John 3:16", "130 verses found · Showing 36"],
+    ["diodati", "Iddio", "Giovanni 3:16", null],
+  ];
 
-  await searchInput.fill("john");
-  await expect(results).toHaveCount(12);
+  for (const [edition, query, reference, expectedSummary] of searchCases) {
+    await page.goto(`/${edition}`);
+    await page.locator("#verse-1").waitFor();
+    const searchInput = page.locator("#search-input");
+    const results = page.locator(".search-result");
+    const searchResults = page.locator("#search-results");
 
-  await searchResults.evaluate((element) => {
-    element.scrollTop = element.scrollHeight;
-  });
+    await searchInput.fill(query);
+    await expect(results).toHaveCount(12);
 
-  await expect(page.locator("#search-results")).toBeVisible();
-  await expect(searchInput).toHaveAttribute("aria-expanded", "true");
-  await expect(results).toHaveCount(24);
+    await searchResults.evaluate((element) => {
+      element.scrollTop = element.scrollHeight;
+    });
 
-  await searchResults.evaluate((element) => {
-    element.scrollTop = element.scrollHeight;
-  });
-  await expect(results).toHaveCount(36);
-  await expect(page.locator(".search-summary")).toContainText("130 verses found · Showing 36");
+    await expect(page.locator("#search-results")).toBeVisible();
+    await expect(searchInput).toHaveAttribute("aria-expanded", "true");
+    await expect(results).toHaveCount(24);
 
-  await searchInput.fill("John 3:16");
-  await expect(results.first()).toHaveAttribute("data-search-type", "reference");
-  await expect(results.first()).toContainText("EXACT PASSAGE · John 3:16");
+    if (expectedSummary) {
+      await searchResults.evaluate((element) => {
+        element.scrollTop = element.scrollHeight;
+      });
+      await expect(results).toHaveCount(36);
+      await expect(page.locator(".search-summary")).toContainText(expectedSummary);
+    }
+
+    await searchInput.fill(reference);
+    await expect(results.first()).toHaveAttribute("data-search-type", "reference");
+    await expect(results.first()).toContainText(`EXACT PASSAGE · ${reference}`);
+  }
 });
 
 test("prioritizes Korean book, chapter, and exact-verse suggestions", async ({ page }) => {
@@ -486,6 +509,51 @@ test("uses a compact JAP edition code while keeping the full Bungo name", async 
   await expect(page.locator("#edition-option-japbungo .edition-option-description small")).toHaveText("Bungo-yaku (文語訳)");
 });
 
+test("loads Diodati with the DIO code, Italian typography, and pink theme", async ({ page }) => {
+  await page.goto("/diodati/b/genesis/c/1/v/1");
+
+  await expect(page).toHaveURL(/\/diodati\/b\/genesis\/c\/1\/v\/1$/);
+  await expect(page.locator("#edition-select-code")).toHaveText("DIO");
+  await expect(page.locator("#edition-select-label")).toHaveText("Diodati · Italiano");
+  await page.locator("#edition-select").click();
+  await expect(page.locator("#edition-option-diodati .edition-option-mark")).toHaveText("DIO");
+  await expect(page.locator("#edition-option-diodati .edition-option-description small")).toHaveText("Giovanni Diodati (1649)");
+  await page.locator("#edition-select").click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "it");
+  await expect(page.locator("body")).toHaveClass(/is-diodati-edition/);
+  await expect(page.locator("#verse-1 .verse-text")).toContainText("NEL principio Iddio creò il cielo e la terra.");
+  expect(await page.locator("#verse-1 .verse-text").evaluate((element) =>
+    getComputedStyle(element).fontFamily.includes("Cormorant Garamond"),
+  )).toBe(true);
+  expect(await page.locator("body").evaluate((element) =>
+    getComputedStyle(element).getPropertyValue("--canvas").trim(),
+  )).toBe("#f8edf1");
+  expect(await page.locator("body").evaluate((element) =>
+    getComputedStyle(element, "::before").backgroundImage.includes("linear-gradient"),
+  )).toBe(true);
+
+  const searchInput = page.locator("#search-input");
+  const firstResult = page.locator("#search-results .search-result").first();
+  await searchInput.fill("Gene");
+  await expect(firstResult).toHaveAttribute("data-search-type", "book");
+  await expect(firstResult).toContainText("BOOK · Genesi");
+
+  await searchInput.fill("Genesi 1");
+  await expect(firstResult).toHaveAttribute("data-search-type", "chapter");
+  await expect(firstResult).toContainText("CHAPTER · Genesi 1");
+
+  await searchInput.fill("Genesi 1:1");
+  await expect(firstResult).toHaveAttribute("data-search-type", "reference");
+  await expect(firstResult).toContainText("EXACT PASSAGE · Genesi 1:1");
+  await firstResult.click();
+  await expect(page).toHaveURL(/\/diodati\/b\/genesis\/c\/1\/v\/1$/);
+
+  await searchInput.fill("principo cielo");
+  const fuzzyResult = page.locator("#search-results .search-result").filter({ hasText: "Genesi 1:1" });
+  await expect(fuzzyResult).toHaveCount(1);
+  await expect(fuzzyResult).toContainText("NEL principio");
+});
+
 test("supports Japanese JapBungo search", async ({ page }) => {
   await page.goto("/japbungo");
   await expect(page.locator("html")).toHaveAttribute("lang", "ja");
@@ -543,6 +611,11 @@ test("routes an edition-only URL to Genesis 1:1 in that edition", async ({ page 
   await expect(page).toHaveURL(/\/krv\/?$/);
   await expect(page.locator("body")).toHaveClass(/is-krv-edition/);
   await expect(page.locator("#verse-1 .verse-text")).toContainText("태초에 하나님이 천지를 창조하시니라");
+
+  await page.goto("/diodati");
+  await expect(page).toHaveURL(/\/diodati\/?$/);
+  await expect(page.locator("body")).toHaveClass(/is-diodati-edition/);
+  await expect(page.locator("#verse-1 .verse-text")).toContainText("NEL principio Iddio creò il cielo e la terra.");
 });
 
 test("omits 3 John 1:15 from the KJV edition", async ({ page }) => {
@@ -566,6 +639,20 @@ test("supports keyboard navigation in the edition menu", async ({ page }) => {
 
   await expect(page).toHaveURL(/\/krv\/b\/genesis\/c\/1\/v\/1$/);
   await expect(page.locator("#verse-list")).toHaveAttribute("lang", "ko");
+});
+
+test("selects Diodati from the edition menu with the keyboard", async ({ page }) => {
+  await page.goto("/kjv/b/john/c/3/v/16");
+  await page.locator("#edition-select").focus();
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator("#edition-option-diodati")).toBeFocused();
+  await page.keyboard.press("Enter");
+
+  await expect(page).toHaveURL(/\/diodati\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("#verse-list")).toHaveAttribute("lang", "it");
+  await expect(page.locator("#edition-select-code")).toHaveText("DIO");
 });
 
 test("Escape from the edition menu returns focus to the verse for arrow navigation", async ({ page }) => {
@@ -649,45 +736,48 @@ for (const viewport of [
   { width: 390, height: 844, label: "mobile" },
   { width: 1280, height: 900, label: "desktop" },
 ]) {
-  test(`toggles independent verse selections on ${viewport.label}`, async ({ page }) => {
-    await page.setViewportSize({ width: viewport.width, height: viewport.height });
-    await page.goto("/kjv/b/john/c/3/v/16");
-    await page.locator("#verse-17").click();
-    await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/17$/);
-    await page.locator("#verse-21").click();
+  for (const edition of ["kjv", "diodati"]) {
+    test(`toggles independent verse selections on ${viewport.label} in ${edition}`, async ({ page }) => {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      await page.goto(`/${edition}/b/john/c/3/v/16`);
+      const passageUrl = (verse) => new RegExp(`/${edition}/b/john/c/3/v/${verse}$`);
+      await page.locator("#verse-17").click();
+      await expect(page).toHaveURL(passageUrl(17));
+      await page.locator("#verse-21").click();
 
-    await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/21$/);
-    await expect(page.locator("#verse-17")).toHaveAttribute("aria-pressed", "true");
-    await expect(page.locator("#verse-21")).toHaveAttribute("aria-pressed", "true");
-    const copyControl = page.locator("#copy-selected-verses");
-    const clearControl = page.locator("#clear-selected-verses");
-    await expect(copyControl).toHaveText("Copy 2 verses");
-    await expect(copyControl).toBeVisible();
-    await expect(clearControl).toBeVisible();
-    const bounds = await copyControl.boundingBox();
-    const viewportBounds = page.viewportSize();
-    expect(bounds.x).toBeGreaterThanOrEqual(0);
-    expect(bounds.y).toBeGreaterThanOrEqual(0);
-    expect(bounds.x + bounds.width).toBeLessThanOrEqual(viewportBounds.width);
-    expect(bounds.y + bounds.height).toBeLessThanOrEqual(viewportBounds.height);
+      await expect(page).toHaveURL(passageUrl(21));
+      await expect(page.locator("#verse-17")).toHaveAttribute("aria-pressed", "true");
+      await expect(page.locator("#verse-21")).toHaveAttribute("aria-pressed", "true");
+      const copyControl = page.locator("#copy-selected-verses");
+      const clearControl = page.locator("#clear-selected-verses");
+      await expect(copyControl).toHaveText("Copy 2 verses");
+      await expect(copyControl).toBeVisible();
+      await expect(clearControl).toBeVisible();
+      const bounds = await copyControl.boundingBox();
+      const viewportBounds = page.viewportSize();
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.y).toBeGreaterThanOrEqual(0);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(viewportBounds.width);
+      expect(bounds.y + bounds.height).toBeLessThanOrEqual(viewportBounds.height);
 
-    await page.locator("#verse-17").click();
-    await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/17$/);
-    await expect(page.locator("#verse-17")).toHaveAttribute("aria-pressed", "false");
-    await expect(copyControl).toHaveText("Copy 1 verse");
-    await page.locator("#verse-21").click();
-    await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/21$/);
-    await expect(copyControl).toBeHidden();
-    await expect(clearControl).toBeHidden();
+      await page.locator("#verse-17").click();
+      await expect(page).toHaveURL(passageUrl(17));
+      await expect(page.locator("#verse-17")).toHaveAttribute("aria-pressed", "false");
+      await expect(copyControl).toHaveText("Copy 1 verse");
+      await page.locator("#verse-21").click();
+      await expect(page).toHaveURL(passageUrl(21));
+      await expect(copyControl).toBeHidden();
+      await expect(clearControl).toBeHidden();
 
-    await page.locator("#verse-17").click();
-    await page.locator("#verse-21").click();
-    await clearControl.click();
-    await expect(page.locator("#verse-17")).toHaveAttribute("aria-pressed", "false");
-    await expect(page.locator("#verse-21")).toHaveAttribute("aria-pressed", "false");
-    await expect(copyControl).toBeHidden();
-    await expect(clearControl).toBeHidden();
-  });
+      await page.locator("#verse-17").click();
+      await page.locator("#verse-21").click();
+      await clearControl.click();
+      await expect(page.locator("#verse-17")).toHaveAttribute("aria-pressed", "false");
+      await expect(page.locator("#verse-21")).toHaveAttribute("aria-pressed", "false");
+      await expect(copyControl).toBeHidden();
+      await expect(clearControl).toBeHidden();
+    });
+  }
 }
 
 test("copies consecutive verses on every edition as separate lines with a compressed citation", async ({ page }) => {
@@ -695,6 +785,7 @@ test("copies consecutive verses on every edition as separate lines with a compre
   const editions = [
     ["kjv", "John"],
     ["krv", "요한복음"],
+    ["diodati", "Giovanni"],
     ["japbungo", "ヨハネの福音書"],
   ];
 

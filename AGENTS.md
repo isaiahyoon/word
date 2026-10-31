@@ -13,6 +13,7 @@
 # Testing
 
 - Every new app feature must include appropriate automated tests for its behavior.
+- When adding a scripture edition, test the full shared search contract in its language, including text matching, prefix and localized reference suggestions, exact and invalid references, fuzzy matching where supported, and result de-duplication. Extend edition-agnostic reader tests for routes, edition switching, verse selection, and copying to cover the new edition.
 
 # Project Organization
 
