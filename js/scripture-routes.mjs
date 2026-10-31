@@ -2,11 +2,23 @@ function slugifyBook(name) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-export function createScriptureRoutes(books, basePath = "/", editionIds = ["kjv"]) {
+export function createScriptureRoutes(books, basePath = "/", editions = ["kjv"]) {
   const baseSegments = basePath.split("/").filter(Boolean);
   const normalizedBasePath = baseSegments.length === 0 ? "/" : `/${baseSegments.join("/")}/`;
   const bookNumbersBySlug = new Map(books.map((name, index) => [slugifyBook(name), index + 1]));
-  const knownEditions = new Set(editionIds);
+  const routeSegmentsByEditionId = Array.isArray(editions)
+    ? new Map(editions.map((editionId) => [editionId, editionId]))
+    : new Map(Object.entries(editions).map(([editionId, edition]) => [
+      editionId,
+      edition.routeSegment ?? editionId,
+    ]));
+  const editionsByRouteSegment = new Map(
+    [...routeSegmentsByEditionId].map(([editionId, routeSegment]) => [routeSegment, editionId]),
+  );
+
+  if (editionsByRouteSegment.size !== routeSegmentsByEditionId.size) {
+    throw new RangeError("Edition route segments must be unique");
+  }
 
   function parse(pathname) {
     if (!pathname.startsWith(normalizedBasePath)) return null;
@@ -15,8 +27,8 @@ export function createScriptureRoutes(books, basePath = "/", editionIds = ["kjv"
 
     const pathSegments = path.split("/");
     const legacy = pathSegments[0] === "b";
-    const editionId = legacy ? "kjv" : pathSegments[0];
-    if (!knownEditions.has(editionId)) return null;
+    const editionId = legacy ? "kjv" : editionsByRouteSegment.get(pathSegments[0]);
+    if (!editionId) return null;
     if (!legacy && pathSegments.length === 1) {
       return {
         editionId,
@@ -68,9 +80,10 @@ export function createScriptureRoutes(books, basePath = "/", editionIds = ["kjv"
     if (!name || !Number.isSafeInteger(chapter) || chapter < 1) {
       throw new RangeError("Invalid scripture reference");
     }
-    if (!knownEditions.has(editionId)) throw new RangeError(`Unknown edition: ${editionId}`);
+    const routeSegment = routeSegmentsByEditionId.get(editionId);
+    if (!routeSegment) throw new RangeError(`Unknown edition: ${editionId}`);
 
-    const path = `${normalizedBasePath}${editionId}/b/${slugifyBook(name)}/c/${chapter}`;
+    const path = `${normalizedBasePath}${routeSegment}/b/${slugifyBook(name)}/c/${chapter}`;
     if (!range) return path;
 
     const verses = range.start === range.end ? range.start : `${range.start}-${range.end}`;

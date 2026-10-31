@@ -15,7 +15,7 @@ const BOOK_TITLES = [
 const CHAPTER_GRADIENT_COLORS = ["var(--chapter-blue)", "var(--chapter-lavender)", "var(--chapter-pink)", "var(--chapter-green)"];
 const state = { editionId: DEFAULT_EDITION, book: 1, chapter: 1, verse: 1, selectedVerses: new Set(), testament: "old", lastBookByTestament: { old: 1, new: 40 }, chapterRequestId: 0, searchTimer: null, searchRequestId: 0, searchMatches: [], searchQuery: "", searchShown: 0, searchActiveIndex: -1 };
 const appBasePath = new URL(document.baseURI).pathname;
-const scriptureRoutes = createScriptureRoutes(BOOKS, appBasePath, EDITION_IDS);
+const scriptureRoutes = createScriptureRoutes(BOOKS, appBasePath, EDITIONS);
 const elements = {
   appShell: document.querySelector(".app-shell"),
   pullRefreshIndicator: document.querySelector("#pull-refresh-indicator"),
@@ -321,6 +321,7 @@ async function activateEdition(editionId) {
   scripture = store;
   document.body.classList.toggle("is-krv-edition", editionId === "krv");
   document.body.classList.toggle("is-diodati-edition", editionId === "diodati");
+  document.body.classList.toggle("is-luther1912-edition", editionId === "luther1912");
   document.body.classList.toggle("is-japbungo-edition", editionId === "japbungo");
   document.documentElement.lang = edition.language;
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", edition.themeColor ?? "#f6f4f9");
