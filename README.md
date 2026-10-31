@@ -2,7 +2,7 @@
 
 ## About
 
-An application that allows you to easily navigate the word of God.
+The Amazing Word is a quiet, free place to read Scripture on the web. It is built to make the text easy to find, move through, and carry with you, without asking you to create an account or pay to read.
 
 ```
 "All scripture is given by inspiration of God,
@@ -33,6 +33,27 @@ The same was in the beginning with God.
 All things were made by him;
 and without him was not any thing made that was made.
 ```
+
+## Features
+
+- Read the King James Version (KJV) and Korean Revised Version (KRV), with their own edition-aware book navigation and direct links to passages.
+- Search scripture by phrase or separate terms, with relevance ranking, fuzzy typo matching, and direct suggestions for books, chapters, and verses. Korean searches support Korean book names, reference formats, and common spelling variations.
+- Choose chapters with the whimsical chapter picker, or move through the text with navigation buttons and keyboard shortcuts.
+- Enter Quiet Mode for a calmer reading view, with subtle glimmer details throughout the interface.
+- Select verses and copy the formatted text with its passage reference. The feedback form lets readers send a note, with passage details included only by choice.
+- Install it as a standalone web app: add it to the Mac Dock from Safari, or to an iPhone or Android home screen from the browser.
+
+## Demos and installation
+
+- [Mobile walkthrough](https://www.youtube.com/shorts/uEqtgbKyGaQ): a look at reading and navigating on a phone.
+- [Web walkthrough](https://www.youtube.com/watch?v=wSXss5Pb46E): search, chapter navigation, Quiet Mode, verse copying, and adding the site to the Dock with Safari on Mac.
+- Android installation walkthrough: coming soon.
+
+To install it on Mac, open the site in Safari and choose **File → Add to Dock**. On iPhone, open it in Safari, tap **Share**, then **Add to Home Screen**. On Android, open it in Chrome, open the menu, and choose **Install app** or **Add to Home screen**. The installation option can vary by browser and device.
+
+## Privacy
+
+The Amazing Word is free to read, has no ads, and requires no account. Umami is the app's only analytics tool and is used for basic usage metrics, not advertising or ad targeting. Umami says its standard analytics process IP addresses transiently to distinguish visits and estimate approximate location, but does not store raw IPs in analytics records; its infrastructure may retain separate operational or security logs. Search runs locally in the browser rather than through an external search service.
 
 ## Run locally
 

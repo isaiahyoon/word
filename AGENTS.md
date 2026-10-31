@@ -6,6 +6,10 @@
 
 - Whenever search behavior or capabilities change, update the Search section in `README.md` in the same change.
 
+# Documentation
+
+- Whenever a notable, interesting, or user-facing app change is made, update the relevant README section in the same change.
+
 # Testing
 
 - Every new app feature must include appropriate automated tests for its behavior.
