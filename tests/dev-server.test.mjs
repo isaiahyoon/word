@@ -80,6 +80,18 @@ describe("development server", () => {
     }
   });
 
+  it("keeps scripture rewrites ahead of the branded fallback", async () => {
+    const response = await fetch(`${origin}/_redirects`);
+    const redirects = await response.text();
+    const fallbackIndex = redirects.indexOf("/*        /404.html    404");
+
+    assert.equal(response.status, 200);
+    assert.notEqual(fallbackIndex, -1);
+    for (const route of ["/kjv/b/*", "/krv/b/*", "/japbungo/b/*", "/b/*"]) {
+      assert.ok(redirects.indexOf(route) < fallbackIndex, `${route} precedes the 404 fallback`);
+    }
+  });
+
   it("serves the branded 404 document for unknown paths", async () => {
     const response = await fetch(`${origin}/not-a-route`);
     const html = await response.text();
