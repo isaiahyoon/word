@@ -82,8 +82,14 @@ for (const [bookIndex, sourceBook] of source.books.entries()) {
       throw new Error(`Invalid JapBungo chapter ${BOOKS[bookIndex]} ${sourceChapter.number}`);
     }
 
-    const expectedVerseCount = canonicalBook[chapterNumber]?.length;
-    if (!expectedVerseCount) throw new Error(`Missing canonical chapter ${BOOKS[bookIndex]} ${chapterNumber}`);
+    const canonicalChapter = canonicalBook[chapterNumber];
+    if (!canonicalChapter?.length) throw new Error(`Missing canonical chapter ${BOOKS[bookIndex]} ${chapterNumber}`);
+    const chapterFallbackVerseCount = source.fallbackVerses.reduce((maximum, fallback) =>
+      fallback.book === bookNumber && fallback.chapter === chapterNumber
+        ? Math.max(maximum, fallback.verse)
+        : maximum,
+    0);
+    const expectedVerseCount = Math.max(canonicalChapter.length, chapterFallbackVerseCount);
 
     const verseTexts = new Map();
     let previousVerse = 0;
@@ -112,7 +118,10 @@ for (const [bookIndex, sourceBook] of source.books.entries()) {
       if (!fallback) throw new Error(`Missing JapBungo verse without a declared fallback: ${fallbackKey}`);
       usedFallbackVerses.add(fallbackKey);
       fallbackVerseCount += 1;
-      return [verse, fallback.text, fallback.sourceEdition, canonicalBook[chapterNumber][index][1]];
+      const kjvReferenceText = canonicalChapter[index]?.[1];
+      return kjvReferenceText && kjvReferenceText !== "[]"
+        ? [verse, fallback.text, fallback.sourceEdition, kjvReferenceText]
+        : [verse, fallback.text, fallback.sourceEdition];
     });
     generatedVerseCount += denseVerses.length;
     chapterData[chapterNumber] = denseVerses;

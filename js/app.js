@@ -131,6 +131,17 @@ function toggleVerseSelection(row) {
   updateCopyControl();
 }
 
+function updateVerseLocation(verseNumber) {
+  state.verse = verseNumber;
+  const path = scriptureRoutes.buildPath(
+    state.book,
+    state.chapter,
+    { start: verseNumber, end: verseNumber },
+    state.editionId,
+  );
+  if (window.location.pathname !== path) window.history.replaceState(null, "", path);
+}
+
 function formatSelectedVerseReference(verseNumbers) {
   const ranges = [];
   let start = verseNumbers[0];
@@ -1056,6 +1067,7 @@ function bindEvents() {
     const verseButton = event.target.closest("button.verse");
     if (!verseButton || !elements.verseList.contains(verseButton)) return;
 
+    updateVerseLocation(Number(verseButton.dataset.verse));
     toggleVerseSelection(verseButton);
   });
   elements.copyControl.addEventListener("click", () => void copySelectedVerses());

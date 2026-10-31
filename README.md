@@ -40,7 +40,7 @@ and without him was not any thing made that was made.
 - Search scripture by phrase or separate terms, with relevance ranking, fuzzy typo matching, and direct suggestions for books, chapters, and verses. Korean and Japanese searches support localized book names and references; Korean searches also support common spelling variations.
 - Choose chapters with the whimsical chapter picker, or move through the text with navigation buttons and keyboard shortcuts.
 - Enter Quiet Mode for a calmer reading view, with subtle glimmer details throughout the interface.
-- Select verses and copy the formatted text with its passage reference. The feedback form lets readers send a note, with passage details included only by choice.
+- Select verses and copy the formatted text with its passage reference. Clicking a verse also updates its direct link. The feedback form lets readers send a note, with passage details included only by choice.
 - Install it as a standalone web app: add it to the Mac Dock from Safari, or to an iPhone or Android home screen from the browser.
 
 ## Demos and installation
@@ -91,7 +91,7 @@ node tools/build-krv-data.mjs
 
 The KJV source is stored in `sources/kjv.json`; the 1961 KRV source is pinned in `sources/krv-1961.json`. KRV attribution is shown when selected. Its economic copyright term has expired according to the [Bible Society of Korea](https://www.bskorea.or.kr/bbs/board.php?bo_table=copyright_faq&wr_id=5); preserve the text and provide attribution.
 
-JapBungo is built from the public-domain [GetBible JapBungo source](https://github.com/getbible/v2/tree/master/japbungo), pinned with source metadata in `sources/japbungo.json`. It uses KJV verse numbering. The upstream text omits Exodus 7:25, 2 Samuel 19:25, 2 Chronicles 2:13, and 3 John 1:15; those four slots use Korean KRV text and are labeled as KRV fallbacks in the reader and copied citations. The reader shows the blue KRV fallback and a matching lavender KJV reference panel beneath it; both texts are included when copied. Rebuild it with `node tools/build-japbungo-data.mjs`.
+JapBungo is built from the public-domain [GetBible JapBungo source](https://github.com/getbible/v2/tree/master/japbungo), pinned with source metadata in `sources/japbungo.json`. It uses KJV verse numbering except for the explicit KRV fallback at 3 John 1:15. The upstream text omits Exodus 7:25, 2 Samuel 19:25, 2 Chronicles 2:13, and 3 John 1:15; those four slots use Korean KRV text and are labeled as KRV fallbacks in the reader and copied citations. Where a same-numbered KJV verse exists, the reader shows its text in a lavender reference panel and includes it when copied. KJV places the closing greeting of 3 John in verse 14, so the 3 John 1:15 fallback has no separate KJV reference. Rebuild it with `node tools/build-japbungo-data.mjs`.
 
 ## Search
 

@@ -12,6 +12,7 @@ for (const { field } of source.contents) {
   if (!Number.isInteger(book) || book < 1 || book > books.length) {
     throw new Error(`Invalid book number in scripture record ${id}`);
   }
+  if (book === 64 && chapter === 1 && verse === 15 && text === "[]") continue;
 
   const chapters = books[book - 1];
   if (!chapters.has(chapter)) chapters.set(chapter, []);

@@ -497,13 +497,13 @@ test("supports Japanese JapBungo search", async ({ page }) => {
 test("labels and copies Korean JapBungo fallback verses", async ({ page }) => {
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   const fallbackCases = [
-    ["exodus", 7, 25],
-    ["2-samuel", 19, 25],
-    ["2-chronicles", 2, 13],
-    ["3-john", 1, 15],
+    ["exodus", 7, 25, true],
+    ["2-samuel", 19, 25, true],
+    ["2-chronicles", 2, 13, true],
+    ["3-john", 1, 15, false],
   ];
 
-  for (const [book, chapter, verse] of fallbackCases) {
+  for (const [book, chapter, verse, hasKJVReference] of fallbackCases) {
     await page.goto(`/japbungo/b/${book}/c/${chapter}/v/${verse}`);
     const fallbackText = page.locator(`#verse-${verse} .verse-text`);
     await expect(fallbackText).toHaveAttribute("lang", "ko");
@@ -512,19 +512,27 @@ test("labels and copies Korean JapBungo fallback verses", async ({ page }) => {
     await expect(krvFallback).toHaveCSS("background-image", /linear-gradient/);
     const koreanVerse = (await krvFallback.locator(".verse-source-panel-text").textContent()).trim();
     const kjvReference = fallbackText.locator(".verse-kjv-reference");
-    await expect(kjvReference).toHaveAttribute("lang", "en");
-    await expect(kjvReference.locator(".verse-kjv-reference-label")).toHaveText("KJV reference");
-    await expect(kjvReference).toHaveCSS("background-color", "rgb(246, 244, 249)");
-    await expect(kjvReference).toHaveCSS("font-family", /Gelasio/);
-    const englishVerse = (await kjvReference.locator(".verse-source-panel-text").textContent()).trim();
+    let englishVerse = "";
+    if (hasKJVReference) {
+      await expect(kjvReference).toHaveAttribute("lang", "en");
+      await expect(kjvReference.locator(".verse-kjv-reference-label")).toHaveText("KJV reference");
+      await expect(kjvReference).toHaveCSS("background-color", "rgb(246, 244, 249)");
+      await expect(kjvReference).toHaveCSS("font-family", /Gelasio/);
+      englishVerse = (await kjvReference.locator(".verse-source-panel-text").textContent()).trim();
+    } else {
+      await expect(kjvReference).toHaveCount(0);
+    }
 
     await page.locator(`#verse-${verse}`).click();
     await page.locator("#copy-selected-verses").click();
     await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
-      .toContain("[KJV reference]");
+      .toContain("[KRV fallback]");
     const copiedText = await page.evaluate(() => navigator.clipboard.readText());
     const citation = copiedText.split("\n\n").at(-1);
-    expect(copiedText).toBe(`${koreanVerse} [KRV fallback]\n\n${englishVerse} [KJV reference]\n\n${citation}`);
+    const expectedVerseText = hasKJVReference
+      ? `${koreanVerse} [KRV fallback]\n\n${englishVerse} [KJV reference]`
+      : `${koreanVerse} [KRV fallback]`;
+    expect(copiedText).toBe(`${expectedVerseText}\n\n${citation}`);
     expect(citation).toMatch(/^- .+ \d+:\d+$/u);
   }
 });
@@ -535,6 +543,15 @@ test("routes an edition-only URL to Genesis 1:1 in that edition", async ({ page 
   await expect(page).toHaveURL(/\/krv\/?$/);
   await expect(page.locator("body")).toHaveClass(/is-krv-edition/);
   await expect(page.locator("#verse-1 .verse-text")).toContainText("태초에 하나님이 천지를 창조하시니라");
+});
+
+test("omits 3 John 1:15 from the KJV edition", async ({ page }) => {
+  await page.goto("/kjv/b/3-john/c/1");
+  await expect(page.locator("#verse-14")).toBeVisible();
+  await expect(page.locator("#verse-15")).toHaveCount(0);
+
+  await page.goto("/kjv/b/3-john/c/1/v/15");
+  await expect(page).toHaveTitle("Page Not Found — The Word");
 });
 
 test("supports keyboard navigation in the edition menu", async ({ page }) => {
@@ -589,9 +606,10 @@ for (const viewport of [
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
     await page.goto("/kjv/b/john/c/3/v/16");
     await page.locator("#verse-17").click();
+    await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/17$/);
     await page.locator("#verse-21").click();
 
-    await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/16$/);
+    await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/21$/);
     await expect(page.locator("#verse-17")).toHaveAttribute("aria-pressed", "true");
     await expect(page.locator("#verse-21")).toHaveAttribute("aria-pressed", "true");
     const copyControl = page.locator("#copy-selected-verses");
@@ -607,9 +625,11 @@ for (const viewport of [
     expect(bounds.y + bounds.height).toBeLessThanOrEqual(viewportBounds.height);
 
     await page.locator("#verse-17").click();
+    await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/17$/);
     await expect(page.locator("#verse-17")).toHaveAttribute("aria-pressed", "false");
     await expect(copyControl).toHaveText("Copy 1 verse");
     await page.locator("#verse-21").click();
+    await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/21$/);
     await expect(copyControl).toBeHidden();
     await expect(clearControl).toBeHidden();
 

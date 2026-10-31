@@ -8,10 +8,15 @@ describe("generated scripture data", () => {
     const source = JSON.parse(await readFile(new URL("../sources/kjv.json", import.meta.url), "utf8"));
     const manifest = JSON.parse(await readFile(new URL("../scripture/kjv/index.json", import.meta.url), "utf8"));
     const expectedBooks = Array.from({ length: BOOKS.length }, () => new Map());
+    let excludedPlaceholderCount = 0;
 
     for (const { field } of source.contents) {
       const [, book, chapter, verse, text] = field;
       assert.ok(book >= 1 && book <= BOOKS.length, `Invalid KJV book number: ${book}`);
+      if (book === 64 && chapter === 1 && verse === 15 && text === "[]") {
+        excludedPlaceholderCount += 1;
+        continue;
+      }
       if (!expectedBooks[book - 1].has(chapter)) expectedBooks[book - 1].set(chapter, []);
       expectedBooks[book - 1].get(chapter).push([verse, text]);
     }
@@ -19,7 +24,14 @@ describe("generated scripture data", () => {
     await assertEditionMatchesSource(manifest, expectedBooks, "kjv");
     assert.equal([...expectedBooks].reduce((total, chapters) =>
       total + [...chapters.values()].reduce((count, verses) => count + verses.length, 0), 0),
-    source.contents.length);
+    source.contents.length - 1);
+    assert.equal(excludedPlaceholderCount, 1);
+    const thirdJohn = JSON.parse(await readFile(
+      new URL(`../scripture/kjv/books/${manifest.bookFiles[63]}`, import.meta.url),
+      "utf8",
+    ));
+    assert.equal(thirdJohn[1].length, 14);
+    assert.equal(thirdJohn[1].some(([verse]) => verse === 15), false);
   });
 
   it("preserves every verse in the KRV source", async () => {
@@ -87,13 +99,22 @@ describe("generated scripture data", () => {
         const verseTexts = new Map(sourceChapter.verses);
         assert.equal(verseTexts.size, sourceChapter.verses.length);
         sourceVerseCount += verseTexts.size;
-        const expectedVerses = Array.from({ length: canonical[chapter].length }, (_, index) => {
+        const chapterFallbackVerseCount = Math.max(0, ...source.fallbackVerses
+          .filter((fallback) => fallback.book === bookIndex + 1 && fallback.chapter === chapter)
+          .map((fallback) => fallback.verse));
+        const expectedVerseCount = Math.max(canonical[chapter].length, chapterFallbackVerseCount);
+        const expectedVerses = Array.from({ length: expectedVerseCount }, (_, index) => {
           const verse = index + 1;
           if (verseTexts.has(verse)) return [verse, verseTexts.get(verse)];
           const fallback = fallbacks.get(`${bookIndex + 1}:${chapter}:${verse}`);
           assert.ok(fallback, `Missing JapBungo fallback ${bookIndex + 1}:${chapter}:${verse}`);
           fallbackVerseCount += 1;
-          return [verse, fallback.text, fallback.sourceEdition, canonical[chapter][index][1]];
+          const kjvReferenceText = canonical[chapter][index]?.[1];
+          if (!kjvReferenceText || kjvReferenceText === "[]") {
+            assert.equal(`${bookIndex + 1}:${chapter}:${verse}`, "64:1:15");
+            return [verse, fallback.text, fallback.sourceEdition];
+          }
+          return [verse, fallback.text, fallback.sourceEdition, kjvReferenceText];
         });
         expectedBooks[bookIndex].set(chapter, expectedVerses);
       }
