@@ -146,10 +146,11 @@ export function createScriptureStore({
           const verses = records.map((record, index) => {
             if (
               !Array.isArray(record) ||
-              (record.length !== 2 && record.length !== 3) ||
+              (record.length !== 2 && record.length !== 3 && record.length !== 4) ||
               record[0] !== index + 1 ||
               typeof record[1] !== "string" ||
-              (record.length === 3 && typeof record[2] !== "string")
+              (record.length >= 3 && typeof record[2] !== "string") ||
+              (record.length === 4 && typeof record[3] !== "string")
             ) {
               throw new Error(`Invalid verse data for ${bookName(book)} ${chapterNumber}`);
             }
@@ -157,6 +158,10 @@ export function createScriptureStore({
             if (record[2]) {
               verse.sourceEdition = record[2];
               verse.textLanguage = record[2] === "krv" ? "ko" : language;
+            }
+            if (record.length === 4) {
+              verse.referenceText = record[3];
+              verse.referenceTextLanguage = "en";
             }
             return verse;
           });

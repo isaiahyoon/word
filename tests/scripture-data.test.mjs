@@ -93,7 +93,7 @@ describe("generated scripture data", () => {
           const fallback = fallbacks.get(`${bookIndex + 1}:${chapter}:${verse}`);
           assert.ok(fallback, `Missing JapBungo fallback ${bookIndex + 1}:${chapter}:${verse}`);
           fallbackVerseCount += 1;
-          return [verse, fallback.text, fallback.sourceEdition];
+          return [verse, fallback.text, fallback.sourceEdition, canonical[chapter][index][1]];
         });
         expectedBooks[bookIndex].set(chapter, expectedVerses);
       }

@@ -2154,20 +2154,46 @@ body.is-krv-edition .verse.is-copy-selected {
   min-width: 0;
   isolation: isolate;
 }
+.verse-source-panel {
+  display: block;
+  margin-top: 7px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  font-size: 0.78em;
+  line-height: 1.55;
+}
+.verse-source-panel--krv {
+  border-color: rgba(49, 88, 99, 0.24);
+  background: linear-gradient(128deg, #bed8ea, #e8f1f4 58%, #c3d3e5);
+  color: #233b47;
+  font-family: var(--serif-korean-ui);
+}
+.verse-source-panel--kjv {
+  border-color: rgba(129, 116, 158, 0.24);
+  background: var(--canvas-kjv);
+  color: var(--journal-ink);
+  font-family: "Gelasio", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+}
+.verse-source-panel-text {
+  display: block;
+}
 .verse-source-label {
-  display: inline-flex;
-  align-items: center;
-  margin: 0 7px 0 0;
+  display: block;
+  width: fit-content;
+  margin-bottom: 4px;
   padding: 1px 5px;
   border: 1px solid rgba(49, 88, 99, 0.26);
   border-radius: 3px;
-  background: #e7f2eb;
+  background: rgba(255, 255, 255, 0.52);
   color: #315863;
   font-family: var(--sans);
   font-size: 9px;
   font-weight: var(--weight-semibold);
   line-height: 1.4;
-  vertical-align: 0.12em;
+}
+.verse-kjv-reference-label {
+  color: #5e5473;
 }
 .verse-actions {
   position: fixed;

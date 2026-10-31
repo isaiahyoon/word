@@ -496,17 +496,37 @@ test("supports Japanese JapBungo search", async ({ page }) => {
 
 test("labels and copies Korean JapBungo fallback verses", async ({ page }) => {
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
-  await page.goto("/japbungo/b/exodus/c/7/v/25");
-  const fallbackText = page.locator("#verse-25 .verse-text");
+  const fallbackCases = [
+    ["exodus", 7, 25],
+    ["2-samuel", 19, 25],
+    ["2-chronicles", 2, 13],
+    ["3-john", 1, 15],
+  ];
 
-  await expect(fallbackText).toHaveAttribute("lang", "ko");
-  await expect(fallbackText.locator(".verse-source-label")).toHaveText("KRV fallback");
-  await expect(fallbackText).toContainText("여호와께서 하수를 치신 후 칠일이 지나니라");
+  for (const [book, chapter, verse] of fallbackCases) {
+    await page.goto(`/japbungo/b/${book}/c/${chapter}/v/${verse}`);
+    const fallbackText = page.locator(`#verse-${verse} .verse-text`);
+    await expect(fallbackText).toHaveAttribute("lang", "ko");
+    const krvFallback = fallbackText.locator(".verse-source-panel--krv");
+    await expect(krvFallback.locator(".verse-source-label")).toHaveText("KRV fallback");
+    await expect(krvFallback).toHaveCSS("background-image", /linear-gradient/);
+    const koreanVerse = (await krvFallback.locator(".verse-source-panel-text").textContent()).trim();
+    const kjvReference = fallbackText.locator(".verse-kjv-reference");
+    await expect(kjvReference).toHaveAttribute("lang", "en");
+    await expect(kjvReference.locator(".verse-kjv-reference-label")).toHaveText("KJV reference");
+    await expect(kjvReference).toHaveCSS("background-color", "rgb(246, 244, 249)");
+    await expect(kjvReference).toHaveCSS("font-family", /Gelasio/);
+    const englishVerse = (await kjvReference.locator(".verse-source-panel-text").textContent()).trim();
 
-  await page.locator("#verse-25").click();
-  await page.locator("#copy-selected-verses").click();
-  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
-    .toContain("KRV fallback (Korean text):");
+    await page.locator(`#verse-${verse}`).click();
+    await page.locator("#copy-selected-verses").click();
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
+      .toContain("[KJV reference]");
+    const copiedText = await page.evaluate(() => navigator.clipboard.readText());
+    const citation = copiedText.split("\n\n").at(-1);
+    expect(copiedText).toBe(`${koreanVerse} [KRV fallback]\n\n${englishVerse} [KJV reference]\n\n${citation}`);
+    expect(citation).toMatch(/^- .+ \d+:\d+$/u);
+  }
 });
 
 test("routes an edition-only URL to Genesis 1:1 in that edition", async ({ page }) => {

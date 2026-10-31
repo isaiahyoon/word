@@ -112,7 +112,7 @@ for (const [bookIndex, sourceBook] of source.books.entries()) {
       if (!fallback) throw new Error(`Missing JapBungo verse without a declared fallback: ${fallbackKey}`);
       usedFallbackVerses.add(fallbackKey);
       fallbackVerseCount += 1;
-      return [verse, fallback.text, fallback.sourceEdition];
+      return [verse, fallback.text, fallback.sourceEdition, canonicalBook[chapterNumber][index][1]];
     });
     generatedVerseCount += denseVerses.length;
     chapterData[chapterNumber] = denseVerses;

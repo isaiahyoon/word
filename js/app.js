@@ -176,11 +176,14 @@ async function copySelectedVerses({ clearAfter = false } = {}) {
   if (selectedVerses.length === 0) return;
 
   const reference = formatSelectedVerseReference(selectedVerses.map((verse) => verse.verse));
-  const fallbackVerses = selectedVerses.filter((verse) => verse.sourceEdition === "krv");
-  const fallbackNote = fallbackVerses.length > 0
-    ? `\n- KRV fallback (Korean text): ${formatSelectedVerseReference(fallbackVerses.map((verse) => verse.verse))}`
-    : "";
-  const text = `${selectedVerses.map((verse) => verse.text.trim()).join(" ")}\n\n- ${reference}${fallbackNote}`;
+  const includesFallback = selectedVerses.some((verse) => verse.sourceEdition === "krv");
+  const copiedVerses = selectedVerses.map((verse) => {
+    const sourceLabel = verse.sourceEdition === "krv" ? " [KRV fallback]" : "";
+    const verseText = `${verse.text.trim()}${sourceLabel}`;
+    if (!verse.referenceText) return verseText;
+    return `${verseText}\n\n${verse.referenceText.trim()} [KJV reference]`;
+  }).join(includesFallback ? "\n\n" : " ");
+  const text = `${copiedVerses}\n\n- ${reference}`;
   try {
     await writeClipboardText(text);
     if (clearAfter) {
@@ -601,11 +604,31 @@ function renderChapter(focusRange = null) {
     text.lang = textLanguage;
     text.dir = EDITIONS[state.editionId].direction;
     if (verse.sourceEdition === "krv") {
+      const fallbackPanel = document.createElement("span");
+      fallbackPanel.className = "verse-source-panel verse-source-panel--krv";
+      fallbackPanel.lang = "ko";
       const sourceLabel = document.createElement("span");
       sourceLabel.className = "verse-source-label";
       sourceLabel.lang = "en";
       sourceLabel.textContent = "KRV fallback";
-      text.append(sourceLabel, document.createTextNode(verse.text));
+      const fallbackVerse = document.createElement("span");
+      fallbackVerse.className = "verse-source-panel-text";
+      fallbackVerse.textContent = verse.text;
+      fallbackPanel.append(sourceLabel, fallbackVerse);
+      text.append(fallbackPanel);
+      if (verse.referenceText) {
+        const kjvReference = document.createElement("span");
+        kjvReference.className = "verse-source-panel verse-source-panel--kjv verse-kjv-reference";
+        kjvReference.lang = verse.referenceTextLanguage;
+        const referenceLabel = document.createElement("span");
+        referenceLabel.className = "verse-source-label verse-kjv-reference-label";
+        referenceLabel.textContent = "KJV reference";
+        const referenceText = document.createElement("span");
+        referenceText.className = "verse-source-panel-text";
+        referenceText.textContent = verse.referenceText;
+        kjvReference.append(referenceLabel, referenceText);
+        text.append(kjvReference);
+      }
     } else {
       text.textContent = verse.text;
     }

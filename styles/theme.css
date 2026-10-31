@@ -4,7 +4,8 @@
   --ink: #292b2a;
   --muted: #85857f;
   --paper: #fbfaf6;
-  --canvas: #f6f4f9;
+  --canvas-kjv: #f6f4f9;
+  --canvas: var(--canvas-kjv);
   --line: #e9e6de;
 
   --blue: #defefc;
