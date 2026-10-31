@@ -1043,6 +1043,66 @@ function bindMobilePullToRefresh() {
   document.addEventListener("touchcancel", reset, { passive: true });
 }
 
+function bindMobileSidebarSwipe() {
+  const edgeWidth = 28;
+  const openThreshold = 72;
+  const excludedTargets = "button, a, input, textarea, select, [contenteditable='true'], dialog[open], .search-wrap, .sidebar, .sidebar-scrim, .chapter-popover, .edition-options, .mobile-chapter-cues";
+  let startX = null;
+  let startY = null;
+
+  const reset = () => {
+    startX = null;
+    startY = null;
+  };
+
+  document.addEventListener("touchstart", (event) => {
+    const target = event.target;
+    if (
+      window.innerWidth > 640 ||
+      event.touches.length !== 1 ||
+      elements.sidebar.classList.contains("is-open") ||
+      elements.appShell.classList.contains("is-quiet-reading") ||
+      elements.feedbackDialog.open ||
+      (target instanceof Element && target.closest(excludedTargets))
+    ) {
+      reset();
+      return;
+    }
+
+    const touch = event.touches[0];
+    if (touch.clientX > edgeWidth) {
+      reset();
+      return;
+    }
+    startX = touch.clientX;
+    startY = touch.clientY;
+  }, { passive: true });
+
+  document.addEventListener("touchmove", (event) => {
+    if (startX === null || startY === null || event.touches.length !== 1) return;
+    const touch = event.touches[0];
+    const deltaX = touch.clientX - startX;
+    const deltaY = touch.clientY - startY;
+    if (deltaX > 12 && deltaX > Math.abs(deltaY)) {
+      if (event.cancelable) event.preventDefault();
+    } else if (Math.abs(deltaY) > 32 || deltaX < 0) {
+      reset();
+    }
+  }, { passive: false });
+
+  document.addEventListener("touchend", (event) => {
+    if (startX === null || startY === null) return;
+    const touch = event.changedTouches[0];
+    const deltaX = touch ? touch.clientX - startX : 0;
+    const deltaY = touch ? touch.clientY - startY : 0;
+    const shouldOpen = deltaX >= openThreshold && deltaX > Math.abs(deltaY) * 1.25;
+    reset();
+    if (shouldOpen) openSidebar();
+  }, { passive: true });
+
+  document.addEventListener("touchcancel", reset, { passive: true });
+}
+
 function bindEvents() {
   document.addEventListener("keydown", (event) => {
     const key = event.key.toLowerCase();
@@ -1244,6 +1304,7 @@ function bindEvents() {
   elements.sidebarScrim.addEventListener("click", closeSidebar);
   bindMobileChapterButtons();
   bindMobilePullToRefresh();
+  bindMobileSidebarSwipe();
 }
 
 initialize().catch((error) => {

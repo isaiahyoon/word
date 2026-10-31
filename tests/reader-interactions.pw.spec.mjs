@@ -598,6 +598,32 @@ test("keeps the mobile navigation drawer open and focused after switching to KRV
   await expect(page.locator("#verse-16 .verse-text")).toContainText("하나님이 세상을 이처럼 사랑하사");
 });
 
+test("opens the mobile navigation drawer with a right swipe from the left edge", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await page.locator("#verse-1").waitFor();
+
+  const session = await page.context().newCDPSession(page);
+  await session.send("Emulation.setTouchEmulationEnabled", {
+    enabled: true,
+    maxTouchPoints: 1,
+  });
+  const dispatchTouch = (type, x, y) => session.send("Input.dispatchTouchEvent", {
+    type,
+    touchPoints: type === "touchEnd" ? [] : [{ id: 1, x, y }],
+  });
+
+  await dispatchTouch("touchStart", 5, 280);
+  await dispatchTouch("touchMove", 85, 286);
+  await dispatchTouch("touchMove", 155, 290);
+  await dispatchTouch("touchEnd", 155, 290);
+
+  await expect(page.locator("#sidebar")).toHaveClass(/is-open/);
+  await expect(page.locator("#sidebar-scrim")).toHaveClass(/is-open/);
+  await expect(page.locator("#menu-toggle")).toHaveAttribute("aria-expanded", "true");
+  await session.detach();
+});
+
 for (const viewport of [
   { width: 390, height: 844, label: "mobile" },
   { width: 1280, height: 900, label: "desktop" },
