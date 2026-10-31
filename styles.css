@@ -961,6 +961,12 @@ a:focus-visible {
 .search-result[aria-selected="true"]:focus-visible {
   background: var(--pink);
 }
+.search-result--navigation {
+  background: rgba(169, 124, 53, 0.07);
+}
+.search-result--navigation .result-reference {
+  color: var(--brass);
+}
 .result-reference {
   display: block;
   margin-bottom: 4px;

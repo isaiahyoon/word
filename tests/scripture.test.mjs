@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { performance } from "node:perf_hooks";
 import { describe, it } from "node:test";
 import { BOOKS, bookFileName } from "../books.mjs";
 import { KRV_BOOK_NAMES } from "../editions.mjs";
@@ -219,10 +220,29 @@ describe("scripture store", () => {
     await store.initialize();
 
     assert.equal(store.bookName(43), "요한복음");
+    const koreanPrefixMatches = await store.search("요한");
     assert.deepEqual(
-      (await store.search("요한복음 3:16")).map(({ book, chapter, verse }) => ({ book, chapter, verse })),
-      [{ book: 43, chapter: 3, verse: 16 }],
+      koreanPrefixMatches
+        .filter((match) => match.searchType === "book")
+        .map(({ book }) => book),
+      [43, 62, 63, 64, 66],
     );
+    assert.equal(koreanPrefixMatches[0].book, 43);
+    const bookMatches = await store.search("요한복음");
+    assert.equal(bookMatches[0].searchType, "book");
+    assert.equal(bookMatches[0].book, 43);
+    const chapterMatches = await store.search("요한복음 3장");
+    assert.equal(chapterMatches[0].searchType, "chapter");
+    assert.equal(chapterMatches[0].chapter, 3);
+    for (const query of ["요한복음 3:16", "요한복음3:16", "요한복음 ３：１６", "요한복음 3장 16절"]) {
+      const matches = await store.search(query);
+      assert.equal(matches[0].searchType, "reference", query);
+      assert.deepEqual(
+        { book: matches[0].book, chapter: matches[0].chapter, verse: matches[0].verse },
+        { book: 43, chapter: 3, verse: 16 },
+        query,
+      );
+    }
     assert.ok(mock.requests.includes("./scripture/krv/index.json"));
     assert.ok(mock.requests.includes("./scripture/krv/books/43_john.json"));
   });
@@ -233,16 +253,60 @@ describe("scripture store", () => {
     });
     await store.initialize();
 
+    const exactReference = await store.search("John 3:16");
+    assert.equal(exactReference[0].searchType, "reference");
     assert.deepEqual(
-      (await store.search("John 3:16")).map(({ book, chapter, verse }) => ({
-        book,
-        chapter,
-        verse,
-      })),
-      [{ book: 43, chapter: 3, verse: 16 }],
+      { book: exactReference[0].book, chapter: exactReference[0].chapter, verse: exactReference[0].verse },
+      { book: 43, chapter: 3, verse: 16 },
     );
-    assert.deepEqual(await store.search("John 3:99"), []);
-    assert.deepEqual(await store.search("John 22:1"), []);
+    assert.ok(exactReference.slice(1).every((match) => match.searchType === "text"));
+    assert.equal(exactReference.filter(({ book, chapter, verse }) => book === 43 && chapter === 3 && verse === 16).length, 1);
+
+    for (const query of ["John 3:99", "John 22:1"]) {
+      const matches = await store.search(query);
+      assert.ok(matches.every((match) => match.searchType === "text"));
+    }
+  });
+
+  it("prioritizes one book, chapter, or verse destination before text matches", async () => {
+    const mock = createMockFetch();
+    const fetchImpl = async (url) => {
+      if (url.endsWith("1_genesis.json")) {
+        return { ok: true, json: async () => ({ 1: [[1, "John appears in this verse"]] }) };
+      }
+      if (url.endsWith("43_john.json")) {
+        return {
+          ok: true,
+          json: async () => ({
+            1: [[1, "John opens this chapter"], [2, "John appears again"]],
+            2: [[1, "John chapter two"]],
+            3: Array.from({ length: 16 }, (_, index) => [
+              index + 1,
+              index === 15 ? "For God so loved the world" : `John chapter three verse ${index + 1}`,
+            ]),
+          }),
+        };
+      }
+      return mock.fetchImpl(url);
+    };
+    const store = createScriptureStore({ fetchImpl });
+    await store.initialize();
+
+    const bookMatches = await store.search("John");
+    assert.equal(bookMatches[0].searchType, "book");
+    assert.equal(bookMatches[0].book, 43);
+    assert.ok(bookMatches.some((match) => match.searchType === "text"));
+
+    const chapterMatches = await store.search("John 1");
+    assert.equal(chapterMatches[0].searchType, "chapter");
+    assert.equal(chapterMatches[0].chapter, 1);
+    assert.ok(chapterMatches.some((match) => match.searchType === "text"));
+
+    const verseMatches = await store.search("John 1:1");
+    assert.equal(verseMatches[0].searchType, "reference");
+    assert.equal(verseMatches[0].verse, 1);
+    assert.equal(verseMatches.filter(({ book, chapter, verse }) => book === 43 && chapter === 1 && verse === 1).length, 1);
+    assert.ok(verseMatches.some((match) => match.searchType === "text" && match.book === 1));
   });
 
   it("searches verse text across books", async () => {
@@ -255,10 +319,130 @@ describe("scripture store", () => {
     assert.deepEqual(
       matches.map(({ book, chapter, verse }) => ({ book, chapter, verse })),
       [
-        { book: 1, chapter: 1, verse: 1 },
         { book: 43, chapter: 1, verse: 1 },
+        { book: 1, chapter: 1, verse: 1 },
       ],
     );
+  });
+
+  it("matches separated and misspelled words without fuzzy short-word collisions", async () => {
+    const mock = createMockFetch();
+    const fetchImpl = async (url) => {
+      if (url.endsWith("1_genesis.json")) {
+        return { ok: true, json: async () => ({ 1: [[1, "the word is good"]] }) };
+      }
+      if (url.endsWith("58_hebrews.json")) {
+        return { ok: true, json: async () => ({ 1: [[1, "a piercing sword"]] }) };
+      }
+      return mock.fetchImpl(url);
+    };
+    const store = createScriptureStore({ fetchImpl });
+    await store.initialize();
+
+    const separated = await store.search("piercing sword");
+    assert.deepEqual(
+      separated.map(({ book, chapter, verse }) => ({ book, chapter, verse })),
+      [{ book: 58, chapter: 1, verse: 1 }],
+    );
+    assert.deepEqual(separated[0].matchedTerms.sort(), ["piercing", "sword"]);
+
+    const misspelled = await store.search("piercin sword");
+    assert.deepEqual(
+      misspelled.map(({ book, chapter, verse }) => ({ book, chapter, verse })),
+      [{ book: 58, chapter: 1, verse: 1 }],
+    );
+    assert.deepEqual(await store.search("piercing word"), []);
+  });
+
+  it("searches KRV text with the edition-specific index", async () => {
+    const mock = createMockFetch("./scripture/krv");
+    const fetchImpl = async (url) => {
+      if (url.endsWith("58_hebrews.json")) {
+        return { ok: true, json: async () => ({ 1: [[1, "날선 검으로"]] }) };
+      }
+      return mock.fetchImpl(url);
+    };
+    const store = createScriptureStore({
+      fetchImpl,
+      dataPath: "./scripture/krv",
+      displayBookNames: KRV_BOOK_NAMES,
+    });
+    await store.initialize();
+
+    const matches = await store.search("날선 검");
+    assert.deepEqual(
+      matches.map(({ book, chapter, verse }) => ({ book, chapter, verse })),
+      [{ book: 58, chapter: 1, verse: 1 }],
+    );
+    assert.deepEqual(matches[0].matchedTerms.sort(), ["검으로", "날선"]);
+  });
+
+  it("fuzzy-matches KRV typos after common Korean particles", async () => {
+    const mock = createMockFetch("./scripture/krv");
+    const fetchImpl = async (url) => {
+      if (url.endsWith("58_hebrews.json")) {
+        return {
+          ok: true,
+          json: async () => ({ 1: [[1, "하나님이 세상을 사랑하사"], [2, "하나님께서 말씀하시니"]] }),
+        };
+      }
+      return mock.fetchImpl(url);
+    };
+    const store = createScriptureStore({
+      fetchImpl,
+      dataPath: "./scripture/krv",
+      displayBookNames: KRV_BOOK_NAMES,
+    });
+    await store.initialize();
+
+    const matches = await store.search("하느님");
+    assert.deepEqual(
+      matches.map(({ book, chapter, verse }) => ({ book, chapter, verse }))
+        .sort((left, right) => left.verse - right.verse),
+      [
+        { book: 58, chapter: 1, verse: 1 },
+        { book: 58, chapter: 1, verse: 2 },
+      ],
+    );
+    assert.deepEqual(matches[0].matchedTerms, ["하나님"]);
+    assert.deepEqual(await store.search("하느"), []);
+  });
+
+  it("keeps warm searches responsive for a Bible-sized index", async () => {
+    const verseCount = 31_000;
+    const verses = Array.from({ length: verseCount }, (_, index) => [
+      index + 1,
+      index === verseCount - 1 ? "piercing sword" : `verse text ${index + 1}`,
+    ]);
+    const fetchImpl = async (url) => {
+      if (url === "./scripture/kjv/index.json") {
+        return { ok: true, json: async () => ({ chapterCounts: [1], bookFiles: ["1_genesis.json"] }) };
+      }
+      if (url === "./scripture/kjv/books/1_genesis.json") {
+        return { ok: true, json: async () => ({ 1: verses }) };
+      }
+      return { ok: false };
+    };
+    const store = createScriptureStore({
+      fetchImpl,
+      canonicalBookNames: ["Genesis"],
+      displayBookNames: ["Genesis"],
+      bookOrder: [1],
+    });
+    await store.initialize();
+
+    const coldStart = performance.now();
+    const firstSearch = await store.search("piercing sword");
+    const coldSearchDuration = performance.now() - coldStart;
+    assert.equal(firstSearch.length, 1);
+    assert.ok(coldSearchDuration < 5000, `Cold index build took ${coldSearchDuration.toFixed(1)} ms`);
+
+    const warmStart = performance.now();
+    for (let count = 0; count < 30; count += 1) {
+      assert.equal((await store.search("piercing sword")).length, 1);
+    }
+    const warmSearchDuration = performance.now() - warmStart;
+    assert.ok(warmSearchDuration < 1500, `Thirty warm searches took ${warmSearchDuration.toFixed(1)} ms`);
   });
 
   it("searches in the selected edition's book order", async () => {

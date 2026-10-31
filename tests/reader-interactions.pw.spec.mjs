@@ -211,7 +211,54 @@ test("loads another search batch when the results panel scrolls to the bottom", 
   await expect(page.locator(".search-summary")).toContainText("130 verses found · Showing 36");
 
   await searchInput.fill("John 3:16");
-  await expect(results).toHaveCount(1);
+  await expect(results.first()).toHaveAttribute("data-search-type", "reference");
+  await expect(results.first()).toContainText("EXACT PASSAGE · John 3:16");
+});
+
+test("prioritizes Korean book, chapter, and exact-verse suggestions", async ({ page }) => {
+  await page.goto("/krv");
+  await page.locator("#verse-1").waitFor();
+  const searchInput = page.locator("#search-input");
+  const firstResult = page.locator(".search-result").first();
+
+  await searchInput.fill("요한복음");
+  await expect(firstResult).toHaveAttribute("data-search-type", "book");
+  await expect(firstResult).toContainText("BOOK · 요한복음");
+
+  await searchInput.fill("요한복음 1장");
+  await expect(firstResult).toHaveAttribute("data-search-type", "chapter");
+  await expect(firstResult).toContainText("CHAPTER · 요한복음 1");
+
+  await searchInput.fill("요한");
+  await expect(firstResult).toHaveAttribute("data-search-type", "book");
+  await expect(firstResult).toContainText("BOOK · 요한복음");
+  await expect(page.locator(".search-result--navigation")).toHaveCount(5);
+
+  await searchInput.fill("요한복음 １：１");
+  await expect(firstResult).toHaveAttribute("data-search-type", "reference");
+  await expect(firstResult).toContainText("EXACT PASSAGE · 요한복음 1:1");
+  await firstResult.click();
+  await expect(page).toHaveURL(/\/krv\/b\/john\/c\/1\/v\/1$/);
+
+  await searchInput.fill("하느님");
+  const normalizedKoreanMatch = page.locator(".search-result mark").filter({ hasText: /하나님/ }).first();
+  await expect(normalizedKoreanMatch).toBeVisible();
+});
+
+test("finds separated and misspelled words and highlights the matched verse terms", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#verse-1").waitFor();
+  const searchInput = page.locator("#search-input");
+
+  await searchInput.fill("piercing sword");
+  let result = page.locator(".search-result").filter({ hasText: "Hebrews 4:12" });
+  await expect(result).toHaveCount(1);
+  await expect(result.locator("mark")).toHaveText(["sword", "piercing"]);
+
+  await searchInput.fill("piercin sword");
+  result = page.locator(".search-result").filter({ hasText: "Hebrews 4:12" });
+  await expect(result).toHaveCount(1);
+  await expect(result.locator("mark")).toHaveText(["sword", "piercing"]);
 });
 
 test("loads another search batch from a mobile touch scroll", async ({ page }) => {

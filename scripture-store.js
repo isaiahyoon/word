@@ -1,6 +1,20 @@
 import { BOOKS, bookFileName } from "./books.mjs";
+import MiniSearch from "./vendor/minisearch.js";
 
 const chapterKey = (book, chapter) => `${book}:${chapter}`;
+const searchBatchSize = 2048;
+const maxBookSuggestions = 5;
+const hangulTermPattern = /\p{Script=Hangul}/u;
+const koreanParticlePattern = /(?:께서|에서|으로|에게|한테|부터|까지|처럼|보다|은|는|이|가|을|를|의|에|로|와|과|도|만|께)$/u;
+const yieldToBrowser = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+function normalizeSearchTerm(term) {
+  const normalizedTerm = term.normalize("NFKC").toLocaleLowerCase();
+  if (!hangulTermPattern.test(normalizedTerm)) return normalizedTerm;
+
+  const stem = normalizedTerm.replace(koreanParticlePattern, "");
+  return stem.length >= 2 ? stem : normalizedTerm;
+}
 
 export function createScriptureStore({
   fetchImpl = fetch,
@@ -12,6 +26,7 @@ export function createScriptureStore({
   const chapters = new Map();
   const bookLoads = new Map();
   const bookIndexes = new Map();
+  const bookOrderIndexes = new Map(bookOrder.map((book, index) => [book, index]));
   if (
     bookOrder.length !== canonicalBookNames.length ||
     new Set(bookOrder).size !== canonicalBookNames.length ||
@@ -23,9 +38,12 @@ export function createScriptureStore({
     const bookIndex = index % canonicalBookNames.length;
     bookIndexes.set(normalizeBookName(name), bookIndex + 1);
   });
+  const bookNamesByLength = [...bookIndexes.keys()].sort((left, right) => right.length - left.length);
   let chapterCounts = [];
   let bookFiles = [];
   let initialization;
+  let textSearchIndex;
+  let textSearchIndexPromise;
 
   function initialize() {
     if (!initialization) {
@@ -127,46 +145,156 @@ export function createScriptureStore({
     return chapters.get(chapterKey(book, chapter)) ?? [];
   }
 
-  function parseReference(query) {
-    const match = query.match(/^(.+?)\s+(\d+)(?::(\d+))?$/);
-    if (!match) return null;
+  function resolveBookNames(name) {
+    const normalizedName = normalizeBookName(name);
+    const exactBook = bookIndexes.get(normalizedName);
+    if (exactBook) return [{ book: exactBook, name: normalizedName }];
 
-    const book = bookIndexes.get(normalizeBookName(match[1]));
-    if (!book) return null;
+    const matches = bookNamesByLength.filter((bookName) => bookName.startsWith(normalizedName));
+    const matchingBooks = [...new Set(matches.map((bookName) => bookIndexes.get(bookName)))];
+    return matchingBooks
+      .sort((left, right) => bookOrderIndexes.get(left) - bookOrderIndexes.get(right))
+      .slice(0, maxBookSuggestions)
+      .map((book) => ({ book, name: normalizeBookName(bookName(book)) }));
+  }
 
-    return {
-      book,
-      chapter: Number(match[2]),
-      verse: match[3] === undefined ? null : Number(match[3])
-    };
+  function parseNavigationQuery(query) {
+    const normalizedQuery = normalizeBookName(query);
+    const exactBook = resolveBookNames(normalizedQuery);
+    if (exactBook.length === 1 && exactBook[0].name === normalizedQuery) {
+      return { searchType: "book", books: exactBook, bookQuery: normalizedQuery };
+    }
+
+    const match = normalizedQuery.match(/^(.*?)\s*(\d+)(?::(\d+)|\s*장(?:\s*(\d+)\s*절?)?)?$/u);
+    if (match) {
+      const resolvedBooks = resolveBookNames(match[1]);
+      if (resolvedBooks.length > 0) {
+        const verse = match[3] ?? match[4];
+        return {
+          searchType: verse === undefined ? "chapter" : "reference",
+          books: resolvedBooks,
+          chapter: Number(match[2]),
+          verse: verse === undefined ? null : Number(verse),
+          bookQuery: match[1].trim(),
+        };
+      }
+    }
+
+    return exactBook.length > 0
+      ? { searchType: "book", books: exactBook, bookQuery: normalizedQuery }
+      : null;
+  }
+
+  async function getNavigationResult(navigationQuery) {
+    if (!navigationQuery) return [];
+    const { searchType, books, chapter, verse } = navigationQuery;
+
+    if (searchType === "book") {
+      return books.map(({ book }) => ({ searchType, book, chapter: 1, verse: 1, text: "", matchedTerms: [] }));
+    }
+    if (chapter < 1) return [];
+
+    const results = [];
+    for (const { book } of books) {
+      if (chapter > chapterCount(book)) continue;
+      const verses = await loadChapter(book, chapter);
+      if (searchType === "chapter") {
+        results.push({ searchType, book, chapter, verse: 1, text: "", matchedTerms: [] });
+        continue;
+      }
+
+      const exactVerse = verses.find((item) => item.verse === verse);
+      if (exactVerse) results.push({ ...exactVerse, searchType, matchedTerms: [] });
+    }
+    return results;
+  }
+
+  async function getTextSearchIndex() {
+    if (textSearchIndex) return textSearchIndex;
+    if (!textSearchIndexPromise) {
+      textSearchIndexPromise = (async () => {
+        await loadAllBooks();
+        const index = new MiniSearch({ fields: ["text"], processTerm: normalizeSearchTerm });
+        let batch = [];
+
+        for (const book of bookOrder) {
+          for (let chapter = 1; chapter <= chapterCount(book); chapter += 1) {
+            for (const verse of getChapter(book, chapter)) {
+              batch.push({
+                id: `${book}:${chapter}:${verse.verse}`,
+                text: verse.text,
+              });
+              if (batch.length < searchBatchSize) continue;
+
+              index.addAll(batch);
+              batch = [];
+              await yieldToBrowser();
+            }
+          }
+        }
+
+        if (batch.length > 0) index.addAll(batch);
+        textSearchIndex = index;
+        return index;
+      })().catch((error) => {
+        textSearchIndexPromise = null;
+        throw error;
+      });
+    }
+    return textSearchIndexPromise;
   }
 
   async function search(query) {
-    const normalizedQuery = query.trim().toLowerCase();
+    const normalizedQuery = query.normalize("NFKC").trim();
     if (normalizedQuery.length < 2) return [];
 
-    const reference = parseReference(query.trim());
-    if (reference) {
-      if (reference.chapter < 1 || reference.chapter > chapterCount(reference.book)) return [];
-      const verses = await loadChapter(reference.book, reference.chapter);
-      return verses.filter((verse) => reference.verse === null || verse.verse === reference.verse);
-    }
+    await initialize();
+    const navigationQuery = parseNavigationQuery(normalizedQuery);
+    const navigationResults = await getNavigationResult(navigationQuery);
+    const textQuery = navigationQuery?.bookQuery ?? normalizedQuery;
 
-    await loadAllBooks();
-    const matches = [];
-    for (const book of bookOrder) {
-      for (let chapter = 1; chapter <= chapterCount(book); chapter += 1) {
-        matches.push(...getChapter(book, chapter).filter((verse) =>
-          verse.text.toLowerCase().includes(normalizedQuery)
-        ));
-      }
-    }
-    return matches;
+    const index = await getTextSearchIndex();
+    const matches = index.search(textQuery, {
+      combineWith: "AND",
+      prefix: (term) => term.length >= 3 || /\p{Script=Hangul}/u.test(term),
+      fuzzy: (term) => {
+        if (hangulTermPattern.test(term)) return term.length >= 3 ? 1 / term.length : false;
+        return term.length >= 6 ? 0.15 : false;
+      },
+    });
+
+    matches.sort((left, right) => {
+      const scoreDifference = right.score - left.score;
+      if (scoreDifference !== 0) return scoreDifference;
+
+      const [leftBook, leftChapter, leftVerse] = left.id.split(":").map(Number);
+      const [rightBook, rightChapter, rightVerse] = right.id.split(":").map(Number);
+      return bookOrderIndexes.get(leftBook) - bookOrderIndexes.get(rightBook) ||
+        leftChapter - rightChapter ||
+        leftVerse - rightVerse;
+    });
+
+    const verseMatches = matches.map((match) => {
+      const [book, chapter, verseNumber] = match.id.split(":").map(Number);
+      return {
+        ...getChapter(book, chapter)[verseNumber - 1],
+        searchType: "text",
+        matchedTerms: Object.keys(match.match),
+      };
+    });
+
+    const navigationReferences = new Set(navigationResults
+      .filter((result) => result.searchType === "reference")
+      .map(({ book, chapter, verse }) => `${book}:${chapter}:${verse}`));
+    const textResults = verseMatches.filter((verse) =>
+      !navigationReferences.has(`${verse.book}:${verse.chapter}:${verse.verse}`)
+    );
+    return [...navigationResults, ...textResults];
   }
 
   return { initialize, chapterCount, bookName, bookOrder, loadChapter, getChapter, search };
 }
 
 function normalizeBookName(name) {
-  return name.trim().toLocaleLowerCase();
+  return name.normalize("NFKC").trim().toLocaleLowerCase();
 }
