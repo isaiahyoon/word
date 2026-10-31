@@ -637,7 +637,27 @@ test("uses the Korean UI font for KRV bottom chapter navigation", async ({ page 
   expect(krvFont).not.toBe(kjvFont);
 });
 
-test("submits reader feedback through Netlify with passage context only by consent", async ({ page }) => {
+test("styles the optional-passage checkbox and feedback exit control", async ({ page }) => {
+  await page.goto("/kjv/b/john/c/3/v/16");
+  await page.locator("#feedback-open").click();
+  const passageOption = page.locator(".feedback-passage-option");
+  const checkbox = page.locator("#feedback-include-passage");
+  const closeButton = page.locator("#feedback-close");
+
+  await expect(passageOption).toHaveCSS("border-radius", "5px");
+  await expect(passageOption).toHaveCSS("background-image", /linear-gradient/);
+  await checkbox.check();
+  await expect(passageOption).toHaveCSS("border-top-color", "rgba(49, 88, 99, 0.42)");
+  await expect(checkbox).toHaveCSS("appearance", "none");
+  await expect(checkbox).toHaveCSS("border-top-color", "rgb(49, 88, 99)");
+
+  await closeButton.hover();
+  await expect(closeButton).toHaveCSS("border-radius", "50%");
+  await expect(closeButton).toHaveCSS("border-top-color", "rgb(223, 198, 129)");
+  await expect(closeButton).toHaveCSS("box-shadow", /72, 65, 99/);
+});
+
+test("submits the URL-focused feedback passage only by consent", async ({ page }) => {
   let submittedForm;
   await page.route("**/*", async (route) => {
     if (route.request().method() !== "POST") {
@@ -647,7 +667,7 @@ test("submits reader feedback through Netlify with passage context only by conse
     submittedForm = new URLSearchParams(route.request().postData() ?? "");
     await route.fulfill({ status: 200, contentType: "text/plain", body: "ok" });
   });
-  await page.goto("/kjv/b/john/c/3/v/16");
+  await page.goto("/kjv/b/john/c/3/v/16-17");
   await page.locator("#feedback-open").click();
 
   const dialog = page.locator("#feedback-dialog");
@@ -656,7 +676,7 @@ test("submits reader feedback through Netlify with passage context only by conse
   await expect(page.locator("#feedback-category-trigger")).toBeFocused();
   await page.locator("#feedback-close").focus();
   await page.keyboard.press("ArrowDown");
-  await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/16$/);
+  await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/16-17$/);
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
 
@@ -684,6 +704,6 @@ test("submits reader feedback through Netlify with passage context only by conse
   expect(submittedForm.get("category")).toBe("idea");
   expect(submittedForm.get("message")).toBe("The KRV page feels lovely on mobile.");
   expect(submittedForm.get("email")).toBe("");
-  expect(submittedForm.get("passage")).toBe("John 3:16");
+  expect(submittedForm.get("passage")).toBe("John 3:16-17");
   expect(submittedForm.get("bot-field")).toBe("");
 });

@@ -190,6 +190,24 @@ async function copySelectedVerses({ clearAfter = false } = {}) {
   }
 }
 
+function currentFeedbackPassage() {
+  const route = scriptureRoutes.parse(window.location.pathname);
+  const passage = route && !route.home
+    ? route
+    : {
+      book: state.book,
+      chapter: state.chapter,
+      range: { start: state.verse, end: state.verse },
+      editionId: state.editionId,
+    };
+  const range = passage.range ?? { start: state.verse, end: state.verse };
+  const verseReference = range.start === range.end
+    ? range.start
+    : `${range.start}-${range.end}`;
+  const passageScripture = scriptureStores.get(passage.editionId) ?? scripture;
+  return `${passageScripture.bookName(passage.book)} ${passage.chapter}:${verseReference}`;
+}
+
 async function submitReaderFeedback(event) {
   event.preventDefault();
   elements.feedbackError.hidden = true;
@@ -203,7 +221,7 @@ async function submitReaderFeedback(event) {
   elements.feedbackCategoryTrigger.setAttribute("aria-invalid", "false");
   elements.feedbackSubmit.disabled = true;
   elements.feedbackPassage.value = elements.feedbackIncludePassage.checked
-    ? `${bookName(state.book)} ${state.chapter}:${state.verse}`
+    ? currentFeedbackPassage()
     : "";
 
   try {
