@@ -16,6 +16,8 @@ export function getNavigationAction(
     dialogOpen = false,
     chapterPickerOpen = false,
     isEditing = false,
+    allowEditionCycling = true,
+    shiftKey = false,
     altKey = false,
     ctrlKey = false,
     metaKey = false,
@@ -30,6 +32,10 @@ export function getNavigationAction(
     metaKey
   )
     return null;
+  if (key === "Tab") {
+    if (!allowEditionCycling) return null;
+    return shiftKey ? "previousEdition" : "nextEdition";
+  }
   return (
     NAVIGATION_ACTIONS.get(key.length === 1 ? key.toLowerCase() : key) ?? null
   );
@@ -49,8 +55,11 @@ export function bindKeyboardShortcuts({
   onOldTestament,
   onNewTestament,
   onToggleQuietReading,
+  onPreviousEdition,
+  onNextEdition,
   onHome,
   onEscape,
+  isSidebarOpen = () => false,
 }) {
   openButton.addEventListener("click", () => dialog.showModal());
   closeButton.addEventListener("click", () => dialog.close());
@@ -83,10 +92,15 @@ export function bindKeyboardShortcuts({
     const isEditing =
       event.target instanceof Element &&
       event.target.closest("input, textarea, select, [contenteditable='true']");
+    const isFocusableControl =
+      event.target instanceof Element &&
+      event.target.closest("button, a[href], input, textarea, select, [contenteditable='true'], [role='button'], [role='option'], [role='tab'], [tabindex]:not([tabindex='-1'])");
     const action = getNavigationAction(event.key, {
       dialogOpen: dialog.open,
       chapterPickerOpen,
       isEditing: Boolean(isEditing),
+      allowEditionCycling: !isFocusableControl && !isSidebarOpen(),
+      shiftKey: event.shiftKey,
       altKey: event.altKey,
       ctrlKey: event.ctrlKey,
       metaKey: event.metaKey,
@@ -101,6 +115,8 @@ export function bindKeyboardShortcuts({
       oldTestament: onOldTestament,
       newTestament: onNewTestament,
       toggleQuietReading: onToggleQuietReading,
+      previousEdition: onPreviousEdition,
+      nextEdition: onNextEdition,
       goHome: onHome,
       openShortcuts: () => openButton.click(),
     };

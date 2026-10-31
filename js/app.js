@@ -15,7 +15,7 @@ const BOOK_TITLES = [
 const CHAPTER_GRADIENT_COLORS = ["var(--chapter-blue)", "var(--chapter-lavender)", "var(--chapter-pink)", "var(--chapter-green)"];
 const state = { editionId: DEFAULT_EDITION, book: 1, chapter: 1, verse: 1, selectedVerses: new Set(), testament: "old", lastBookByTestament: { old: 1, new: 40 }, chapterRequestId: 0, searchTimer: null, searchRequestId: 0, searchMatches: [], searchQuery: "", searchShown: 0, searchActiveIndex: -1 };
 const appBasePath = new URL(document.baseURI).pathname;
-const scriptureRoutes = createScriptureRoutes(BOOKS, appBasePath, EDITION_IDS);
+const scriptureRoutes = createScriptureRoutes(BOOKS, appBasePath, EDITIONS);
 const elements = {
   appShell: document.querySelector(".app-shell"),
   pullRefreshIndicator: document.querySelector("#pull-refresh-indicator"),
@@ -76,6 +76,7 @@ const elements = {
 let chapterPicker;
 let editionPicker;
 let verseNavigationQueue = Promise.resolve();
+let editionCycleQueue = Promise.resolve();
 let copyFeedbackTimer;
 const scriptureStores = new Map(EDITION_IDS.map((editionId) => {
   const edition = EDITIONS[editionId];
@@ -194,7 +195,7 @@ async function copySelectedVerses({ clearAfter = false } = {}) {
     if (!verse.referenceText) return verseText;
     return `${verseText}\n\n${verse.referenceText.trim()} [KJV reference]`;
   }).join("\n\n");
-  const text = `${copiedVerses}\n\n- ${reference}`;
+  const text = `"${copiedVerses}"\n\n- ${reference}`;
   try {
     await writeClipboardText(text);
     if (clearAfter) {
@@ -321,6 +322,7 @@ async function activateEdition(editionId) {
   scripture = store;
   document.body.classList.toggle("is-krv-edition", editionId === "krv");
   document.body.classList.toggle("is-diodati-edition", editionId === "diodati");
+  document.body.classList.toggle("is-luther1912-edition", editionId === "luther1912");
   document.body.classList.toggle("is-japbungo-edition", editionId === "japbungo");
   document.documentElement.lang = edition.language;
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", edition.themeColor ?? "#f6f4f9");
@@ -350,7 +352,7 @@ async function activateEdition(editionId) {
   await store.initialize();
 }
 
-async function changeEdition(editionId) {
+async function changeEdition(editionId, { preserveFocus = false } = {}) {
   if (!EDITIONS[editionId] || editionId === state.editionId) return;
   const keepSidebarOpen = elements.sidebar.classList.contains("is-open");
   const { book, chapter, verse } = state;
@@ -363,13 +365,24 @@ async function changeEdition(editionId) {
   requestAnimationFrame(() => {
     if (keepSidebarOpen) {
       elements.bookList.querySelector('.book-row[aria-current="page"]')?.focus();
-    } else {
+    } else if (!preserveFocus) {
       document.querySelector(`#verse-${state.verse}`)?.focus({ preventScroll: true });
     }
   });
   if (searchQuery.length >= 2) {
     void search(searchQuery, ++state.searchRequestId);
   }
+}
+
+function cycleEdition(direction) {
+  editionCycleQueue = editionCycleQueue
+    .catch((error) => console.error(error))
+    .then(() => {
+      const currentIndex = EDITION_IDS.indexOf(state.editionId);
+      const nextIndex = (currentIndex + direction + EDITION_IDS.length) % EDITION_IDS.length;
+      return changeEdition(EDITION_IDS[nextIndex], { preserveFocus: true });
+    });
+  return editionCycleQueue;
 }
 
 function animateEditionSwitch() {
@@ -1046,14 +1059,16 @@ function bindMobilePullToRefresh() {
 
 function bindMobileSidebarSwipe() {
   const edgeWidth = 28;
-  const openThreshold = 72;
+  const swipeThreshold = 72;
   const excludedTargets = "button, a, input, textarea, select, [contenteditable='true'], dialog[open], .search-wrap, .sidebar, .sidebar-scrim, .chapter-popover, .edition-options, .mobile-chapter-cues";
   let startX = null;
   let startY = null;
+  let gesture = null;
 
   const reset = () => {
     startX = null;
     startY = null;
+    gesture = null;
   };
 
   document.addEventListener("touchstart", (event) => {
@@ -1061,20 +1076,34 @@ function bindMobileSidebarSwipe() {
     if (
       window.innerWidth > 640 ||
       event.touches.length !== 1 ||
-      elements.sidebar.classList.contains("is-open") ||
       elements.appShell.classList.contains("is-quiet-reading") ||
-      elements.feedbackDialog.open ||
-      (target instanceof Element && target.closest(excludedTargets))
+      elements.feedbackDialog.open
     ) {
       reset();
       return;
     }
 
     const touch = event.touches[0];
+    if (elements.sidebar.classList.contains("is-open")) {
+      if (!(target instanceof Element) || !elements.sidebar.contains(target)) {
+        reset();
+        return;
+      }
+      gesture = "close";
+      startX = touch.clientX;
+      startY = touch.clientY;
+      return;
+    }
+
+    if (target instanceof Element && target.closest(excludedTargets)) {
+      reset();
+      return;
+    }
     if (touch.clientX > edgeWidth) {
       reset();
       return;
     }
+    gesture = "open";
     startX = touch.clientX;
     startY = touch.clientY;
   }, { passive: true });
@@ -1084,9 +1113,10 @@ function bindMobileSidebarSwipe() {
     const touch = event.touches[0];
     const deltaX = touch.clientX - startX;
     const deltaY = touch.clientY - startY;
-    if (deltaX > 12 && deltaX > Math.abs(deltaY)) {
+    const directionalDeltaX = gesture === "close" ? -deltaX : deltaX;
+    if (directionalDeltaX > 12 && directionalDeltaX > Math.abs(deltaY)) {
       if (event.cancelable) event.preventDefault();
-    } else if (Math.abs(deltaY) > 32 || deltaX < 0) {
+    } else if (Math.abs(deltaY) > 32 || directionalDeltaX < 0) {
       reset();
     }
   }, { passive: false });
@@ -1096,9 +1126,12 @@ function bindMobileSidebarSwipe() {
     const touch = event.changedTouches[0];
     const deltaX = touch ? touch.clientX - startX : 0;
     const deltaY = touch ? touch.clientY - startY : 0;
-    const shouldOpen = deltaX >= openThreshold && deltaX > Math.abs(deltaY) * 1.25;
+    const isHorizontalSwipe = Math.abs(deltaX) >= swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY) * 1.25;
+    const shouldOpen = gesture === "open" && isHorizontalSwipe && deltaX > 0;
+    const shouldClose = gesture === "close" && isHorizontalSwipe && deltaX < 0;
     reset();
     if (shouldOpen) openSidebar();
+    if (shouldClose) closeSidebar();
   }, { passive: true });
 
   document.addEventListener("touchcancel", reset, { passive: true });
@@ -1303,7 +1336,10 @@ function bindEvents() {
     onOldTestament: () => selectTestament("old"),
     onNewTestament: () => selectTestament("new"),
     onToggleQuietReading: toggleQuietReadingMode,
+    onPreviousEdition: () => void cycleEdition(-1),
+    onNextEdition: () => void cycleEdition(1),
     onHome: navigateHome,
+    isSidebarOpen: () => elements.sidebar.classList.contains("is-open"),
     onEscape: () => {
       const returnFocusToChapterPicker = chapterPicker.isOpen();
       setQuietReadingMode(false);

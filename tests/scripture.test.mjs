@@ -130,6 +130,27 @@ describe("scripture routes", () => {
     );
   });
 
+  it("maps public route segments to internal edition ids", () => {
+    const editionRoutes = createScriptureRoutes(BOOKS, "/", {
+      kjv: { routeSegment: "kjv" },
+      luther1912: { routeSegment: "licht" },
+    });
+
+    assert.deepEqual(editionRoutes.parse("/licht/b/john/c/3/v/16"), {
+      editionId: "luther1912",
+      book: 43,
+      chapter: 3,
+      range: { start: 16, end: 16 },
+      legacy: false,
+    });
+    assert.equal(editionRoutes.parse("/licht").editionId, "luther1912");
+    assert.equal(
+      editionRoutes.buildPath(43, 3, { start: 16, end: 16 }, "luther1912"),
+      "/licht/b/john/c/3/v/16",
+    );
+    assert.equal(editionRoutes.parse("/luther1912/b/john/c/3/v/16"), null);
+  });
+
   it("round-trips numbered and multiword book slugs", () => {
     for (const [book, name] of BOOKS.entries()) {
       const path = routes.buildPath(book + 1, 1, { start: 1, end: 1 }, "kjv");
@@ -439,6 +460,61 @@ describe("scripture store", () => {
     assert.deepEqual(await store.search("principo xyz"), []);
 
     for (const query of ["Genesi 1:99", "Genesi 99:1"]) {
+      const matches = await store.search(query);
+      assert.ok(matches.every((match) => match.searchType !== "reference"), query);
+    }
+  });
+
+  it("searches Luther German text, prefixes, and localized references", async () => {
+    const fetchImpl = async (path) => {
+      const fileUrl = new URL(`../${path.replace(/^\.\//, "")}`, import.meta.url);
+      return { ok: true, json: async () => JSON.parse(await readFile(fileUrl, "utf8")) };
+    };
+    const store = createScriptureStore({
+      fetchImpl,
+      dataPath: "./scripture/luther1912",
+      language: "de",
+    });
+    await store.initialize();
+
+    assert.equal(store.bookName(1), "1 Mose");
+    assert.equal(store.bookName(43), "Johannes");
+
+    const bookPrefix = await store.search("1 Mo");
+    assert.equal(bookPrefix[0].searchType, "book");
+    assert.equal(bookPrefix[0].book, 1);
+
+    const chapter = await store.search("Johannes 3");
+    assert.equal(chapter[0].searchType, "chapter");
+    assert.equal(chapter[0].book, 43);
+    assert.equal(chapter[0].chapter, 3);
+
+    const reference = await store.search("Johannes 3:16");
+    assert.equal(reference[0].searchType, "reference");
+    assert.deepEqual(
+      { book: reference[0].book, chapter: reference[0].chapter, verse: reference[0].verse },
+      { book: 43, chapter: 3, verse: 16 },
+    );
+    assert.equal(reference.filter(({ book, chapter: chapterNumber, verse }) =>
+      book === 43 && chapterNumber === 3 && verse === 16).length, 1);
+
+    const separatedTerms = await store.search("Gott Erde");
+    assert.ok(separatedTerms.some(({ book, chapter, verse }) => book === 1 && chapter === 1 && verse === 1));
+
+    const umlautMatch = await store.search("wüst");
+    assert.ok(umlautMatch.some(({ book, chapter, verse }) => book === 1 && chapter === 1 && verse === 2));
+
+    const rankedTerms = await store.search("Anfang schuf Himmel Erde");
+    assert.deepEqual(
+      { book: rankedTerms[0].book, chapter: rankedTerms[0].chapter, verse: rankedTerms[0].verse },
+      { book: 1, chapter: 1, verse: 1 },
+    );
+
+    const misspelled = await store.search("Anfangg Erde");
+    assert.ok(misspelled.some(({ book, chapter, verse }) => book === 1 && chapter === 1 && verse === 1));
+    assert.deepEqual(await store.search("Anfangg xyz"), []);
+
+    for (const query of ["Johannes 3:99", "Johannes 99:1"]) {
       const matches = await store.search(query);
       assert.ok(matches.every((match) => match.searchType !== "reference"), query);
     }

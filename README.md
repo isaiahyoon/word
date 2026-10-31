@@ -36,12 +36,12 @@ and without him was not any thing made that was made.
 
 ## Features
 
-- Read the King James Version (KJV), Korean Revised Version (KRV), Japanese Bungo-yaku (JapBungo), and Italian Giovanni Diodati (1649), with edition-aware book navigation and direct links to passages. JapBungo has a green reading theme; Diodati has a pink gradient reading theme.
-- Search scripture by phrase or separate terms, with relevance ranking, fuzzy typo matching, and direct suggestions for books, chapters, and verses. Korean and Japanese searches support localized book names and references; Korean searches also support common spelling variations.
-- Choose chapters with the whimsical chapter picker, or move through the text with navigation buttons and keyboard shortcuts. On mobile, swipe right from the left screen edge to open book navigation. A discreet back-to-top button appears while scrolling.
-- Open the shortcut guide with `/` to see Mac and Windows keys for refresh, search, navigation, Quiet Mode, and verse copying.
+- Read the King James Version (KJV), Korean Revised Version (KRV), Japanese Bungo-yaku (JapBungo), Italian Giovanni Diodati (1649), and German Luther Bible (1912), with edition-aware book navigation and direct links to passages. JapBungo has a green reading theme; Diodati has a pink gradient reading theme; Luther uses a pastel yellow gradient with red accents.
+- Search scripture by phrase or separate terms, with relevance ranking, fuzzy typo matching, and direct suggestions for books, chapters, and verses. German, Korean, and Japanese searches support localized book names and references; Korean searches also support common spelling variations.
+- Choose chapters with the whimsical chapter picker, or move through the text with navigation buttons and keyboard shortcuts. On mobile, swipe right from the left screen edge to open book navigation, or swipe left across the open drawer to close it. A discreet back-to-top button appears while scrolling.
+- Open the shortcut guide with `/` to see Mac and Windows keys for refresh, search, navigation, Quiet Mode, verse copying, and edition cycling with Tab/Shift+Tab.
 - Enter Quiet Mode for a calmer reading view, with subtle glimmer details throughout the interface.
-- Select verses and copy each selected verse on its own line, in chapter order, followed by a compressed passage reference. Clicking a verse also updates its direct link. The feedback form lets readers send a note, with passage details included only by choice.
+- Select verses and copy them in chapter order as a quoted passage, with each verse on its own line and a compressed reference below the closing quotation mark. Clicking a verse also updates its direct link. The feedback form lets readers send a note, with passage details included only by choice.
 - Shared links use a high-resolution branded preview featuring The Word's sword emblem.
 - Install it as a standalone web app on Mac, iPhone, Android, or Windows using the browser's install option.
 
@@ -63,7 +63,7 @@ node tools/dev-server.mjs
 
 Then open [http://localhost:8000](http://localhost:8000).
 If port 8000 is occupied, choose another port with `PORT=8001 node tools/dev-server.mjs`.
-When deploying, configure the host to internally serve `index.html` for valid `/kjv/b/*`, `/krv/b/*`, `/diodati/b/*`, `/japbungo/b/*`, and legacy `/b/*` scripture routes while keeping the requested URL. Unknown paths should serve `404.html` with a 404 status.
+When deploying, configure the host to internally serve `index.html` for valid `/kjv/b/*`, `/krv/b/*`, `/diodati/b/*`, `/licht/b/*`, `/japbungo/b/*`, and legacy `/b/*` scripture routes while keeping the requested URL. Unknown paths should serve `404.html` with a 404 status.
 
 Scripture links identify their edition before the book route. Omitting the chapter opens chapter 1; omitting the verse opens and highlights verse 1:
 
@@ -74,6 +74,7 @@ Scripture links identify their edition before the book route. Omitting the chapt
 /kjv/b/john/c/3/v/16-18
 /krv/b/john/c/3/v/16
 /diodati/b/genesis/c/1/v/1
+/licht/b/john/c/3/v/16
 /japbungo/b/john/c/3/v/16
 ```
 
@@ -87,6 +88,7 @@ The reader loads the selected edition's chapter-count index and current book fir
 node tools/build-kjv-data.mjs
 node tools/build-krv-data.mjs
 node tools/build-diodati-data.mjs
+node tools/build-luther-data.mjs
 node tools/build-japbungo-data.mjs
 ```
 
@@ -95,6 +97,8 @@ The KJV source is stored in `sources/kjv.json`; the 1961 KRV source is pinned in
 JapBungo is built from the public-domain [GetBible JapBungo source](https://github.com/getbible/v2/tree/master/japbungo), pinned with source metadata in `sources/japbungo.json`. It uses KJV verse numbering except for the explicit KRV fallback at 3 John 1:15. The upstream text omits Exodus 7:25, 2 Samuel 19:25, 2 Chronicles 2:13, and 3 John 1:15; those four slots use Korean KRV text and are labeled as KRV fallbacks in the reader and copied citations. Where a same-numbered KJV verse exists, the reader shows its text in a lavender reference panel and includes it when copied. KJV places the closing greeting of 3 John in verse 14, so the 3 John 1:15 fallback has no separate KJV reference. Rebuild it with `node tools/build-japbungo-data.mjs`.
 
 Diodati text is stored in `sources/diodati.json` from the public-domain [Diodati-1649 repository](https://github.com/FordhamRamFan/public-domain-bible-translations/tree/main/Italian/Diodati-1649). Its 66 books and 31,102 verse slots follow KJV numbering. The picker code is DIO, and the Italian reader uses a pink gradient theme and Cormorant Garamond. Rebuild it with `node tools/build-diodati-data.mjs`. The [Diodati–KJV lexical comparison study](studies/beasts-in-translation.html) compares verses containing Diodati dragone/dragoni, liocorno/liocorni, or sciacallo/sciacalli with the corresponding KJV dragon/dragons or unicorn/unicorns passages. There are 34 dragon-related verse comparisons and 9 unicorn-related verse comparisons, for a total of 43 comparisons.
+
+The Luther Bible (1912) source is in `sources/luther_1912.json`; its records were imported from the now-discontinued Unbound Bible. The [eBible.org Lutherbibel 1912 page](https://ebible.org/details.php?id=deu1912) identifies the edition as public domain and provides downloadable formats. The edition uses the LUX picker code, the dropdown label `Lutherbibel · Licht im Wort`, the `/licht/` route, and a readable Gelasio serif with a pastel-yellow/red peach-calm theme. Its 66 books and 31,102 verse slots have been checked against KJV. Rebuild it with `node tools/build-luther-data.mjs`.
 
 ## Search
 
@@ -107,6 +111,8 @@ KRV search accepts Korean book names and references such as `요한복음`, `요
 JapBungo search accepts Japanese text and localized references such as `ヨハネの福音書 3:16`. Matching is lexical and uses the selected edition's Japanese text and display-book names.
 
 Diodati search uses Italian text and localized book names and references, including `Genesi`, `Genesi 1:1`, and the prefix `Gene`. It supports separate terms, accented text, and typo tolerance for longer words.
+
+Luther search uses German text and localized book names and references, including `1 Mose`, `Johannes 3:16`, and German terms with umlauts. It supports prefixes, separate terms, and typo tolerance for longer words.
 
 The first text search loads and indexes the selected edition's verses in the browser. The index is reused for later searches in that edition; no search query is sent to an external search service. Results are shown 12 at a time as the list is scrolled. The index is separate for each edition.
 
