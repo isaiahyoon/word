@@ -194,7 +194,7 @@ async function copySelectedVerses({ clearAfter = false } = {}) {
     if (!verse.referenceText) return verseText;
     return `${verseText}\n\n${verse.referenceText.trim()} [KJV reference]`;
   }).join("\n\n");
-  const text = `${copiedVerses}\n\n- ${reference}`;
+  const text = `"${copiedVerses}"\n\n- ${reference}`;
   try {
     await writeClipboardText(text);
     if (clearAfter) {

@@ -41,7 +41,7 @@ and without him was not any thing made that was made.
 - Choose chapters with the whimsical chapter picker, or move through the text with navigation buttons and keyboard shortcuts. On mobile, swipe right from the left screen edge to open book navigation, or swipe left across the open drawer to close it. A discreet back-to-top button appears while scrolling.
 - Open the shortcut guide with `/` to see Mac and Windows keys for refresh, search, navigation, Quiet Mode, and verse copying.
 - Enter Quiet Mode for a calmer reading view, with subtle glimmer details throughout the interface.
-- Select verses and copy each selected verse on its own line, in chapter order, followed by a compressed passage reference. Clicking a verse also updates its direct link. The feedback form lets readers send a note, with passage details included only by choice.
+- Select verses and copy them in chapter order as a quoted passage, with each verse on its own line and a compressed reference below the closing quotation mark. Clicking a verse also updates its direct link. The feedback form lets readers send a note, with passage details included only by choice.
 - Shared links use a high-resolution branded preview featuring The Word's sword emblem.
 - Install it as a standalone web app on Mac, iPhone, Android, or Windows using the browser's install option.
 

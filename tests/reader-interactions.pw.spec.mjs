@@ -600,7 +600,7 @@ test("labels and copies Korean JapBungo fallback verses", async ({ page }) => {
     const expectedVerseText = hasKJVReference
       ? `${koreanVerse} [KRV fallback]\n\n${englishVerse} [KJV reference]`
       : `${koreanVerse} [KRV fallback]`;
-    expect(copiedText).toBe(`${expectedVerseText}\n\n${citation}`);
+    expect(copiedText).toBe(`"${expectedVerseText}"\n\n${citation}`);
     expect(citation).toMatch(/^- .+ \d+:\d+$/u);
   }
 });
@@ -830,7 +830,7 @@ test("copies consecutive verses on every edition as separate lines with a compre
     await page.locator("#copy-selected-verses").click();
 
     await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
-      .toBe(`${expectedLines.join("\n\n")}\n\n- ${displayBook} 3:16-18`);
+      .toBe(`"${expectedLines.join("\n\n")}"\n\n- ${displayBook} 3:16-18`);
   }
 });
 
@@ -847,7 +847,7 @@ test("copies selected verses with Command+C", async ({ page }) => {
   await page.keyboard.press("Meta+C");
 
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
-    .toBe(`${expectedText}\n\n- Isaiah 3:10, 21`);
+    .toBe(`"${expectedText}"\n\n- Isaiah 3:10, 21`);
 });
 
 test("copies selected verses with Control+C", async ({ page }) => {
@@ -863,7 +863,7 @@ test("copies selected verses with Control+C", async ({ page }) => {
   await page.keyboard.press("Control+C");
 
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
-    .toBe(`${expectedText}\n\n- Isaiah 3:10, 21`);
+    .toBe(`"${expectedText}"\n\n- Isaiah 3:10, 21`);
 });
 
 test("fills the currently focused verse when it is selected for copying", async ({ page }) => {
@@ -891,7 +891,7 @@ test("copies staggered verses in chapter order with separated reference ranges",
   await page.locator("#copy-selected-verses").click();
 
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
-    .toBe(`${expectedText}\n\n- Isaiah 3:10, 21-22`);
+    .toBe(`"${expectedText}"\n\n- Isaiah 3:10, 21-22`);
 });
 
 for (const viewport of [
@@ -934,7 +934,7 @@ for (const shortcut of ["Meta+X", "Control+X"]) {
     await page.keyboard.press(shortcut);
 
     await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
-      .toBe(`${expectedText}\n\n- Isaiah 3:10, 21`);
+      .toBe(`"${expectedText}"\n\n- Isaiah 3:10, 21`);
     await expect(page.locator("#verse-10")).toHaveAttribute("aria-pressed", "false");
     await expect(page.locator("#verse-21")).toHaveAttribute("aria-pressed", "false");
     await expect(page.locator("#verse-actions")).toBeHidden();
