@@ -302,6 +302,21 @@ test("finds separated and misspelled words and highlights the matched verse term
   await expect(result.locator("mark")).toHaveText(["sword", "piercing"]);
 });
 
+test("highlights the first search result and opens it with Enter", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#verse-1").waitFor();
+  const searchInput = page.locator("#search-input");
+  const firstResult = page.locator(".search-result").first();
+
+  await searchInput.fill("piercing sword");
+  await expect(firstResult).toContainText("Isaiah 27:1");
+  await expect(firstResult).toHaveAttribute("aria-selected", "true");
+  await expect(searchInput).toHaveAttribute("aria-activedescendant", "search-result-0");
+
+  await searchInput.press("Enter");
+  await expect(page).toHaveURL(/\/kjv\/b\/isaiah\/c\/27\/v\/1$/);
+});
+
 test("loads another search batch from a mobile touch scroll", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");

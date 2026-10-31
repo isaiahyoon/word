@@ -895,6 +895,7 @@ async function search(query, requestId) {
   summary.textContent = summaryParts.join(" · ");
   elements.searchResults.append(summary);
   appendSearchResults();
+  setActiveSearchResult(0);
 }
 
 function openSidebar() {
