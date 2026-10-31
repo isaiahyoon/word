@@ -30,6 +30,8 @@ body::before {
 }
 body.is-krv-edition::before {
   opacity: 1;
+  background-color: #e8f1f4;
+  background-image: linear-gradient(128deg, #bed8ea, #e8f1f4 58%, #c3d3e5);
 }
 body.is-japbungo-edition {
   --canvas: #edf5eb;

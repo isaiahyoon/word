@@ -139,6 +139,17 @@ describe("development server", () => {
     assert.match(styles, /\.kicker-dash\s*\{[^}]*var\(--brass\)/s);
   });
 
+  it("uses the Cobalt Roof Tile gradient for the KRV backdrop", async () => {
+    const response = await fetch(`${origin}/styles/styles.css`);
+    const styles = await response.text();
+
+    assert.equal(response.status, 200);
+    assert.match(
+      styles,
+      /body\.is-krv-edition::before\s*\{[^}]*background-image:\s*linear-gradient\(128deg,\s*#bed8ea,\s*#e8f1f4 58%,\s*#c3d3e5\)/s,
+    );
+  });
+
   it("reduces the verse loading message size", async () => {
     const response = await fetch(`${origin}/styles/styles.css`);
     const styles = await response.text();
