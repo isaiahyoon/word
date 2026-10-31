@@ -31,6 +31,7 @@ const elements = {
   quietViewToggle: document.querySelector("#quiet-view-toggle"),
   verseList: document.querySelector("#verse-list"),
   verseActions: document.querySelector("#verse-actions"),
+  scrollToTop: document.querySelector("#scroll-to-top"),
   copyControl: document.querySelector("#copy-selected-verses"),
   copyControlLabel: document.querySelector("#copy-selected-label"),
   clearControl: document.querySelector("#clear-selected-verses"),
@@ -1103,6 +1104,23 @@ function bindMobileSidebarSwipe() {
   document.addEventListener("touchcancel", reset, { passive: true });
 }
 
+function bindMobileScrollToTop() {
+  function updateVisibility() {
+    const scrollTop = Math.max(window.scrollY, document.scrollingElement?.scrollTop ?? 0);
+    elements.scrollToTop.hidden = !window.matchMedia("(max-width: 640px)").matches || scrollTop <= 420;
+  }
+
+  window.addEventListener("scroll", updateVisibility, { passive: true });
+  window.addEventListener("resize", updateVisibility, { passive: true });
+  elements.scrollToTop.addEventListener("click", () => {
+    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? "instant"
+      : "smooth";
+    window.scrollTo({ top: 0, behavior });
+  });
+  updateVisibility();
+}
+
 function bindEvents() {
   document.addEventListener("keydown", (event) => {
     const key = event.key.toLowerCase();
@@ -1305,6 +1323,7 @@ function bindEvents() {
   bindMobileChapterButtons();
   bindMobilePullToRefresh();
   bindMobileSidebarSwipe();
+  bindMobileScrollToTop();
 }
 
 initialize().catch((error) => {
