@@ -5,8 +5,31 @@ const chapterKey = (book, chapter) => `${book}:${chapter}`;
 const searchBatchSize = 2048;
 const maxBookSuggestions = 5;
 const hangulTermPattern = /\p{Script=Hangul}/u;
+const japaneseCharacterPattern = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u;
 const koreanParticlePattern = /(?:께서|에서|으로|에게|한테|부터|까지|처럼|보다|은|는|이|가|을|를|의|에|로|와|과|도|만|께)$/u;
 const yieldToBrowser = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+function createJapaneseTokenizer() {
+  const segmenter = typeof Intl.Segmenter === "function"
+    ? new Intl.Segmenter("ja", { granularity: "word" })
+    : null;
+
+  return (text) => {
+    if (segmenter) {
+      return [...segmenter.segment(text)]
+        .filter((part) => part.isWordLike)
+        .map((part) => part.segment);
+    }
+
+    const runs = text.match(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]+|[\p{L}\p{N}]+/gu) ?? [];
+    return runs.flatMap((run) => {
+      if (!japaneseCharacterPattern.test(run)) return [run];
+      const characters = Array.from(run);
+      if (characters.length < 2) return characters;
+      return characters.slice(0, -1).map((_, index) => characters.slice(index, index + 2).join(""));
+    });
+  };
+}
 
 function normalizeSearchTerm(term) {
   const normalizedTerm = term.normalize("NFKC").toLocaleLowerCase();
@@ -19,6 +42,7 @@ function normalizeSearchTerm(term) {
 export function createScriptureStore({
   fetchImpl = fetch,
   dataPath = "./scripture/kjv",
+  language = "en",
   canonicalBookNames = BOOKS,
   displayBookNames = canonicalBookNames,
   bookOrder = canonicalBookNames.map((_, index) => index + 1),
@@ -27,6 +51,9 @@ export function createScriptureStore({
   const bookLoads = new Map();
   const bookIndexes = new Map();
   const bookOrderIndexes = new Map(bookOrder.map((book, index) => [book, index]));
+  let activeDisplayBookNames = displayBookNames;
+  let bookNamesByLength = [];
+  const japaneseTokenizer = language === "ja" ? createJapaneseTokenizer() : null;
   if (
     bookOrder.length !== canonicalBookNames.length ||
     new Set(bookOrder).size !== canonicalBookNames.length ||
@@ -34,11 +61,15 @@ export function createScriptureStore({
   ) {
     throw new RangeError("Edition book order must be a permutation of the fixed canon");
   }
-  [...canonicalBookNames, ...displayBookNames].forEach((name, index) => {
-    const bookIndex = index % canonicalBookNames.length;
-    bookIndexes.set(normalizeBookName(name), bookIndex + 1);
-  });
-  const bookNamesByLength = [...bookIndexes.keys()].sort((left, right) => right.length - left.length);
+  function rebuildBookNameIndex() {
+    bookIndexes.clear();
+    [...canonicalBookNames, ...activeDisplayBookNames].forEach((name, index) => {
+      const bookIndex = index % canonicalBookNames.length;
+      bookIndexes.set(normalizeBookName(name), bookIndex + 1);
+    });
+    bookNamesByLength = [...bookIndexes.keys()].sort((left, right) => right.length - left.length);
+  }
+  rebuildBookNameIndex();
   let chapterCounts = [];
   let bookFiles = [];
   let initialization;
@@ -58,10 +89,21 @@ export function createScriptureStore({
         const validBookFiles = Array.isArray(index.bookFiles) &&
           index.bookFiles.length === canonicalBookNames.length &&
           index.bookFiles.every((fileName, index) => fileName === bookFileName(index + 1));
+        const validDisplayBookNames = index.displayBookNames === undefined || (
+          Array.isArray(index.displayBookNames) &&
+          index.displayBookNames.length === canonicalBookNames.length &&
+          index.displayBookNames.every((name) => typeof name === "string" && name.trim().length > 0)
+        );
 
-        if (!validChapterCounts || !validBookFiles) throw new Error("The scripture index is invalid");
+        if (!validChapterCounts || !validBookFiles || !validDisplayBookNames) {
+          throw new Error("The scripture index is invalid");
+        }
         chapterCounts = index.chapterCounts;
         bookFiles = index.bookFiles;
+        if (index.displayBookNames) {
+          activeDisplayBookNames = index.displayBookNames;
+          rebuildBookNameIndex();
+        }
       })().catch((error) => {
         initialization = null;
         throw error;
@@ -75,7 +117,7 @@ export function createScriptureStore({
   }
 
   function bookName(book) {
-    return displayBookNames[book - 1] ?? canonicalBookNames[book - 1];
+    return activeDisplayBookNames[book - 1] ?? canonicalBookNames[book - 1];
   }
 
   function validateBook(book) {
@@ -102,10 +144,21 @@ export function createScriptureStore({
           }
 
           const verses = records.map((record, index) => {
-            if (!Array.isArray(record) || record.length !== 2 || record[0] !== index + 1 || typeof record[1] !== "string") {
+            if (
+              !Array.isArray(record) ||
+              (record.length !== 2 && record.length !== 3) ||
+              record[0] !== index + 1 ||
+              typeof record[1] !== "string" ||
+              (record.length === 3 && typeof record[2] !== "string")
+            ) {
               throw new Error(`Invalid verse data for ${bookName(book)} ${chapterNumber}`);
             }
-            return { book, chapter: chapterNumber, verse: record[0], text: record[1] };
+            const verse = { book, chapter: chapterNumber, verse: record[0], text: record[1] };
+            if (record[2]) {
+              verse.sourceEdition = record[2];
+              verse.textLanguage = record[2] === "krv" ? "ko" : language;
+            }
+            return verse;
           });
           return [chapterNumber, verses];
         }).sort(([left], [right]) => left - right);
@@ -214,7 +267,9 @@ export function createScriptureStore({
     if (!textSearchIndexPromise) {
       textSearchIndexPromise = (async () => {
         await loadAllBooks();
-        const index = new MiniSearch({ fields: ["text"], processTerm: normalizeSearchTerm });
+        const indexOptions = { fields: ["text"], processTerm: normalizeSearchTerm };
+        if (japaneseTokenizer) indexOptions.tokenize = japaneseTokenizer;
+        const index = new MiniSearch(indexOptions);
         let batch = [];
 
         for (const book of bookOrder) {
@@ -256,8 +311,10 @@ export function createScriptureStore({
     const index = await getTextSearchIndex();
     const matches = index.search(textQuery, {
       combineWith: "AND",
-      prefix: (term) => term.length >= 3 || /\p{Script=Hangul}/u.test(term),
+      prefix: (term) => term.length >= 3 || hangulTermPattern.test(term) ||
+        (language === "ja" && Array.from(term).length >= 2),
       fuzzy: (term) => {
+        if (language === "ja") return false;
         if (hangulTermPattern.test(term)) return term.length >= 3 ? 1 / term.length : false;
         return term.length >= 6 ? 0.15 : false;
       },

@@ -80,6 +80,7 @@ const scriptureStores = new Map(EDITION_IDS.map((editionId) => {
   const edition = EDITIONS[editionId];
   return [editionId, createScriptureStore({
     dataPath: edition.dataPath,
+    language: edition.language,
     displayBookNames: edition.displayBookNames,
     bookOrder: edition.bookOrder,
   })];
@@ -175,7 +176,11 @@ async function copySelectedVerses({ clearAfter = false } = {}) {
   if (selectedVerses.length === 0) return;
 
   const reference = formatSelectedVerseReference(selectedVerses.map((verse) => verse.verse));
-  const text = `${selectedVerses.map((verse) => verse.text.trim()).join(" ")}\n\n- ${reference}`;
+  const fallbackVerses = selectedVerses.filter((verse) => verse.sourceEdition === "krv");
+  const fallbackNote = fallbackVerses.length > 0
+    ? `\n- KRV fallback (Korean text): ${formatSelectedVerseReference(fallbackVerses.map((verse) => verse.verse))}`
+    : "";
+  const text = `${selectedVerses.map((verse) => verse.text.trim()).join(" ")}\n\n- ${reference}${fallbackNote}`;
   try {
     await writeClipboardText(text);
     if (clearAfter) {
@@ -301,6 +306,9 @@ async function activateEdition(editionId) {
   state.editionId = editionId;
   scripture = store;
   document.body.classList.toggle("is-krv-edition", editionId === "krv");
+  document.body.classList.toggle("is-japbungo-edition", editionId === "japbungo");
+  document.documentElement.lang = edition.language;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", edition.themeColor ?? "#f6f4f9");
   editionPicker.render(EDITION_IDS, EDITIONS, editionId);
   elements.editionSelect.disabled = false;
   elements.editionSelect.removeAttribute("aria-busy");
@@ -582,16 +590,25 @@ function renderChapter(focusRange = null) {
     row.id = `verse-${verse.verse}`;
     row.dataset.verse = verse.verse;
     row.setAttribute("aria-pressed", "false");
-    row.lang = EDITIONS[state.editionId].language;
+    const textLanguage = verse.textLanguage ?? EDITIONS[state.editionId].language;
+    row.lang = textLanguage;
     row.dir = EDITIONS[state.editionId].direction;
     const number = document.createElement("span");
     number.className = "verse-number";
     number.textContent = verse.verse;
     const text = document.createElement("span");
     text.className = "verse-text";
-    text.lang = EDITIONS[state.editionId].language;
+    text.lang = textLanguage;
     text.dir = EDITIONS[state.editionId].direction;
-    text.textContent = verse.text;
+    if (verse.sourceEdition === "krv") {
+      const sourceLabel = document.createElement("span");
+      sourceLabel.className = "verse-source-label";
+      sourceLabel.lang = "en";
+      sourceLabel.textContent = "KRV fallback";
+      text.append(sourceLabel, document.createTextNode(verse.text));
+    } else {
+      text.textContent = verse.text;
+    }
     row.append(number, text);
     elements.verseList.append(row);
   }
@@ -696,8 +713,25 @@ function animateChapterTurn(direction, requestId) {
   });
 }
 
-function appendHighlighted(container, text, matchedTerms = []) {
+function appendHighlighted(container, text, matchedTerms = [], language = EDITIONS[state.editionId].language) {
   const terms = new Set(matchedTerms.map((term) => term.toLocaleLowerCase()));
+  if (language === "ja" && typeof Intl.Segmenter === "function") {
+    const segmenter = new Intl.Segmenter("ja", { granularity: "word" });
+    let cursor = 0;
+    for (const part of segmenter.segment(text)) {
+      const word = part.segment;
+      if (!part.isWordLike || !terms.has(word.toLocaleLowerCase())) continue;
+
+      container.append(document.createTextNode(text.slice(cursor, part.index)));
+      const mark = document.createElement("mark");
+      mark.textContent = word;
+      container.append(mark);
+      cursor = part.index + word.length;
+    }
+    container.append(document.createTextNode(text.slice(cursor)));
+    return;
+  }
+
   const hangulTerm = /\p{Script=Hangul}/u;
   const wordPattern = /[\p{L}\p{N}]+/gu;
   let cursor = 0;
@@ -769,6 +803,7 @@ function appendSearchResults() {
     } else {
       reference.textContent = `${bookName(verse.book)} ${verse.chapter}:${verse.verse}`;
     }
+    if (verse.sourceEdition === "krv") reference.textContent += " · KRV fallback";
     const text = document.createElement("span");
     text.className = "result-text";
     if (verse.searchType === "book") {
@@ -776,7 +811,7 @@ function appendSearchResults() {
     } else if (verse.searchType === "chapter") {
       text.textContent = `Open ${bookName(verse.book)} ${verse.chapter}`;
     } else {
-      appendHighlighted(text, verse.text, verse.matchedTerms);
+      appendHighlighted(text, verse.text, verse.matchedTerms, verse.textLanguage ?? EDITIONS[state.editionId].language);
     }
     button.append(reference, text);
     button.addEventListener("click", () => openSearchResult(verse));
@@ -860,6 +895,7 @@ async function search(query, requestId) {
   summary.textContent = summaryParts.join(" · ");
   elements.searchResults.append(summary);
   appendSearchResults();
+  setActiveSearchResult(0);
 }
 
 function openSidebar() {

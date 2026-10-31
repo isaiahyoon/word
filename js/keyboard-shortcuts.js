@@ -72,7 +72,11 @@ export function bindKeyboardShortcuts({
     if (dialog.open || chapterPickerOpen || isOtherDialogOpen()) return;
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
       event.preventDefault();
-      searchInput.focus();
+      const bounds = searchInput.getBoundingClientRect();
+      if (bounds.top < 0 || bounds.bottom > window.innerHeight) {
+        window.scrollTo({ top: 0, behavior: "instant" });
+      }
+      searchInput.focus({ preventScroll: true });
       return;
     }
 

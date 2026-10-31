@@ -37,6 +37,22 @@ export const EDITIONS = {
     attribution: "개역한글판 1961 · 대한성서공회",
     attributionUrl: "https://www.bskorea.or.kr/bbs/board.php?bo_table=copyright_faq&wr_id=5",
   },
+  japbungo: {
+    id: "japbungo",
+    routeSegment: "japbungo",
+    shortCode: "JAP",
+    label: "Bungo-yaku · 日本語",
+    name: "Bungo-yaku (文語訳)",
+    brandPrimary: "BUNGO-YAKU",
+    brandSecondary: "文語訳",
+    language: "ja",
+    direction: "ltr",
+    dataPath: "./scripture/japbungo",
+    bookOrder: CANONICAL_BOOK_ORDER,
+    themeColor: "#edf5eb",
+    attribution: "Bungo-yaku · Meiji-genyaku OT / Taisho-kaiyaku NT",
+    attributionUrl: "https://github.com/getbible/v2/tree/master/japbungo",
+  },
 };
 
 export const EDITION_IDS = Object.keys(EDITIONS);

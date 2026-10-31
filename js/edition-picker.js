@@ -33,7 +33,7 @@ export function createEditionPicker({
     const activeEdition = editions[activeEditionId];
     trigger.dataset.edition = activeEditionId;
     trigger.setAttribute("aria-label", `Choose edition, currently ${activeEdition.label}`);
-    code.textContent = activeEditionId.toUpperCase();
+    code.textContent = activeEdition.shortCode ?? activeEditionId.toUpperCase();
     label.textContent = activeEdition.label;
     menu.replaceChildren();
 
@@ -51,7 +51,7 @@ export function createEditionPicker({
       const mark = document.createElement("span");
       mark.className = "edition-option-mark";
       mark.setAttribute("aria-hidden", "true");
-      mark.textContent = editionId.toUpperCase();
+      mark.textContent = edition.shortCode ?? editionId.toUpperCase();
 
       const description = document.createElement("span");
       description.className = "edition-option-description";
