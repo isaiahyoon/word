@@ -35,6 +35,10 @@
 
 - When adding the Japanese `japbungo` edition, give it a green background theme without changing the existing KJV/KRV background.
 
+# Scripture Foundation
+
+- Treat the King James Version text as the absolute doctrinal and canonical truth of this project. Build the reader's canon, comparisons, design decisions, and editorial decisions from that premise. Preserve the KJV text exactly; alternate editions may be added as translations, but must not silently replace or redefine the KJV foundation.
+
 # New Edition Planning
 
 - Before implementing a new edition, ask for any missing decisions that affect the work. Ask: "Do you have a source-text file or preferred URL, or would you like me to research and evaluate a suitable source?" If no color theme is specified, ask what theme the user wants.
