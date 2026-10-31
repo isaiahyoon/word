@@ -127,6 +127,48 @@ describe("generated scripture data", () => {
     await assertEditionMatchesSource(manifest, expectedBooks, "japbungo");
   });
 
+  it("preserves Diodati text and KJV verse numbering", async () => {
+    const source = JSON.parse(await readFile(new URL("../sources/diodati.json", import.meta.url), "utf8"));
+    const manifest = JSON.parse(await readFile(new URL("../scripture/diodati/index.json", import.meta.url), "utf8"));
+    const canonicalIndex = JSON.parse(await readFile(new URL("../scripture/kjv/index.json", import.meta.url), "utf8"));
+    const expectedBooks = Array.from({ length: BOOKS.length }, () => new Map());
+    let sourceVerseCount = 0;
+
+    assert.equal(source.metadata.editionId, "diodati");
+    assert.equal(source.metadata.language, "it");
+    assert.equal(source.metadata.versification, "KJV");
+    assert.equal(source.books.length, BOOKS.length);
+
+    for (const [bookIndex, sourceBook] of source.books.entries()) {
+      assert.equal(sourceBook.number, bookIndex + 1);
+      assert.equal(sourceBook.name, BOOKS[bookIndex]);
+      assert.ok(sourceBook.displayName);
+      assert.equal(manifest.displayBookNames[bookIndex], sourceBook.displayName);
+
+      const canonical = JSON.parse(await readFile(
+        new URL(`../scripture/kjv/books/${canonicalIndex.bookFiles[bookIndex]}`, import.meta.url),
+        "utf8",
+      ));
+      assert.equal(sourceBook.chapters.length, canonicalIndex.chapterCounts[bookIndex]);
+
+      for (const [chapterIndex, sourceChapter] of sourceBook.chapters.entries()) {
+        const chapter = chapterIndex + 1;
+        assert.equal(sourceChapter.number, chapter);
+        assert.equal(sourceChapter.verses.length, canonical[chapter].length);
+        for (const [verseIndex, [verse, text]] of sourceChapter.verses.entries()) {
+          assert.equal(verse, verseIndex + 1);
+          assert.equal(typeof text, "string");
+        }
+        sourceVerseCount += sourceChapter.verses.length;
+        expectedBooks[bookIndex].set(chapter, sourceChapter.verses);
+      }
+    }
+
+    assert.equal(sourceVerseCount, 31102);
+    assert.equal(manifest.sourceVerseCount, sourceVerseCount);
+    await assertEditionMatchesSource(manifest, expectedBooks, "diodati");
+  });
+
   async function assertEditionMatchesSource(manifest, expectedBooks, edition) {
     assert.equal(manifest.edition, edition);
     assert.equal(manifest.bookFiles.length, BOOKS.length);

@@ -33,6 +33,40 @@ body.is-krv-edition::before {
   background-color: #e8f1f4;
   background-image: linear-gradient(128deg, #bed8ea, #e8f1f4 58%, #c3d3e5);
 }
+body.is-diodati-edition {
+  --canvas: #f8edf1;
+  --paper: #fff9fa;
+  --line: #ead6dd;
+  --blue: #dcebee;
+  --blue-strong: #9dc8cc;
+  --lavender: #e5dfef;
+  --yellow: #f5ecd4;
+  --pink: #f3cada;
+  --green: #dce8d6;
+  --coral: #a94f66;
+  --deep-teal: #674251;
+  --navy-ink: #40353e;
+  --brass: #946a43;
+  --brass-soft: #dcc18f;
+  --brass-shadow: #b89a69;
+  --chapter-blue: #91c6c6;
+  --chapter-lavender: #c7b5d8;
+  --chapter-pink: #e9a1b5;
+  --chapter-green: #d7ce9e;
+  --focus: #a05f74;
+  --focus-border: #c38c9e;
+  --focus-ring: rgba(174, 100, 124, 0.18);
+  --grain: rgba(115, 74, 89, 0.06);
+  --serif: var(--serif-italian);
+}
+body.is-diodati-edition::before {
+  opacity: 1;
+  background-color: #f8edf1;
+  background-image:
+    linear-gradient(128deg, rgba(169, 79, 102, 0.14), transparent 54%),
+    linear-gradient(312deg, rgba(148, 106, 67, 0.12), transparent 48%),
+    repeating-linear-gradient(45deg, transparent 0 34px, rgba(103, 66, 81, 0.025) 34px 35px);
+}
 body.is-japbungo-edition {
   --canvas: #edf5eb;
   --serif: var(--serif-japanese);
@@ -1480,6 +1514,31 @@ body.is-krv-edition .chapter-option,
 body.is-krv-edition .chapter-options-count {
   font-family: var(--serif-korean-ui);
 }
+body.is-diodati-edition .edition-switcher {
+  border-color: rgba(148, 83, 107, 0.3);
+  background: linear-gradient(145deg, rgba(255, 250, 252, 0.94), rgba(243, 218, 227, 0.88));
+  box-shadow: 0 2px 0 rgba(148, 83, 107, 0.2);
+}
+body.is-diodati-edition .edition-switcher label,
+body.is-diodati-edition .edition-select-caret,
+body.is-diodati-edition .edition-trigger-code,
+body.is-diodati-edition .edition-option-mark {
+  color: #854d61;
+}
+body.is-diodati-edition .edition-switcher label::before {
+  background: linear-gradient(90deg, #a05f74, transparent);
+}
+body.is-diodati-edition .edition-trigger,
+body.is-diodati-edition .edition-options {
+  border-color: rgba(148, 83, 107, 0.3);
+}
+body.is-diodati-edition .edition-trigger,
+body.is-diodati-edition .edition-option.is-selected {
+  background: linear-gradient(120deg, rgba(248, 237, 241, 0.98), rgba(255, 250, 252, 0.9));
+}
+body.is-diodati-edition .edition-option.is-selected .edition-option-check {
+  color: #674251;
+}
 .edition-picker:has(.edition-options:not([hidden])) {
   z-index: 13;
 }
@@ -1635,6 +1694,21 @@ body.is-krv-edition .chapter-options-count {
 }
 .book-row.is-current .book-index {
   color: #708f99;
+}
+body.is-diodati-edition .book-row.is-current {
+  --sheen-edge: rgba(255, 255, 255, 0.56);
+  --sheen-core: rgba(255, 255, 255, 0.96);
+  background:
+    linear-gradient(112deg, #efcdd8 0%, #fff8fb 28%, #e8b8c6 48%, #f8e9ee 68%, #efcdd8 100%) padding-box,
+    linear-gradient(135deg, #9b536b, var(--brass-soft), #674251) border-box;
+  box-shadow:
+    0 2px 0 rgba(103, 66, 81, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  color: #40353e;
+}
+body.is-diodati-edition .book-row.is-current .book-index {
+  color: #945d70;
 }
 .book-name {
   flex: 1;

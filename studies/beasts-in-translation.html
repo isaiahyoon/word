@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0e1c4a" />
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&display=swap" rel="stylesheet" />
+    <title>Beasts in Translation | Diodati &amp; KJV</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --royal: #2346c8;
+        --royal-deep: #17308f;
+        --sun: #f7c93b;
+        --navy: #0e1c4a;
+        --navy-deep: #08122f;
+        --crimson: #c8202f;
+        --crimson-deep: #9d1624;
+        --ember: #f0603a;
+        --ink: #14193a;
+        --muted: #5a5f7d;
+        --paper: #fffdf3;
+        --canvas: #fdeb9c;
+        --line: #e6d88c;
+        --measure: 1120px;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        background-color: var(--canvas);
+        background-image:
+          radial-gradient(ellipse 68% 64% at 0% 0%, var(--royal-deep) 0%, var(--royal) 13%, #6f8bf0 27%, #c9d1fa 40%, #fff4c4 54%, rgba(253, 235, 156, 0) 72%),
+          radial-gradient(ellipse 70% 66% at 100% 100%, var(--navy-deep) 0%, var(--navy) 11%, #6e1f45 20%, var(--crimson) 31%, var(--ember) 44%, #ffb23f 58%, rgba(253, 235, 156, 0) 76%);
+        background-attachment: fixed;
+        color: var(--ink);
+        font-family: "DM Sans", "Segoe UI", sans-serif;
+        font-size: 15px;
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a { color: var(--royal-deep); }
+
+      .watermark {
+        position: fixed;
+        z-index: 0;
+        width: 300px;
+        height: auto;
+        opacity: 0.3;
+        filter: grayscale(1) invert(1);
+        mix-blend-mode: screen;
+        pointer-events: none;
+      }
+
+      .watermark-dragon { right: -72px; bottom: 1%; }
+      .watermark-unicorn { top: 95px; left: -85px; width: 260px; }
+
+      .masthead {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        min-height: 52px;
+        padding: 0 max(24px, calc((100% - var(--measure)) / 2));
+        background: linear-gradient(90deg, var(--royal-deep), var(--navy) 50%, var(--crimson-deep));
+        color: #eef0fa;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .masthead a { color: inherit; text-decoration: none; }
+      .masthead span:last-child { color: var(--sun); }
+
+      main {
+        position: relative;
+        z-index: 1;
+        width: min(var(--measure), 100%);
+        margin: 0 auto;
+        padding: 0 32px 72px;
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        margin: 30px 0 24px;
+        padding: 44px 48px 40px;
+        border: 1px solid rgba(14, 28, 74, 0.16);
+        background: rgba(255, 253, 243, 0.8);
+        backdrop-filter: blur(8px);
+      }
+
+      .hero::before,
+      .hero::after {
+        position: absolute;
+        right: 0;
+        left: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--royal), var(--sun) 50%, var(--crimson));
+        content: "";
+      }
+
+      .hero::before { top: 0; }
+      .hero::after { bottom: 0; }
+      .eyebrow { margin: 0 0 10px; color: var(--crimson); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+      h1, h2, p { margin-top: 0; }
+
+      h1 {
+        margin-bottom: 12px;
+        width: fit-content;
+        background: linear-gradient(100deg, var(--royal) 0%, var(--navy) 55%, var(--crimson) 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: var(--navy-deep);
+        font-family: "Literata", "Iowan Old Style", Georgia, serif;
+        font-size: 56px;
+        font-weight: 500;
+        line-height: 1.04;
+      }
+
+      .study-section { margin: 38px 0 0; }
+
+      .section-heading {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 10px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .study-section[data-section="dragon"] {
+        --edition-a: var(--navy);
+        --edition-b: var(--crimson-deep);
+        --tint: #eef0fa;
+        --line: #c9cfe8;
+        --mark: rgba(200, 32, 47, 0.16);
+        --mark-ink: var(--navy-deep);
+      }
+
+      .study-section[data-section="unicorn"] {
+        --edition-a: var(--royal);
+        --edition-b: #8a6100;
+        --tint: #fff6d0;
+        --line: #e8d88a;
+        --mark: rgba(247, 201, 59, 0.6);
+        --mark-ink: var(--royal-deep);
+      }
+
+      .section-heading h2 {
+        margin: 0;
+        color: #fff;
+        font-family: "Literata", Georgia, serif;
+        font-size: 28px;
+        font-weight: 500;
+      }
+
+      .study-section[data-section="dragon"] .section-heading {
+        padding: 10px 16px 12px;
+        border: 1px solid var(--navy-deep);
+        border-bottom: 2px solid var(--ember);
+        background: linear-gradient(105deg, var(--navy-deep), var(--navy) 30%, var(--crimson-deep) 75%, var(--crimson));
+      }
+
+      .study-section[data-section="unicorn"] .section-heading {
+        padding: 10px 16px 12px;
+        border: 1px solid var(--royal-deep);
+        border-bottom: 2px solid var(--sun);
+        background: linear-gradient(105deg, var(--royal-deep), var(--royal) 45%, #8aa0f0 62%, #f6e08a 82%, var(--sun));
+      }
+
+      .section-heading p { max-width: 540px; margin: 0; color: var(--muted); font-size: 12px; text-align: right; }
+      .column-headings { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; padding: 0 20px 8px; color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; }
+      .column-headings span:first-child { color: var(--edition-a); }
+      .column-headings span:last-child { color: var(--edition-b); }
+      .comparison-list { display: grid; gap: 10px; }
+
+      .entry { position: relative; border: 1px solid var(--line); background: var(--paper); }
+      .entry::before { position: absolute; top: 0; bottom: 0; left: 0; width: 4px; background: linear-gradient(180deg, var(--edition-a), var(--edition-b)); content: ""; }
+      .entry-head { display: flex; align-items: center; gap: 12px; padding: 9px 18px 9px 22px; border-bottom: 1px solid var(--line); background: var(--tint); }
+      .reference { color: var(--edition-a); font-family: "Literata", Georgia, serif; font-size: 17px; font-weight: 600; }
+      .book-name { color: var(--muted); font-size: 11px; }
+      .verse-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+      .translation { min-width: 0; padding: 17px 20px 19px; }
+      .translation + .translation { border-left: 1px solid var(--line); }
+      .translation-label { display: block; margin-bottom: 7px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+      .translation.diodati .translation-label { color: var(--edition-a); }
+      .translation.kjv .translation-label { color: var(--edition-b); }
+
+      .verse-text {
+        margin: 0;
+        font-family: "Literata", "Iowan Old Style", Georgia, serif;
+        font-size: 16px;
+        line-height: 1.62;
+        overflow-wrap: anywhere;
+      }
+
+      mark { padding: 0 2px; background: var(--mark); color: var(--mark-ink); }
+      footer { margin-top: 34px; padding: 20px 0 0; border-top: 1px solid rgba(14, 28, 74, 0.25); color: var(--muted); font-size: 11px; }
+      footer p { margin: 0 0 7px; }
+
+      @media (max-width: 700px) {
+        main { padding: 0 16px 44px; }
+        .masthead { padding: 0 16px; }
+        .watermark { opacity: 0.2; }
+        .watermark-dragon { right: -140px; bottom: 0; width: 240px; }
+        .watermark-unicorn { top: 105px; left: -145px; width: 210px; }
+        .hero { margin-top: 18px; padding: 34px 22px 28px; }
+        h1 { font-size: 42px; }
+        .section-heading { align-items: start; flex-direction: column; }
+        .section-heading p { text-align: left; }
+        .column-headings { display: none; }
+        .verse-grid { grid-template-columns: minmax(0, 1fr); }
+        .translation + .translation { border-top: 1px solid var(--line); border-left: 0; }
+        .translation { padding: 14px 16px 16px; }
+      }
+
+      @media print {
+        body { background: white; }
+        .masthead, .watermark { display: none; }
+        main { width: 100%; padding: 0; }
+        .hero { margin-top: 0; }
+        .entry { break-inside: avoid; }
+        .comparison-list { gap: 6px; }
+        a { color: inherit; text-decoration: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <img class="watermark watermark-unicorn" src="../assets/study-unicorn.jpg" alt="" aria-hidden="true" />
+    <img class="watermark watermark-dragon" src="../assets/study-dragon.jpg" alt="" aria-hidden="true" />
+    <div class="masthead">
+      <a href="./">The Word · Studies</a>
+      <span>Textual comparison · Italian / English</span>
+    </div>
+    <main>
+      <header class="hero">
+        <p class="eyebrow">A lexical study · Diodati &amp; King James</p>
+        <h1>Beasts in<br />Translation</h1>
+      </header>
+
+      <section class="study-section" aria-labelledby="dragon-heading" data-section="dragon">
+        <div class="section-heading">
+          <h2 id="dragon-heading">Dragon / dragons · dragone / dragoni · sciacallo / sciacalli</h2>
+        </div>
+        <div class="column-headings" aria-hidden="true"><span>Diodati</span><span>King James Version · dragon / dragons</span></div>
+        <div class="comparison-list" id="dragon-list" aria-live="polite"></div>
+      </section>
+
+      <section class="study-section" aria-labelledby="liocorno-heading" data-section="unicorn">
+        <div class="section-heading">
+          <h2 id="liocorno-heading">Unicorn / unicorns · liocorno / liocorni</h2>
+        </div>
+        <div class="column-headings" aria-hidden="true"><span>Diodati · liocorno / liocorni</span><span>King James Version · unicorn / unicorns</span></div>
+        <div class="comparison-list" id="unicorn-list" aria-live="polite"></div>
+      </section>
+
+      <footer>
+        <p>Diodati text: <a href="https://github.com/FordhamRamFan/public-domain-bible-translations/tree/main/Italian/Diodati-1649">FordhamRamFan · public-domain-bible-translations</a>.</p>
+        <p>Diodati source: <a href="https://github.com/FordhamRamFan/public-domain-bible-translations/tree/main/Italian/Diodati-1649">Diodati-1649 repository</a>. KJV text: this project’s local source. Public-domain engravings: <a href="https://commons.wikimedia.org/wiki/File:Unicorn_(Laurent_Catelan).jpg">unicorn</a> and <a href="https://commons.wikimedia.org/wiki/File:A_dragon_as_it_lived_on_the_first_of_December_1691_in_the_marshes_outside_Rome.jpg">dragon</a>.</p>
+      </footer>
+    </main>
+
+    <script type="application/json" id="comparison-data">[{"book":"Numbers","displayBook":"Numeri","reference":"Numbers 23:22","bookNumber":4,"chapter":23,"verse":22,"diodati":"Iddio, che li ha tratti fuori di Egitto, È loro a guisa di forze di liocorno.","kjv":"God brought them out of Egypt; he hath as it were the strength of an unicorn.","diodatiTerms":["liocorno"],"kjvTerms":["unicorn"],"section":"unicorn"},{"book":"Numbers","displayBook":"Numeri","reference":"Numbers 24:8","bookNumber":4,"chapter":24,"verse":8,"diodati":"Iddio, che l’ha tratto fuor di Egitto, Gli sarà a guisa di forze di liocorno; Egli consumerà le genti che gli saranno nemiche, E triterà loro le ossa, e le trafiggerà con le sue saette.","kjv":"God brought him forth out of Egypt; he hath as it were the strength of an unicorn: he shall eat up the nations his enemies, and shall break their bones, and pierce them through with his arrows.","diodatiTerms":["liocorno"],"kjvTerms":["unicorn"],"section":"unicorn"},{"book":"Deuteronomy","displayBook":"Deuteronomio","reference":"Deuteronomy 32:33","bookNumber":5,"chapter":32,"verse":33,"diodati":"Il lor vino è veleno di dragoni, Crudel veleno d’aspidi.","kjv":"Their wine is the poison of dragons, and the cruel venom of asps.","diodatiTerms":["dragoni"],"kjvTerms":["dragons"],"section":"dragon"},{"book":"Deuteronomy","displayBook":"Deuteronomio","reference":"Deuteronomy 33:17","bookNumber":5,"chapter":33,"verse":17,"diodati":"Egli ha una bravura, come il primogenito di un toro; E le sue corna son come corna di liocorno; Con quello egli cozzerà i popoli tutti quanti, Fino alle stremità della terra. E queste son le decine delle migliaia d’Efraim, E queste son le migliaia di Manasse.","kjv":"His glory is like the firstling of his bullock, and his horns are like the horns of unicorns: with them he shall push the people together to the ends of the earth: and they are the ten thousands of Ephraim, and they are the thousands of Manasseh.","diodatiTerms":["liocorno"],"kjvTerms":["unicorns"],"section":"unicorn"},{"book":"Nehemiah","displayBook":"Neemia","reference":"Nehemiah 2:13","bookNumber":16,"chapter":2,"verse":13,"diodati":"Io adunque uscii di notte dalla porta della valle, e passai dirincontro alla fontana del dragone, ed alla porta del letame; ed andava considerando le mura di Gerusalemme, come erano rotte, e come le porte di essa erano consumate dal fuoco.","kjv":"And I went out by night by the gate of the valley, even before the dragon well, and to the dung port, and viewed the walls of Jerusalem, which were broken down, and the gates thereof were consumed with fire.","diodatiTerms":["dragone"],"kjvTerms":["dragon"],"section":"dragon"},{"book":"Job","displayBook":"Giobbe","reference":"Job 30:29","bookNumber":18,"chapter":30,"verse":29,"diodati":"Io son diventato fratello degli sciacalli, E compagno delle ulule.","kjv":"I am a brother to dragons, and a companion to owls.","diodatiTerms":["sciacalli"],"kjvTerms":["dragons"],"section":"dragon"},{"book":"Job","displayBook":"Giobbe","reference":"Job 39:9","bookNumber":18,"chapter":39,"verse":9,"diodati":"(H39-12) Il liocorno ti vorrà egli servire? Si riparerà egli presso alla tua mangiatoia?","kjv":"Will the unicorn be willing to serve thee, or abide by thy crib?","diodatiTerms":["liocorno"],"kjvTerms":["unicorn"],"section":"unicorn"},{"book":"Job","displayBook":"Giobbe","reference":"Job 39:10","bookNumber":18,"chapter":39,"verse":10,"diodati":"(H39-13) Legherai tu il liocorno con la sua fune, per farlo arare al solco? Erpicherà egli le valli dietro a te?","kjv":"Canst thou bind the unicorn with his band in the furrow? or will he harrow the valleys after thee?","diodatiTerms":["liocorno"],"kjvTerms":["unicorn"],"section":"unicorn"},{"book":"Psalms","displayBook":"Salmi","reference":"Psalms 22:21","bookNumber":19,"chapter":22,"verse":21,"diodati":"Salvami dalla gola del leone, Ed esaudiscimi, liberandomi dalle corna de’ liocorni.","kjv":"Save me from the lion's mouth: for thou hast heard me from the horns of the unicorns.","diodatiTerms":["liocorni"],"kjvTerms":["unicorns"],"section":"unicorn"},{"book":"Psalms","displayBook":"Salmi","reference":"Psalms 29:6","bookNumber":19,"chapter":29,"verse":6,"diodati":"E li fa saltellar come un vitello; Il Libano stesso, e Sirion, come il figlio d’un liocorno.","kjv":"He maketh them also to skip like a calf; Lebanon and Sirion like a young unicorn.","diodatiTerms":["liocorno"],"kjvTerms":["unicorn"],"section":"unicorn"},{"book":"Psalms","displayBook":"Salmi","reference":"Psalms 44:19","bookNumber":19,"chapter":44,"verse":19,"diodati":"Quantunque tu ci abbi tritati, e messi in luogo di sciacalli; E ci abbi coperti d’ombra di morte.","kjv":"Though thou hast sore broken us in the place of dragons, and covered us with the shadow of death.","diodatiTerms":["sciacalli"],"kjvTerms":["dragons"],"section":"dragon"},{"book":"Psalms","displayBook":"Salmi","reference":"Psalms 74:13","bookNumber":19,"chapter":74,"verse":13,"diodati":"Tu, colla tua forza, spartisti il mare; Tu rompesti le teste delle balene nelle acque.","kjv":"Thou didst divide the sea by thy strength: thou brakest the heads of the dragons in the waters.","diodatiTerms":[],"kjvTerms":["dragons"],"section":"dragon"},{"book":"Psalms","displayBook":"Salmi","reference":"Psalms 91:13","bookNumber":19,"chapter":91,"verse":13,"diodati":"Tu camminerai sopra il leone, e sopra l’aspido; Tu calcherai il leoncello e il dragone.","kjv":"Thou shalt tread upon the lion and adder: the young lion and the dragon shalt thou trample under feet.","diodatiTerms":["dragone"],"kjvTerms":["dragon"],"section":"dragon"},{"book":"Psalms","displayBook":"Salmi","reference":"Psalms 92:10","bookNumber":19,"chapter":92,"verse":10,"diodati":"Ma tu alzerai il mio corno, come quello di un liocorno; Io sarò unto d’olio verdeggiante.","kjv":"But my horn shalt thou exalt like the horn of an unicorn: I shall be anointed with fresh oil.","diodatiTerms":["liocorno"],"kjvTerms":["unicorn"],"section":"unicorn"},{"book":"Psalms","displayBook":"Salmi","reference":"Psalms 148:7","bookNumber":19,"chapter":148,"verse":7,"diodati":"Lodate il Signore della terra. Balene, ed abissi tutti;","kjv":"Praise the LORD from the earth, ye dragons, and all deeps:","diodatiTerms":[],"kjvTerms":["dragons"],"section":"dragon"},{"book":"Isaiah","displayBook":"Isaia","reference":"Isaiah 13:22","bookNumber":23,"chapter":13,"verse":22,"diodati":"E i gufi canteranno nelle lor case grandi, e i dragoni ne’ lor palazzi di diletto. Or il tempo di essa viene, ed è vicino, e i suoi giorni non saran prolungati.","kjv":"And the wild beasts of the islands shall cry in their desolate houses, and dragons in their pleasant palaces: and her time is near to come, and her days shall not be prolonged.","diodatiTerms":["dragoni"],"kjvTerms":["dragons"],"section":"dragon"},{"book":"Isaiah","displayBook":"Isaia","reference":"Isaiah 27:1","bookNumber":23,"chapter":27,"verse":1,"diodati":"IN quel giorno il Signore farà punizione, con la sua dura, grande, e forte spada, di Leviatan, serpente guizzante, e di Leviatan, serpente torto; ed ucciderà la balena che è nel mare.","kjv":"In that day the LORD with his sore and great and strong sword shall punish leviathan the piercing serpent, even leviathan that crooked serpent; and he shall slay the dragon that is in the sea.","diodatiTerms":[],"kjvTerms":["dragon"],"section":"dragon"},{"book":"Isaiah","displayBook":"Isaia","reference":"Isaiah 34:7","bookNumber":23,"chapter":34,"verse":7,"diodati":"E i liocorni andranno a basso con loro, ed i giovenchi, insieme co’ tori; e il lor paese sarà inebbriato di sangue, e la lor polvere sarà ingrassata di grasso.","kjv":"And the unicorns shall come down with them, and the bullocks with the bulls; and their land shall be soaked with blood, and their dust made fat with fatness.","diodatiTerms":["liocorni"],"kjvTerms":["unicorns"],"section":"unicorn"},{"book":"Isaiah","displayBook":"Isaia","reference":"Isaiah 34:13","bookNumber":23,"chapter":34,"verse":13,"diodati":"Le spine cresceranno ne’ suoi palazzi; e l’ortica e il cardo nelle sue fortezze; ed essa sarà un ricetto di sciacalli, un cortile di ulule.","kjv":"And thorns shall come up in her palaces, nettles and brambles in the fortresses thereof: and it shall be an habitation of dragons, and a court for owls.","diodatiTerms":["sciacalli"],"kjvTerms":["dragons"],"section":"dragon"},{"book":"Isaiah","displayBook":"Isaia","reference":"Isaiah 35:7","bookNumber":23,"chapter":35,"verse":7,"diodati":"E il luogo arido diventerà uno stagno, e la terra asciutta vene di acque; il ricetto che accoglieva gli sciacalli diventerà un luogo da canne e giunchi.","kjv":"And the parched ground shall become a pool, and the thirsty land springs of water: in the habitation of dragons, where each lay, shall be grass with reeds and rushes.","diodatiTerms":["sciacalli"],"kjvTerms":["dragons"],"section":"dragon"},{"book":"Isaiah","displayBook":"Isaia","reference":"Isaiah 43:20","bookNumber":23,"chapter":43,"verse":20,"diodati":"Le fiere della campagna, gli sciacalli, e le ulule mi glorificheranno; perciocchè io avrò messe dell’acque nel deserto, e de’ fiumi nella solitudine, per dar bere al mio popolo, al mio eletto.","kjv":"The beast of the field shall honour me, the dragons and the owls: because I give waters in the wilderness, and rivers in the desert, to give drink to my people, my chosen.","diodatiTerms":["sciacalli"],"kjvTerms":["dragons"],"section":"dragon"},{"book":"Isaiah","displayBook":"Isaia","reference":"Isaiah 51:9","bookNumber":23,"chapter":51,"verse":9,"diodati":"O braccio del Signore, risvegliati, risvegliati, rivestiti di forza, risvegliati come a’ giorni antichi, come nelle età dei secoli passati. Non sei tu quel che tagliasti a pezzi Rahab, che uccidesti il dragone?","kjv":"Awake, awake, put on strength, O arm of the LORD; awake, as in the ancient days, in the generations of old. Art thou not it that hath cut Rahab, and wounded the dragon?","diodatiTerms":["dragone"],"kjvTerms":["dragon"],"section":"dragon"},{"book":"Jeremiah","displayBook":"Geremia","reference":"Jeremiah 9:11","bookNumber":24,"chapter":9,"verse":11,"diodati":"Ed io ridurrò Gerusalemme in monti di ruine, in ricetto di sciacalli; e metterò le città di Giuda in desolazione, senza che alcuno abiti più in esse.","kjv":"And I will make Jerusalem heaps, and a den of dragons; and I will make the cities of Judah desolate, without an inhabitant.","diodatiTerms":["sciacalli"],"kjvTerms":["dragons"],"section":"dragon"},{"book":"Jeremiah","displayBook":"Geremia","reference":"Jeremiah 10:22","bookNumber":24,"chapter":10,"verse":22,"diodati":"Ecco, una voce di grido viene, con gran commovimento, dal paese di Settentrione, per ridurre le città di Giuda in desolazione, in ricetti di sciacalli.","kjv":"Behold, the noise of the bruit is come, and a great commotion out of the north country, to make the cities of Judah desolate, and a den of dragons.","diodatiTerms":["sciacalli"],"kjvTerms":["dragons"],"section":"dragon"},{"book":"Jeremiah","displayBook":"Geremia","reference":"Jeremiah 14:6","bookNumber":24,"chapter":14,"verse":6,"diodati":"E gli asini salvatici si son fermati sopra i luoghi elevati, ed han sorbito il vento, come sciacalli; gli occhi loro son venuti meno; perciocchè non vi era erba alcuna.","kjv":"And the wild asses did stand in the high places, they snuffed up the wind like dragons; their eyes did fail, because there was no grass.","diodatiTerms":["sciacalli"],"kjvTerms":["dragons"],"section":"dragon"},{"book":"Jeremiah","displayBook":"Geremia","reference":"Jeremiah 49:33","bookNumber":24,"chapter":49,"verse":33,"diodati":"Ed Hasor diverrà un ricetto di sciacalli un luogo deserto in perpetuo: uomo alcuno non vi abiterà, e niun figliuolo d’uomo vi dimorerà.","kjv":"And Hazor shall be a dwelling for dragons, and a desolation for ever: there shall no man abide there, nor any son of man dwell in it.","diodatiTerms":["sciacalli"],"kjvTerms":["dragons"],"section":"dragon"},{"book":"Jeremiah","displayBook":"Geremia","reference":"Jeremiah 51:34","bookNumber":24,"chapter":51,"verse":34,"diodati":"Nebucadnesar, re di Babilonia, mi ha divorata, mi ha tritata, mi ha ridotta ad esser come un vaso vuoto, mi ha inghiottita come un dragone, ha empiuto il suo ventre delle mie delizie, mi ha scacciata.","kjv":"Nebuchadrezzar the king of Babylon hath devoured me, he hath crushed me, he hath made me an empty vessel, he hath swallowed me up like a dragon, he hath filled his belly with my delicates, he hath cast me out.","diodatiTerms":["dragone"],"kjvTerms":["dragon"],"section":"dragon"},{"book":"Jeremiah","displayBook":"Geremia","reference":"Jeremiah 51:37","bookNumber":24,"chapter":51,"verse":37,"diodati":"E Babilonia sarà ridotta in monti di ruine, in ricetto di sciacalli, in istupore, e in zufolo, senza che vi abiti più alcuno.","kjv":"And Babylon shall become heaps, a dwellingplace for dragons, an astonishment, and an hissing, without an inhabitant.","diodatiTerms":["sciacalli"],"kjvTerms":["dragons"],"section":"dragon"},{"book":"Ezekiel","displayBook":"Ezechiele","reference":"Ezekiel 29:3","bookNumber":26,"chapter":29,"verse":3,"diodati":"Parla, e di’: Così ha detto il Signore Iddio: Eccomi sopra te, Faraone, re di Egitto, gran coccodrillo, che giaci in mezzo de’ tuoi fiumi; che hai detto: Il mio fiume è mio; ed io mi son fatto me stesso.","kjv":"Speak, and say, Thus saith the Lord GOD; Behold, I am against thee, Pharaoh king of Egypt, the great dragon that lieth in the midst of his rivers, which hath said, My river is mine own, and I have made it for myself.","diodatiTerms":[],"kjvTerms":["dragon"],"section":"dragon"},{"book":"Micah","displayBook":"Michea","reference":"Micah 1:8","bookNumber":33,"chapter":1,"verse":8,"diodati":"Perciò, io lamenterò, ed urlerò; io andrò spogliato e nudo; io farò un lamento, gridando come gli sciacalli; e un cordoglio, urlando come l’ulule.","kjv":"Therefore I will wail and howl, I will go stripped and naked: I will make a wailing like the dragons, and mourning as the owls.","diodatiTerms":["sciacalli"],"kjvTerms":["dragons"],"section":"dragon"},{"book":"Malachi","displayBook":"Malachia","reference":"Malachi 1:3","bookNumber":39,"chapter":1,"verse":3,"diodati":"ed ho odiato Esaù, ed ho messi i suoi monti in desolazione, ed ho abbandonata la sua eredità agli sciacalli del deserto.","kjv":"And I hated Esau, and laid his mountains and his heritage waste for the dragons of the wilderness.","diodatiTerms":["sciacalli"],"kjvTerms":["dragons"],"section":"dragon"},{"book":"Revelation","displayBook":"Apocalisse","reference":"Revelation 12:3","bookNumber":66,"chapter":12,"verse":3,"diodati":"Apparve ancora un altro segno nel cielo. Ed ecco un gran dragone rosso, che avea sette teste, e dieci corna; e in su le sue teste v’erano sette diademi.","kjv":"And there appeared another wonder in heaven; and behold a great red dragon, having seven heads and ten horns, and seven crowns upon his heads.","diodatiTerms":["dragone"],"kjvTerms":["dragon"],"section":"dragon"},{"book":"Revelation","displayBook":"Apocalisse","reference":"Revelation 12:4","bookNumber":66,"chapter":12,"verse":4,"diodati":"E la sua coda strascinava dietro a sè la terza parte delle stelle del cielo, ed egli le gettò in terra. E il dragone si fermò davanti alla donna che avea da partorire, acciocchè, quando avesse partorito, egli divorasse il suo figliuolo.","kjv":"And his tail drew the third part of the stars of heaven, and did cast them to the earth: and the dragon stood before the woman which was ready to be delivered, for to devour her child as soon as it was born.","diodatiTerms":["dragone"],"kjvTerms":["dragon"],"section":"dragon"},{"book":"Revelation","displayBook":"Apocalisse","reference":"Revelation 12:7","bookNumber":66,"chapter":12,"verse":7,"diodati":"E si fece battaglia nel cielo; Michele, e i suoi angeli, combatterono col dragone; il dragone parimente, e i suoi angeli, combatterono.","kjv":"And there was war in heaven: Michael and his angels fought against the dragon; and the dragon fought and his angels,","diodatiTerms":["dragone"],"kjvTerms":["dragon"],"section":"dragon"},{"book":"Revelation","displayBook":"Apocalisse","reference":"Revelation 12:9","bookNumber":66,"chapter":12,"verse":9,"diodati":"E il gran dragone, il serpente antico, che è chiamato Diavolo e Satana, il qual seduce tutto il mondo, fu gettato in terra; e furono con lui gettati ancora i suoi angeli.","kjv":"And the great dragon was cast out, that old serpent, called the Devil, and Satan, which deceiveth the whole world: he was cast out into the earth, and his angels were cast out with him.","diodatiTerms":["dragone"],"kjvTerms":["dragon"],"section":"dragon"},{"book":"Revelation","displayBook":"Apocalisse","reference":"Revelation 12:13","bookNumber":66,"chapter":12,"verse":13,"diodati":"E quando il dragone vide ch’egli era stato gettato in terra, perseguitò la donna, che avea partorito il figliuol maschio.","kjv":"And when the dragon saw that he was cast unto the earth, he persecuted the woman which brought forth the man child.","diodatiTerms":["dragone"],"kjvTerms":["dragon"],"section":"dragon"},{"book":"Revelation","displayBook":"Apocalisse","reference":"Revelation 12:16","bookNumber":66,"chapter":12,"verse":16,"diodati":"Ma la terra soccorse la donna; e la terra aperse la sua bocca, ed assorbì il fiume, che il dragone avea gettato della sua bocca.","kjv":"And the earth helped the woman, and the earth opened her mouth, and swallowed up the flood which the dragon cast out of his mouth.","diodatiTerms":["dragone"],"kjvTerms":["dragon"],"section":"dragon"},{"book":"Revelation","displayBook":"Apocalisse","reference":"Revelation 12:17","bookNumber":66,"chapter":12,"verse":17,"diodati":"E il dragone si adirò contro alla donna, e se ne andò a far guerra col rimanente della progenie d’essa, che serba i comandamenti di Dio, ed ha la testimonianza di Gesù Cristo.","kjv":"And the dragon was wroth with the woman, and went to make war with the remnant of her seed, which keep the commandments of God, and have the testimony of Jesus Christ.","diodatiTerms":["dragone"],"kjvTerms":["dragon"],"section":"dragon"},{"book":"Revelation","displayBook":"Apocalisse","reference":"Revelation 13:2","bookNumber":66,"chapter":13,"verse":2,"diodati":"E la bestia ch’io vidi era simigliante ad un pardo, e i suoi piedi erano come piedi d’orso, e la sua bocca come una bocca di leone; e il dragone le diede la sua potenza, e il suo trono, e podestà grande.","kjv":"And the beast which I saw was like unto a leopard, and his feet were as the feet of a bear, and his mouth as the mouth of a lion: and the dragon gave him his power, and his seat, and great authority.","diodatiTerms":["dragone"],"kjvTerms":["dragon"],"section":"dragon"},{"book":"Revelation","displayBook":"Apocalisse","reference":"Revelation 13:4","bookNumber":66,"chapter":13,"verse":4,"diodati":"E adorarono il dragone, che avea data la podestà alla bestia; adorarono ancora la bestia, dicendo: Chi è simile alla bestia, e chi può guerreggiare con lei?","kjv":"And they worshipped the dragon which gave power unto the beast: and they worshipped the beast, saying, Who is like unto the beast? who is able to make war with him?","diodatiTerms":["dragone"],"kjvTerms":["dragon"],"section":"dragon"},{"book":"Revelation","displayBook":"Apocalisse","reference":"Revelation 13:11","bookNumber":66,"chapter":13,"verse":11,"diodati":"POI vidi un’altra bestia, che saliva dalla terra, ed avea due corna simili a quelle dell’Agnello, ma parlava come il dragone.","kjv":"And I beheld another beast coming up out of the earth; and he had two horns like a lamb, and he spake as a dragon.","diodatiTerms":["dragone"],"kjvTerms":["dragon"],"section":"dragon"},{"book":"Revelation","displayBook":"Apocalisse","reference":"Revelation 16:13","bookNumber":66,"chapter":16,"verse":13,"diodati":"Ed io vidi uscir della bocca del dragone, e della bocca della bestia, e della bocca del falso profeta, tre spiriti immondi, a guisa di rane;","kjv":"And I saw three unclean spirits like frogs come out of the mouth of the dragon, and out of the mouth of the beast, and out of the mouth of the false prophet.","diodatiTerms":["dragone"],"kjvTerms":["dragon"],"section":"dragon"},{"book":"Revelation","displayBook":"Apocalisse","reference":"Revelation 20:2","bookNumber":66,"chapter":20,"verse":2,"diodati":"Ed egli prese il dragone, il serpente antico, che è il Diavolo e Satana, il qual seduce tutto il mondo, e lo legò per mille anni.","kjv":"And he laid hold on the dragon, that old serpent, which is the Devil, and Satan, and bound him a thousand years,","diodatiTerms":["dragone"],"kjvTerms":["dragon"],"section":"dragon"}]</script>
+    <script>
+      const verses = JSON.parse(document.querySelector("#comparison-data").textContent);
+      const sections = ["dragon", "unicorn"];
+      const termBySection = {
+        dragon: { diodati: "(?:dragoni?|sciacalli?)", kjv: "dragons?" },
+        unicorn: { diodati: "liocorn[oi]", kjv: "unicorns?" },
+      };
+
+      function appendHighlightedText(element, text, term) {
+        const expression = new RegExp(term, "gi");
+        let lastIndex = 0;
+        for (const match of text.matchAll(expression)) {
+          element.append(document.createTextNode(text.slice(lastIndex, match.index)));
+          const mark = document.createElement("mark");
+          mark.textContent = match[0];
+          element.append(mark);
+          lastIndex = match.index + match[0].length;
+        }
+        element.append(document.createTextNode(text.slice(lastIndex)));
+      }
+
+      function makeEntry(verse, section) {
+        const entry = document.createElement("article");
+        entry.className = "entry";
+        const heading = document.createElement("header");
+        heading.className = "entry-head";
+        const reference = document.createElement("span");
+        reference.className = "reference";
+        reference.textContent = verse.reference;
+        const book = document.createElement("span");
+        book.className = "book-name";
+        book.textContent = verse.displayBook;
+        heading.append(reference, book);
+
+        const grid = document.createElement("div");
+        grid.className = "verse-grid";
+        for (const [edition, text, css, term] of [
+          ["Diodati", verse.diodati, "diodati", termBySection[section].diodati],
+          ["King James Version", verse.kjv, "kjv", termBySection[section].kjv],
+        ]) {
+          const column = document.createElement("div");
+          column.className = `translation ${css}`;
+          const label = document.createElement("span");
+          label.className = "translation-label";
+          label.textContent = edition;
+          const paragraph = document.createElement("p");
+          paragraph.className = "verse-text";
+          appendHighlightedText(paragraph, text, term);
+          column.append(label, paragraph);
+          grid.append(column);
+        }
+        entry.append(heading, grid);
+        return entry;
+      }
+
+      function render() {
+        for (const section of sections) {
+          const container = document.querySelector(`#${section}-list`);
+          const sectionElement = document.querySelector(`[data-section="${section}"]`);
+          const matches = verses.filter((verse) => verse.section === section);
+          container.replaceChildren(...matches.map((verse) => makeEntry(verse, section)));
+          sectionElement.hidden = matches.length === 0;
+        }
+      }
+
+      render();
+    </script>
+  </body>
+</html>

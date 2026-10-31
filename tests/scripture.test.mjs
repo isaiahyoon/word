@@ -380,6 +380,70 @@ describe("scripture store", () => {
     assert.equal(reference[0].verse, 16);
   });
 
+  it("searches Diodati Italian text, prefixes, and localized references", async () => {
+    const fetchImpl = async (path) => {
+      const fileUrl = new URL(`../${path.replace(/^\.\//, "")}`, import.meta.url);
+      return { ok: true, json: async () => JSON.parse(await readFile(fileUrl, "utf8")) };
+    };
+    const store = createScriptureStore({
+      fetchImpl,
+      dataPath: "./scripture/diodati",
+      language: "it",
+    });
+    await store.initialize();
+
+    assert.equal(store.bookName(1), "Genesi");
+
+    const bookPrefix = await store.search("Gene");
+    assert.equal(bookPrefix[0].searchType, "book");
+    assert.equal(bookPrefix[0].book, 1);
+
+    const chapter = await store.search("Genesi 1");
+    assert.equal(chapter[0].searchType, "chapter");
+    assert.equal(chapter[0].chapter, 1);
+
+    const reference = await store.search("Genesi 1:1");
+    assert.equal(reference[0].searchType, "reference");
+    assert.deepEqual(
+      { book: reference[0].book, chapter: reference[0].chapter, verse: reference[0].verse },
+      { book: 1, chapter: 1, verse: 1 },
+    );
+    assert.equal(reference.filter(({ book, chapter: chapterNumber, verse }) =>
+      book === 1 && chapterNumber === 1 && verse === 1).length, 1);
+
+    const separatedTerms = await store.search("Iddio terra");
+    const creationVerse = separatedTerms.find(({ book, chapter: chapterNumber, verse }) =>
+      book === 1 && chapterNumber === 1 && verse === 1);
+    assert.ok(creationVerse);
+    assert.deepEqual(creationVerse.matchedTerms.map((term) => term.toLocaleLowerCase()).sort(), ["iddio", "terra"]);
+
+    const rankedTerms = await store.search("Iddio creò cielo terra");
+    assert.deepEqual(
+      { book: rankedTerms[0].book, chapter: rankedTerms[0].chapter, verse: rankedTerms[0].verse },
+      { book: 1, chapter: 1, verse: 1 },
+    );
+
+    const accentedTerm = await store.search("CREÒ");
+    assert.ok(accentedTerm.some(({ book, chapter: chapterNumber, verse }) =>
+      book === 1 && chapterNumber === 1 && verse === 1));
+
+    const crossBook = await store.search("principio");
+    assert.ok(crossBook.some(({ book, chapter: chapterNumber, verse }) =>
+      book === 1 && chapterNumber === 1 && verse === 1));
+    assert.ok(crossBook.some(({ book, chapter: chapterNumber, verse }) =>
+      book === 43 && chapterNumber === 1 && verse === 1));
+
+    const misspelled = await store.search("principo cielo");
+    assert.ok(misspelled.some(({ book, chapter: chapterNumber, verse }) =>
+      book === 1 && chapterNumber === 1 && verse === 1));
+    assert.deepEqual(await store.search("principo xyz"), []);
+
+    for (const query of ["Genesi 1:99", "Genesi 99:1"]) {
+      const matches = await store.search(query);
+      assert.ok(matches.every((match) => match.searchType !== "reference"), query);
+    }
+  });
+
   it("searches KRV text with the edition-specific index", async () => {
     const mock = createMockFetch("./scripture/krv");
     const fetchImpl = async (url) => {
