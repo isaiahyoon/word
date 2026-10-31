@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { performance } from "node:perf_hooks";
+import { readFile } from "node:fs/promises";
 import { describe, it } from "node:test";
 import { BOOKS, bookFileName } from "../js/books.mjs";
 import { KRV_BOOK_NAMES } from "../js/editions.mjs";
@@ -352,6 +353,31 @@ describe("scripture store", () => {
       [{ book: 58, chapter: 1, verse: 1 }],
     );
     assert.deepEqual(await store.search("piercing word"), []);
+  });
+
+  it("searches JapBungo Japanese text and localized references", async () => {
+    const fetchImpl = async (path) => {
+      const fileUrl = new URL(`../${path.replace(/^\.\//, "")}`, import.meta.url);
+      return { ok: true, json: async () => JSON.parse(await readFile(fileUrl, "utf8")) };
+    };
+    const store = createScriptureStore({
+      fetchImpl,
+      dataPath: "./scripture/japbungo",
+      language: "ja",
+    });
+    await store.initialize();
+
+    assert.equal(store.bookName(43), "ヨハネの福音書");
+    const matches = await store.search("ニコデモ");
+    const nicodemusVerse = matches.find((verse) => verse.book === 43 && verse.chapter === 3 && verse.verse === 1);
+    assert.ok(nicodemusVerse);
+    assert.ok(nicodemusVerse.matchedTerms.includes("ニコデモ"));
+
+    const reference = await store.search("ヨハネの福音書 3:16");
+    assert.equal(reference[0].searchType, "reference");
+    assert.equal(reference[0].book, 43);
+    assert.equal(reference[0].chapter, 3);
+    assert.equal(reference[0].verse, 16);
   });
 
   it("searches KRV text with the edition-specific index", async () => {

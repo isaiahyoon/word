@@ -32,7 +32,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Gelasio:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Gelasio:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Noto+Sans+JP:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;600&family=Noto+Serif+KR:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/styles/theme.css" />
@@ -80,6 +80,7 @@
                 class="glimmer-text glimmer-blue"
                 id="brand-edition-primary"
                 data-krv-label="개역한글"
+                data-japbungo-label="BUNGO-YAKU"
                 data-glimmer="KING JAMES"
                 aria-hidden="true"
                 >KING JAMES</span
@@ -88,6 +89,7 @@
                 class="glimmer-text glimmer-pink"
                 id="brand-edition-secondary"
                 data-krv-label="1961"
+                data-japbungo-label="文語訳"
                 data-glimmer="VERSION"
                 aria-hidden="true"
                 >VERSION</span
@@ -96,12 +98,14 @@
           </span>
         </a>
         <script>
-          if (window.initialEditionId === "krv") {
+          if (window.initialEditionId === "krv" || window.initialEditionId === "japbungo") {
+            const labelKey = window.initialEditionId === "krv" ? "krvLabel" : "japbungoLabel";
+            const labelLanguage = window.initialEditionId === "krv" ? "ko" : "ja";
             for (const id of ["brand-edition-primary", "brand-edition-secondary"]) {
               const label = document.getElementById(id);
-              label.textContent = label.dataset.krvLabel;
-              label.dataset.glimmer = label.dataset.krvLabel;
-              label.lang = "ko";
+              label.textContent = label.dataset[labelKey];
+              label.dataset.glimmer = label.dataset[labelKey];
+              label.lang = labelLanguage;
             }
           }
         </script>

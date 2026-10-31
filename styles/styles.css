@@ -31,6 +31,11 @@ body::before {
 body.is-krv-edition::before {
   opacity: 1;
 }
+body.is-japbungo-edition {
+  --canvas: #edf5eb;
+  --serif: var(--serif-japanese);
+  --sans: var(--sans-japanese);
+}
 .pull-refresh-indicator {
   position: fixed;
   z-index: 20;
@@ -2137,6 +2142,21 @@ body.is-krv-edition .verse.is-copy-selected {
   position: relative;
   min-width: 0;
   isolation: isolate;
+}
+.verse-source-label {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 7px 0 0;
+  padding: 1px 5px;
+  border: 1px solid rgba(49, 88, 99, 0.26);
+  border-radius: 3px;
+  background: #e7f2eb;
+  color: #315863;
+  font-family: var(--sans);
+  font-size: 9px;
+  font-weight: var(--weight-semibold);
+  line-height: 1.4;
+  vertical-align: 0.12em;
 }
 .verse-actions {
   position: fixed;

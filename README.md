@@ -36,8 +36,8 @@ and without him was not any thing made that was made.
 
 ## Features
 
-- Read the King James Version (KJV) and Korean Revised Version (KRV), with their own edition-aware book navigation and direct links to passages.
-- Search scripture by phrase or separate terms, with relevance ranking, fuzzy typo matching, and direct suggestions for books, chapters, and verses. Korean searches support Korean book names, reference formats, and common spelling variations.
+- Read the King James Version (KJV), Korean Revised Version (KRV), and Japanese Bungo-yaku (JapBungo), with edition-aware book navigation and direct links to passages. JapBungo has a green reading theme.
+- Search scripture by phrase or separate terms, with relevance ranking, fuzzy typo matching, and direct suggestions for books, chapters, and verses. Korean and Japanese searches support localized book names and references; Korean searches also support common spelling variations.
 - Choose chapters with the whimsical chapter picker, or move through the text with navigation buttons and keyboard shortcuts.
 - Enter Quiet Mode for a calmer reading view, with subtle glimmer details throughout the interface.
 - Select verses and copy the formatted text with its passage reference. The feedback form lets readers send a note, with passage details included only by choice.
@@ -65,7 +65,7 @@ node tools/dev-server.mjs
 
 Then open [http://localhost:8000](http://localhost:8000).
 If port 8000 is occupied, choose another port with `PORT=8001 node tools/dev-server.mjs`.
-When deploying, configure the host to internally serve `index.html` for valid `/kjv/b/*`, `/krv/b/*`, and legacy `/b/*` scripture routes while keeping the requested URL. Unknown paths should serve `404.html` with a 404 status.
+When deploying, configure the host to internally serve `index.html` for valid `/kjv/b/*`, `/krv/b/*`, `/japbungo/b/*`, and legacy `/b/*` scripture routes while keeping the requested URL. Unknown paths should serve `404.html` with a 404 status.
 
 Scripture links identify their edition before the book route. Omitting the chapter opens chapter 1; omitting the verse opens and highlights verse 1:
 
@@ -75,6 +75,7 @@ Scripture links identify their edition before the book route. Omitting the chapt
 /kjv/b/john/c/3/v/16
 /kjv/b/john/c/3/v/16-18
 /krv/b/john/c/3/v/16
+/japbungo/b/john/c/3/v/16
 ```
 
 Existing unprefixed `/b/*` links continue to open KJV and are canonicalized to `/kjv/b/*`. Valid verse links scroll to the requested verses and highlight them briefly. Invalid books, chapters, or verse ranges open the 404 page, which links back to the reading room.
@@ -90,6 +91,8 @@ node tools/build-krv-data.mjs
 
 The KJV source is stored in `sources/kjv.json`; the 1961 KRV source is pinned in `sources/krv-1961.json`. KRV attribution is shown when selected. Its economic copyright term has expired according to the [Bible Society of Korea](https://www.bskorea.or.kr/bbs/board.php?bo_table=copyright_faq&wr_id=5); preserve the text and provide attribution.
 
+JapBungo is built from the public-domain [GetBible JapBungo source](https://github.com/getbible/v2/tree/master/japbungo), pinned with source metadata in `sources/japbungo.json`. It uses KJV verse numbering. The upstream text omits Exodus 7:25, 2 Samuel 19:25, 2 Chronicles 2:13, and 3 John 1:15; those four slots use Korean KRV text and are labeled as KRV fallbacks in the reader and copied citations. Rebuild it with `node tools/build-japbungo-data.mjs`.
+
 ## Search
 
 Search applies to the selected edition. Scripture text matching requires every query term to appear in the same verse, but the terms do not need to be adjacent. Results are ranked by relevance; longer words tolerate small spelling errors, and prefixes can match as you type. For example, `piercing sword` and `piercin sword` both find Hebrews 4:12. Search is lexical rather than semantic, so it does not infer synonyms or concepts that are absent from the verse text.
@@ -97,6 +100,8 @@ Search applies to the selected edition. Scripture text matching requires every q
 Book and passage queries also provide one direct navigation suggestion at the top of the list, followed by matching verse text. For example, `John` offers an option to open John before verses containing “John”; `John 1` offers a chapter link; and `John 1:1` places that exact verse first. The exact passage is not repeated in the text results. Book-name prefixes work when they identify a single book.
 
 KRV search accepts Korean book names and references such as `요한복음`, `요한복음 1:1`, and `요한복음 1장 1절`. A shared prefix such as `요한` offers matching book suggestions in canon order, with text matches after them. Hangul terms of at least three syllables tolerate one-syllable typos, and common particles are normalized for matching; for example, `하느님` can find `하나님이`. Full-width digits and punctuation are normalized, and spaces between the book name and reference are optional.
+
+JapBungo search accepts Japanese text and localized references such as `ヨハネの福音書 3:16`. Matching is lexical and uses the selected edition's Japanese text and display-book names.
 
 The first text search loads and indexes the selected edition's verses in the browser. The index is reused for later searches in that edition; no search query is sent to an external search service. Results are shown 12 at a time as the list is scrolled. The index is separate for each edition.
 

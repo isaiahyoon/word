@@ -8,7 +8,7 @@
     <script>
       (() => {
         const currentPath = window.location.pathname;
-        const routeIndex = currentPath.search(/\/(?:(?:kjv|krv)\/)?b\//);
+        const routeIndex = currentPath.search(/\/(?:(?:kjv|krv|japbungo)\/)?b\//);
         const appRoot =
           routeIndex < 0
             ? currentPath.slice(0, currentPath.lastIndexOf("/") + 1)

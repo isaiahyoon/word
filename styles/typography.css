@@ -3,6 +3,8 @@
   --sans: "DM Sans", "Avenir Next", sans-serif;
   --serif-korean-ui: "Noto Serif KR", "AppleMyungjo", "Batang", serif;
   --sans-korean-scripture: "Helvetica Neue", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", Arial, sans-serif;
+  --serif-japanese: "Noto Serif JP", "Yu Mincho", "Hiragino Mincho ProN", serif;
+  --sans-japanese: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
 
   --type-brand: 23px;
   --type-display: clamp(42px, 5vw, 58px);

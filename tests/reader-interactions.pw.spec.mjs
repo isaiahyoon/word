@@ -441,6 +441,39 @@ test("renders the KRV brand before its scripture index finishes loading", async 
   await expect(page.locator("#verse-16 .verse-text")).toContainText("하나님이 세상을 이처럼 사랑하사");
 });
 
+test("uses a compact JAP edition code while keeping the full Bungo name", async ({ page }) => {
+  await page.goto("/japbungo");
+  await expect(page.locator("#edition-select-code")).toHaveText("JAP");
+  await expect(page.locator("#edition-select-label")).toHaveText("Bungo-yaku · 日本語");
+
+  await page.locator("#edition-select").click();
+  await expect(page.locator("#edition-option-japbungo .edition-option-mark")).toHaveText("JAP");
+  await expect(page.locator("#edition-option-japbungo .edition-option-description small")).toHaveText("Bungo-yaku (文語訳)");
+});
+
+test("supports Japanese JapBungo search", async ({ page }) => {
+  await page.goto("/japbungo");
+  await expect(page.locator("html")).toHaveAttribute("lang", "ja");
+  await expect(page.locator("body")).toHaveClass(/is-japbungo-edition/);
+  await page.locator("#search-input").fill("ニコデモ");
+  await expect(page.locator("#search-results .search-result").first()).toContainText("ニコデモ");
+});
+
+test("labels and copies Korean JapBungo fallback verses", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/japbungo/b/exodus/c/7/v/25");
+  const fallbackText = page.locator("#verse-25 .verse-text");
+
+  await expect(fallbackText).toHaveAttribute("lang", "ko");
+  await expect(fallbackText.locator(".verse-source-label")).toHaveText("KRV fallback");
+  await expect(fallbackText).toContainText("여호와께서 하수를 치신 후 칠일이 지나니라");
+
+  await page.locator("#verse-25").click();
+  await page.locator("#copy-selected-verses").click();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toContain("KRV fallback (Korean text):");
+});
+
 test("routes an edition-only URL to Genesis 1:1 in that edition", async ({ page }) => {
   await page.goto("/krv");
 
