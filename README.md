@@ -41,15 +41,11 @@ and without him was not any thing made that was made.
 - Choose chapters with the whimsical chapter picker, or move through the text with navigation buttons and keyboard shortcuts.
 - Enter Quiet Mode for a calmer reading view, with subtle glimmer details throughout the interface.
 - Select verses and copy the formatted text with its passage reference. Clicking a verse also updates its direct link. The feedback form lets readers send a note, with passage details included only by choice.
-- Install it as a standalone web app: add it to the Mac Dock from Safari, or to an iPhone or Android home screen from the browser.
+- Install it as a standalone web app on Mac, iPhone, Android, or Windows using the browser's install option.
 
-## Demos and installation
+## App Installation
 
-- [Mobile walkthrough](https://www.youtube.com/shorts/uEqtgbKyGaQ): a look at reading and navigating on a phone.
-- [Web walkthrough](https://www.youtube.com/watch?v=wSXss5Pb46E): search, chapter navigation, Quiet Mode, verse copying, and adding the site to the Dock with Safari on Mac.
-- Android installation walkthrough: coming soon.
-
-To install it on Mac, open the site in Safari and choose **File → Add to Dock**. On iPhone, open it in Safari, tap **Share**, then **Add to Home Screen**. On Android, open it in Chrome, open the menu, and choose **Install app** or **Add to Home screen**. The installation option can vary by browser and device.
+To install it on Mac, open the site in Safari and choose **File → Add to Dock**. On iPhone, open it in Safari, tap **Share**, then **Add to Home Screen**. On Android, open it in Chrome, open the menu, and choose **Install app** or **Add to Home screen**. On Windows, open the site in Microsoft Edge and choose **Settings and more → Apps → Install this site as an app**; in Chrome, choose **Cast, save, and share → Install page as app**. Menu labels may vary by browser version. The installed app requires an internet connection to load Scripture and other site content.
 
 ## Privacy
 
