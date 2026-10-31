@@ -22,7 +22,7 @@
 # Instagram Posts
 
 - Before creating an Instagram post, review existing work in `assets/instagram` and use the app's established color palette.
-- Create three separate 1080×1350 JPG images with distinct color themes, plus a caption followed by exactly three hashtags on a separate line. Always make `#TheAmazingWord` the first hashtag.
+- Deliver only three separate 1080×1350 JPG images with distinct color themes and the caption in the response, followed by exactly three hashtags on a separate line. Always make `#TheAmazingWord` the first hashtag. Do not create scripts, HTML, previews, extra images, caption files, or other supporting artifacts unless asked.
 - Make the caption and images together grounded, kind, welcoming, safe, lovable, witty, pleasant, honest, talented, reliable, hardworking, hot, thoughtful, entertaining, playful, romantic, happy, intelligent, artistic, familial, fashionable, beautiful-making (amazing), funny, pretty, dope, elegant, innovative, gentle, marvelous, graceful, comforting, inviting, clean, regal, homely, God-fearing, wise, and classy.
 
 # Project Organization
