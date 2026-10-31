@@ -269,6 +269,17 @@ test("keeps all editable text fields at 16px on touch devices", async ({ page })
   expect(fontSizes.every((size) => size >= 16)).toBe(true);
 });
 
+test("prevents double-tap zoom on mobile while allowing pinch zoom", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+
+  await expect(page.locator("body")).toHaveCSS("touch-action", "manipulation");
+  await expect(page.locator('meta[name="viewport"]')).toHaveAttribute(
+    "content",
+    "width=device-width, initial-scale=1",
+  );
+});
+
 test("frames the shortcut question mark and styles the close control on hover", async ({ page }) => {
   await page.goto("/");
   const shortcutButton = page.locator("#shortcuts-open");

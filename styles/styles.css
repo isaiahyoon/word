@@ -6,6 +6,7 @@ body {
   position: relative;
   isolation: isolate;
   margin: 0;
+  touch-action: manipulation;
   color: var(--ink);
   background-color: var(--canvas);
   background-image: radial-gradient(var(--grain) 0.65px, transparent 0.65px);
