@@ -142,14 +142,7 @@ Edit the shared typography tokens in `styles/typography.css`, the base color tok
 
 ## License
 
-This project is jointly licensed under the terms of both of the following licenses:
-
-- **[MIT License](LICENSE.md)**
-- **[Polymorph License](LICENSE.md)**
-
-By using, copying, modifying, or distributing this software, you agree to comply with the terms, conditions, and restrictions of **both** licenses simultaneously.
-
-Please review the full text in the linked license file included in this repository for complete compliance details.
+Proprietary code and design owned by Isaiah Yoon may not be copied, modified, distributed, or hosted without explicit written permission. Third-party software, scripture text, fonts, and other materials remain governed by their respective licenses and notices. See [LICENSE.md](LICENSE.md) or contact isaiahyoon22@gmail.com for licensing or hosting inquiries.
 
 ## Support the project
 
