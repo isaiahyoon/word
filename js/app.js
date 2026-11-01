@@ -320,6 +320,7 @@ async function activateEdition(editionId) {
 
   state.editionId = editionId;
   scripture = store;
+  document.body.classList.toggle("is-kjv-edition", editionId === "kjv");
   document.body.classList.toggle("is-krv-edition", editionId === "krv");
   document.body.classList.toggle("is-diodati-edition", editionId === "diodati");
   document.body.classList.toggle("is-luther1912-edition", editionId === "luther1912");

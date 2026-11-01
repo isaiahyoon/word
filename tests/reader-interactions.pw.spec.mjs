@@ -624,6 +624,19 @@ test("renders the KRV brand before its scripture index finishes loading", async 
   await expect(page.locator("#verse-16 .verse-text")).toContainText("하나님이 세상을 이처럼 사랑하사");
 });
 
+test("uses a two-pixel smaller verse size only for KJV", async ({ page }) => {
+  await page.goto("/kjv/b/john/c/3/v/16");
+  await expect(page.locator("#verse-16")).toHaveCSS("font-size", "17px");
+  await page.locator("#quiet-view-toggle").click();
+  await expect(page.locator("#verse-16")).toHaveCSS("font-size", "18px");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator("#verse-16")).toHaveCSS("font-size", "16px");
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/diodati/b/genesis/c/1/v/1");
+  await expect(page.locator("#verse-1")).toHaveCSS("font-size", "19px");
+});
+
 test("auto-scrolls long edition labels only while the mobile sidebar is open", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 800 });
   await page.goto("/licht");
