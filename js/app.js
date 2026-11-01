@@ -32,6 +32,7 @@ const elements = {
   verseList: document.querySelector("#verse-list"),
   verseActions: document.querySelector("#verse-actions"),
   scrollToTop: document.querySelector("#scroll-to-top"),
+  cutControl: document.querySelector("#cut-selected-verses"),
   copyControl: document.querySelector("#copy-selected-verses"),
   copyControlLabel: document.querySelector("#copy-selected-label"),
   clearControl: document.querySelector("#clear-selected-verses"),
@@ -1183,6 +1184,7 @@ function bindEvents() {
     updateVerseLocation(Number(verseButton.dataset.verse));
     toggleVerseSelection(verseButton);
   });
+  elements.cutControl.addEventListener("click", () => void copySelectedVerses({ clearAfter: true }));
   elements.copyControl.addEventListener("click", () => void copySelectedVerses());
   elements.clearControl.addEventListener("click", clearVerseSelection);
   elements.feedbackOpen.addEventListener("click", () => {

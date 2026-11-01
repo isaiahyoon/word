@@ -2465,9 +2465,12 @@ body.is-krv-edition .verse.is-copy-selected {
   z-index: 20;
   right: clamp(18px, 5vw, 72px);
   bottom: max(18px, env(safe-area-inset-bottom));
-  display: flex;
+  display: grid;
+  grid-template-areas: "cut ." "copy clear";
+  grid-template-columns: max-content max-content;
   align-items: center;
-  gap: 8px;
+  justify-items: start;
+  gap: 6px;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -2502,6 +2505,9 @@ body.is-krv-edition .verse.is-copy-selected {
 .scroll-to-top:active {
   transform: translateY(1px);
 }
+.app-shell.has-copy-selection .scroll-to-top {
+  bottom: calc(132px + env(safe-area-inset-bottom));
+}
 .verse-actions.is-visible {
   opacity: 1;
   visibility: visible;
@@ -2523,10 +2529,32 @@ body.is-krv-edition .verse.is-copy-selected {
 .verse-actions.is-visible .verse-copy-control {
   transition-delay: 0.04s;
 }
+.verse-actions.is-visible .verse-cut-control {
+  transition-delay: 0s;
+}
 .verse-actions.is-visible .verse-clear-control {
   transition-delay: 0.1s;
 }
+.verse-cut-control {
+  grid-area: cut;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+  border: 1px solid rgba(49, 88, 99, 0.34);
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--green), var(--blue) 54%, var(--lavender));
+  box-shadow:
+    0 2px 0 rgba(79, 119, 113, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 8px 20px rgba(49, 61, 58, 0.12);
+  color: var(--navy-ink);
+  font-size: var(--type-control-small);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
 .verse-copy-control {
+  grid-area: copy;
   min-height: 46px;
   display: flex;
   align-items: center;
@@ -2545,10 +2573,12 @@ body.is-krv-edition .verse.is-copy-selected {
   cursor: pointer;
 }
 .verse-copy-control:hover,
+.verse-cut-control:hover,
 .verse-clear-control:hover {
   filter: brightness(1.03);
 }
 .verse-clear-control {
+  grid-area: clear;
   min-height: 42px;
   display: flex;
   align-items: center;
@@ -3350,11 +3380,18 @@ body.is-kjv-edition .app-shell.is-quiet-reading .verse {
   .verse-actions {
     right: max(12px, env(safe-area-inset-right));
     bottom: max(12px, env(safe-area-inset-bottom));
-    gap: 6px;
+    gap: 5px 6px;
   }
   .scroll-to-top {
     right: max(14px, env(safe-area-inset-right));
     bottom: calc(70px + env(safe-area-inset-bottom));
+  }
+  .app-shell.has-copy-selection .scroll-to-top {
+    bottom: calc(126px + env(safe-area-inset-bottom));
+  }
+  .verse-cut-control {
+    min-height: 34px;
+    padding: 0 13px;
   }
   .verse-copy-control {
     min-height: 44px;
@@ -3366,7 +3403,7 @@ body.is-kjv-edition .app-shell.is-quiet-reading .verse {
     padding: 0 9px 0 7px;
   }
   .app-shell.has-copy-selection .reader {
-    padding-bottom: 112px;
+    padding-bottom: 136px;
   }
   .reader-topline {
     align-items: flex-start;

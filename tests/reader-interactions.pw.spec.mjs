@@ -746,7 +746,7 @@ test("loads Luther with the LUX code, German search, and yellow-red theme", asyn
 
   await expect(page).toHaveURL(/\/licht\/b\/genesis\/c\/1\/v\/1$/);
   await expect(page.locator("#edition-select-code")).toHaveText("LUX");
-  await expect(page.locator("#edition-select-label")).toHaveText("Lutherbibel · Licht im Wort");
+  await expect(page.locator("#edition-select-label")).toHaveText("Lutherbibel · Deutsch");
   await page.locator("#edition-select").click();
   await expect(page.locator("#edition-option-luther1912 .edition-option-mark")).toHaveText("LUX");
   await expect(page.locator("#edition-option-luther1912 .edition-option-description small")).toHaveText("Luther Bible (1912)");
@@ -1071,6 +1071,48 @@ for (const viewport of [
       await expect(clearControl).toBeHidden();
     });
   }
+}
+
+for (const viewport of [
+  { width: 320, height: 568, label: "narrow mobile" },
+  { width: 390, height: 844, label: "mobile" },
+  { width: 1280, height: 900, label: "desktop" },
+]) {
+  test(`cuts selected verses from the action button without overlap on ${viewport.label}`, async ({ page }) => {
+    await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto("/kjv/b/john/c/3/v/16");
+    const verse = page.locator("#verse-16");
+    const verseText = (await verse.locator(".verse-text").textContent()).trim();
+    await verse.click();
+    await page.evaluate(() => window.scrollTo(0, 800));
+
+    const cutControl = page.locator("#cut-selected-verses");
+    const copyControl = page.locator("#copy-selected-verses");
+    const clearControl = page.locator("#clear-selected-verses");
+    const scrollToTop = page.locator("#scroll-to-top");
+    await expect(cutControl).toBeVisible();
+    await expect(scrollToTop).toBeVisible();
+
+    const cutBounds = await cutControl.boundingBox();
+    const copyBounds = await copyControl.boundingBox();
+    const clearBounds = await clearControl.boundingBox();
+    const topBounds = await scrollToTop.boundingBox();
+    const viewportBounds = page.viewportSize();
+    expect(cutBounds.y + cutBounds.height).toBeLessThanOrEqual(copyBounds.y + 2);
+    expect(topBounds.y + topBounds.height).toBeLessThanOrEqual(cutBounds.y);
+    for (const bounds of [cutBounds, copyBounds, clearBounds]) {
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(viewportBounds.width);
+      expect(bounds.y + bounds.height).toBeLessThanOrEqual(viewportBounds.height);
+    }
+
+    await cutControl.click();
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
+      .toBe(`"${verseText}"\n\n- John 3:16`);
+    await expect(verse).toHaveAttribute("aria-pressed", "false");
+    await expect(page.locator("#verse-actions")).toBeHidden();
+  });
 }
 
 test("copies consecutive verses on every edition as separate lines with a compressed citation", async ({ page }) => {
