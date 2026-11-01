@@ -577,6 +577,10 @@ test("opens the Martin edition with native Psalm numbering and the French pastel
   await expect(page.locator("body")).toHaveClass(/is-martin1744-edition/);
   await expect(page.locator("#verse-1 .verse-text")).toContainText("Psaume de David");
   await expect(page.locator("#verse-2 .verse-text")).toContainText("Ô Eternel!");
+  await page.evaluate(() => document.fonts.load('18px "EB Garamond"'));
+  expect(await page.locator("#verse-1 .verse-text").evaluate((element) =>
+    getComputedStyle(element).fontFamily,
+  )).toContain("EB Garamond");
 
   const gradient = await page.locator("body").evaluate((element) =>
     getComputedStyle(element, "::before").backgroundImage,
@@ -618,6 +622,55 @@ test("renders the KRV brand before its scripture index finishes loading", async 
   await expect(page.locator("#brand-edition-secondary")).toHaveText("1961");
   await expect(page.locator("#brand-edition-primary")).not.toHaveText("KING JAMES");
   await expect(page.locator("#verse-16 .verse-text")).toContainText("하나님이 세상을 이처럼 사랑하사");
+});
+
+test("auto-scrolls long edition labels only while the mobile sidebar is open", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto("/licht");
+  const triggerLabel = page.locator("#edition-select-label");
+  await expect(triggerLabel).toHaveClass(/is-overflowing/);
+  const triggerTrack = triggerLabel.locator(".edition-scroll-text");
+  await expect(triggerTrack).toHaveCSS("animation-name", "none");
+  await page.locator("#menu-toggle").click();
+  await expect(triggerTrack).toHaveCSS("animation-name", "edition-label-scroll");
+
+  await page.locator("#edition-select").click();
+  const lutherOption = page.locator("#edition-option-luther1912");
+  const longOptionTitle = lutherOption.locator(".edition-option-description strong.is-overflowing .edition-scroll-text");
+  await expect(longOptionTitle).toHaveCount(1);
+  await expect(longOptionTitle).toHaveCSS("animation-name", "edition-label-scroll");
+
+  await page.locator(".sidebar-scrim").click({ position: { x: 310, y: 400 } });
+  await expect(page.locator(".sidebar")).not.toHaveClass(/is-open/);
+  await expect(triggerTrack).toHaveCSS("animation-name", "none");
+});
+
+test("scrolls long edition labels only when hovered on desktop", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/licht");
+  const desktopTrack = page.locator("#edition-select-label .edition-scroll-text");
+  await expect(desktopTrack).toHaveCSS("animation-name", "none");
+  await page.locator("#edition-select").focus();
+  await expect(desktopTrack).toHaveCSS("animation-name", "none");
+  await page.locator("#edition-select").hover();
+  await expect(desktopTrack).toHaveCSS("animation-name", "edition-label-scroll");
+  await page.locator("#edition-select").click();
+  const longOptionTitle = page.locator(
+    "#edition-option-luther1912 .edition-option-description strong.is-overflowing .edition-scroll-text",
+  );
+  await expect(longOptionTitle).toHaveCSS("animation-name", "none");
+  await page.locator("#edition-option-luther1912").hover();
+  await expect(longOptionTitle).toHaveCSS("animation-name", "edition-label-scroll");
+  const endGap = await longOptionTitle.evaluate(async (track) => {
+    const animation = track.getAnimations()[0];
+    animation.pause();
+    animation.currentTime = 1000;
+    await new Promise(requestAnimationFrame);
+    const range = document.createRange();
+    range.selectNodeContents(track);
+    return track.parentElement.getBoundingClientRect().right - range.getBoundingClientRect().right;
+  });
+  expect(endGap).toBeGreaterThanOrEqual(3);
 });
 
 test("uses a compact JAP edition code while keeping the full Bungo name", async ({ page }) => {

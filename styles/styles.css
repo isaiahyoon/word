@@ -108,6 +108,7 @@ body.is-japbungo-edition {
 }
 body.is-martin1744-edition {
   --canvas: #f5edf2;
+  --serif: var(--serif-french);
   --paper: #fffdfd;
   --line: #e7dce5;
   --blue: #dce8f8;
@@ -1464,10 +1465,17 @@ a:focus-visible {
   letter-spacing: 0;
 }
 .edition-trigger-label {
+  min-width: 0;
   overflow: hidden;
   font-size: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.edition-scroll-text {
+  display: block;
+  width: max-content;
+  padding-inline-end: 0.5em;
+  transform: translateX(0);
 }
 .edition-select-caret {
   color: var(--brass);
@@ -1539,6 +1547,8 @@ a:focus-visible {
   font-family: var(--sans);
 }
 .edition-option-description strong {
+  display: block;
+  min-width: 0;
   overflow: hidden;
   font-size: 11px;
   font-weight: var(--weight-semibold);
@@ -1546,6 +1556,8 @@ a:focus-visible {
   white-space: nowrap;
 }
 .edition-option-description small {
+  display: block;
+  min-width: 0;
   overflow: hidden;
   color: #777970;
   font-family: var(--serif);
@@ -1647,6 +1659,18 @@ body.is-luther1912-edition .edition-option.is-selected .edition-option-check {
 .edition-picker:has(.edition-options:not([hidden])) {
   z-index: 13;
 }
+@media (hover: hover) and (pointer: fine) {
+  .edition-trigger:hover .edition-trigger-label.is-overflowing .edition-scroll-text,
+  .edition-option:hover .edition-option-description .is-overflowing .edition-scroll-text {
+    animation: edition-label-scroll 1.25s linear infinite alternate;
+  }
+}
+@media (max-width: 640px) {
+  .sidebar.is-open .edition-trigger-label.is-overflowing .edition-scroll-text,
+  .sidebar.is-open .edition-option-description .is-overflowing .edition-scroll-text {
+    animation: edition-label-scroll 1.25s linear infinite alternate;
+  }
+}
 @keyframes edition-options-in {
   from {
     opacity: 0;
@@ -1655,6 +1679,20 @@ body.is-luther1912-edition .edition-option.is-selected .edition-option-check {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+@keyframes edition-label-scroll {
+  0%, 5% {
+    transform: translateX(0);
+  }
+  50%, 100% {
+    transform: translateX(calc(-1 * var(--edition-scroll-distance)));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .edition-trigger-label.is-overflowing .edition-scroll-text,
+  .edition-option-description .is-overflowing .edition-scroll-text {
+    animation: none;
   }
 }
 .edition-attribution {

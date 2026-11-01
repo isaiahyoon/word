@@ -23,10 +23,36 @@ export function createEditionPicker({
     option?.scrollIntoView({ block: "nearest" });
   }
 
+  function refreshScrollableText() {
+    root.querySelectorAll("[data-scroll-text]").forEach((frame) => {
+      const track = frame.firstElementChild;
+      if (!track || frame.clientWidth === 0) return;
+      const distance = Math.max(0, Math.ceil(track.getBoundingClientRect().width - frame.clientWidth));
+      frame.classList.toggle("is-overflowing", distance > 0);
+      frame.style.setProperty("--edition-scroll-distance", `${distance}px`);
+    });
+  }
+
+  function setScrollableText(frame, text) {
+    const track = document.createElement("span");
+    track.className = "edition-scroll-text";
+    track.textContent = text;
+    frame.replaceChildren(track);
+    frame.dataset.scrollText = "";
+    frame.title = text;
+    resizeObserver?.observe(track);
+  }
+
+  const resizeObserver = typeof ResizeObserver === "function"
+    ? new ResizeObserver(refreshScrollableText)
+    : null;
+  resizeObserver?.observe(root);
+
   function open() {
     menu.hidden = false;
     trigger.setAttribute("aria-expanded", "true");
     focusOption(trigger.dataset.edition);
+    requestAnimationFrame(refreshScrollableText);
   }
 
   function render(editionIds, editions, activeEditionId) {
@@ -34,7 +60,7 @@ export function createEditionPicker({
     trigger.dataset.edition = activeEditionId;
     trigger.setAttribute("aria-label", `Choose edition, currently ${activeEdition.label}`);
     code.textContent = activeEdition.shortCode ?? activeEditionId.toUpperCase();
-    label.textContent = activeEdition.label;
+    setScrollableText(label, activeEdition.label);
     menu.replaceChildren();
 
     for (const editionId of editionIds) {
@@ -57,9 +83,9 @@ export function createEditionPicker({
       description.className = "edition-option-description";
       description.lang = edition.language;
       const title = document.createElement("strong");
-      title.textContent = edition.label;
+      setScrollableText(title, edition.label);
       const subtitle = document.createElement("small");
-      subtitle.textContent = edition.name;
+      setScrollableText(subtitle, edition.name);
       description.append(title, subtitle);
 
       const selectedMark = document.createElement("span");
@@ -68,6 +94,10 @@ export function createEditionPicker({
       selectedMark.textContent = editionId === activeEditionId ? "✓" : "";
       option.append(mark, description, selectedMark);
       menu.append(option);
+    }
+    requestAnimationFrame(refreshScrollableText);
+    if (document.fonts) {
+      document.fonts.ready.then(() => requestAnimationFrame(refreshScrollableText));
     }
   }
 
