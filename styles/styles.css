@@ -106,6 +106,36 @@ body.is-japbungo-edition {
   --serif: var(--serif-japanese);
   --sans: var(--sans-japanese);
 }
+body.is-martin1744-edition {
+  --canvas: #f5edf2;
+  --paper: #fffdfd;
+  --line: #e7dce5;
+  --blue: #dce8f8;
+  --blue-strong: #a9c5e8;
+  --lavender: #e6e2f1;
+  --yellow: #fff3d5;
+  --pink: #f5d6e2;
+  --green: #e2eee2;
+  --coral: #bd5d70;
+  --deep-teal: #405d75;
+  --navy-ink: #30455f;
+  --brass: #a47d76;
+  --brass-soft: #d9b8bc;
+  --brass-shadow: #c59da5;
+  --chapter-blue: #9ebce3;
+  --chapter-lavender: #d9cbe8;
+  --chapter-pink: #e9afc5;
+  --chapter-green: #c9decf;
+  --focus: #a95672;
+  --focus-border: #ca8199;
+  --focus-ring: rgba(169, 86, 114, 0.16);
+  --grain: rgba(81, 79, 111, 0.055);
+}
+body.is-martin1744-edition::before {
+  opacity: 1;
+  background-color: #fff;
+  background-image: linear-gradient(135deg, #dce8f8 0%, #fff 50%, #f5d6e2 100%);
+}
 .pull-refresh-indicator {
   position: fixed;
   z-index: 20;

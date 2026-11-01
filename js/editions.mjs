@@ -8,6 +8,11 @@ export const KRV_BOOK_NAMES = [
   "마태복음", "마가복음", "누가복음", "요한복음", "사도행전", "로마서", "고린도전서", "고린도후서", "갈라디아서", "에베소서", "빌립보서", "골로새서", "데살로니가전서", "데살로니가후서", "디모데전서", "디모데후서", "디도서", "빌레몬서", "히브리서", "야고보서", "베드로전서", "베드로후서", "요한1서", "요한2서", "요한3서", "유다서", "요한계시록",
 ];
 
+export const MARTIN_BOOK_NAMES = [
+  "Genèse", "Exode", "Lévitique", "Nombres", "Deutéronome", "Josué", "Juges", "Ruth", "1 Samuel", "2 Samuel", "1 Rois", "2 Rois", "1 Chroniques", "2 Chroniques", "Esdras", "Néhémie", "Esther", "Job", "Psaumes", "Proverbes", "Ecclésiaste", "Cantique des Cantiques", "Ésaïe", "Jérémie", "Lamentations", "Ézéchiel", "Daniel", "Osée", "Joël", "Amos", "Abdias", "Jonas", "Michée", "Nahum", "Habacuc", "Sophonie", "Aggée", "Zacharie", "Malachie",
+  "Matthieu", "Marc", "Luc", "Jean", "Actes des Apôtres", "Romains", "1 Corinthiens", "2 Corinthiens", "Galates", "Éphésiens", "Philippiens", "Colossiens", "1 Thessaloniciens", "2 Thessaloniciens", "1 Timothée", "2 Timothée", "Tite", "Philémon", "Hébreux", "Jacques", "1 Pierre", "2 Pierre", "1 Jean", "2 Jean", "3 Jean", "Jude", "Apocalypse",
+];
+
 export const EDITIONS = {
   kjv: {
     id: "kjv",
@@ -85,6 +90,23 @@ export const EDITIONS = {
     themeColor: "#edf5eb",
     attribution: "Bungo-yaku · Meiji-genyaku OT / Taisho-kaiyaku NT",
     attributionUrl: "https://github.com/getbible/v2/tree/master/japbungo",
+  },
+  martin1744: {
+    id: "martin1744",
+    routeSegment: "moh",
+    shortCode: "MOH",
+    label: "Martin 1744 · Français",
+    name: "David Martin Bible (1744)",
+    brandPrimary: "DAVID MARTIN",
+    brandSecondary: "1744",
+    language: "fr",
+    direction: "ltr",
+    dataPath: "./scripture/martin1744",
+    bookOrder: CANONICAL_BOOK_ORDER,
+    displayBookNames: MARTIN_BOOK_NAMES,
+    themeColor: "#f2eaf1",
+    attribution: "Bible de David Martin (1744) · domaine public",
+    attributionUrl: "https://github.com/getbible/v2/tree/master/martin",
   },
 };
 

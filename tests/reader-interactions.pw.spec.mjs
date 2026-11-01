@@ -208,6 +208,7 @@ test("cycles editions with Tab and Shift+Tab and wraps at both ends", async ({ p
     ["/diodati", "it"],
     ["/licht", "de"],
     ["/japbungo", "ja"],
+    ["/moh", "fr"],
     ["/kjv", "en"],
   ]) {
     await page.keyboard.press("Tab");
@@ -217,6 +218,7 @@ test("cycles editions with Tab and Shift+Tab and wraps at both ends", async ({ p
   }
 
   for (const [route, language] of [
+    ["/moh", "fr"],
     ["/japbungo", "ja"],
     ["/licht", "de"],
     ["/diodati", "it"],
@@ -562,6 +564,46 @@ test("switches editions at the same passage and canonicalizes legacy KJV links",
   await expect(page.locator("body")).toHaveClass(/is-luther1912-edition/);
   await expect(page.locator("#verse-list")).toHaveAttribute("lang", "de");
   await expect(page.locator("#verse-17 .verse-text")).toContainText("Denn Gott hat seinen Sohn nicht gesandt");
+});
+
+test("opens the Martin edition with native Psalm numbering and the French pastel theme", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/moh/b/psalms/c/3/v/1");
+
+  await expect(page).toHaveURL(/\/moh\/b\/psalms\/c\/3\/v\/1$/);
+  await expect(page.locator("#edition-select-code")).toHaveText("MOH");
+  await expect(page.locator("#verse-list")).toHaveAttribute("lang", "fr");
+  await expect(page.locator("body")).toHaveClass(/is-martin1744-edition/);
+  await expect(page.locator("#verse-1 .verse-text")).toContainText("Psaume de David");
+  await expect(page.locator("#verse-2 .verse-text")).toContainText("Ô Eternel!");
+
+  const gradient = await page.locator("body").evaluate((element) =>
+    getComputedStyle(element, "::before").backgroundImage,
+  );
+  expect(gradient).toContain("rgb(220, 232, 248)");
+  expect(gradient).toContain("rgb(255, 255, 255)");
+  expect(gradient).toContain("rgb(245, 214, 226)");
+  const dimensions = await page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+  expect(dimensions.scrollWidth).toBe(dimensions.clientWidth);
+
+  await page.locator("#verse-2").click();
+  await expect(page).toHaveURL(/\/moh\/b\/psalms\/c\/3\/v\/2$/);
+  await expect(page.locator("#verse-2")).toHaveClass(/is-copy-selected/);
+  await page.locator("#copy-selected-verses").click();
+  const verseText = (await page.locator("#verse-2 .verse-text").textContent()).trim();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toBe(`"${verseText}"\n\n- Psaumes 3:2`);
+
+  await page.goto("/kjv/b/john/c/3/v/16");
+  await page.locator("#menu-toggle").click();
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-option-martin1744").click();
+  await expect(page).toHaveURL(/\/moh\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("#verse-16 .verse-text")).toContainText("Car Dieu a tant aimé le monde");
 });
 
 test("renders the KRV brand before its scripture index finishes loading", async ({ page }) => {
