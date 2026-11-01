@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f6e5d2" />
+    <meta name="description" content="A comparison of 22 serif typefaces for reading Samoan, with macron and glottal-stop specimens." />
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;500&family=Andada+Pro:wght@400;500&family=Arvo:wght@400;700&family=Brawler:wght@400;700&family=Bodoni+Moda:wght@400;500&family=Cardo:wght@400;700&family=Cormorant+Garamond:wght@400;500&family=Crimson+Pro:wght@400;500&family=EB+Garamond:wght@400;500&family=Gentium+Book+Plus:wght@400;500&family=Libre+Baskerville:wght@400;700&family=Lora:wght@400;500&family=Literata:wght@400;500&family=Merriweather:wght@400;700&family=Newsreader:wght@400;500&family=Noto+Serif:wght@400;500&family=Noto+Serif+Display:wght@400;500&family=Old+Standard+TT:wght@400;700&family=PT+Serif:wght@400;700&family=Source+Serif+4:wght@400;500&family=Spectral:wght@400;500&family=Vollkorn:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <title>Samoan Type Study · The Word</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #332d2a;
+        --muted: #71635b;
+        --rule: rgba(91, 61, 43, 0.18);
+        --paper: #fffaf3;
+        --peach: #f6e5d2;
+        --apricot: #edc5a5;
+        --butter: #f4e8b6;
+        --coral: #c76e55;
+        --leaf: #5b7365;
+        --sans: "DM Sans", "Avenir Next", sans-serif;
+        --display: "Gelasio", "Iowan Old Style", Georgia, serif;
+        --specimen-size: 23px;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        min-width: 320px;
+        margin: 0;
+        color: var(--ink);
+        background-color: #f8edde;
+        background-image: repeating-linear-gradient(0deg, rgba(132, 91, 57, 0.035) 0, rgba(132, 91, 57, 0.035) 1px, transparent 1px, transparent 7px);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      main {
+        width: min(1180px, 100%);
+        margin: 0 auto;
+        padding: 46px 30px 64px;
+      }
+
+      header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 430px);
+        align-items: end;
+        gap: 32px;
+        padding: 0 0 24px;
+        border-bottom: 1px solid var(--rule);
+      }
+
+      .eyebrow,
+      .specimen-index,
+      .specimen-note,
+      .control-label {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow {
+        margin: 0 0 11px;
+        color: #a0523e;
+      }
+
+      h1 {
+        max-width: 620px;
+        margin: 0;
+        font-family: var(--display);
+        font-size: 48px;
+        font-weight: 500;
+        line-height: 1.05;
+      }
+
+      .intro {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.7;
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 20px 0 17px;
+        padding: 12px 15px;
+        border: 1px solid var(--rule);
+        border-radius: 5px;
+        background: rgba(255, 250, 243, 0.72);
+      }
+
+      .control-label { color: #7a5543; }
+
+      input[type="range"] {
+        width: min(240px, 45vw);
+        accent-color: var(--coral);
+      }
+
+      output {
+        min-width: 42px;
+        color: var(--muted);
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .specimens {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 13px;
+      }
+
+      .specimen {
+        min-width: 0;
+        padding: 20px 21px 18px;
+        border: 1px solid var(--rule);
+        border-radius: 5px;
+        background: var(--paper);
+        box-shadow: 0 5px 16px rgba(96, 65, 43, 0.045);
+        animation: settle-in 420ms both;
+      }
+
+      .specimen:nth-child(3n + 2) { animation-delay: 45ms; }
+      .specimen:nth-child(3n) { animation-delay: 85ms; }
+
+      .specimen.is-priority {
+        border-color: rgba(91, 115, 101, 0.58);
+        box-shadow: inset 3px 0 0 var(--leaf), 0 5px 16px rgba(96, 65, 43, 0.045);
+      }
+
+      .specimen-header {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .specimen-index { color: var(--coral); }
+
+      h2 {
+        min-width: 0;
+        margin: 0;
+        font-family: var(--specimen-font), Georgia, serif;
+        font-size: 18px;
+        font-weight: 500;
+      }
+
+      .specimen-note {
+        margin-left: auto;
+        color: var(--muted);
+        font-size: 8px;
+        text-align: right;
+      }
+
+      .phrase {
+        margin: 0 0 8px;
+        font-family: var(--specimen-font), Georgia, serif;
+        font-size: var(--specimen-size);
+        font-weight: 500;
+        line-height: 1.24;
+        overflow-wrap: anywhere;
+      }
+
+      .paragraph {
+        margin: 0;
+        color: #51463f;
+        font-family: var(--specimen-font), Georgia, serif;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+      }
+
+      .marks {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 7px;
+        margin-top: 14px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(91, 61, 43, 0.12);
+        font-family: var(--specimen-font), Georgia, serif;
+        font-size: 15px;
+      }
+
+      .marks-label {
+        color: #8a6652;
+        font-family: var(--sans);
+        font-size: 8px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      footer {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 22px;
+        margin-top: 20px;
+        padding-top: 14px;
+        border-top: 1px solid var(--rule);
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.65;
+      }
+
+      footer p { margin: 0; }
+      footer a { color: #8d4937; }
+
+      @media (max-width: 760px) {
+        main { padding: 30px 17px 46px; }
+        header { grid-template-columns: 1fr; gap: 14px; }
+        h1 { font-size: 39px; }
+        .specimens { grid-template-columns: 1fr; gap: 10px; }
+        .specimen { padding: 18px 17px 16px; }
+        .phrase { font-size: max(21px, var(--specimen-size)); }
+        footer { grid-template-columns: 1fr; gap: 8px; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          scroll-behavior: auto !important;
+        }
+      }
+
+      @keyframes settle-in {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    </style>
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="83c99f62-84e3-4c00-b8d6-71acdd602637"></script>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <p class="eyebrow">The Word · Samoan · 1887 text study</p>
+          <h1>Reading type for Gagana Sāmoa</h1>
+        </div>
+        <p class="intro">Twenty-two serif families set with the same Samoan title and orthographic marks. Compare warmth, long-line rhythm, and the clarity of macrons and the glottal stop. These are reading candidates, not claims that a typeface is inherently Samoan.</p>
+      </header>
+
+      <div class="toolbar">
+        <label class="control-label" for="specimen-size">Reading size</label>
+        <input id="specimen-size" type="range" min="19" max="32" value="23" />
+        <output id="specimen-size-value" for="specimen-size">23 px</output>
+      </div>
+
+      <section class="specimens" id="specimens" aria-label="Twenty-two Samoan serif type specimens"></section>
+
+      <footer>
+        <p>The extended title follows the cataloged 1887 edition. The marks row tests modern forms: ā ē ī ō ū and ʻ. Final font selection should confirm glyph coverage, print-size legibility, and preference with Samoan readers.</p>
+        <p>Source: <a href="https://archive.org/details/oletusipaiaole00lond">Smithsonian Libraries, 1887 scan</a>. Candidate web fonts load from <a href="https://fonts.google.com/">Google Fonts</a>; an internet connection is needed to compare them.</p>
+      </footer>
+    </main>
+    <script>
+      const families = [
+        ["Alegreya", "Literary · warm"],
+        ["Andada Pro", "Humanist · sturdy"],
+        ["Arvo", "Slab · grounded"],
+        ["Brawler", "Old-style · compact"],
+        ["Bodoni Moda", "High contrast · formal"],
+        ["Cardo", "Scholarly · old-style"],
+        ["Cormorant Garamond", "Historic · expressive"],
+        ["Crimson Pro", "Classic · refined"],
+        ["EB Garamond", "Historic · familiar"],
+        ["Gentium Book Plus", "Humanist · language-rich"],
+        ["Libre Baskerville", "Measured · clear"],
+        ["Lora", "Warm · contemporary"],
+        ["Literata", "Digital · literary"],
+        ["Merriweather", "Sturdy · open"],
+        ["Newsreader", "Editorial · composed"],
+        ["Noto Serif", "Broad-script candidate"],
+        ["Noto Serif Display", "Display · stately"],
+        ["Old Standard TT", "Historical · bookish"],
+        ["PT Serif", "Practical · balanced"],
+        ["Source Serif 4", "Versatile · text-first"],
+        ["Spectral", "Editorial · open"],
+        ["Vollkorn", "Warm · substantial"],
+      ];
+      const priorityFamilies = new Set(["Gentium Book Plus", "Noto Serif", "Source Serif 4", "Literata"]);
+      const specimenTitle = "O le Tusi Pa'ia";
+      const specimenParagraph = "O le tusi paia o le Feagaiga Tuai ma le Feagaiga Fou lea, ua faasamoaina.";
+      const specimens = document.querySelector("#specimens");
+
+      families.forEach(([family, note], index) => {
+        const specimen = document.createElement("article");
+        specimen.className = priorityFamilies.has(family) ? "specimen is-priority" : "specimen";
+        specimen.style.setProperty("--specimen-font", `"${family}"`);
+
+        const top = document.createElement("div");
+        top.className = "specimen-header";
+        const number = document.createElement("span");
+        number.className = "specimen-index";
+        number.textContent = String(index + 1).padStart(2, "0");
+        const title = document.createElement("h2");
+        title.textContent = family;
+        const caption = document.createElement("span");
+        caption.className = "specimen-note";
+        caption.textContent = priorityFamilies.has(family) ? "Coverage candidate" : note;
+        top.append(number, title, caption);
+
+        const phrase = document.createElement("p");
+        phrase.className = "phrase";
+        phrase.lang = "sm";
+        phrase.textContent = specimenTitle;
+
+        const paragraph = document.createElement("p");
+        paragraph.className = "paragraph";
+        paragraph.lang = "sm";
+        paragraph.textContent = specimenParagraph;
+
+        const marks = document.createElement("div");
+        marks.className = "marks";
+        marks.lang = "sm";
+        const label = document.createElement("span");
+        label.className = "marks-label";
+        label.textContent = "Marks";
+        const sample = document.createElement("span");
+        sample.textContent = "Faʻa-Sāmoa · ā ē ī ō ū · ʻ";
+        marks.append(label, sample);
+
+        specimen.append(top, phrase, paragraph, marks);
+        specimens.append(specimen);
+      });
+
+      const sizeControl = document.querySelector("#specimen-size");
+      const sizeValue = document.querySelector("#specimen-size-value");
+      sizeControl.addEventListener("input", () => {
+        document.documentElement.style.setProperty("--specimen-size", `${sizeControl.value}px`);
+        sizeValue.value = `${sizeControl.value} px`;
+        sizeValue.textContent = `${sizeControl.value} px`;
+      });
+    </script>
+  </body>
+</html>
