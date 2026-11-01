@@ -120,7 +120,7 @@ await writeFile(
     displayBookNames,
     language: source.metadata.lang_short,
     source: source.metadata.name,
-    sourceUrl: "http://unbound.biola.edu/",
+    sourceUrl: source.metadata.url,
     rightsUrl: "https://ebible.org/details.php?id=deu1912",
     sourceModule: source.metadata.module,
     sourceModuleVersion: source.metadata.module_version,

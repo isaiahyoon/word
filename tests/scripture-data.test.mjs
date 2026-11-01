@@ -223,6 +223,10 @@ describe("generated scripture data", () => {
     assert.equal(manifest.sourceVerseCount, sourceVerseCount);
     assert.equal(manifest.language, "de");
     assert.equal(manifest.versification, "KJV");
+    assert.equal(
+      manifest.sourceUrl,
+      "https://github.com/laisiangtho/bible/blob/master/json/luther1912.json",
+    );
     assert.equal(manifest.rightsUrl, "https://ebible.org/details.php?id=deu1912");
     await assertEditionMatchesSource(manifest, expectedBooks, "luther1912");
   });
