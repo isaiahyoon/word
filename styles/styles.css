@@ -34,6 +34,9 @@ body.is-krv-edition::before {
   background-color: #e8f1f4;
   background-image: linear-gradient(128deg, #bed8ea, #e8f1f4 58%, #c3d3e5);
 }
+body.is-kjv-edition {
+  --verse-font-size-adjustment: -2px;
+}
 body.is-diodati-edition {
   --canvas: #f8edf1;
   --paper: #fff9fa;
@@ -105,6 +108,37 @@ body.is-japbungo-edition {
   --canvas: #edf5eb;
   --serif: var(--serif-japanese);
   --sans: var(--sans-japanese);
+}
+body.is-martin1744-edition {
+  --canvas: #f5edf2;
+  --serif: var(--serif-french);
+  --paper: #fffdfd;
+  --line: #e7dce5;
+  --blue: #dce8f8;
+  --blue-strong: #a9c5e8;
+  --lavender: #e6e2f1;
+  --yellow: #fff3d5;
+  --pink: #f5d6e2;
+  --green: #e2eee2;
+  --coral: #bd5d70;
+  --deep-teal: #405d75;
+  --navy-ink: #30455f;
+  --brass: #a47d76;
+  --brass-soft: #d9b8bc;
+  --brass-shadow: #c59da5;
+  --chapter-blue: #9ebce3;
+  --chapter-lavender: #d9cbe8;
+  --chapter-pink: #e9afc5;
+  --chapter-green: #c9decf;
+  --focus: #a95672;
+  --focus-border: #ca8199;
+  --focus-ring: rgba(169, 86, 114, 0.16);
+  --grain: rgba(81, 79, 111, 0.055);
+}
+body.is-martin1744-edition::before {
+  opacity: 1;
+  background-color: #fff;
+  background-image: linear-gradient(135deg, #dce8f8 0%, #fff 50%, #f5d6e2 100%);
 }
 .pull-refresh-indicator {
   position: fixed;
@@ -1434,10 +1468,17 @@ a:focus-visible {
   letter-spacing: 0;
 }
 .edition-trigger-label {
+  min-width: 0;
   overflow: hidden;
   font-size: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.edition-scroll-text {
+  display: block;
+  width: max-content;
+  padding-inline-end: 0.5em;
+  transform: translateX(0);
 }
 .edition-select-caret {
   color: var(--brass);
@@ -1509,6 +1550,8 @@ a:focus-visible {
   font-family: var(--sans);
 }
 .edition-option-description strong {
+  display: block;
+  min-width: 0;
   overflow: hidden;
   font-size: 11px;
   font-weight: var(--weight-semibold);
@@ -1516,6 +1559,8 @@ a:focus-visible {
   white-space: nowrap;
 }
 .edition-option-description small {
+  display: block;
+  min-width: 0;
   overflow: hidden;
   color: #777970;
   font-family: var(--serif);
@@ -1617,6 +1662,18 @@ body.is-luther1912-edition .edition-option.is-selected .edition-option-check {
 .edition-picker:has(.edition-options:not([hidden])) {
   z-index: 13;
 }
+@media (hover: hover) and (pointer: fine) {
+  .edition-trigger:hover .edition-trigger-label.is-overflowing .edition-scroll-text,
+  .edition-option:hover .edition-option-description .is-overflowing .edition-scroll-text {
+    animation: edition-label-scroll 1.25s linear infinite alternate;
+  }
+}
+@media (max-width: 640px) {
+  .sidebar.is-open .edition-trigger-label.is-overflowing .edition-scroll-text,
+  .sidebar.is-open .edition-option-description .is-overflowing .edition-scroll-text {
+    animation: edition-label-scroll 1.25s linear infinite alternate;
+  }
+}
 @keyframes edition-options-in {
   from {
     opacity: 0;
@@ -1625,6 +1682,20 @@ body.is-luther1912-edition .edition-option.is-selected .edition-option-check {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+@keyframes edition-label-scroll {
+  0%, 5% {
+    transform: translateX(0);
+  }
+  50%, 100% {
+    transform: translateX(calc(-1 * var(--edition-scroll-distance)));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .edition-trigger-label.is-overflowing .edition-scroll-text,
+  .edition-option-description .is-overflowing .edition-scroll-text {
+    animation: none;
   }
 }
 .edition-attribution {
@@ -2315,7 +2386,7 @@ body.is-krv-edition .verse-list {
   color: var(--journal-ink);
   font: inherit;
   font-family: var(--serif);
-  font-size: var(--type-reading);
+  font-size: calc(var(--type-reading) + var(--verse-font-size-adjustment));
   line-height: var(--line-reading);
   cursor: pointer;
   text-align: left;
@@ -2726,8 +2797,11 @@ body.is-krv-edition .bottom-chapter strong {
 }
 .app-shell.is-quiet-reading .verse {
   padding: 11px 0;
-  font-size: var(--type-quiet-reading);
+  font-size: calc(var(--type-quiet-reading) + var(--verse-font-size-adjustment));
   line-height: var(--line-quiet-reading);
+}
+body.is-kjv-edition .app-shell.is-quiet-reading .verse {
+  font-size: calc(var(--type-quiet-reading) + var(--verse-font-size-adjustment));
 }
 
 @keyframes page-in {
@@ -2974,7 +3048,7 @@ body.is-krv-edition .bottom-chapter strong {
     padding-top: 66px;
   }
   .verse {
-    font-size: 19px;
+    font-size: calc(19px + var(--verse-font-size-adjustment));
   }
 }
 
@@ -3348,8 +3422,11 @@ body.is-krv-edition .bottom-chapter strong {
     padding-top: 32px;
   }
   .app-shell.is-quiet-reading .verse {
-    font-size: var(--type-quiet-reading-mobile);
+    font-size: calc(var(--type-quiet-reading-mobile) + var(--verse-font-size-adjustment));
     line-height: 1.85;
+  }
+  body.is-kjv-edition .app-shell.is-quiet-reading .verse {
+    font-size: calc(var(--type-quiet-reading-mobile) + var(--verse-font-size-adjustment));
   }
   .chapter-heading h1 {
     font-size: 45px;

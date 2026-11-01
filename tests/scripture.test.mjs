@@ -3,7 +3,7 @@ import { performance } from "node:perf_hooks";
 import { readFile } from "node:fs/promises";
 import { describe, it } from "node:test";
 import { BOOKS, bookFileName } from "../js/books.mjs";
-import { KRV_BOOK_NAMES } from "../js/editions.mjs";
+import { KRV_BOOK_NAMES, MARTIN_BOOK_NAMES } from "../js/editions.mjs";
 import {
   createScriptureRoutes,
   getVerseStep,
@@ -149,6 +149,22 @@ describe("scripture routes", () => {
       "/licht/b/john/c/3/v/16",
     );
     assert.equal(editionRoutes.parse("/luther1912/b/john/c/3/v/16"), null);
+
+    const martinRoutes = createScriptureRoutes(BOOKS, "/", {
+      kjv: { routeSegment: "kjv" },
+      martin1744: { routeSegment: "moh" },
+    });
+    assert.deepEqual(martinRoutes.parse("/moh/b/psalms/c/3/v/2"), {
+      editionId: "martin1744",
+      book: 19,
+      chapter: 3,
+      range: { start: 2, end: 2 },
+      legacy: false,
+    });
+    assert.equal(
+      martinRoutes.buildPath(19, 3, { start: 2, end: 2 }, "martin1744"),
+      "/moh/b/psalms/c/3/v/2",
+    );
   });
 
   it("round-trips numbered and multiword book slugs", () => {
@@ -463,6 +479,43 @@ describe("scripture store", () => {
       const matches = await store.search(query);
       assert.ok(matches.every((match) => match.searchType !== "reference"), query);
     }
+  });
+
+  it("searches Martin French text, localized references, and native verse numbers", async () => {
+    const fetchImpl = async (path) => {
+      const fileUrl = new URL(`../${path.replace(/^\.\//, "")}`, import.meta.url);
+      return { ok: true, json: async () => JSON.parse(await readFile(fileUrl, "utf8")) };
+    };
+    const store = createScriptureStore({
+      fetchImpl,
+      dataPath: "./scripture/martin1744",
+      language: "fr",
+      displayBookNames: MARTIN_BOOK_NAMES,
+    });
+    await store.initialize();
+
+    assert.equal(store.bookName(19), "Psaumes");
+    const bookPrefix = await store.search("Psaum");
+    assert.equal(bookPrefix[0].searchType, "book");
+    assert.equal(bookPrefix[0].book, 19);
+
+    const title = await store.search("Psaumes 3:1");
+    assert.equal(title[0].searchType, "reference");
+    assert.equal(title[0].text, "Psaume de David au sujet de sa fuite de devant Absalom son fils.");
+    assert.equal(title.filter(({ book, chapter, verse }) => book === 19 && chapter === 3 && verse === 1).length, 1);
+
+    const scriptureVerse = await store.search("Psaumes 3:2");
+    assert.equal(scriptureVerse[0].searchType, "reference");
+    assert.equal(scriptureVerse[0].verse, 2);
+    assert.ok(scriptureVerse[0].text.startsWith("Ô Eternel!"));
+
+    const textMatch = await store.search("Au commencement");
+    assert.ok(textMatch.some(({ book, chapter, verse }) => book === 1 && chapter === 1 && verse === 1));
+    const fuzzyMatch = await store.search("commencemant");
+    assert.ok(fuzzyMatch.some(({ book, chapter, verse }) => book === 1 && chapter === 1 && verse === 1));
+
+    const invalidReference = await store.search("Psaumes 3:10");
+    assert.ok(invalidReference.every((match) => match.searchType !== "reference"));
   });
 
   it("searches Luther German text, prefixes, and localized references", async () => {

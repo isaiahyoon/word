@@ -3,6 +3,7 @@
   "scripts": {
     "build:diodati": "node tools/build-diodati-data.mjs",
     "build:luther": "node tools/build-luther-data.mjs",
+    "build:martin": "node tools/build-martin-data.mjs",
     "lint:css": "stylelint \"**/*.css\"",
     "test": "node --test tests/*.test.mjs",
     "test:ui": "playwright test",

@@ -84,6 +84,8 @@ describe("development server", () => {
       "/kjv/b/joshua/c/1/v/1-10",
       "/krv/b/joshua/c/1/v/1-10",
       "/licht/b/joshua/c/1/v/1-10",
+      "/moh/b/psalms/c/3/v/1",
+      "/moh",
       "/licht",
       "/kjv",
       "/krv",
@@ -104,7 +106,7 @@ describe("development server", () => {
 
     assert.equal(response.status, 200);
     assert.notEqual(fallbackIndex, -1);
-    for (const route of ["/kjv/b/*", "/krv/b/*", "/diodati/b/*", "/licht/b/*", "/japbungo/b/*", "/b/*"]) {
+    for (const route of ["/kjv/b/*", "/krv/b/*", "/diodati/b/*", "/licht/b/*", "/japbungo/b/*", "/moh/b/*", "/b/*"]) {
       assert.ok(redirects.indexOf(route) < fallbackIndex, `${route} precedes the 404 fallback`);
     }
   });

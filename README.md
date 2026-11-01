@@ -36,8 +36,8 @@ and without him was not any thing made that was made.
 
 ## Features
 
-- Read the King James Version (KJV), Korean Revised Version (KRV), Japanese Bungo-yaku (JapBungo), Italian Giovanni Diodati (1649), and German Luther Bible (1912), with edition-aware book navigation and direct links to passages. JapBungo has a green reading theme; Diodati has a pink gradient reading theme; Luther uses a pastel yellow gradient with red accents.
-- Search scripture by phrase or separate terms, with relevance ranking, fuzzy typo matching, and direct suggestions for books, chapters, and verses. German, Korean, and Japanese searches support localized book names and references; Korean searches also support common spelling variations.
+- Read the King James Version (KJV), Korean Revised Version (KRV), Japanese Bungo-yaku (JapBungo), Italian Giovanni Diodati (1649), German Luther Bible (1912), and French David Martin Bible (1744), with edition-aware book navigation and direct links to passages. JapBungo has a green reading theme; Diodati has a pink gradient reading theme; Luther uses a pastel yellow gradient with red accents; Martin uses a blue-white-pink gradient.
+- Search scripture by phrase or separate terms, with relevance ranking, fuzzy typo matching, and direct suggestions for books, chapters, and verses. German, Korean, Japanese, and French searches support localized book names and references; Korean searches also support common spelling variations.
 - Choose chapters with the whimsical chapter picker, or move through the text with navigation buttons and keyboard shortcuts. On mobile, swipe right from the left screen edge to open book navigation, or swipe left across the open drawer to close it. A discreet back-to-top button appears while scrolling.
 - Open the shortcut guide with `/` to see Mac and Windows keys for refresh, search, navigation, Quiet Mode, verse copying, and edition cycling with Tab/Shift+Tab.
 - Enter Quiet Mode for a calmer reading view, with subtle glimmer details throughout the interface.
@@ -90,6 +90,7 @@ node tools/build-krv-data.mjs
 node tools/build-diodati-data.mjs
 node tools/build-luther-data.mjs
 node tools/build-japbungo-data.mjs
+node tools/build-martin-data.mjs
 ```
 
 The KJV source is stored in `sources/kjv.json`; the 1961 KRV source is pinned in `sources/krv-1961.json`. KRV attribution is shown when selected. Its economic copyright term has expired according to the [Bible Society of Korea](https://www.bskorea.or.kr/bbs/board.php?bo_table=copyright_faq&wr_id=5); preserve the text and provide attribution.
@@ -99,6 +100,8 @@ JapBungo is built from the public-domain [GetBible JapBungo source](https://gith
 Diodati text is stored in `sources/diodati.json` from the public-domain [Diodati-1649 repository](https://github.com/FordhamRamFan/public-domain-bible-translations/tree/main/Italian/Diodati-1649). Its 66 books and 31,102 verse slots follow KJV numbering. The picker code is DIO, and the Italian reader uses a pink gradient theme and Cormorant Garamond. Rebuild it with `node tools/build-diodati-data.mjs`. The [Diodati–KJV lexical comparison study](studies/beasts-in-translation.html) compares verses containing Diodati dragone/dragoni, liocorno/liocorni, or sciacallo/sciacalli with the corresponding KJV dragon/dragons or unicorn/unicorns passages. There are 34 dragon-related verse comparisons and 9 unicorn-related verse comparisons, for a total of 43 comparisons.
 
 The Luther Bible (1912) source is in `sources/luther_1912.json`; its records were imported from the now-discontinued Unbound Bible. The [eBible.org Lutherbibel 1912 page](https://ebible.org/details.php?id=deu1912) identifies the edition as public domain and provides downloadable formats. The edition uses the LUX picker code, the dropdown label `Lutherbibel · Licht im Wort`, the `/licht/` route, and a readable Gelasio serif with a pastel-yellow/red peach-calm theme. Its 66 books and 31,102 verse slots have been checked against KJV. Rebuild it with `node tools/build-luther-data.mjs`.
+
+The French [David Martin Bible (1744)](https://github.com/getbible/v2/tree/master/martin) is stored in `sources/martin_1744.json`. CrossWire JSword identifies its French Protestant versification as **Calvin**, the [Geneva/Olivetan system used by Martin](https://github.com/crosswire/jsword/blob/master/src/main/java/org/crosswire/jsword/versification/system/SystemCalvin.java). MOH preserves Martin's native references at `/moh/`; it does not relabel verses to KJV numbers. The generated index records 90 chapters whose Martin verse counts differ from KJV, and explicitly lists four empty source placeholders excluded from display (Psalms 69:37, 102:29, 108:14, and 140:14). The source contains 31,170 records, 31,166 non-empty verse texts, and KJV contains 31,102 verse slots. These count differences are not a complete passage-by-passage crosswalk; do not assume same-numbered verses always contain the same passage. MOH uses EB Garamond for French reading and display typography, selected from the [font study](studies/french-font-study.html). The edition uses a pastel blue upper-left, white center, and pink lower-right background. Rebuild it with `npm run build:martin`.
 
 ## Search
 
@@ -111,6 +114,8 @@ KRV search accepts Korean book names and references such as `요한복음`, `요
 JapBungo search accepts Japanese text and localized references such as `ヨハネの福音書 3:16`. Matching is lexical and uses the selected edition's Japanese text and display-book names.
 
 Diodati search uses Italian text and localized book names and references, including `Genesi`, `Genesi 1:1`, and the prefix `Gene`. It supports separate terms, accented text, and typo tolerance for longer words.
+
+Martin search uses French text and localized references, including `Psaumes 3:1` and `Psaumes 3:2`. References use Martin's native Calvin numbering; for example, Psalms 3:1 is its numbered psalm title and the first body verse is Psalms 3:2.
 
 Luther search uses German text and localized book names and references, including `1 Mose`, `Johannes 3:16`, and German terms with umlauts. It supports prefixes, separate terms, and typo tolerance for longer words.
 
@@ -133,7 +138,7 @@ Run the CSS lint and both test suites together with `npm run test:all`.
 
 ## Customize the palette
 
-Edit the shared typography tokens in `styles/typography.css`, the base color tokens in `styles/theme.css`, and component colors in `styles/styles.css`. The app and 404 page use Gelasio for display and reading with DM Sans for interface text; Diodati uses Cormorant Garamond for its Italian reading face. The base pastels are `--blue`, `--lavender`, `--yellow`, `--pink`, and `--green`; the chapter number's higher-contrast gradient stops are `--chapter-blue`, `--chapter-lavender`, `--chapter-pink`, and `--chapter-green`.
+Edit the shared typography tokens in `styles/typography.css`, the base color tokens in `styles/theme.css`, and component colors in `styles/styles.css`. The app and 404 page use Gelasio for display and reading with DM Sans for interface text; Diodati uses Cormorant Garamond for its Italian reading face, and Martin uses EB Garamond for French. The French font comparison is available in the [font study](studies/french-font-study.html). The base pastels are `--blue`, `--lavender`, `--yellow`, `--pink`, and `--green`; the chapter number's higher-contrast gradient stops are `--chapter-blue`, `--chapter-lavender`, `--chapter-pink`, and `--chapter-green`.
 
 ## License
 

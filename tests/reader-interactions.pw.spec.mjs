@@ -208,6 +208,7 @@ test("cycles editions with Tab and Shift+Tab and wraps at both ends", async ({ p
     ["/diodati", "it"],
     ["/licht", "de"],
     ["/japbungo", "ja"],
+    ["/moh", "fr"],
     ["/kjv", "en"],
   ]) {
     await page.keyboard.press("Tab");
@@ -217,6 +218,7 @@ test("cycles editions with Tab and Shift+Tab and wraps at both ends", async ({ p
   }
 
   for (const [route, language] of [
+    ["/moh", "fr"],
     ["/japbungo", "ja"],
     ["/licht", "de"],
     ["/diodati", "it"],
@@ -564,6 +566,50 @@ test("switches editions at the same passage and canonicalizes legacy KJV links",
   await expect(page.locator("#verse-17 .verse-text")).toContainText("Denn Gott hat seinen Sohn nicht gesandt");
 });
 
+test("opens the Martin edition with native Psalm numbering and the French pastel theme", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/moh/b/psalms/c/3/v/1");
+
+  await expect(page).toHaveURL(/\/moh\/b\/psalms\/c\/3\/v\/1$/);
+  await expect(page.locator("#edition-select-code")).toHaveText("MOH");
+  await expect(page.locator("#verse-list")).toHaveAttribute("lang", "fr");
+  await expect(page.locator("body")).toHaveClass(/is-martin1744-edition/);
+  await expect(page.locator("#verse-1 .verse-text")).toContainText("Psaume de David");
+  await expect(page.locator("#verse-2 .verse-text")).toContainText("Ô Eternel!");
+  await page.evaluate(() => document.fonts.load('18px "EB Garamond"'));
+  expect(await page.locator("#verse-1 .verse-text").evaluate((element) =>
+    getComputedStyle(element).fontFamily,
+  )).toContain("EB Garamond");
+
+  const gradient = await page.locator("body").evaluate((element) =>
+    getComputedStyle(element, "::before").backgroundImage,
+  );
+  expect(gradient).toContain("rgb(220, 232, 248)");
+  expect(gradient).toContain("rgb(255, 255, 255)");
+  expect(gradient).toContain("rgb(245, 214, 226)");
+  const dimensions = await page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+  expect(dimensions.scrollWidth).toBe(dimensions.clientWidth);
+
+  await page.locator("#verse-2").click();
+  await expect(page).toHaveURL(/\/moh\/b\/psalms\/c\/3\/v\/2$/);
+  await expect(page.locator("#verse-2")).toHaveClass(/is-copy-selected/);
+  await page.locator("#copy-selected-verses").click();
+  const verseText = (await page.locator("#verse-2 .verse-text").textContent()).trim();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toBe(`"${verseText}"\n\n- Psaumes 3:2`);
+
+  await page.goto("/kjv/b/john/c/3/v/16");
+  await page.locator("#menu-toggle").click();
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-option-martin1744").click();
+  await expect(page).toHaveURL(/\/moh\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("#verse-16 .verse-text")).toContainText("Car Dieu a tant aimé le monde");
+});
+
 test("renders the KRV brand before its scripture index finishes loading", async ({ page }) => {
   await page.route("**/scripture/krv/index.json", async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 700));
@@ -576,6 +622,68 @@ test("renders the KRV brand before its scripture index finishes loading", async 
   await expect(page.locator("#brand-edition-secondary")).toHaveText("1961");
   await expect(page.locator("#brand-edition-primary")).not.toHaveText("KING JAMES");
   await expect(page.locator("#verse-16 .verse-text")).toContainText("하나님이 세상을 이처럼 사랑하사");
+});
+
+test("uses a two-pixel smaller verse size only for KJV", async ({ page }) => {
+  await page.goto("/kjv/b/john/c/3/v/16");
+  await expect(page.locator("#verse-16")).toHaveCSS("font-size", "17px");
+  await page.locator("#quiet-view-toggle").click();
+  await expect(page.locator("#verse-16")).toHaveCSS("font-size", "18px");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator("#verse-16")).toHaveCSS("font-size", "16px");
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/diodati/b/genesis/c/1/v/1");
+  await expect(page.locator("#verse-1")).toHaveCSS("font-size", "19px");
+});
+
+test("auto-scrolls long edition labels only while the mobile sidebar is open", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto("/licht");
+  const triggerLabel = page.locator("#edition-select-label");
+  await expect(triggerLabel).toHaveClass(/is-overflowing/);
+  const triggerTrack = triggerLabel.locator(".edition-scroll-text");
+  await expect(triggerTrack).toHaveCSS("animation-name", "none");
+  await page.locator("#menu-toggle").click();
+  await expect(triggerTrack).toHaveCSS("animation-name", "edition-label-scroll");
+
+  await page.locator("#edition-select").click();
+  const lutherOption = page.locator("#edition-option-luther1912");
+  const longOptionTitle = lutherOption.locator(".edition-option-description strong.is-overflowing .edition-scroll-text");
+  await expect(longOptionTitle).toHaveCount(1);
+  await expect(longOptionTitle).toHaveCSS("animation-name", "edition-label-scroll");
+
+  await page.locator(".sidebar-scrim").click({ position: { x: 310, y: 400 } });
+  await expect(page.locator(".sidebar")).not.toHaveClass(/is-open/);
+  await expect(triggerTrack).toHaveCSS("animation-name", "none");
+});
+
+test("scrolls long edition labels only when hovered on desktop", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/licht");
+  const desktopTrack = page.locator("#edition-select-label .edition-scroll-text");
+  await expect(desktopTrack).toHaveCSS("animation-name", "none");
+  await page.locator("#edition-select").focus();
+  await expect(desktopTrack).toHaveCSS("animation-name", "none");
+  await page.locator("#edition-select").hover();
+  await expect(desktopTrack).toHaveCSS("animation-name", "edition-label-scroll");
+  await page.locator("#edition-select").click();
+  const longOptionTitle = page.locator(
+    "#edition-option-luther1912 .edition-option-description strong.is-overflowing .edition-scroll-text",
+  );
+  await expect(longOptionTitle).toHaveCSS("animation-name", "none");
+  await page.locator("#edition-option-luther1912").hover();
+  await expect(longOptionTitle).toHaveCSS("animation-name", "edition-label-scroll");
+  const endGap = await longOptionTitle.evaluate(async (track) => {
+    const animation = track.getAnimations()[0];
+    animation.pause();
+    animation.currentTime = 1000;
+    await new Promise(requestAnimationFrame);
+    const range = document.createRange();
+    range.selectNodeContents(track);
+    return track.parentElement.getBoundingClientRect().right - range.getBoundingClientRect().right;
+  });
+  expect(endGap).toBeGreaterThanOrEqual(3);
 });
 
 test("uses a compact JAP edition code while keeping the full Bungo name", async ({ page }) => {

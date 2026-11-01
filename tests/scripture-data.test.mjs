@@ -227,6 +227,77 @@ describe("generated scripture data", () => {
     await assertEditionMatchesSource(manifest, expectedBooks, "luther1912");
   });
 
+  it("preserves Martin text and native Calvin verse numbering", async () => {
+    const source = JSON.parse(await readFile(new URL("../sources/martin_1744.json", import.meta.url), "utf8"));
+    const manifest = JSON.parse(await readFile(new URL("../scripture/martin1744/index.json", import.meta.url), "utf8"));
+    const canonicalIndex = JSON.parse(await readFile(new URL("../scripture/kjv/index.json", import.meta.url), "utf8"));
+    const expectedBooks = Array.from({ length: BOOKS.length }, () => new Map());
+    const emptyRecords = [];
+    const numberingDifferences = [];
+    let sourceRecordCount = 0;
+    let sourceVerseCount = 0;
+
+    assert.equal(source.books.length, BOOKS.length);
+    assert.equal(manifest.language, "fr");
+    assert.equal(manifest.versification, "Calvin");
+    assert.equal(manifest.source, "David Martin Bible (1744)");
+    assert.equal(manifest.displayBookNames[18], "Psaumes");
+
+    for (const [bookIndex, sourceBook] of source.books.entries()) {
+      const canonicalName = sourceBook.name === "Revelation of John"
+        ? "Revelation"
+        : sourceBook.name.replace(/^(III|II|I) /, (_, numeral) => `${numeral.length} `);
+      assert.equal(canonicalName, BOOKS[bookIndex]);
+      assert.equal(sourceBook.chapters.length, canonicalIndex.chapterCounts[bookIndex]);
+
+      const canonical = JSON.parse(await readFile(
+        new URL(`../scripture/kjv/books/${canonicalIndex.bookFiles[bookIndex]}`, import.meta.url),
+        "utf8",
+      ));
+      for (const [chapterIndex, sourceChapter] of sourceBook.chapters.entries()) {
+        const chapter = chapterIndex + 1;
+        assert.equal(sourceChapter.chapter, chapter);
+        const verses = [];
+        for (const [verseIndex, record] of sourceChapter.verses.entries()) {
+          assert.equal(record.chapter, chapter);
+          assert.equal(record.verse, verseIndex + 1);
+          sourceRecordCount += 1;
+          if (record.text.trim() === "") {
+            emptyRecords.push({ book: bookIndex + 1, chapter, verse: record.verse });
+            continue;
+          }
+          verses.push([record.verse, record.text]);
+          sourceVerseCount += 1;
+        }
+        expectedBooks[bookIndex].set(chapter, verses);
+        if (verses.length !== canonical[chapter].length) {
+          numberingDifferences.push({
+            book: bookIndex + 1,
+            chapter,
+            martinVerseCount: verses.length,
+            kjvVerseCount: canonical[chapter].length,
+          });
+        }
+      }
+    }
+
+    assert.equal(sourceRecordCount, 31170);
+    assert.equal(sourceVerseCount, 31166);
+    assert.equal(manifest.sourceRecordCount, sourceRecordCount);
+    assert.equal(manifest.sourceVerseCount, sourceVerseCount);
+    assert.equal(manifest.kjvVerseCount, 31102);
+    assert.deepEqual(manifest.excludedEmptyRecords, [
+      { book: 19, chapter: 69, verse: 37 },
+      { book: 19, chapter: 102, verse: 29 },
+      { book: 19, chapter: 108, verse: 14 },
+      { book: 19, chapter: 140, verse: 14 },
+    ]);
+    assert.deepEqual(emptyRecords, manifest.excludedEmptyRecords);
+    assert.deepEqual(manifest.numberingDifferences, numberingDifferences);
+    assert.equal(numberingDifferences.length, 90);
+    await assertEditionMatchesSource(manifest, expectedBooks, "martin1744");
+  });
+
   async function assertEditionMatchesSource(manifest, expectedBooks, edition) {
     assert.equal(manifest.edition, edition);
     assert.equal(manifest.bookFiles.length, BOOKS.length);

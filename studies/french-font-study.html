@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f8f2f1" />
+    <meta name="description" content="A side-by-side study of ten romantic, French-capable serif typefaces for The Word." />
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,600;1,6..96,400&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;1,7..72,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&display=swap"
+      rel="stylesheet"
+    />
+    <title>French Type Study · The Word</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #322e34;
+        --muted: #716a72;
+        --rule: rgba(68, 57, 67, 0.16);
+        --paper: #f8f2f1;
+        --blue: #dce8f5;
+        --rose: #f3dfe5;
+        --serif-display: "Gelasio", "Iowan Old Style", Georgia, serif;
+        --sans: "DM Sans", "Avenir Next", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        min-width: 320px;
+        margin: 0;
+        background:
+          radial-gradient(rgba(89, 73, 82, 0.055) 0.7px, transparent 0.7px) 0 0 / 8px 8px,
+          linear-gradient(135deg, #e5edf6 0%, #fbf8f5 45%, #f5e3e8 100%);
+        color: var(--ink);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      main {
+        width: min(1120px, 100%);
+        margin: 0 auto;
+        padding: 48px 30px 72px;
+      }
+
+      header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(240px, 370px);
+        align-items: end;
+        gap: 30px;
+        margin-bottom: 30px;
+        padding: 0 0 22px;
+        border-bottom: 1px solid var(--rule);
+      }
+
+      .eyebrow,
+      .specimen-index,
+      .specimen-role,
+      .accent-label {
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        color: #806477;
+      }
+
+      h1 {
+        margin: 0;
+        font-family: var(--serif-display);
+        font-size: clamp(32px, 4vw, 48px);
+        font-weight: 500;
+        line-height: 1.05;
+      }
+
+      .intro {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.7;
+      }
+
+      .specimens {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .specimen {
+        --specimen-font: Georgia, serif;
+        min-width: 0;
+        overflow: hidden;
+        padding: 20px 22px 18px;
+        border: 1px solid var(--rule);
+        border-radius: 6px;
+        background: rgba(255, 253, 251, 0.86);
+        box-shadow: 0 5px 16px rgba(58, 48, 57, 0.035);
+      }
+
+      .specimen.is-selected {
+        border-color: #a05f74;
+        box-shadow: 0 7px 20px rgba(98, 63, 81, 0.12);
+      }
+
+      .specimen-header {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+
+      .specimen-index { color: #a05f74; }
+
+      h2 {
+        min-width: 0;
+        margin: 0;
+        font-family: var(--specimen-font);
+        font-size: 19px;
+        font-weight: 500;
+      }
+
+      .specimen-role {
+        margin-left: auto;
+        color: var(--muted);
+        font-size: 9px;
+        text-align: right;
+      }
+
+      .phrase {
+        margin: 0 0 7px;
+        font-family: var(--specimen-font);
+        font-size: 25px;
+        font-weight: 500;
+        line-height: 1.28;
+      }
+
+      .paragraph {
+        margin: 0;
+        color: #514a52;
+        font-family: var(--specimen-font);
+        font-size: 17px;
+        font-weight: 400;
+        line-height: 1.58;
+      }
+
+      .accent-row {
+        display: flex;
+        align-items: baseline;
+        gap: 9px;
+        margin-top: 15px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(68, 57, 67, 0.1);
+      }
+
+      .accent-label { color: #8c7781; font-size: 8px; }
+      .accents { font-family: var(--specimen-font); font-size: 15px; }
+
+      .alegreya { --specimen-font: "Alegreya", Georgia, serif; }
+      .eb-garamond { --specimen-font: "EB Garamond", Georgia, serif; }
+      .newsreader { --specimen-font: "Newsreader", Georgia, serif; }
+      .crimson-pro { --specimen-font: "Crimson Pro", Georgia, serif; }
+      .lora { --specimen-font: "Lora", Georgia, serif; }
+      .playfair { --specimen-font: "Playfair Display", Georgia, serif; }
+      .bodoni { --specimen-font: "Bodoni Moda", Georgia, serif; }
+      .libre-baskerville { --specimen-font: "Libre Baskerville", Georgia, serif; }
+      .fraunces { --specimen-font: "Fraunces", Georgia, serif; }
+      .literata { --specimen-font: "Literata", Georgia, serif; }
+
+      footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        margin-top: 22px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      @media (max-width: 700px) {
+        main { padding: 30px 17px 48px; }
+        header { grid-template-columns: 1fr; gap: 12px; }
+        .specimens { grid-template-columns: 1fr; gap: 11px; }
+        .specimen { padding: 18px 17px 16px; }
+        .phrase { font-size: 23px; }
+        footer { flex-direction: column; }
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .specimen { animation: settle-in 480ms both; }
+        .specimen:nth-child(2n) { animation-delay: 50ms; }
+        .specimen:nth-child(3n) { animation-delay: 90ms; }
+      }
+
+      @keyframes settle-in {
+        from { opacity: 0; transform: translateY(7px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    </style>
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="83c99f62-84e3-4c00-b8d6-71acdd602637"></script>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <p class="eyebrow">The Word · MOH · 1744</p>
+          <h1>French type study</h1>
+        </div>
+        <p class="intro">Ten serif voices set in the same French passage. Compare letterforms, accents, rhythm, and the texture of a longer reading line.</p>
+      </header>
+
+      <section class="specimens" aria-label="French serif type specimens">
+        <article class="specimen alegreya">
+          <div class="specimen-header"><span class="specimen-index">01</span><h2>Alegreya</h2><span class="specimen-role">Literary · warm</span></div>
+          <p class="phrase" lang="fr">La lumière demeure au cœur des pages.</p>
+          <p class="paragraph" lang="fr">À l’aube, les premières paroles s’éveillent; leur douceur demeure, comme une promesse que le temps ne peut effacer.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="fr">É é · È è · Ê ê · À à · Ç ç · œ</span></div>
+        </article>
+        <article class="specimen eb-garamond is-selected">
+          <div class="specimen-header"><span class="specimen-index">02</span><h2>EB Garamond</h2><span class="specimen-role">Selected for MOH</span></div>
+          <p class="phrase" lang="fr">La lumière demeure au cœur des pages.</p>
+          <p class="paragraph" lang="fr">À l’aube, les premières paroles s’éveillent; leur douceur demeure, comme une promesse que le temps ne peut effacer.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="fr">É é · È è · Ê ê · À à · Ç ç · œ</span></div>
+        </article>
+        <article class="specimen newsreader">
+          <div class="specimen-header"><span class="specimen-index">03</span><h2>Newsreader</h2><span class="specimen-role">Editorial · composed</span></div>
+          <p class="phrase" lang="fr">La lumière demeure au cœur des pages.</p>
+          <p class="paragraph" lang="fr">À l’aube, les premières paroles s’éveillent; leur douceur demeure, comme une promesse que le temps ne peut effacer.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="fr">É é · È è · Ê ê · À à · Ç ç · œ</span></div>
+        </article>
+        <article class="specimen crimson-pro">
+          <div class="specimen-header"><span class="specimen-index">04</span><h2>Crimson Pro</h2><span class="specimen-role">Classic · refined</span></div>
+          <p class="phrase" lang="fr">La lumière demeure au cœur des pages.</p>
+          <p class="paragraph" lang="fr">À l’aube, les premières paroles s’éveillent; leur douceur demeure, comme une promesse que le temps ne peut effacer.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="fr">É é · È è · Ê ê · À à · Ç ç · œ</span></div>
+        </article>
+        <article class="specimen lora">
+          <div class="specimen-header"><span class="specimen-index">05</span><h2>Lora</h2><span class="specimen-role">Warm · readable</span></div>
+          <p class="phrase" lang="fr">La lumière demeure au cœur des pages.</p>
+          <p class="paragraph" lang="fr">À l’aube, les premières paroles s’éveillent; leur douceur demeure, comme une promesse que le temps ne peut effacer.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="fr">É é · È è · Ê ê · À à · Ç ç · œ</span></div>
+        </article>
+        <article class="specimen playfair">
+          <div class="specimen-header"><span class="specimen-index">06</span><h2>Playfair Display</h2><span class="specimen-role">Romantic · expressive</span></div>
+          <p class="phrase" lang="fr">La lumière demeure au cœur des pages.</p>
+          <p class="paragraph" lang="fr">À l’aube, les premières paroles s’éveillent; leur douceur demeure, comme une promesse que le temps ne peut effacer.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="fr">É é · È è · Ê ê · À à · Ç ç · œ</span></div>
+        </article>
+        <article class="specimen bodoni">
+          <div class="specimen-header"><span class="specimen-index">07</span><h2>Bodoni Moda</h2><span class="specimen-role">Dramatic · polished</span></div>
+          <p class="phrase" lang="fr">La lumière demeure au cœur des pages.</p>
+          <p class="paragraph" lang="fr">À l’aube, les premières paroles s’éveillent; leur douceur demeure, comme une promesse que le temps ne peut effacer.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="fr">É é · È è · Ê ê · À à · Ç ç · œ</span></div>
+        </article>
+        <article class="specimen libre-baskerville">
+          <div class="specimen-header"><span class="specimen-index">08</span><h2>Libre Baskerville</h2><span class="specimen-role">Measured · clear</span></div>
+          <p class="phrase" lang="fr">La lumière demeure au cœur des pages.</p>
+          <p class="paragraph" lang="fr">À l’aube, les premières paroles s’éveillent; leur douceur demeure, comme une promesse que le temps ne peut effacer.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="fr">É é · È è · Ê ê · À à · Ç ç · œ</span></div>
+        </article>
+        <article class="specimen fraunces">
+          <div class="specimen-header"><span class="specimen-index">09</span><h2>Fraunces</h2><span class="specimen-role">Expressive · soft</span></div>
+          <p class="phrase" lang="fr">La lumière demeure au cœur des pages.</p>
+          <p class="paragraph" lang="fr">À l’aube, les premières paroles s’éveillent; leur douceur demeure, comme une promesse que le temps ne peut effacer.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="fr">É é · È è · Ê ê · À à · Ç ç · œ</span></div>
+        </article>
+        <article class="specimen literata">
+          <div class="specimen-header"><span class="specimen-index">10</span><h2>Literata</h2><span class="specimen-role">Digital · literary</span></div>
+          <p class="phrase" lang="fr">La lumière demeure au cœur des pages.</p>
+          <p class="paragraph" lang="fr">À l’aube, les premières paroles s’éveillent; leur douceur demeure, comme une promesse que le temps ne peut effacer.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="fr">É é · È è · Ê ê · À à · Ç ç · œ</span></div>
+        </article>
+      </section>
+
+      <footer>
+        <span>Specimen text is original, written for type comparison.</span>
+        <span>MOH · French · EB Garamond selected for reading.</span>
+      </footer>
+    </main>
+  </body>
+</html>
