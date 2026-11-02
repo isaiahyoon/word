@@ -16,6 +16,7 @@ const CHAPTER_GRADIENT_COLORS = ["var(--chapter-blue)", "var(--chapter-lavender)
 const state = { editionId: DEFAULT_EDITION, book: 1, chapter: 1, verse: 1, selectedVerses: new Set(), testament: "old", lastBookByTestament: { old: 1, new: 40 }, chapterRequestId: 0, searchTimer: null, searchRequestId: 0, searchMatches: [], searchQuery: "", searchShown: 0, searchActiveIndex: -1 };
 const appBasePath = new URL(document.baseURI).pathname;
 const scriptureRoutes = createScriptureRoutes(BOOKS, appBasePath, EDITIONS);
+const readerStateStorageKey = `the-word.reader-state.v1:${appBasePath}`;
 const elements = {
   appShell: document.querySelector(".app-shell"),
   pullRefreshIndicator: document.querySelector("#pull-refresh-indicator"),
@@ -112,6 +113,50 @@ function updateCopyControl() {
   clearTimeout(copyFeedbackTimer);
 }
 
+function readSavedReaderState() {
+  try {
+    const savedState = JSON.parse(window.localStorage.getItem(readerStateStorageKey));
+    if (
+      !savedState ||
+      savedState.version !== 1 ||
+      !Object.hasOwn(EDITIONS, savedState.editionId) ||
+      !Number.isSafeInteger(savedState.book) || savedState.book < 1 || savedState.book > BOOKS.length ||
+      !Number.isSafeInteger(savedState.chapter) || savedState.chapter < 1 ||
+      !Number.isSafeInteger(savedState.verse) || savedState.verse < 1 ||
+      !Array.isArray(savedState.selectedVerses)
+    ) {
+      return null;
+    }
+
+    return {
+      editionId: savedState.editionId,
+      book: savedState.book,
+      chapter: savedState.chapter,
+      verse: savedState.verse,
+      selectedVerses: [...new Set(savedState.selectedVerses.filter((verse) =>
+        Number.isSafeInteger(verse) && verse > 0,
+      ))],
+    };
+  } catch {
+    return null;
+  }
+}
+
+function saveReaderState() {
+  try {
+    window.localStorage.setItem(readerStateStorageKey, JSON.stringify({
+      version: 1,
+      editionId: state.editionId,
+      book: state.book,
+      chapter: state.chapter,
+      verse: state.verse,
+      selectedVerses: [...state.selectedVerses].sort((left, right) => left - right),
+    }));
+  } catch {
+    // Reading remains available when browser storage is disabled or full.
+  }
+}
+
 function clearVerseSelection() {
   for (const verseNumber of state.selectedVerses) {
     const row = elements.verseList.querySelector(`[data-verse="${verseNumber}"]`);
@@ -120,6 +165,7 @@ function clearVerseSelection() {
   }
   state.selectedVerses.clear();
   updateCopyControl();
+  saveReaderState();
 }
 
 function toggleVerseSelection(row) {
@@ -132,6 +178,20 @@ function toggleVerseSelection(row) {
   const selected = state.selectedVerses.has(verseNumber);
   row.classList.toggle("is-copy-selected", selected);
   row.setAttribute("aria-pressed", String(selected));
+  updateCopyControl();
+  saveReaderState();
+}
+
+function restoreVerseSelection(verseNumbers, verseCount) {
+  for (const verseNumber of verseNumbers) {
+    if (!Number.isSafeInteger(verseNumber) || verseNumber > verseCount) continue;
+    const row = elements.verseList.querySelector(`[data-verse="${verseNumber}"]`);
+    if (!row) continue;
+
+    state.selectedVerses.add(verseNumber);
+    row.classList.add("is-copy-selected");
+    row.setAttribute("aria-pressed", "true");
+  }
   updateCopyControl();
 }
 
@@ -430,10 +490,33 @@ async function restoreLocationFromPath() {
     return;
   }
 
-  await activateEdition(route.editionId);
-  elements.quietWelcome.hidden = !route.home;
-  const reference = route.home ? { book: 1, chapter: 1, range: null } : route;
-  await openChapter(reference.book, reference.chapter, reference.range, { updateHistory: false });
+  const savedState = readSavedReaderState();
+  const savedLocation = route.home ? savedState : null;
+  await activateEdition(savedLocation?.editionId ?? route.editionId);
+  const canRestoreSavedLocation = savedLocation &&
+    savedLocation.chapter <= scripture.chapterCount(savedLocation.book);
+  if (savedLocation && !canRestoreSavedLocation) await activateEdition(route.editionId);
+
+  const routeMatchesSavedState = savedState && !route.home &&
+    savedState.editionId === route.editionId &&
+    savedState.book === route.book &&
+    savedState.chapter === route.chapter &&
+    route.range?.start === savedState.verse &&
+    route.range?.end === savedState.verse &&
+    savedState.chapter <= scripture.chapterCount(savedState.book);
+  const stateToRestore = canRestoreSavedLocation ? savedLocation : routeMatchesSavedState ? savedState : null;
+
+  elements.quietWelcome.hidden = !route.home || Boolean(canRestoreSavedLocation);
+  const reference = canRestoreSavedLocation
+    ? savedLocation
+    : route.home ? { book: 1, chapter: 1, verse: 1, range: null } : route;
+  const range = canRestoreSavedLocation
+    ? { start: savedLocation.verse, end: savedLocation.verse }
+    : reference.range;
+  await openChapter(reference.book, reference.chapter, range, {
+    updateHistory: false,
+    selectedVersesToRestore: stateToRestore?.selectedVerses,
+  });
   if (route.legacy) {
     const canonicalPath = scriptureRoutes.buildPath(
       reference.book,
@@ -474,7 +557,8 @@ async function initialize() {
     onEscape: () => document.querySelector(`#verse-${state.verse}`)?.focus({ preventScroll: true }),
   });
   const initialRoute = scriptureRoutes.parse(window.location.pathname);
-  await activateEdition(initialRoute?.editionId ?? DEFAULT_EDITION);
+  const savedEditionId = initialRoute?.home ? readSavedReaderState()?.editionId : null;
+  await activateEdition(savedEditionId ?? initialRoute?.editionId ?? DEFAULT_EDITION);
   renderBookList();
   chapterPicker = createChapterPicker({
     root: elements.chapterPicker,
@@ -496,7 +580,11 @@ async function initialize() {
   await restoreLocationFromPath();
 }
 
-async function openChapter(book, chapter, requestedRange = null, { updateHistory = true, direction = 0 } = {}) {
+async function openChapter(book, chapter, requestedRange = null, {
+  updateHistory = true,
+  direction = 0,
+  selectedVersesToRestore = [],
+} = {}) {
   if (updateHistory) elements.quietWelcome.hidden = true;
   state.selectedVerses.clear();
   updateCopyControl();
@@ -534,6 +622,7 @@ async function openChapter(book, chapter, requestedRange = null, { updateHistory
   }
   elements.verseList.removeAttribute("aria-busy");
   renderChapter(range);
+  restoreVerseSelection(selectedVersesToRestore, verses.length);
   animateChapterTurn(direction, requestId);
   if (range) {
     requestAnimationFrame(() => {
@@ -552,6 +641,7 @@ async function openChapter(book, chapter, requestedRange = null, { updateHistory
   if (updateHistory) {
     if (window.location.pathname !== path) window.history.pushState(null, "", path);
   }
+  saveReaderState();
 }
 
 function renderBookList() {
