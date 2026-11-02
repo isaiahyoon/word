@@ -45,14 +45,21 @@ and without him was not any thing made that was made.
 - The reader remembers the current edition, passage, focused verse, and selected verses on this device, including after reopening the app.
 - Shared links use a high-resolution branded preview featuring The Word's sword emblem.
 - Install it as a standalone web app on Mac, iPhone, Android, or Windows using the browser's install option.
+- Save any edition for offline reading from the Reading Edition panel. Each edition is saved separately and can be removed at any time.
 
 ## App Installation
 
-To install it on Mac, open the site in Safari and choose **File → Add to Dock**. On iPhone, open it in Safari, tap **Share**, then **Add to Home Screen**. On Android, open it in Chrome, open the menu, and choose **Install app** or **Add to Home screen**. On Windows, open the site in Microsoft Edge and choose **Settings and more → Apps → Install this site as an app**; in Chrome, choose **Cast, save, and share → Install page as app**. Menu labels may vary by browser version. The installed app requires an internet connection to load Scripture and other site content.
+To install it on Mac, open the site in Safari and choose **File → Add to Dock**. On iPhone, open it in Safari, tap **Share**, then **Add to Home Screen**. On Android, open it in Chrome, open the menu, and choose **Install app** or **Add to Home screen**. On Windows, open the site in Microsoft Edge and choose **Settings and more → Apps → Install this site as an app**; in Chrome, choose **Cast, save, and share → Install page as app**. Menu labels may vary by browser version. The installed app loads the latest version when it is online. Offline, it opens the reader from the last saved copy of the app and can read only the editions saved for offline use (see below).
+
+## Offline editions
+
+Choose **Save** under the Reading Edition picker to download every book of the selected edition into the browser's Cache Storage. A progress count is shown while it saves, the status changes to **Available offline** when it finishes, and **Remove** deletes that edition's saved copy. If a download fails, nothing is kept and the control offers to try again. Editions that have not been saved are only available online, and search for a saved edition works offline.
+
+A service worker (`sw.js`) keeps the reader's code available offline. It checks the network first for code and styles, so online readers receive new deploys on their next load; saved editions are served from the cache and refreshed in the background when online. Saved copies stay on the device and are not synced.
 
 ## Privacy
 
-The Amazing Word is free to read, has no ads, and requires no account. Reading position and selected verses are saved in local browser storage on the device; this state is not sent to The Word or synced across devices, and browser and installed-app storage may differ by platform. Umami is the app's only analytics tool and is used for basic usage metrics, not advertising or ad targeting. Umami says its standard analytics process IP addresses transiently to distinguish visits and estimate approximate location, but does not store raw IPs in analytics records; its infrastructure may retain separate operational or security logs. Search runs locally in the browser rather than through an external search service.
+The Amazing Word is free to read, has no ads, and requires no account. Reading position and selected verses are saved in local browser storage on the device; offline editions are saved in the browser's cache storage on the device. This state is not sent to The Word or synced across devices, and browser and installed-app storage may differ by platform. Umami is the app's only analytics tool and is used for basic usage metrics, not advertising or ad targeting. Umami says its standard analytics process IP addresses transiently to distinguish visits and estimate approximate location, but does not store raw IPs in analytics records; its infrastructure may retain separate operational or security logs. Search runs locally in the browser rather than through an external search service.
 
 ## Run locally
 

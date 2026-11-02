@@ -3,6 +3,8 @@ import { createChapterPicker } from "./chapter-picker.js";
 import { createScriptureStore } from "./scripture-store.js";
 import { createVisualEffects } from "./visual-effects.js";
 import { createEditionPicker } from "./edition-picker.js";
+import { createOfflineEditions, registerServiceWorker } from "./offline.js";
+import { createOfflineControl } from "./offline-control.js";
 import { createScriptureRoutes, getVerseStep, isValidVerseRange, normalizeVerseRange } from "./scripture-routes.mjs";
 import { BOOKS } from "./books.mjs";
 import { DEFAULT_EDITION, EDITIONS, EDITION_IDS } from "./editions.mjs";
@@ -73,11 +75,15 @@ const elements = {
   editionSelectLabel: document.querySelector("#edition-select-label"),
   editionOptions: document.querySelector("#edition-options"),
   editionAttribution: document.querySelector("#edition-attribution"),
+  editionOffline: document.querySelector("#edition-offline"),
+  editionOfflineStatus: document.querySelector("#edition-offline-status"),
+  editionOfflineAction: document.querySelector("#edition-offline-action"),
   brandEditionPrimary: document.querySelector("#brand-edition-primary"),
   brandEditionSecondary: document.querySelector("#brand-edition-secondary")
 };
 let chapterPicker;
 let editionPicker;
+let offlineControl;
 let verseNavigationQueue = Promise.resolve();
 let editionCycleQueue = Promise.resolve();
 let copyFeedbackTimer;
@@ -453,6 +459,7 @@ async function activateEdition(editionId) {
     link.textContent = edition.attribution;
     elements.editionAttribution.append(link);
   }
+  void offlineControl.render(edition);
   await store.initialize();
 }
 
@@ -596,6 +603,13 @@ async function initialize() {
     onSelect: (editionId) => void changeEdition(editionId),
     onEscape: () => document.querySelector(`#verse-${state.verse}`)?.focus({ preventScroll: true }),
   });
+  offlineControl = createOfflineControl({
+    root: elements.editionOffline,
+    status: elements.editionOfflineStatus,
+    action: elements.editionOfflineAction,
+    offline: createOfflineEditions(),
+  });
+  void registerServiceWorker();
   const initialRoute = scriptureRoutes.parse(window.location.pathname);
   const savedEditionId = initialRoute?.home ? readSavedReaderState()?.editionId : null;
   await activateEdition(savedEditionId ?? initialRoute?.editionId ?? DEFAULT_EDITION);
