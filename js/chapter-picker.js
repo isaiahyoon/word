@@ -1,3 +1,5 @@
+import { formatUiText } from "./ui-locales.mjs";
+
 export function createChapterPicker({ root, trigger, value, popover, heading, count, list, onSelect }) {
   function optionButtons() {
     return [...list.querySelectorAll(".chapter-option")];
@@ -29,11 +31,11 @@ export function createChapterPicker({ root, trigger, value, popover, heading, co
     focusOption(chapter);
   }
 
-  function render({ bookName, chapterCount, activeChapter }) {
+  function render({ bookName, chapterCount, activeChapter, locale }) {
     value.textContent = activeChapter;
-    trigger.setAttribute("aria-label", `Choose ${bookName} chapter, currently ${activeChapter}`);
+    trigger.setAttribute("aria-label", formatUiText(locale, "chooseChapter", { book: bookName, chapter: activeChapter }));
     heading.textContent = bookName.toUpperCase();
-    count.textContent = `${chapterCount} ${chapterCount === 1 ? "CHAPTER" : "CHAPTERS"}`;
+    count.textContent = formatUiText(locale, chapterCount === 1 ? "chapterCountOne" : "chapterCountMany", { count: chapterCount });
     list.replaceChildren();
 
     for (let chapter = 1; chapter <= chapterCount; chapter += 1) {
@@ -42,7 +44,7 @@ export function createChapterPicker({ root, trigger, value, popover, heading, co
       option.className = "chapter-option";
       option.setAttribute("role", "option");
       option.setAttribute("aria-selected", String(chapter === activeChapter));
-      option.setAttribute("aria-label", `${bookName} chapter ${chapter}`);
+      option.setAttribute("aria-label", formatUiText(locale, "chapterOption", { book: bookName, chapter }));
       option.tabIndex = chapter === activeChapter ? 0 : -1;
       option.dataset.chapter = chapter;
       option.textContent = chapter;

@@ -29,7 +29,7 @@ test("keeps each edition's offline status separate", async ({ page }) => {
   await expect(page.locator("#edition-offline-status")).toHaveText("Available offline");
 
   await page.goto("/krv/b/john/c/3/v/16");
-  await expect(page.locator("#edition-offline-status")).toHaveText("Not saved for offline");
+  await expect(page.locator("#edition-offline-status")).toHaveText("오프라인 저장 안 됨");
 });
 
 async function saveKjvThenGoOffline(page, context) {
@@ -60,7 +60,7 @@ test("explains an unsaved edition opened directly while offline and allows switc
   await saveKjvThenGoOffline(page, context);
   await page.goto("/krv/b/john/c/3/v/16");
 
-  await expect(page.locator("#verse-list")).toContainText("choose an edition saved for offline");
+  await expect(page.locator("#verse-list")).toContainText("오프라인 저장된 번역본을 선택하세요.");
   await page.locator("#edition-select").click();
   await page.locator('[data-edition="kjv"]').click();
   await expect(page.locator("#verse-list")).toContainText("In the beginning God created the heaven and the earth");

@@ -1,12 +1,9 @@
-const STATE_TEXT = {
-  idle: { status: "Not saved for offline", action: "Save" },
-  saved: { status: "Available offline", action: "Remove" },
-  failed: { status: "Could not save. Please try again.", action: "Save" },
-};
+import { formatUiText, getUiLocale } from "./ui-locales.mjs";
 
 export function createOfflineControl({ root, status, action, offline }) {
   const saving = new Map();
   let edition = null;
+  let locale = getUiLocale("en");
   let state = "idle";
   let renderId = 0;
 
@@ -14,8 +11,20 @@ export function createOfflineControl({ root, status, action, offline }) {
     state = nextState;
     const progress = saving.get(edition.id);
     const text = nextState === "saving"
-      ? { status: progress?.total ? `Saving ${progress.done} of ${progress.total}…` : "Saving…", action: "Save" }
-      : STATE_TEXT[nextState];
+      ? {
+        status: progress?.total
+          ? formatUiText(locale, "offlineSavingProgress", progress)
+          : formatUiText(locale, "offlineSaving"),
+        action: formatUiText(locale, "save"),
+      }
+      : {
+        status: formatUiText(locale, {
+          idle: "offlineNotSaved",
+          saved: "offlineAvailable",
+          failed: "offlineFailed",
+        }[nextState]),
+        action: formatUiText(locale, nextState === "saved" ? "remove" : "save"),
+      };
     root.dataset.state = nextState;
     status.setAttribute("aria-live", nextState === "saving" ? "off" : "polite");
     status.textContent = text.status;
@@ -27,8 +36,9 @@ export function createOfflineControl({ root, status, action, offline }) {
     if (edition?.id === target.id) display(nextState);
   }
 
-  async function render(nextEdition) {
+  async function render(nextEdition, nextLocale = locale) {
     edition = nextEdition;
+    locale = nextLocale;
     root.hidden = !offline.supported;
     if (!offline.supported) return;
 

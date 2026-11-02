@@ -8,6 +8,7 @@ import { createOfflineControl } from "./offline-control.js";
 import { createScriptureRoutes, getVerseStep, isValidVerseRange, normalizeVerseRange } from "./scripture-routes.mjs";
 import { BOOKS } from "./books.mjs";
 import { DEFAULT_EDITION, EDITIONS, EDITION_IDS } from "./editions.mjs";
+import { applyUiLocale, formatUiText, getUiLocale } from "./ui-locales.mjs";
 
 const BOOK_TITLES = [
   "The First Book of Moses", "The Second Book of Moses", "The Third Book of Moses", "The Fourth Book of Moses", "The Fifth Book of Moses", "The Book of Joshua", "The Book of Judges", "The Book of Ruth", "The First Book of Samuel", "The Second Book of Samuel", "The First Book of the Kings", "The Second Book of the Kings", "The First Book of the Chronicles", "The Second Book of the Chronicles", "The Book of Ezra", "The Book of Nehemiah", "The Book of Esther", "The Book of Job", "The Book of Psalms", "The Proverbs", "Ecclesiastes", "The Song of Solomon", "The Book of the Prophet Isaiah", "The Book of the Prophet Jeremiah", "The Lamentations of Jeremiah", "The Book of the Prophet Ezekiel", "The Book of Daniel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi",
@@ -16,6 +17,8 @@ const BOOK_TITLES = [
 
 const CHAPTER_GRADIENT_COLORS = ["var(--chapter-blue)", "var(--chapter-lavender)", "var(--chapter-pink)", "var(--chapter-green)"];
 const state = { editionId: DEFAULT_EDITION, book: 1, chapter: 1, verse: 1, selectedVerses: new Set(), testament: "old", lastBookByTestament: { old: 1, new: 40 }, chapterRequestId: 0, searchTimer: null, searchRequestId: 0, searchMatches: [], searchQuery: "", searchShown: 0, searchActiveIndex: -1 };
+let uiLocale = getUiLocale("en");
+const uiText = (key, values) => formatUiText(uiLocale, key, values);
 const appBasePath = new URL(document.baseURI).pathname;
 const scriptureRoutes = createScriptureRoutes(BOOKS, appBasePath, EDITIONS);
 const readerStateStorageKey = `the-word.reader-state.v1:${appBasePath}`;
@@ -115,15 +118,15 @@ function updateCopyControl() {
   elements.verseActions.inert = !visible;
   elements.appShell.classList.toggle("has-copy-selection", visible);
   elements.copyControlLabel.textContent = visible
-    ? `Copy ${count} ${count === 1 ? "verse" : "verses"}`
-    : "Copy text";
+    ? uiText(count === 1 ? "copyOneVerse" : "copyManyVerses", { count })
+    : uiText("copyText");
   elements.shareControl.setAttribute(
     "aria-label",
-    visible ? `Share ${count} ${count === 1 ? "verse" : "verses"}` : "Share selected verses",
+    visible ? uiText(count === 1 ? "shareOneVerse" : "shareManyVerses", { count }) : uiText("shareSelected"),
   );
   elements.shareControl.title = visible
-    ? `Share ${count} ${count === 1 ? "verse" : "verses"}`
-    : "Share selected verses";
+    ? uiText(count === 1 ? "shareOneVerse" : "shareManyVerses", { count })
+    : uiText("shareSelected");
   elements.copyStatus.textContent = "";
   clearTimeout(copyFeedbackTimer);
 }
@@ -267,10 +270,10 @@ function selectedVerseContent() {
 
   const reference = formatSelectedVerseReference(selectedVerses.map((verse) => verse.verse));
   const copiedVerses = selectedVerses.map((verse) => {
-    const sourceLabel = verse.sourceEdition === "krv" ? " [KRV fallback]" : "";
+    const sourceLabel = verse.sourceEdition === "krv" ? ` [${uiText("sourceFallback")}]` : "";
     const verseText = `${verse.text.trim()}${sourceLabel}`;
     if (!verse.referenceText) return verseText;
-    return `${verseText}\n\n${verse.referenceText.trim()} [KJV reference]`;
+    return `${verseText}\n\n${verse.referenceText.trim()} [${uiText("kjvReference")}]`;
   }).join("\n\n");
   const text = `"${copiedVerses}"\n\n- ${reference}`;
   return { reference, text };
@@ -284,15 +287,15 @@ async function copySelectedVerses({ clearAfter = false } = {}) {
     await writeClipboardText(content.text);
     if (clearAfter) {
       clearVerseSelection();
-      elements.copyStatus.textContent = `Copied ${content.reference} and cleared selected verses.`;
+      elements.copyStatus.textContent = uiText("copiedAndCleared", { reference: content.reference });
       return;
     }
-    elements.copyControlLabel.textContent = "Copied";
-    elements.copyStatus.textContent = `Copied ${content.reference} to clipboard.`;
+    elements.copyControlLabel.textContent = uiText("copied");
+    elements.copyStatus.textContent = uiText("copiedReference", { reference: content.reference });
     copyFeedbackTimer = setTimeout(updateCopyControl, 1600);
   } catch (error) {
     console.error(error);
-    elements.copyStatus.textContent = "Could not copy. Check clipboard permissions and try again.";
+    elements.copyStatus.textContent = uiText("copyFailed");
   }
 }
 
@@ -303,21 +306,21 @@ async function shareSelectedVerses() {
   if (typeof navigator.share !== "function") {
     try {
       await writeClipboardText(content.text);
-      elements.copyStatus.textContent = `Sharing is unavailable here. Copied ${content.reference} to clipboard.`;
+      elements.copyStatus.textContent = uiText("shareUnavailableCopied", { reference: content.reference });
     } catch (error) {
       console.error(error);
-      elements.copyStatus.textContent = "Could not share or copy this passage. Check browser permissions and try again.";
+      elements.copyStatus.textContent = uiText("shareCopyFailed");
     }
     return;
   }
 
   try {
     await navigator.share({ text: content.text });
-    elements.copyStatus.textContent = `Shared ${content.reference}.`;
+    elements.copyStatus.textContent = uiText("sharedReference", { reference: content.reference });
   } catch (error) {
     if (error?.name === "AbortError") return;
     console.error(error);
-    elements.copyStatus.textContent = "Could not share this passage. Try copying it instead.";
+    elements.copyStatus.textContent = uiText("shareFailed");
   }
 }
 
@@ -413,7 +416,7 @@ function selectFeedbackCategory(option) {
 
 function resetFeedbackCategory() {
   elements.feedbackCategory.value = "";
-  elements.feedbackCategoryValue.textContent = "Choose a topic";
+  elements.feedbackCategoryValue.textContent = uiText("chooseTopic");
   elements.feedbackCategoryError.hidden = true;
   elements.feedbackCategoryTrigger.setAttribute("aria-invalid", "false");
   feedbackCategoryOptions().forEach((option) => {
@@ -434,6 +437,10 @@ function showEdition(editionId) {
 
   state.editionId = editionId;
   scripture = store;
+  document.documentElement.lang = edition.language;
+  uiLocale = getUiLocale(edition.language);
+  applyUiLocale(uiLocale);
+  setQuietReadingMode(document.body.classList.contains("is-quiet-reading"));
   elements.editionNotice.hidden = true;
   document.body.classList.toggle("is-kjv-edition", editionId === "kjv");
   document.body.classList.toggle("is-krv-edition", editionId === "krv");
@@ -441,9 +448,13 @@ function showEdition(editionId) {
   document.body.classList.toggle("is-luther1912-edition", editionId === "luther1912");
   document.body.classList.toggle("is-japbungo-edition", editionId === "japbungo");
   document.body.classList.toggle("is-martin1744-edition", editionId === "martin1744");
-  document.documentElement.lang = edition.language;
+  document.querySelector('meta[name="description"]')?.setAttribute("content", uiText("metaDescription"));
+  document.querySelector('meta[property="og:description"]')?.setAttribute("content", uiText("metaDescription"));
+  document.querySelector('meta[name="twitter:description"]')?.setAttribute("content", uiText("metaDescription"));
+  document.querySelector('meta[property="og:image:alt"]')?.setAttribute("content", uiText("socialPreviewAlt"));
+  document.querySelector('meta[name="twitter:image:alt"]')?.setAttribute("content", uiText("socialPreviewAlt"));
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", edition.themeColor ?? "#f6f4f9");
-  editionPicker.render(EDITION_IDS, EDITIONS, editionId);
+  editionPicker.render(EDITION_IDS, EDITIONS, editionId, uiLocale);
   elements.editionSelect.disabled = false;
   elements.editionSelect.removeAttribute("aria-busy");
   elements.verseList.lang = edition.language;
@@ -466,7 +477,8 @@ function showEdition(editionId) {
     link.textContent = edition.attribution;
     elements.editionAttribution.append(link);
   }
-  void offlineControl.render(edition);
+  updateCopyControl();
+  void offlineControl.render(edition, uiLocale);
 }
 
 async function changeEdition(editionId, { preserveFocus = false } = {}) {
@@ -480,7 +492,7 @@ async function changeEdition(editionId, { preserveFocus = false } = {}) {
     await activateEdition(editionId);
   } catch {
     showEdition(previousEditionId);
-    elements.editionNotice.textContent = `${EDITIONS[editionId].name} needs an internet connection until it is saved for offline.`;
+    elements.editionNotice.textContent = uiText("offlineEditionNotice", { edition: EDITIONS[editionId].name });
     elements.editionNotice.hidden = false;
     return;
   }
@@ -526,12 +538,10 @@ function setQuietReadingMode(enabled) {
   document.querySelector(".app-shell").classList.toggle("is-quiet-reading", enabled);
   document.body.classList.toggle("is-quiet-reading", enabled);
   elements.quietViewToggle.setAttribute("aria-pressed", String(enabled));
-  elements.quietViewToggle.setAttribute(
-    "aria-label",
-    enabled ? "Exit quiet reading view" : "Enter quiet reading view"
-  );
-  elements.quietViewToggle.title = enabled ? "Exit quiet reading view" : "Enter quiet reading view";
-  elements.quietViewToggle.textContent = enabled ? "Exit" : "Quiet";
+  const label = uiText(enabled ? "exitQuiet" : "enterQuiet");
+  elements.quietViewToggle.setAttribute("aria-label", label);
+  elements.quietViewToggle.title = label;
+  elements.quietViewToggle.textContent = uiText(enabled ? "exit" : "quiet");
 }
 
 function toggleQuietReadingMode() {
@@ -669,7 +679,7 @@ async function openChapter(book, chapter, requestedRange = null, {
   state.lastBookByTestament[state.testament] = book;
   renderBookList();
   elements.verseList.setAttribute("aria-busy", "true");
-  elements.verseList.textContent = "Finding your place…";
+  elements.verseList.textContent = uiText("loadingPlace");
 
   try {
     await scripture.loadChapter(book, chapter);
@@ -681,7 +691,7 @@ async function openChapter(book, chapter, requestedRange = null, {
     }
     console.error(error);
     elements.verseList.removeAttribute("aria-busy");
-    elements.verseList.textContent = "We couldn’t open this book. Please check your network connection.";
+    elements.verseList.textContent = uiText("chapterLoadFailed");
     return;
   }
 
@@ -750,7 +760,9 @@ function renderChapter(focusRange = null) {
   const name = bookName(state.book);
   const testament = testamentFor(state.book);
   const verses = scripture.getChapter(state.book, state.chapter);
-  document.querySelector("#testament-name").textContent = `${testament.toUpperCase()} TESTAMENT`;
+  document.querySelector("#testament-name").textContent = uiText(
+    testament === "old" ? "oldTestamentFull" : "newTestamentFull",
+  ).toUpperCase();
   document.querySelector("#book-crumb").textContent = name.toUpperCase();
   document.querySelector("#book-crumb").lang = EDITIONS[state.editionId].language;
   const headingBook = document.querySelector("#heading-book");
@@ -766,12 +778,18 @@ function renderChapter(focusRange = null) {
     ? BOOK_TITLES[state.book - 1].toUpperCase()
     : name.toUpperCase();
   chapterKicker.lang = EDITIONS[state.editionId].language;
-  document.querySelector("#verse-count").textContent = `${verses.length} ${verses.length === 1 ? "verse" : "verses"}`;
-  document.querySelector("#testament-meta").textContent = `${testament === "old" ? "Old" : "New"} Testament`;
+  const formattedVerseCount = new Intl.NumberFormat(EDITIONS[state.editionId].language).format(verses.length);
+  document.querySelector("#verse-count").textContent = uiText(
+    verses.length === 1 ? "verseCountOne" : "verseCountMany",
+    { count: formattedVerseCount },
+  );
+  document.querySelector("#testament-meta").textContent = uiText(
+    testament === "old" ? "oldTestamentFull" : "newTestamentFull",
+  );
   document.title = `${name} ${state.chapter} — ${state.editionId === "kjv" ? "The Word" : `${EDITIONS[state.editionId].name} · The Word`}`;
 
   const chapterCount = scripture.chapterCount(state.book);
-  chapterPicker.render({ bookName: name, chapterCount, activeChapter: state.chapter });
+  chapterPicker.render({ bookName: name, chapterCount, activeChapter: state.chapter, locale: uiLocale });
   document.querySelector("#chapter-options-title").lang = EDITIONS[state.editionId].language;
 
   visualEffects.clearScriptureGlow();
@@ -800,8 +818,8 @@ function renderChapter(focusRange = null) {
       fallbackPanel.lang = "ko";
       const sourceLabel = document.createElement("span");
       sourceLabel.className = "verse-source-label";
-      sourceLabel.lang = "en";
-      sourceLabel.textContent = "KRV fallback";
+      sourceLabel.lang = EDITIONS[state.editionId].language;
+      sourceLabel.textContent = uiText("sourceFallback");
       const fallbackVerse = document.createElement("span");
       fallbackVerse.className = "verse-source-panel-text";
       fallbackVerse.textContent = verse.text;
@@ -813,7 +831,7 @@ function renderChapter(focusRange = null) {
         kjvReference.lang = verse.referenceTextLanguage;
         const referenceLabel = document.createElement("span");
         referenceLabel.className = "verse-source-label verse-kjv-reference-label";
-        referenceLabel.textContent = "KJV reference";
+        referenceLabel.textContent = uiText("kjvReference");
         const referenceText = document.createElement("span");
         referenceText.className = "verse-source-panel-text";
         referenceText.textContent = verse.referenceText;
@@ -868,14 +886,18 @@ function updateChapterLinks() {
   const nextTitle = `${bookName(next.book)} ${next.chapter}`;
   document.querySelector("#previous-title").textContent = previousTitle;
   document.querySelector("#next-title").textContent = nextTitle;
-  document.querySelector("#previous-chapter").title = `Previous chapter: ${previousTitle}`;
-  document.querySelector("#previous-chapter").setAttribute("aria-label", `Previous chapter: ${previousTitle}`);
-  document.querySelector("#next-chapter").title = `Next chapter: ${nextTitle}`;
-  document.querySelector("#next-chapter").setAttribute("aria-label", `Next chapter: ${nextTitle}`);
+  document.querySelector("#previous-title").lang = EDITIONS[state.editionId].language;
+  document.querySelector("#next-title").lang = EDITIONS[state.editionId].language;
+  document.querySelector("#previous-chapter").title = uiText("previousChapter", { reference: previousTitle });
+  document.querySelector("#previous-chapter").setAttribute("aria-label", uiText("previousChapter", { reference: previousTitle }));
+  document.querySelector("#next-chapter").title = uiText("nextChapter", { reference: nextTitle });
+  document.querySelector("#next-chapter").setAttribute("aria-label", uiText("nextChapter", { reference: nextTitle }));
   elements.mobilePreviousTitle.textContent = previousTitle;
   elements.mobileNextTitle.textContent = nextTitle;
-  elements.mobilePreviousChapter.setAttribute("aria-label", `Previous chapter: ${previousTitle}`);
-  elements.mobileNextChapter.setAttribute("aria-label", `Next chapter: ${nextTitle}`);
+  elements.mobilePreviousTitle.lang = EDITIONS[state.editionId].language;
+  elements.mobileNextTitle.lang = EDITIONS[state.editionId].language;
+  elements.mobilePreviousChapter.setAttribute("aria-label", uiText("previousChapter", { reference: previousTitle }));
+  elements.mobileNextChapter.setAttribute("aria-label", uiText("nextChapter", { reference: nextTitle }));
 }
 
 function navigate(offset) {
@@ -991,6 +1013,26 @@ function setActiveSearchResult(index) {
   activeResult.scrollIntoView({ block: "nearest" });
 }
 
+function formatSearchSummary(matches, shown) {
+  const language = EDITIONS[state.editionId].language;
+  const number = (value) => value.toLocaleString(language);
+  const navigationCount = matches.filter((match) => match.searchType !== "text").length;
+  const verseCount = matches.length - navigationCount;
+  const summaryParts = [];
+  if (navigationCount > 0) {
+    summaryParts.push(uiText(navigationCount === 1 ? "navigationSuggestionOne" : "navigationSuggestionMany", {
+      count: number(navigationCount),
+    }));
+  }
+  if (verseCount > 0) {
+    summaryParts.push(uiText(verseCount === 1 ? "foundVerseOne" : "foundVerseMany", {
+      count: number(verseCount),
+    }));
+  }
+  summaryParts.push(uiText("searchShowing", { count: number(shown) }));
+  return summaryParts.join(" · ");
+}
+
 function appendSearchResults() {
   const batch = state.searchMatches.slice(state.searchShown, state.searchShown + 12);
   for (const [batchIndex, verse] of batch.entries()) {
@@ -1009,21 +1051,23 @@ function appendSearchResults() {
     const reference = document.createElement("span");
     reference.className = "result-reference";
     if (verse.searchType === "book") {
-      reference.textContent = `BOOK · ${bookName(verse.book)}`;
+      reference.textContent = uiText("resultBook", { book: bookName(verse.book) });
     } else if (verse.searchType === "chapter") {
-      reference.textContent = `CHAPTER · ${bookName(verse.book)} ${verse.chapter}`;
+      reference.textContent = uiText("resultChapter", { book: bookName(verse.book), chapter: verse.chapter });
     } else if (verse.searchType === "reference") {
-      reference.textContent = `EXACT PASSAGE · ${bookName(verse.book)} ${verse.chapter}:${verse.verse}`;
+      reference.textContent = uiText("resultExactPassage", {
+        reference: `${bookName(verse.book)} ${verse.chapter}:${verse.verse}`,
+      });
     } else {
       reference.textContent = `${bookName(verse.book)} ${verse.chapter}:${verse.verse}`;
     }
-    if (verse.sourceEdition === "krv") reference.textContent += " · KRV fallback";
+    if (verse.sourceEdition === "krv") reference.textContent += uiText("fallbackResult");
     const text = document.createElement("span");
     text.className = "result-text";
     if (verse.searchType === "book") {
-      text.textContent = `Open ${bookName(verse.book)} from chapter 1`;
+      text.textContent = uiText("openBookFromStart", { book: bookName(verse.book) });
     } else if (verse.searchType === "chapter") {
-      text.textContent = `Open ${bookName(verse.book)} ${verse.chapter}`;
+      text.textContent = uiText("openChapterResult", { book: bookName(verse.book), chapter: verse.chapter });
     } else {
       appendHighlighted(text, verse.text, verse.matchedTerms, verse.textLanguage ?? EDITIONS[state.editionId].language);
     }
@@ -1033,17 +1077,7 @@ function appendSearchResults() {
   }
   state.searchShown += batch.length;
   const summary = elements.searchResults.querySelector(".search-summary");
-  const navigationCount = state.searchMatches.filter((match) => match.searchType !== "text").length;
-  const verseCount = state.searchMatches.length - navigationCount;
-  const summaryParts = [];
-  if (navigationCount > 0) {
-    summaryParts.push(`${navigationCount} ${navigationCount === 1 ? "navigation suggestion" : "navigation suggestions"}`);
-  }
-  if (verseCount > 0) {
-    summaryParts.push(`${verseCount.toLocaleString()} ${verseCount === 1 ? "verse" : "verses"} found`);
-  }
-  summaryParts.push(`Showing ${state.searchShown}`);
-  summary.textContent = summaryParts.join(" · ");
+  summary.textContent = formatSearchSummary(state.searchMatches, state.searchShown);
 }
 
 async function search(query, requestId) {
@@ -1066,7 +1100,7 @@ async function search(query, requestId) {
 
   const loading = document.createElement("div");
   loading.className = "search-summary";
-  loading.textContent = "Looking through the verses…";
+  loading.textContent = uiText("searchLoading");
   elements.searchResults.append(loading);
 
   let matches;
@@ -1082,7 +1116,7 @@ async function search(query, requestId) {
     elements.searchResults.replaceChildren();
     const message = document.createElement("div");
     message.className = "search-empty";
-    message.textContent = "The verses aren’t available just now. Please check your network connection.";
+    message.textContent = uiText("searchUnavailable");
     elements.searchResults.append(message);
     return;
   }
@@ -1090,23 +1124,13 @@ async function search(query, requestId) {
   if (matches.length === 0) {
     const empty = document.createElement("div");
     empty.className = "search-empty";
-    empty.textContent = "No matching verses found. Try another word or reference.";
+    empty.textContent = uiText("searchNoMatches");
     elements.searchResults.append(empty);
     return;
   }
   const summary = document.createElement("div");
   summary.className = "search-summary";
-  const navigationCount = matches.filter((match) => match.searchType !== "text").length;
-  const verseCount = matches.length - navigationCount;
-  const summaryParts = [];
-  if (navigationCount > 0) {
-    summaryParts.push(`${navigationCount} ${navigationCount === 1 ? "navigation suggestion" : "navigation suggestions"}`);
-  }
-  if (verseCount > 0) {
-    summaryParts.push(`${verseCount.toLocaleString()} ${verseCount === 1 ? "verse" : "verses"} found`);
-  }
-  summaryParts.push(`Showing ${Math.min(matches.length, 12)}`);
-  summary.textContent = summaryParts.join(" · ");
+  summary.textContent = formatSearchSummary(matches, Math.min(matches.length, 12));
   elements.searchResults.append(summary);
   appendSearchResults();
   setActiveSearchResult(0);
@@ -1116,12 +1140,14 @@ function openSidebar() {
   elements.sidebar.classList.add("is-open");
   elements.sidebarScrim.classList.add("is-open");
   elements.menuToggle.setAttribute("aria-expanded", "true");
+  elements.menuToggle.setAttribute("aria-label", uiText("closeNavigation"));
 }
 
 function closeSidebar() {
   elements.sidebar.classList.remove("is-open");
   elements.sidebarScrim.classList.remove("is-open");
   elements.menuToggle.setAttribute("aria-expanded", "false");
+  elements.menuToggle.setAttribute("aria-label", uiText("openNavigation"));
 }
 
 function bindMobileChapterButtons() {
@@ -1194,7 +1220,7 @@ function bindMobilePullToRefresh() {
     document.body.classList.toggle("is-pull-refreshing", distance > 0);
     document.body.classList.toggle("is-pull-refresh-ready", ready);
     elements.pullRefreshIndicator.setAttribute("aria-hidden", "false");
-    elements.pullRefreshLabel.textContent = ready ? "Release to refresh" : "Pull down to refresh";
+    elements.pullRefreshLabel.textContent = uiText(ready ? "releaseToRefresh" : "pullToRefresh");
     elements.pullRefreshIndicator.style.setProperty("--pull-refresh-offset", `${distance}px`);
     elements.pullRefreshIndicator.style.setProperty(
       "--pull-refresh-progress",
@@ -1214,8 +1240,8 @@ function bindMobilePullToRefresh() {
 
     document.body.classList.add("is-refreshing");
     document.body.classList.remove("is-pull-refresh-ready");
-    elements.pullRefreshLabel.textContent = "Refreshing…";
-    elements.pullRefreshIndicator.setAttribute("aria-label", "Refreshing");
+    elements.pullRefreshLabel.textContent = uiText("refreshing");
+    elements.pullRefreshIndicator.setAttribute("aria-label", uiText("refreshing"));
     elements.pullRefreshIndicator.style.setProperty("--pull-refresh-offset", "88px");
     requestAnimationFrame(() => window.location.reload());
   }, { passive: true });
@@ -1444,7 +1470,7 @@ function bindEvents() {
     elements.searchInput.setAttribute("aria-expanded", "true");
     const loading = document.createElement("div");
     loading.className = "search-summary";
-    loading.textContent = "Looking through the verses…";
+    loading.textContent = uiText("searchLoading");
     elements.searchResults.append(loading);
     state.searchTimer = setTimeout(() => void search(elements.searchInput.value, requestId), 120);
   });
@@ -1532,5 +1558,5 @@ function bindEvents() {
 
 initialize().catch((error) => {
   console.error(error);
-  elements.verseList.textContent = "The Bible text could not be loaded. Check your internet connection, or choose an edition saved for offline.";
+  elements.verseList.textContent = uiText("bibleLoadFailed");
 });

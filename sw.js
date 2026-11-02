@@ -20,6 +20,7 @@ const SHELL_URLS = [
   "/js/offline-fonts.js",
   "/js/scripture-routes.mjs",
   "/js/scripture-store.js",
+  "/js/ui-locales.mjs",
   "/js/visual-effects.js",
   "/js/vendor/minisearch.js",
   "/assets/favicon.svg",

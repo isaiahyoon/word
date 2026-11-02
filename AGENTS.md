@@ -59,6 +59,8 @@ Never go against Scripture, or regard it as false or untrustworthy. It will alwa
 
 # Edition Themes
 
+- Accessibility and understandability are part of multilingual design: localize visible interface copy, navigation, accessible names, alternate text, and status messages to the selected edition language, while preserving scripture text and correct language metadata.
+
 - When adding the Japanese `japbungo` edition, give it a green background theme without changing the existing KJV/KRV background.
 
 # Scripture Foundation

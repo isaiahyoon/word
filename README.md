@@ -37,6 +37,7 @@ and without him was not any thing made that was made.
 ## Features
 
 - Read the King James Version (KJV), Korean Revised Version (KRV), Japanese Bungo-yaku (JapBungo), Italian Giovanni Diodati (1649), German Luther Bible (1912), and French David Martin Bible (1744), with edition-aware book navigation and direct links to passages. JapBungo has a green reading theme; Diodati has a pink gradient reading theme; Luther uses a pastel yellow gradient with red accents; Martin uses a blue-white-pink gradient.
+- Reader navigation, controls, status messages, accessible names, and alternate descriptions follow the selected edition language across the supported English, Korean, Italian, German, Japanese, and French interfaces; scripture text remains unchanged.
 - Search scripture by phrase or separate terms, with relevance ranking, fuzzy typo matching, and direct suggestions for books, chapters, and verses. German, Korean, Japanese, and French searches support localized book names and references; Korean searches also support common spelling variations.
 - Choose chapters with the whimsical chapter picker, or move through the text with navigation buttons and keyboard shortcuts. On mobile, swipe right from the left screen edge to open book navigation, or swipe left across the open drawer to close it. A discreet back-to-top button appears while scrolling.
 - Open the shortcut guide with `/` to see Mac and Windows keys for refresh, search, navigation, Quiet Mode, verse copying, and edition cycling with Tab/Shift+Tab.
