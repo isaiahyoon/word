@@ -53,7 +53,7 @@ To install it on Mac, open the site in Safari and choose **File → Add to Dock*
 
 ## Offline editions
 
-Choose **Save** under the Reading Edition picker to download every book of the selected edition into the browser's Cache Storage. A progress count is shown while it saves, the status changes to **Available offline** when it finishes, and **Remove** deletes that edition's saved copy. If a download fails, nothing is kept and the control offers to try again. Editions that have not been saved are only available online, and search for a saved edition works offline.
+Choose **Save** under the Reading Edition picker to download every book of the selected edition into the browser's Cache Storage. A progress count is shown while it saves, the status changes to **Available offline** when it finishes, and **Remove** deletes that edition's saved copy. If a download fails, nothing is kept and the control offers to try again. Editions that have not been saved are only available online: choosing one while offline keeps the current edition and shows a notice, and opening one directly explains that it needs a connection while leaving the edition picker usable. Search for a saved edition works offline.
 
 A service worker (`sw.js`) keeps the reader's code available offline. It checks the network first for code and styles, so online readers receive new deploys on their next load; saved editions are served from the cache and refreshed in the background when online. Saved copies stay on the device and are not synced.
 

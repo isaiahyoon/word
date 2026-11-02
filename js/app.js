@@ -75,6 +75,7 @@ const elements = {
   editionSelectLabel: document.querySelector("#edition-select-label"),
   editionOptions: document.querySelector("#edition-options"),
   editionAttribution: document.querySelector("#edition-attribution"),
+  editionNotice: document.querySelector("#edition-notice"),
   editionOffline: document.querySelector("#edition-offline"),
   editionOfflineStatus: document.querySelector("#edition-offline-status"),
   editionOfflineAction: document.querySelector("#edition-offline-action"),
@@ -422,12 +423,18 @@ function resetFeedbackCategory() {
 }
 
 async function activateEdition(editionId) {
+  showEdition(editionId);
+  await scripture.initialize();
+}
+
+function showEdition(editionId) {
   const edition = EDITIONS[editionId];
   const store = scriptureStores.get(editionId);
   if (!edition || !store) throw new RangeError(`Unknown edition: ${editionId}`);
 
   state.editionId = editionId;
   scripture = store;
+  elements.editionNotice.hidden = true;
   document.body.classList.toggle("is-kjv-edition", editionId === "kjv");
   document.body.classList.toggle("is-krv-edition", editionId === "krv");
   document.body.classList.toggle("is-diodati-edition", editionId === "diodati");
@@ -460,7 +467,6 @@ async function activateEdition(editionId) {
     elements.editionAttribution.append(link);
   }
   void offlineControl.render(edition);
-  await store.initialize();
 }
 
 async function changeEdition(editionId, { preserveFocus = false } = {}) {
@@ -468,8 +474,16 @@ async function changeEdition(editionId, { preserveFocus = false } = {}) {
   const keepSidebarOpen = elements.sidebar.classList.contains("is-open");
   const { book, chapter, verse } = state;
   const searchQuery = state.searchQuery;
+  const previousEditionId = state.editionId;
   state.searchRequestId += 1;
-  await activateEdition(editionId);
+  try {
+    await activateEdition(editionId);
+  } catch {
+    showEdition(previousEditionId);
+    elements.editionNotice.textContent = `${EDITIONS[editionId].name} needs an internet connection until it is saved for offline.`;
+    elements.editionNotice.hidden = false;
+    return;
+  }
   const verses = await scripture.loadChapter(book, chapter);
   await openChapter(book, chapter, Math.min(verse, verses.length));
   animateEditionSwitch();
@@ -612,8 +626,10 @@ async function initialize() {
   void registerServiceWorker();
   const initialRoute = scriptureRoutes.parse(window.location.pathname);
   const savedEditionId = initialRoute?.home ? readSavedReaderState()?.editionId : null;
-  await activateEdition(savedEditionId ?? initialRoute?.editionId ?? DEFAULT_EDITION);
-  renderBookList();
+  let editionLoadError = null;
+  await activateEdition(savedEditionId ?? initialRoute?.editionId ?? DEFAULT_EDITION)
+    .catch((error) => { editionLoadError = error; });
+  if (!editionLoadError) renderBookList();
   chapterPicker = createChapterPicker({
     root: elements.chapterPicker,
     trigger: elements.chapterSelect,
@@ -631,6 +647,8 @@ async function initialize() {
   });
   visualEffects.bind();
   bindEvents();
+  // Finish wiring first so a saved edition can still be chosen after a failed load.
+  if (editionLoadError) throw editionLoadError;
   await restoreLocationFromPath();
 }
 
@@ -1514,5 +1532,5 @@ function bindEvents() {
 
 initialize().catch((error) => {
   console.error(error);
-  elements.verseList.textContent = "The Bible text could not be loaded. Please open this reader through a local web server.";
+  elements.verseList.textContent = "The Bible text could not be loaded. Check your internet connection, or choose an edition saved for offline.";
 });

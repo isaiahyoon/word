@@ -1701,13 +1701,17 @@ body.is-luther1912-edition .edition-option.is-selected .edition-option-check {
     animation: none;
   }
 }
-.edition-attribution {
+.edition-attribution,
+.edition-notice {
   margin: 0;
   padding: 0 5px;
   color: #777970;
   font-family: var(--serif);
   font-size: var(--type-caption);
   line-height: 1.5;
+}
+.edition-notice {
+  color: #9b5147;
 }
 .edition-attribution a {
   color: inherit;
