@@ -3,6 +3,7 @@ import { access, readFile } from "node:fs/promises";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import { EDITION_CACHE, createOfflineEditions, registerServiceWorker } from "../js/offline.js";
+import { preloadEditionFonts } from "../js/offline-fonts.js";
 
 const baseUrl = "https://example.test/";
 const kjv = { id: "kjv", dataPath: "./scripture/kjv" };
@@ -46,9 +47,9 @@ function createFetch({ failOn } = {}) {
   };
 }
 
-function createOffline({ cacheStorage = createCacheStorage(), fetchOptions, logger = { error() {} } } = {}) {
+function createOffline({ cacheStorage = createCacheStorage(), fetchOptions, preloadFonts = async () => {}, logger = { error() {} } } = {}) {
   const { fetchImpl, requests } = createFetch(fetchOptions);
-  const offline = createOfflineEditions({ cacheStorage, fetchImpl, baseUrl, logger });
+  const offline = createOfflineEditions({ cacheStorage, fetchImpl, baseUrl, preloadFonts, logger });
   return { cacheStorage, offline, requests };
 }
 
@@ -96,11 +97,67 @@ describe("offline editions", () => {
     assert.equal(errors[0][1].editionId, "kjv");
   });
 
+  it("still saves the text when font preloading fails", async () => {
+    const errors = [];
+    const { offline } = createOffline({
+      preloadFonts: async () => { throw new Error("fonts unavailable"); },
+      logger: { error: (...details) => errors.push(details) },
+    });
+
+    await offline.save(kjv);
+
+    assert.equal(await offline.isSaved(kjv), true);
+    assert.equal(errors.length, 1);
+    assert.equal(errors[0][1].editionId, "kjv");
+  });
+
   it("reports itself unsupported without the Cache API", async () => {
     const offline = createOfflineEditions({ cacheStorage: undefined, baseUrl });
 
     assert.equal(offline.supported, false);
     assert.equal(await offline.isSaved(kjv), false);
+  });
+});
+
+describe("offline fonts", () => {
+  const face = (family, weight, style = "normal") => ({
+    family,
+    weight,
+    style,
+    loaded: false,
+    async load() {
+      this.loaded = true;
+    },
+  });
+  const styles = new Map([
+    ["verses", { fontFamily: '"Noto Serif KR", serif', fontWeight: "400", fontStyle: "normal" }],
+    ["heading", { fontFamily: "Gelasio, Georgia", fontWeight: "600", fontStyle: "normal" }],
+  ]);
+
+  it("fetches the font stylesheet and loads only the faces the reader renders", async () => {
+    const fetched = [];
+    const faces = [
+      face("Noto Serif KR", "400"),
+      face("Noto Serif KR", "600"),
+      face("Gelasio", "600"),
+      face("Gelasio", "400", "italic"),
+      face("Noto Serif JP", "400"),
+    ];
+    const elements = { "#verse-list": "verses", ".chapter-heading h1": "heading" };
+    const doc = {
+      fonts: faces,
+      querySelectorAll: () => [{ href: "https://fonts.googleapis.com/css2?family=Gelasio" }],
+      querySelector: (selector) => elements[selector],
+    };
+
+    await preloadEditionFonts({
+      doc,
+      fetchImpl: async (url, options) => void fetched.push([url, options]),
+      getStyle: (element) => styles.get(element),
+    });
+
+    assert.deepEqual(fetched, [["https://fonts.googleapis.com/css2?family=Gelasio", { mode: "no-cors" }]]);
+    assert.deepEqual(faces.map((item) => item.loaded), [true, false, true, false, false]);
   });
 });
 

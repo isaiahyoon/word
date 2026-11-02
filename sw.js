@@ -17,6 +17,7 @@ const SHELL_URLS = [
   "/js/keyboard-shortcuts.js",
   "/js/offline.js",
   "/js/offline-control.js",
+  "/js/offline-fonts.js",
   "/js/scripture-routes.mjs",
   "/js/scripture-store.js",
   "/js/visual-effects.js",

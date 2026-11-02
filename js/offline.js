@@ -1,3 +1,5 @@
+import { preloadEditionFonts } from "./offline-fonts.js";
+
 export const EDITION_CACHE = "the-word-editions";
 const downloadConcurrency = 4;
 
@@ -16,6 +18,7 @@ export function createOfflineEditions({
   cacheStorage = globalThis.caches,
   fetchImpl = fetch,
   baseUrl = globalThis.document?.baseURI,
+  preloadFonts = preloadEditionFonts,
   logger = console,
 } = {}) {
   const supported = Boolean(cacheStorage);
@@ -74,6 +77,10 @@ export function createOfflineEditions({
       const failure = results.find((result) => result.status === "rejected");
       if (failure) throw failure.reason;
 
+      // Fonts are cosmetic, so a failed preload must not block saving the text.
+      await preloadFonts().catch((error) => {
+        logger.error("Offline font preload failed", { editionId: edition.id, error });
+      });
       await cache.put(indexUrl(edition), indexResponse);
     } catch (error) {
       await Promise.all(stored.map((url) => cache.delete(url)));
