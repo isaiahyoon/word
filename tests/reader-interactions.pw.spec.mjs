@@ -625,7 +625,6 @@ test("shares selected verse text natively and falls back to copying when sharing
   const verseText = (await page.locator("#verse-16 .verse-text").textContent()).trim();
   await page.locator("#share-selected-verses").click();
   await expect.poll(() => page.evaluate(() => window.sharedPayload)).toEqual({
-    title: "The Word",
     text: `"${verseText}"\n\n- John 3:16`,
   });
   await expect(page.locator("#share-selected-verses")).toHaveAttribute("aria-label", "Share 1 verse");

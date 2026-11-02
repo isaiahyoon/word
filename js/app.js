@@ -305,7 +305,7 @@ async function shareSelectedVerses() {
   }
 
   try {
-    await navigator.share({ title: "The Word", text: content.text });
+    await navigator.share({ text: content.text });
     elements.copyStatus.textContent = `Shared ${content.reference}.`;
   } catch (error) {
     if (error?.name === "AbortError") return;
