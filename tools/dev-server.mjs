@@ -43,6 +43,15 @@ export function createDevServer(projectRoot = root) {
       return;
     }
 
+    if (pathname === "/health") {
+      response.writeHead(200, {
+        "Cache-Control": "no-store",
+        "Content-Type": "application/json; charset=utf-8"
+      });
+      response.end(request.method === "HEAD" ? undefined : JSON.stringify({ status: "ok" }));
+      return;
+    }
+
     let filePath = resolve(projectRoot, `.${pathname}`);
     let statusCode = 200;
     if (pathname === "/404.html") statusCode = 404;

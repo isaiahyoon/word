@@ -18,6 +18,7 @@
 # Code Quality
 
 - Keep code clean, readable, and maintainable. Follow established project patterns, choose descriptive names, reuse shared behavior, and avoid needless complexity or duplication.
+- When a feature introduces failures that would otherwise be difficult to diagnose, add concise contextual logging at the owning boundary; include useful identifiers, avoid sensitive or user-provided content, and preserve normal error handling.
 
 # Instagram Posts
 

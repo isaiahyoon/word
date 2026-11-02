@@ -688,8 +688,11 @@ describe("scripture store", () => {
 
   it("retries a book after its first fetch fails", async () => {
     const mock = createMockFetch();
+    const errors = [];
     let bookAttempts = 0;
     const store = createScriptureStore({
+      editionId: "kjv",
+      logger: { error: (...args) => errors.push(args) },
       fetchImpl: async (url) => {
         if (url.endsWith("43_john.json") && ++bookAttempts === 1)
           return { ok: false };
@@ -699,9 +702,40 @@ describe("scripture store", () => {
     await store.initialize();
 
     await assert.rejects(store.loadChapter(43, 1), /Could not load John/);
+    assert.equal(errors.length, 1);
+    assert.equal(errors[0][0], "Scripture data loading failed");
+    assert.equal(errors[0][1].operation, "loadBook");
+    assert.equal(errors[0][1].editionId, "kjv");
+    assert.deepEqual(errors[0][1].book, { id: 43, name: "John" });
     const chapter = await store.loadChapter(43, 1);
 
     assert.equal(bookAttempts, 2);
+    assert.equal(errors.length, 1);
     assert.equal(chapter[0].text, "In the beginning was the Word");
+  });
+
+  it("logs edition context and retries after scripture index initialization fails", async () => {
+    const mock = createMockFetch();
+    const errors = [];
+    let indexAttempts = 0;
+    const store = createScriptureStore({
+      editionId: "luther1912",
+      logger: { error: (...args) => errors.push(args) },
+      fetchImpl: async (url) => {
+        if (url.endsWith("/index.json") && ++indexAttempts === 1) return { ok: false };
+        return mock.fetchImpl(url);
+      },
+    });
+
+    await assert.rejects(store.initialize(), /Could not load scripture index/);
+
+    assert.equal(errors.length, 1);
+    assert.equal(errors[0][0], "Scripture data loading failed");
+    assert.equal(errors[0][1].operation, "initialize");
+    assert.equal(errors[0][1].editionId, "luther1912");
+    assert.match(errors[0][1].error.message, /Could not load scripture index/);
+
+    await store.initialize();
+    assert.equal(indexAttempts, 2);
   });
 });

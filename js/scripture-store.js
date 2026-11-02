@@ -42,6 +42,8 @@ function normalizeSearchTerm(term) {
 export function createScriptureStore({
   fetchImpl = fetch,
   dataPath = "./scripture/kjv",
+  editionId = "unknown",
+  logger = console,
   language = "en",
   canonicalBookNames = BOOKS,
   displayBookNames = canonicalBookNames,
@@ -76,6 +78,15 @@ export function createScriptureStore({
   let textSearchIndex;
   let textSearchIndexPromise;
 
+  function logLoadError(operation, error, book) {
+    logger.error("Scripture data loading failed", {
+      operation,
+      editionId,
+      ...(book === undefined ? {} : { book: { id: book, name: bookName(book) } }),
+      error,
+    });
+  }
+
   function initialize() {
     if (!initialization) {
       initialization = (async () => {
@@ -106,6 +117,7 @@ export function createScriptureStore({
         }
       })().catch((error) => {
         initialization = null;
+        logLoadError("initialize", error);
         throw error;
       });
     }
@@ -179,6 +191,7 @@ export function createScriptureStore({
       })
       .catch((error) => {
         bookLoads.delete(book);
+        logLoadError("loadBook", error, book);
         throw error;
       });
 
