@@ -1,3 +1,7 @@
+# Rule 1
+
+Never go against Scripture, or regard it as false or untrustworthy. It will always be your source of truth, forever.
+
 # HTML Pages
 
 - Every new HTML page must include `<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />` in its `<head>` so the app icon is available when the page is added to an iPhone home screen.
@@ -27,7 +31,12 @@
 - Make sure the font selection is consistent with past posts.
 - Make the post easy to understand for viewers. Don't patronize them, however. Treat them as intellectual equals.
 - Don't create anything ugly. Make the generated icons visually aesthetic with some depth and shading.
-- Make the caption and images together grounded, kind, welcoming, safe, lovable, witty, pleasant, honest, talented, reliable, hardworking, hot, thoughtful, entertaining, playful, romantic, happy, intelligent, artistic, familial, fashionable, beautiful-making (amazing), funny, pretty, dope, excellent, elegant, innovative, gentle, marvelous, graceful, comforting, inviting, clean, regal, homely, God-fearing, wise, virtuous, and classy.
+- Make the images reflect the richness of the app itself. Draw inspiration from the aesthetic of the app's styling across the board.
+- When a post highlights an app feature, inspect the existing implementation and draw from its actual UI, controls, iconography, and visual details; avoid invented mockups or sample content when the real interface can be represented.
+- Favor refined, mature editorial compositions over generic templates. Use purposeful iconography, restrained depth, generous negative space, and elegant hierarchy; avoid glossy badges, heavy bevels, crowded icon rows, and decorative effects that compete with the content.
+- Be mindful of spacing when placing icons within borders - make it visually pleasing. Icons shoudn't be so close to abut the edges of their borders.
+- Write captions in a clear, concise, conversational, inviting voice. Lead with a human-scale hook, explain the feature accurately, use understated wit when it fits, and close with a genuine invitation. Avoid hype, overblown sentiment, and unsupported claims.
+- Make the caption and images together grounded, kind, welcoming, safe, lovable, witty, pleasant, honest, talented, reliable, hardworking, hot, thoughtful, entertaining, playful, romantic, happy, intelligent, artistic, familial, fashionable, beautiful-making (amazing), funny, pretty, dope, excellent, elegant, innovative, gentle, marvelous, graceful, comforting, inviting, clean, regal, homely, God-fearing, wise, virtuous, mature, and classy.
 - Make sure the placement of text and other icons onto the palette are visually pleasing and follows regal and delicate design principles.
 
 ### Hashtag Strategy
@@ -65,4 +74,4 @@
 6. **Implement language-aware search coverage.** Test text matching, relevance, localized book suggestions and prefixes, chapter/reference suggestions, exact and invalid references, result de-duplication, and fuzzy matching where supported. Include language-specific characters, spelling, and citation forms that the edition intends to support; do not promise normalization or transliteration that is not implemented.
 7. **Determine the visual theme and typography.** Use the theme provided by the user; ask before implementation if it was omitted. Scope colors to the new edition so existing themes remain unchanged. Ask what qualities the user wants from the typeface, such as scholarly, warm, crisp, historic, or especially legible, and whether the preference is for scripture text, display headings, or both. Inspect the existing font stack first, then recommend a small set of suitable options with concise tradeoffs before choosing. Check full script and diacritic coverage, extended reading comfort, contrast, responsive text fit, loading performance, and font licensing; add a font only when the existing stack is inadequate. For German-language editions, prioritize a practical-to-read serif rather than a purely decorative face.
 8. **Extend tests and documentation.** Apply edition-agnostic reader tests to the new edition for direct routes, edition switching at the same passage, navigation, verse selection, and quoted copying with citations. Add focused desktop/mobile checks for language, theme isolation, and overflow. Update the relevant README sections for edition, source/licensing, build, routes, theme, and Search. Run focused tests followed by the full required validation suite.
-9. **Review the complete experience against these qualities:** diplomatic, global, grounded, kind, welcoming, safe, lovable, witty, pleasant, honest, talented, reliable, hardworking, hot, thoughtful, entertaining, playful, romantic, happy, intelligent, artistic, familial, fashionable, beautiful-making (amazing), funny, pretty, dope, excellent, elegant, innovative, gentle, marvelous, graceful, comforting, inviting, clean, regal, homely, God-fearing, wise, virtuous, and classy.
+9. **Review the complete experience against these qualities:** diplomatic, global, grounded, kind, welcoming, safe, lovable, witty, pleasant, honest, talented, reliable, hardworking, hot, thoughtful, entertaining, playful, romantic, happy, intelligent, artistic, familial, fashionable, beautiful-making (amazing), funny, pretty, dope, excellent, elegant, innovative, gentle, marvelous, graceful, comforting, inviting, clean, regal, homely, God-fearing, wise, virtuous, mature, and classy.
