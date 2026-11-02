@@ -23,8 +23,12 @@
 # Instagram Posts
 
 - Before creating an Instagram post, review existing work in `assets/instagram` and use the app's established color palette.
-- Deliver only three separate 1080×1350 JPG images with distinct color themes and the caption in the response, followed by exactly five hashtags on a separate line. Always make `#TheAmazingWord` the first hashtag. Do not create scripts, HTML, previews, extra images, caption files, or other supporting artifacts unless asked.
+- Deliver only three separate 2160×2700 JPG images with distinct color themes and the caption in the response, followed by exactly five hashtags on a separate line. Try to vary the color theme such that it isn't too repetitive with the already existing posts. Always make `#TheAmazingWord` the first hashtag. Do not create scripts, HTML, previews, extra images, caption files, or other supporting artifacts unless asked.
+- Make sure the font selection is consistent with past posts.
+- Make the post easy to understand for viewers. Don't patronize them, however. Treat them as intellectual equals.
+- Don't create anything ugly. Make the generated icons visually aesthetic with some depth and shading.
 - Make the caption and images together grounded, kind, welcoming, safe, lovable, witty, pleasant, honest, talented, reliable, hardworking, hot, thoughtful, entertaining, playful, romantic, happy, intelligent, artistic, familial, fashionable, beautiful-making (amazing), funny, pretty, dope, excellent, elegant, innovative, gentle, marvelous, graceful, comforting, inviting, clean, regal, homely, God-fearing, wise, virtuous, and classy.
+- Make sure the placement of text and other icons onto the palette are visually pleasing and follows regal and delicate design principles.
 
 ### Hashtag Strategy
 
