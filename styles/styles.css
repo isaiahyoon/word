@@ -2466,11 +2466,11 @@ body.is-krv-edition .verse.is-copy-selected {
   right: clamp(18px, 5vw, 72px);
   bottom: max(18px, env(safe-area-inset-bottom));
   display: grid;
-  grid-template-areas: "cut ." "copy clear";
-  grid-template-columns: max-content max-content;
+  grid-template-areas: "copy share cut clear";
+  grid-template-columns: max-content max-content max-content max-content;
   align-items: center;
   justify-items: start;
-  gap: 6px;
+  gap: 4px;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -2516,6 +2516,11 @@ body.is-krv-edition .verse.is-copy-selected {
   transition-delay: 0s;
 }
 .verse-actions > button {
+  min-height: 44px;
+  border-radius: 6px;
+  font-family: var(--sans);
+  font-size: var(--type-control-small);
+  font-weight: var(--weight-semibold);
   opacity: 0;
   transform: translateY(5px) scale(0.97);
   transition:
@@ -2529,6 +2534,9 @@ body.is-krv-edition .verse.is-copy-selected {
 .verse-actions.is-visible .verse-copy-control {
   transition-delay: 0.04s;
 }
+.verse-actions.is-visible .verse-share-control {
+  transition-delay: 0.06s;
+}
 .verse-actions.is-visible .verse-cut-control {
   transition-delay: 0s;
 }
@@ -2537,7 +2545,6 @@ body.is-krv-edition .verse.is-copy-selected {
 }
 .verse-cut-control {
   grid-area: cut;
-  min-height: 36px;
   display: flex;
   align-items: center;
   padding: 0 15px;
@@ -2549,13 +2556,10 @@ body.is-krv-edition .verse.is-copy-selected {
     inset 0 1px 0 rgba(255, 255, 255, 0.9),
     0 8px 20px rgba(49, 61, 58, 0.12);
   color: var(--navy-ink);
-  font-size: var(--type-control-small);
-  font-weight: var(--weight-semibold);
   cursor: pointer;
 }
 .verse-copy-control {
   grid-area: copy;
-  min-height: 46px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -2568,29 +2572,52 @@ body.is-krv-edition .verse.is-copy-selected {
     inset 0 1px 0 rgba(255, 255, 255, 0.96),
     0 10px 26px rgba(49, 61, 58, 0.16);
   color: var(--navy-ink);
-  font-size: var(--type-control-small);
-  font-weight: var(--weight-semibold);
   cursor: pointer;
 }
+.verse-share-control {
+  grid-area: share;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(49, 88, 99, 0.46);
+  border-radius: 6px;
+  background: linear-gradient(145deg, #f1fbf7, #dcefe9 58%, #c9e3dd);
+  box-shadow:
+    0 3px 0 rgba(49, 88, 99, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96),
+    0 8px 20px rgba(49, 61, 58, 0.12);
+  color: var(--deep-teal);
+  cursor: pointer;
+}
+.verse-share-control svg {
+  width: 19px;
+  height: 19px;
+  stroke: currentColor;
+  stroke-width: 1.65;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .verse-copy-control:hover,
+.verse-share-control:hover,
 .verse-cut-control:hover,
 .verse-clear-control:hover {
   filter: brightness(1.03);
 }
 .verse-clear-control {
   grid-area: clear;
-  min-height: 42px;
   display: flex;
   align-items: center;
   gap: 5px;
   padding: 0 12px 0 9px;
-  border: 1px solid rgba(112, 100, 152, 0.28);
-  border-radius: 5px;
-  background: rgba(253, 252, 255, 0.96);
-  box-shadow: 0 2px 0 rgba(112, 100, 152, 0.16);
+  border: 1px solid rgba(112, 100, 152, 0.34);
+  background: linear-gradient(135deg, #fff, #f5f1f8 58%, #e9e4f1);
+  box-shadow:
+    0 3px 0 rgba(112, 100, 152, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96),
+    0 8px 20px rgba(49, 61, 58, 0.1);
   color: #57536e;
-  font-size: var(--type-control-small);
-  font-weight: var(--weight-semibold);
   cursor: pointer;
 }
 .copy-control-icon {
@@ -2619,13 +2646,13 @@ body.is-krv-edition .verse.is-copy-selected {
   background: #fff7e2;
 }
 .clear-control-icon {
-  width: 15px;
-  height: 15px;
-  display: grid;
-  place-items: center;
-  font-size: 19px;
-  font-weight: var(--weight-regular);
-  line-height: 1;
+  width: 13px;
+  height: 13px;
+  flex: 0 0 13px;
+  display: block;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
 }
 #heading-book:lang(ko),
 #book-crumb:lang(ko),
@@ -3380,7 +3407,6 @@ body.is-kjv-edition .app-shell.is-quiet-reading .verse {
   .verse-actions {
     right: max(12px, env(safe-area-inset-right));
     bottom: max(12px, env(safe-area-inset-bottom));
-    gap: 5px 6px;
   }
   .scroll-to-top {
     right: max(14px, env(safe-area-inset-right));
@@ -3389,19 +3415,17 @@ body.is-kjv-edition .app-shell.is-quiet-reading .verse {
   .app-shell.has-copy-selection .scroll-to-top {
     bottom: calc(126px + env(safe-area-inset-bottom));
   }
-  .verse-cut-control {
-    min-height: 34px;
-    padding: 0 13px;
-  }
+  .verse-cut-control { padding: 0 13px; }
   .verse-copy-control {
     min-height: 44px;
     max-width: calc(100vw - 24px);
     padding: 0 12px;
   }
-  .verse-clear-control {
-    min-height: 42px;
-    padding: 0 9px 0 7px;
+  .verse-share-control {
+    width: 44px;
+    height: 44px;
   }
+  .verse-clear-control { padding: 0 9px 0 7px; }
   .app-shell.has-copy-selection .reader {
     padding-bottom: 136px;
   }
@@ -3484,6 +3508,13 @@ body.is-kjv-edition .app-shell.is-quiet-reading .verse {
   }
   .reader-rule {
     margin-bottom: 19px;
+  }
+}
+
+@media (max-width: 359px) {
+  .verse-actions {
+    grid-template-areas: "copy share" "cut clear";
+    grid-template-columns: max-content max-content;
   }
 }
 

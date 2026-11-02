@@ -419,6 +419,24 @@
         aria-hidden="true"
         inert
       >
+        <button class="verse-copy-control" id="copy-selected-verses" type="button">
+          <span class="copy-control-icon" aria-hidden="true"></span>
+          <span id="copy-selected-label">Copy text</span>
+        </button>
+        <button
+          class="verse-share-control"
+          id="share-selected-verses"
+          type="button"
+          aria-label="Share selected verses"
+          title="Share selected verses"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" focusable="false">
+            <circle cx="18" cy="5" r="3" />
+            <circle cx="6" cy="12" r="3" />
+            <circle cx="18" cy="19" r="3" />
+            <path d="m8.6 10.6 6.8-3.2m-6.8 6 6.8 3.2" />
+          </svg>
+        </button>
         <button
           class="verse-cut-control"
           id="cut-selected-verses"
@@ -428,17 +446,15 @@
         >
           Cut
         </button>
-        <button class="verse-copy-control" id="copy-selected-verses" type="button">
-          <span class="copy-control-icon" aria-hidden="true"></span>
-          <span id="copy-selected-label">Copy text</span>
-        </button>
         <button
           class="verse-clear-control"
           id="clear-selected-verses"
           type="button"
           title="Clear all selected verses"
         >
-          <span class="clear-control-icon" aria-hidden="true">×</span>
+          <svg class="clear-control-icon" aria-hidden="true" viewBox="0 0 16 16" fill="none" focusable="false">
+            <path d="m4 4 8 8m0-8-8 8" />
+          </svg>
           <span>Clear all</span>
         </button>
       </div>

@@ -41,7 +41,7 @@ and without him was not any thing made that was made.
 - Choose chapters with the whimsical chapter picker, or move through the text with navigation buttons and keyboard shortcuts. On mobile, swipe right from the left screen edge to open book navigation, or swipe left across the open drawer to close it. A discreet back-to-top button appears while scrolling.
 - Open the shortcut guide with `/` to see Mac and Windows keys for refresh, search, navigation, Quiet Mode, verse copying, and edition cycling with Tab/Shift+Tab.
 - Enter Quiet Mode for a calmer reading view, with subtle glimmer details throughout the interface.
-- Select verses and copy them in chapter order as a quoted passage, with each verse on its own line and a compressed reference below the closing quotation mark. The Cut button copies the same passage and clears the selection; `Cmd+X`/`Ctrl+X` does the same. Clicking a verse also updates its direct link. The feedback form lets readers send a note, with passage details included only by choice.
+- Select verses and copy or share them in chapter order as a quoted passage, with each verse on its own line and a compressed reference below the closing quotation mark. Share opens the device's native sharing interface where supported and copies the passage when it is unavailable. The Cut button copies the same passage and clears the selection; `Cmd+X`/`Ctrl+X` does the same. Clicking a verse also updates its direct link. The feedback form lets readers send a note, with passage details included only by choice.
 - The reader remembers the current edition, passage, focused verse, and selected verses on this device, including after reopening the app.
 - Shared links use a high-resolution branded preview featuring The Word's sword emblem.
 - Install it as a standalone web app on Mac, iPhone, Android, or Windows using the browser's install option.
@@ -65,7 +65,7 @@ node tools/dev-server.mjs
 Then open [http://localhost:8000](http://localhost:8000).
 If port 8000 is occupied, choose another port with `PORT=8001 node tools/dev-server.mjs`.
 Check that the development server is running with `curl http://localhost:8000/health`.
-When deploying, configure the host to internally serve `index.html` for valid `/kjv/b/*`, `/krv/b/*`, `/diodati/b/*`, `/licht/b/*`, `/japbungo/b/*`, and legacy `/b/*` scripture routes while keeping the requested URL. Unknown paths should serve `404.html` with a 404 status.
+When deploying, configure the host to internally serve `index.html` for valid `/kjv/b/*`, `/krv/b/*`, `/diodati/b/*`, `/licht/b/*`, `/japbungo/b/*`, `/moh/b/*`, and legacy `/b/*` scripture routes while keeping the requested URL. Unknown paths should serve `404.html` with a 404 status.
 
 Scripture links identify their edition before the book route. Omitting the chapter opens chapter 1; omitting the verse opens and highlights verse 1:
 
@@ -78,6 +78,7 @@ Scripture links identify their edition before the book route. Omitting the chapt
 /diodati/b/genesis/c/1/v/1
 /licht/b/john/c/3/v/16
 /japbungo/b/john/c/3/v/16
+/moh/b/psalms/c/3/v/1
 ```
 
 Existing unprefixed `/b/*` links continue to open KJV and are canonicalized to `/kjv/b/*`. Valid verse links scroll to the requested verses and highlight them briefly. Invalid books, chapters, or verse ranges open the 404 page, which links back to the reading room.
