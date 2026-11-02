@@ -63,6 +63,7 @@ node tools/dev-server.mjs
 
 Then open [http://localhost:8000](http://localhost:8000).
 If port 8000 is occupied, choose another port with `PORT=8001 node tools/dev-server.mjs`.
+Check that the development server is running with `curl http://localhost:8000/health`.
 When deploying, configure the host to internally serve `index.html` for valid `/kjv/b/*`, `/krv/b/*`, `/diodati/b/*`, `/licht/b/*`, `/japbungo/b/*`, and legacy `/b/*` scripture routes while keeping the requested URL. Unknown paths should serve `404.html` with a 404 status.
 
 Scripture links identify their edition before the book route. Omitting the chapter opens chapter 1; omitting the verse opens and highlights verse 1:
@@ -135,6 +136,7 @@ npm run test:ui
 ```
 
 Run the CSS lint and both test suites together with `npm run test:all`.
+GitHub Actions runs this full check on every push and pull request.
 
 ## Customize the palette
 

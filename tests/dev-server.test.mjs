@@ -35,6 +35,19 @@ describe("development server", () => {
     assert.match(html, /aria-label="Visit The Word on Instagram, opens in a new tab"/);
   });
 
+  it("reports server liveness at /health", async () => {
+    const response = await fetch(`${origin}/health`);
+
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get("content-type"), /application\/json/);
+    assert.equal(response.headers.get("cache-control"), "no-store");
+    assert.deepEqual(await response.json(), { status: "ok" });
+
+    const headResponse = await fetch(`${origin}/health`, { method: "HEAD" });
+    assert.equal(headResponse.status, 200);
+    assert.equal(await headResponse.text(), "");
+  });
+
   it("includes a statically detectable Netlify reader feedback form", async () => {
     const response = await fetch(origin);
     const html = await response.text();

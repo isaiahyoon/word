@@ -83,6 +83,7 @@ const scriptureStores = new Map(EDITION_IDS.map((editionId) => {
   const edition = EDITIONS[editionId];
   return [editionId, createScriptureStore({
     dataPath: edition.dataPath,
+    editionId,
     language: edition.language,
     displayBookNames: edition.displayBookNames,
     bookOrder: edition.bookOrder,
