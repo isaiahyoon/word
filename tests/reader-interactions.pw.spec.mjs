@@ -610,6 +610,75 @@ test("opens the Martin edition with native Psalm numbering and the French pastel
   await expect(page.locator("#verse-16 .verse-text")).toContainText("Car Dieu a tant aimé le monde");
 });
 
+test("shares selected verse text natively and falls back to copying when sharing is unavailable", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/kjv/b/john/c/3/v/16");
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, "share", {
+      configurable: true,
+      value: async (payload) => { window.sharedPayload = payload; },
+    });
+  });
+
+  await page.locator("#verse-16").click();
+  const verseText = (await page.locator("#verse-16 .verse-text").textContent()).trim();
+  await page.locator("#share-selected-verses").click();
+  await expect.poll(() => page.evaluate(() => window.sharedPayload)).toEqual({
+    title: "The Word",
+    text: `"${verseText}"\n\n- John 3:16`,
+  });
+  await expect(page.locator("#share-selected-verses")).toHaveAttribute("aria-label", "Share 1 verse");
+
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, "share", { configurable: true, value: undefined });
+  });
+  await page.locator("#share-selected-verses").click();
+  await expect(page.locator("#copy-status")).toHaveText("Sharing is unavailable here. Copied John 3:16 to clipboard.");
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toBe(`"${verseText}"\n\n- John 3:16`);
+});
+
+test("keeps selected-verse actions inside small mobile viewports across edition themes", async ({ page }) => {
+  const editions = ["kjv", "krv", "moh"];
+  const viewports = [
+    { width: 320, height: 568 },
+    { width: 375, height: 667 },
+    { width: 390, height: 844 },
+    { width: 430, height: 932 },
+    { width: 568, height: 320 },
+  ];
+
+  for (const edition of editions) {
+    await page.setViewportSize(viewports[0]);
+    await page.goto(`/${edition}/b/john/c/3/v/16`);
+    await page.locator("#verse-16").click();
+    await expect(page.locator("#verse-actions")).toBeVisible();
+
+    for (const viewport of viewports) {
+      await page.setViewportSize(viewport);
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      await expect(page.locator("#share-selected-verses")).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
+      const [actions, bottomNavigation, shareButton] = await Promise.all([
+        page.locator("#verse-actions").boundingBox(),
+        page.locator(".bottom-navigation").boundingBox(),
+        page.locator("#share-selected-verses").boundingBox(),
+      ]);
+      expect(actions).not.toBeNull();
+      expect(bottomNavigation).not.toBeNull();
+      expect(shareButton).not.toBeNull();
+      expect(actions.x).toBeGreaterThanOrEqual(0);
+      expect(actions.x + actions.width).toBeLessThanOrEqual(viewport.width);
+      expect(actions.y + actions.height).toBeLessThanOrEqual(viewport.height);
+      expect(bottomNavigation.y + bottomNavigation.height).toBeLessThanOrEqual(actions.y);
+      expect(shareButton.width).toBeGreaterThanOrEqual(44);
+      expect(shareButton.height).toBeGreaterThanOrEqual(44);
+      expect(await page.locator("body").evaluate((element) => element.scrollWidth))
+        .toBeLessThanOrEqual(viewport.width);
+    }
+  }
+});
+
 test("renders the KRV brand before its scripture index finishes loading", async ({ page }) => {
   await page.route("**/scripture/krv/index.json", async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 700));

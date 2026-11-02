@@ -2466,7 +2466,7 @@ body.is-krv-edition .verse.is-copy-selected {
   right: clamp(18px, 5vw, 72px);
   bottom: max(18px, env(safe-area-inset-bottom));
   display: grid;
-  grid-template-areas: "cut ." "copy clear";
+  grid-template-areas: "cut share" "copy clear";
   grid-template-columns: max-content max-content;
   align-items: center;
   justify-items: start;
@@ -2529,6 +2529,9 @@ body.is-krv-edition .verse.is-copy-selected {
 .verse-actions.is-visible .verse-copy-control {
   transition-delay: 0.04s;
 }
+.verse-actions.is-visible .verse-share-control {
+  transition-delay: 0.06s;
+}
 .verse-actions.is-visible .verse-cut-control {
   transition-delay: 0s;
 }
@@ -2572,7 +2575,33 @@ body.is-krv-edition .verse.is-copy-selected {
   font-weight: var(--weight-semibold);
   cursor: pointer;
 }
+.verse-share-control {
+  grid-area: share;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(49, 88, 99, 0.46);
+  border-radius: 6px;
+  background: linear-gradient(145deg, #f1fbf7, #dcefe9 58%, #c9e3dd);
+  box-shadow:
+    0 3px 0 rgba(49, 88, 99, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96),
+    0 8px 20px rgba(49, 61, 58, 0.12);
+  color: var(--deep-teal);
+  cursor: pointer;
+}
+.verse-share-control svg {
+  width: 19px;
+  height: 19px;
+  stroke: currentColor;
+  stroke-width: 1.65;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .verse-copy-control:hover,
+.verse-share-control:hover,
 .verse-cut-control:hover,
 .verse-clear-control:hover {
   filter: brightness(1.03);
@@ -3397,6 +3426,10 @@ body.is-kjv-edition .app-shell.is-quiet-reading .verse {
     min-height: 44px;
     max-width: calc(100vw - 24px);
     padding: 0 12px;
+  }
+  .verse-share-control {
+    width: 44px;
+    height: 44px;
   }
   .verse-clear-control {
     min-height: 42px;

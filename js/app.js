@@ -36,6 +36,7 @@ const elements = {
   cutControl: document.querySelector("#cut-selected-verses"),
   copyControl: document.querySelector("#copy-selected-verses"),
   copyControlLabel: document.querySelector("#copy-selected-label"),
+  shareControl: document.querySelector("#share-selected-verses"),
   clearControl: document.querySelector("#clear-selected-verses"),
   copyStatus: document.querySelector("#copy-status"),
   feedbackOpen: document.querySelector("#feedback-open"),
@@ -109,6 +110,13 @@ function updateCopyControl() {
   elements.copyControlLabel.textContent = visible
     ? `Copy ${count} ${count === 1 ? "verse" : "verses"}`
     : "Copy text";
+  elements.shareControl.setAttribute(
+    "aria-label",
+    visible ? `Share ${count} ${count === 1 ? "verse" : "verses"}` : "Share selected verses",
+  );
+  elements.shareControl.title = visible
+    ? `Share ${count} ${count === 1 ? "verse" : "verses"}`
+    : "Share selected verses";
   elements.copyStatus.textContent = "";
   clearTimeout(copyFeedbackTimer);
 }
@@ -245,10 +253,10 @@ async function writeClipboardText(text) {
   if (!copied) throw new Error("Clipboard copy failed");
 }
 
-async function copySelectedVerses({ clearAfter = false } = {}) {
+function selectedVerseContent() {
   const selectedVerses = scripture.getChapter(state.book, state.chapter)
     .filter((verse) => state.selectedVerses.has(verse.verse));
-  if (selectedVerses.length === 0) return;
+  if (selectedVerses.length === 0) return null;
 
   const reference = formatSelectedVerseReference(selectedVerses.map((verse) => verse.verse));
   const copiedVerses = selectedVerses.map((verse) => {
@@ -258,19 +266,51 @@ async function copySelectedVerses({ clearAfter = false } = {}) {
     return `${verseText}\n\n${verse.referenceText.trim()} [KJV reference]`;
   }).join("\n\n");
   const text = `"${copiedVerses}"\n\n- ${reference}`;
+  return { reference, text };
+}
+
+async function copySelectedVerses({ clearAfter = false } = {}) {
+  const content = selectedVerseContent();
+  if (!content) return;
+
   try {
-    await writeClipboardText(text);
+    await writeClipboardText(content.text);
     if (clearAfter) {
       clearVerseSelection();
-      elements.copyStatus.textContent = `Copied ${reference} and cleared selected verses.`;
+      elements.copyStatus.textContent = `Copied ${content.reference} and cleared selected verses.`;
       return;
     }
     elements.copyControlLabel.textContent = "Copied";
-    elements.copyStatus.textContent = `Copied ${reference} to clipboard.`;
+    elements.copyStatus.textContent = `Copied ${content.reference} to clipboard.`;
     copyFeedbackTimer = setTimeout(updateCopyControl, 1600);
   } catch (error) {
     console.error(error);
     elements.copyStatus.textContent = "Could not copy. Check clipboard permissions and try again.";
+  }
+}
+
+async function shareSelectedVerses() {
+  const content = selectedVerseContent();
+  if (!content) return;
+
+  if (typeof navigator.share !== "function") {
+    try {
+      await writeClipboardText(content.text);
+      elements.copyStatus.textContent = `Sharing is unavailable here. Copied ${content.reference} to clipboard.`;
+    } catch (error) {
+      console.error(error);
+      elements.copyStatus.textContent = "Could not share or copy this passage. Check browser permissions and try again.";
+    }
+    return;
+  }
+
+  try {
+    await navigator.share({ title: "The Word", text: content.text });
+    elements.copyStatus.textContent = `Shared ${content.reference}.`;
+  } catch (error) {
+    if (error?.name === "AbortError") return;
+    console.error(error);
+    elements.copyStatus.textContent = "Could not share this passage. Try copying it instead.";
   }
 }
 
@@ -1277,6 +1317,7 @@ function bindEvents() {
   });
   elements.cutControl.addEventListener("click", () => void copySelectedVerses({ clearAfter: true }));
   elements.copyControl.addEventListener("click", () => void copySelectedVerses());
+  elements.shareControl.addEventListener("click", () => void shareSelectedVerses());
   elements.clearControl.addEventListener("click", clearVerseSelection);
   elements.feedbackOpen.addEventListener("click", () => {
     elements.feedbackError.hidden = true;
