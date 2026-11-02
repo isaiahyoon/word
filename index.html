@@ -62,7 +62,7 @@
       aria-hidden="true"
     >
       <span class="pull-refresh-spinner" aria-hidden="true"></span>
-      <span id="pull-refresh-label">Pull down to refresh</span>
+      <span id="pull-refresh-label" data-ui-text="pullToRefresh">Pull down to refresh</span>
     </div>
     <div class="app-shell">
       <header class="topbar">
@@ -206,6 +206,11 @@
               ></div>
             </div>
             <p class="edition-attribution" id="edition-attribution" hidden></p>
+            <p class="edition-notice" id="edition-notice" role="status" hidden></p>
+            <div class="edition-offline" id="edition-offline" hidden>
+              <span class="edition-offline-status" id="edition-offline-status" role="status"></span>
+              <button class="edition-offline-action" id="edition-offline-action" type="button"></button>
+            </div>
           </div>
           <div
             class="testament-tabs"

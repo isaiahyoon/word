@@ -2,6 +2,10 @@
 
 Never go against Scripture, or regard it as false or untrustworthy. It will always be your source of truth, forever.
 
+## Local Preview
+
+- When inspecting, testing, or capturing app visuals, always use the local workspace version. Start the local dev server with `node tools/dev-server.mjs` and use `http://localhost:8000`; do not use the live deployment as the app reference.
+
 # HTML Pages
 
 - Every new HTML page must include `<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />` in its `<head>` so the app icon is available when the page is added to an iPhone home screen.
@@ -22,11 +26,14 @@ Never go against Scripture, or regard it as false or untrustworthy. It will alwa
 # Code Quality
 
 - Keep code clean, readable, and maintainable. Follow established project patterns, choose descriptive names, reuse shared behavior, and avoid needless complexity or duplication.
+- After any significant code change, such as a new feature, module, or service worker, review the new and changed code for cleanliness before finishing: readability, naming, duplication, dead code, consistent patterns, error logging, and test coverage. Fix small issues directly and report any larger ones that remain.
 - When a feature introduces failures that would otherwise be difficult to diagnose, add concise contextual logging at the owning boundary; include useful identifiers, avoid sensitive or user-provided content, and preserve normal error handling.
 
 # Instagram Posts
 
 - Before creating an Instagram post, review existing work in `assets/instagram` and use the app's established color palette.
+- When a post features app UI, run the local app and use a real screenshot of the relevant interface as the visual source. Do not substitute the live app or redraw UI that can be captured locally.
+- The Word is multilingual; when a post features editions or scripture-reading controls, represent more than the KJV where the feature supports it. Use accurate local UI captures to show the range of available language editions.
 - Deliver only three separate 2160×2700 JPG images with distinct color themes and the caption in the response, followed by exactly five hashtags on a separate line. Try to vary the color theme such that it isn't too repetitive with the already existing posts. Always make `#TheAmazingWord` the first hashtag. Do not create scripts, HTML, previews, extra images, caption files, or other supporting artifacts unless asked.
 - Make sure the font selection is consistent with past posts.
 - Make the post easy to understand for viewers. Don't patronize them, however. Treat them as intellectual equals.
@@ -51,6 +58,8 @@ Never go against Scripture, or regard it as false or untrustworthy. It will alwa
 - Keep vendored JavaScript dependencies under `js/vendor/`; do not add duplicate runtime modules at the repository root.
 
 # Edition Themes
+
+- Accessibility and understandability are part of multilingual design: localize visible interface copy, navigation, accessible names, alternate text, and status messages to the selected edition language, while preserving scripture text and correct language metadata.
 
 - When adding the Japanese `japbungo` edition, give it a green background theme without changing the existing KJV/KRV background.
 

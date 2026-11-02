@@ -1,3 +1,5 @@
+import { formatUiText } from "./ui-locales.mjs";
+
 export function createEditionPicker({
   root,
   trigger,
@@ -55,10 +57,10 @@ export function createEditionPicker({
     requestAnimationFrame(refreshScrollableText);
   }
 
-  function render(editionIds, editions, activeEditionId) {
+  function render(editionIds, editions, activeEditionId, locale) {
     const activeEdition = editions[activeEditionId];
     trigger.dataset.edition = activeEditionId;
-    trigger.setAttribute("aria-label", `Choose edition, currently ${activeEdition.label}`);
+    trigger.setAttribute("aria-label", formatUiText(locale, "chooseEdition", { edition: activeEdition.label }));
     code.textContent = activeEdition.shortCode ?? activeEditionId.toUpperCase();
     setScrollableText(label, activeEdition.label);
     menu.replaceChildren();

@@ -1,5 +1,66 @@
 import { expect, test } from "@playwright/test";
 
+test("localizes reader navigation and accessible controls for every edition", async ({ page }) => {
+  const editions = [
+    { route: "/kjv", language: "en", navigation: "Open book navigation", previous: "Previous chapter:", chapter: "Choose Genesis chapter", chapterOption: "Genesis chapter 2", testament: "Old", offlineStatus: "Not saved for offline", save: "Save", cut: "Cut", previewAlt: "The Word prism sword emblem beside the Scripture reader name", shortcutTitle: "Keyboard shortcuts", shortcutHome: "Go to homepage", feedbackTitle: "Leave me a note", feedbackBug: "A small snag" },
+    { route: "/krv", language: "ko", navigation: "책 탐색 열기", previous: "이전 장:", chapter: "창세기 장 선택", chapterOption: "창세기 2장", testament: "구약", offlineStatus: "오프라인 저장 안 됨", save: "저장", cut: "잘라내기", previewAlt: "성경 읽기 서비스 이름 옆에 있는 The Word 프리즘 검 문양", shortcutTitle: "키보드 단축키", shortcutHome: "홈페이지로 이동", feedbackTitle: "의견 남기기", feedbackBug: "작은 문제" },
+    { route: "/diodati", language: "it", navigation: "Apri la navigazione dei libri", previous: "Capitolo precedente:", chapter: "Scegli il capitolo di Genesi", chapterOption: "Genesi, capitolo 2", testament: "Antico", offlineStatus: "Non salvata per l’uso offline", save: "Salva", cut: "Taglia", previewAlt: "Emblema della spada prismatica di The Word accanto al nome del lettore biblico", shortcutTitle: "Scorciatoie da tastiera", shortcutHome: "Vai alla pagina iniziale", feedbackTitle: "Lasciami un messaggio", feedbackBug: "Un piccolo problema" },
+    { route: "/licht", language: "de", navigation: "Buchnavigation öffnen", previous: "Vorheriges Kapitel:", chapter: "Kapitel von ", chapterOption: "1 Mose, Kapitel 2", testament: "Altes", offlineStatus: "Nicht offline gespeichert", save: "Speichern", cut: "Ausschneiden", previewAlt: "Prismenschwert-Emblem von The Word neben dem Namen des Bibelleseprogramms", shortcutTitle: "Tastenkürzel", shortcutHome: "Zur Startseite", feedbackTitle: "Hinterlasse eine Nachricht", feedbackBug: "Ein kleines Problem" },
+    { route: "/japbungo", language: "ja", navigation: "書名ナビゲーションを開く", previous: "前の章：", chapter: "創世記の章を選択", chapterOption: "創世記 2章", testament: "旧約", offlineStatus: "オフライン用に未保存", save: "保存", cut: "切り取る", previewAlt: "聖書リーダー名の横にあるThe Wordのプリズムの剣の紋章", shortcutTitle: "キーボードショートカット", shortcutHome: "ホームページへ移動", feedbackTitle: "ご意見をお聞かせください", feedbackBug: "小さな不具合" },
+    { route: "/moh", language: "fr", navigation: "Ouvrir la navigation des livres", previous: "Chapitre précédent :", chapter: "Choisir le chapitre de Genèse", chapterOption: "Genèse, chapitre 2", testament: "Ancien", offlineStatus: "Non enregistré hors connexion", save: "Enregistrer", cut: "Couper", previewAlt: "Emblème de l’épée prismatique de The Word à côté du nom du lecteur biblique", shortcutTitle: "Raccourcis clavier", shortcutHome: "Aller à la page d’accueil", feedbackTitle: "Laissez-moi un mot", feedbackBug: "Un petit souci" },
+  ];
+
+  for (const edition of editions) {
+    await page.goto(`${edition.route}/b/genesis/c/1`);
+    await expect(page.locator("#verse-1")).toBeVisible();
+    await expect(page.locator("html")).toHaveAttribute("lang", edition.language);
+    await expect(page.locator('meta[property="og:image:alt"]')).toHaveAttribute("content", edition.previewAlt ?? "The Word prism sword emblem beside the Scripture reader name");
+    await expect(page.locator("#menu-toggle")).toHaveAttribute("aria-label", edition.navigation);
+    await expect(page.locator("#edition-offline-status")).toHaveText(edition.offlineStatus);
+    await expect(page.locator("#edition-offline-action")).toHaveText(edition.save);
+    await expect(page.locator("#cut-selected-verses")).toHaveText(edition.cut);
+    await expect(page.locator("#search-input")).toHaveAttribute("aria-label", edition.language === "en" ? "Search Scripture" : {
+      ko: "성경 검색",
+      it: "Cerca nelle Scritture",
+      de: "In der Bibel suchen",
+      ja: "聖書を検索",
+      fr: "Rechercher dans les Écritures",
+    }[edition.language]);
+    await expect(page.locator(".testament-tabs [role='tab']").first()).toContainText(edition.testament);
+    expect(await page.locator("#previous-chapter").getAttribute("aria-label")).toContain(edition.previous);
+    expect(await page.locator("#chapter-select").getAttribute("aria-label")).toContain(edition.chapter);
+    await page.locator("#chapter-select").click();
+    await expect(page.locator('#chapter-options-list [data-chapter="2"]')).toHaveAttribute("aria-label", edition.chapterOption);
+    await page.locator('#chapter-options-list [data-chapter="2"]').click();
+
+    await page.locator("#shortcuts-open").click();
+    await expect(page.locator("#shortcuts-title")).toHaveText(edition.shortcutTitle);
+    await expect(page.locator(".shortcut-row--home > span")).toHaveText(edition.shortcutHome);
+    await expect(page.locator("#shortcuts-close")).toHaveAttribute("aria-label", {
+      en: "Close keyboard shortcuts",
+      ko: "키보드 단축키 닫기",
+      it: "Chiudi le scorciatoie da tastiera",
+      de: "Tastenkürzel schließen",
+      ja: "キーボードショートカットを閉じる",
+      fr: "Fermer les raccourcis clavier",
+    }[edition.language]);
+    await page.locator("#shortcuts-close").click();
+
+    await page.locator("#feedback-open").click();
+    await expect(page.locator("#feedback-title")).toHaveText(edition.feedbackTitle);
+    await page.locator("#feedback-category-trigger").click();
+    await expect(page.locator("[data-value='bug'] .feedback-option-title")).toHaveText(edition.feedbackBug);
+    await page.locator("#feedback-close").click();
+  }
+
+  await page.goto("/kjv/b/genesis/c/1");
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-option-krv").click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "ko");
+  await expect(page.locator("#menu-toggle")).toHaveAttribute("aria-label", "책 탐색 열기");
+  await expect(page.locator("#edition-offline-status")).toHaveText("오프라인 저장 안 됨");
+});
+
 test("centers the chapter picker within a mobile viewport", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/kjv/b/john/c/3/v/16");
@@ -349,7 +410,8 @@ test("loads another search batch when the results panel scrolls to the bottom", 
 
     await searchInput.fill(reference);
     await expect(results.first()).toHaveAttribute("data-search-type", "reference");
-    await expect(results.first()).toContainText(`EXACT PASSAGE · ${reference}`);
+    const exactPassageLabel = edition === "diodati" ? "BRANO ESATTO" : "EXACT PASSAGE";
+    await expect(results.first()).toContainText(`${exactPassageLabel} · ${reference}`);
   }
 });
 
@@ -361,20 +423,20 @@ test("prioritizes Korean book, chapter, and exact-verse suggestions", async ({ p
 
   await searchInput.fill("요한복음");
   await expect(firstResult).toHaveAttribute("data-search-type", "book");
-  await expect(firstResult).toContainText("BOOK · 요한복음");
+  await expect(firstResult).toContainText("책 · 요한복음");
 
   await searchInput.fill("요한복음 1장");
   await expect(firstResult).toHaveAttribute("data-search-type", "chapter");
-  await expect(firstResult).toContainText("CHAPTER · 요한복음 1");
+  await expect(firstResult).toContainText("장 · 요한복음 1장");
 
   await searchInput.fill("요한");
   await expect(firstResult).toHaveAttribute("data-search-type", "book");
-  await expect(firstResult).toContainText("BOOK · 요한복음");
+  await expect(firstResult).toContainText("책 · 요한복음");
   await expect(page.locator(".search-result--navigation")).toHaveCount(5);
 
   await searchInput.fill("요한복음 １：１");
   await expect(firstResult).toHaveAttribute("data-search-type", "reference");
-  await expect(firstResult).toContainText("EXACT PASSAGE · 요한복음 1:1");
+  await expect(firstResult).toContainText("정확한 본문 · 요한복음 1:1");
   await firstResult.click();
   await expect(page).toHaveURL(/\/krv\/b\/john\/c\/1\/v\/1$/);
 
@@ -566,6 +628,26 @@ test("switches editions at the same passage and canonicalizes legacy KJV links",
   await expect(page.locator("#verse-17 .verse-text")).toContainText("Denn Gott hat seinen Sohn nicht gesandt");
 });
 
+test("keeps highlighted verses selected when switching to another language for copying", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/kjv/b/john/c/3/v/16");
+  await page.locator("#verse-16").click();
+  await expect(page.locator("#verse-16")).toHaveAttribute("aria-pressed", "true");
+
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-option-krv").click();
+
+  await expect(page).toHaveURL(/\/krv\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("#verse-16")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("#verse-16")).toHaveClass(/is-copy-selected/);
+  await expect(page.locator("#verse-16 .verse-text")).toContainText("하나님이 세상을 이처럼 사랑하사");
+  await expect(page.locator("#copy-selected-verses")).toHaveText("1절 복사");
+
+  await page.locator("#copy-selected-verses").click();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toContain("하나님이 세상을 이처럼 사랑하사");
+});
+
 test("opens the Martin edition with native Psalm numbering and the French pastel theme", async ({ page }) => {
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.setViewportSize({ width: 390, height: 844 });
@@ -662,7 +744,7 @@ test("keeps selected-verse actions inside small mobile viewports across edition 
       await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
       await expect(page.locator("#share-selected-verses")).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
       await expect(page.locator("#clear-selected-verses")).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
-      const expectedAreas = viewport.width < 360
+      const expectedAreas = viewport.width <= 430
         ? '"copy share" "cut clear"'
         : '"copy share cut clear"';
       await expect(page.locator("#verse-actions")).toHaveCSS("grid-template-areas", expectedAreas);
@@ -804,15 +886,15 @@ test("loads Diodati with the DIO code, Italian typography, and pink theme", asyn
   const firstResult = page.locator("#search-results .search-result").first();
   await searchInput.fill("Gene");
   await expect(firstResult).toHaveAttribute("data-search-type", "book");
-  await expect(firstResult).toContainText("BOOK · Genesi");
+  await expect(firstResult).toContainText("LIBRO · Genesi");
 
   await searchInput.fill("Genesi 1");
   await expect(firstResult).toHaveAttribute("data-search-type", "chapter");
-  await expect(firstResult).toContainText("CHAPTER · Genesi 1");
+  await expect(firstResult).toContainText("CAPITOLO · Genesi 1");
 
   await searchInput.fill("Genesi 1:1");
   await expect(firstResult).toHaveAttribute("data-search-type", "reference");
-  await expect(firstResult).toContainText("EXACT PASSAGE · Genesi 1:1");
+  await expect(firstResult).toContainText("BRANO ESATTO · Genesi 1:1");
   await firstResult.click();
   await expect(page).toHaveURL(/\/diodati\/b\/genesis\/c\/1\/v\/1$/);
 
@@ -856,15 +938,15 @@ test("loads Luther with the LUX code, German search, and yellow-red theme", asyn
   const firstResult = page.locator("#search-results .search-result").first();
   await searchInput.fill("1 Mo");
   await expect(firstResult).toHaveAttribute("data-search-type", "book");
-  await expect(firstResult).toContainText("BOOK · 1 Mose");
+  await expect(firstResult).toContainText("BUCH · 1 Mose");
 
   await searchInput.fill("Johannes 3");
   await expect(firstResult).toHaveAttribute("data-search-type", "chapter");
-  await expect(firstResult).toContainText("CHAPTER · Johannes 3");
+  await expect(firstResult).toContainText("KAPITEL · Johannes 3");
 
   await searchInput.fill("Johannes 3:16");
   await expect(firstResult).toHaveAttribute("data-search-type", "reference");
-  await expect(firstResult).toContainText("EXACT PASSAGE · Johannes 3:16");
+  await expect(firstResult).toContainText("GENAUE TEXTSTELLE · Johannes 3:16");
   await firstResult.click();
   await expect(page).toHaveURL(/\/licht\/b\/john\/c\/3\/v\/16$/);
   await expect(page.locator("#verse-16 .verse-text")).toContainText("Also hat Gott die Welt geliebt");
@@ -900,14 +982,14 @@ test("labels and copies Korean JapBungo fallback verses", async ({ page }) => {
     const fallbackText = page.locator(`#verse-${verse} .verse-text`);
     await expect(fallbackText).toHaveAttribute("lang", "ko");
     const krvFallback = fallbackText.locator(".verse-source-panel--krv");
-    await expect(krvFallback.locator(".verse-source-label")).toHaveText("KRV fallback");
+    await expect(krvFallback.locator(".verse-source-label")).toHaveText("KRV代替本文");
     await expect(krvFallback).toHaveCSS("background-image", /linear-gradient/);
     const koreanVerse = (await krvFallback.locator(".verse-source-panel-text").textContent()).trim();
     const kjvReference = fallbackText.locator(".verse-kjv-reference");
     let englishVerse = "";
     if (hasKJVReference) {
       await expect(kjvReference).toHaveAttribute("lang", "en");
-      await expect(kjvReference.locator(".verse-kjv-reference-label")).toHaveText("KJV reference");
+      await expect(kjvReference.locator(".verse-kjv-reference-label")).toHaveText("KJV参照");
       await expect(kjvReference).toHaveCSS("background-color", "rgb(246, 244, 249)");
       await expect(kjvReference).toHaveCSS("font-family", /Gelasio/);
       englishVerse = (await kjvReference.locator(".verse-source-panel-text").textContent()).trim();
@@ -918,12 +1000,12 @@ test("labels and copies Korean JapBungo fallback verses", async ({ page }) => {
     await page.locator(`#verse-${verse}`).click();
     await page.locator("#copy-selected-verses").click();
     await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
-      .toContain("[KRV fallback]");
+      .toContain("[KRV代替本文]");
     const copiedText = await page.evaluate(() => navigator.clipboard.readText());
     const citation = copiedText.split("\n\n").at(-1);
     const expectedVerseText = hasKJVReference
-      ? `${koreanVerse} [KRV fallback]\n\n${englishVerse} [KJV reference]`
-      : `${koreanVerse} [KRV fallback]`;
+      ? `${koreanVerse} [KRV代替本文]\n\n${englishVerse} [KJV参照]`
+      : `${koreanVerse} [KRV代替本文]`;
     expect(copiedText).toBe(`"${expectedVerseText}"\n\n${citation}`);
     expect(citation).toMatch(/^- .+ \d+:\d+$/u);
   }
@@ -1148,7 +1230,12 @@ for (const viewport of [
       await expect(page.locator("#verse-21")).toHaveAttribute("aria-pressed", "true");
       const copyControl = page.locator("#copy-selected-verses");
       const clearControl = page.locator("#clear-selected-verses");
-      await expect(copyControl).toHaveText("Copy 2 verses");
+      const copyLabels = {
+        kjv: { two: "Copy 2 verses", one: "Copy 1 verse" },
+        diodati: { two: "Copia 2 versetti", one: "Copia 1 versetto" },
+        luther1912: { two: "2 Verse kopieren", one: "1 Vers kopieren" },
+      }[edition];
+      await expect(copyControl).toHaveText(copyLabels.two);
       await expect(copyControl).toBeVisible();
       await expect(clearControl).toBeVisible();
       const bounds = await copyControl.boundingBox();
@@ -1161,7 +1248,7 @@ for (const viewport of [
       await page.locator("#verse-17").click();
       await expect(page).toHaveURL(passageUrl(17));
       await expect(page.locator("#verse-17")).toHaveAttribute("aria-pressed", "false");
-      await expect(copyControl).toHaveText("Copy 1 verse");
+      await expect(copyControl).toHaveText(copyLabels.one);
       await page.locator("#verse-21").click();
       await expect(page).toHaveURL(passageUrl(21));
       await expect(copyControl).toBeHidden();
@@ -1207,7 +1294,7 @@ for (const viewport of [
     const clearBounds = await clearControl.boundingBox();
     const topBounds = await scrollToTop.boundingBox();
     const viewportBounds = page.viewportSize();
-    if (viewport.width < 360) {
+    if (viewport.width <= 430) {
       expect(copyBounds.y + copyBounds.height).toBeLessThanOrEqual(cutBounds.y + 2);
     } else {
       expect(copyBounds.y).toBeCloseTo(cutBounds.y, 0);

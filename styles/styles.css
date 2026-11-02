@@ -1582,6 +1582,7 @@ body.is-krv-edition .edition-switcher {
 body.is-krv-edition .edition-switcher label,
 body.is-krv-edition .edition-select-caret,
 body.is-krv-edition .edition-trigger-code,
+body.is-krv-edition .edition-offline-action,
 body.is-krv-edition .edition-option-mark {
   color: var(--deep-teal);
 }
@@ -1617,6 +1618,7 @@ body.is-diodati-edition .edition-switcher {
 body.is-diodati-edition .edition-switcher label,
 body.is-diodati-edition .edition-select-caret,
 body.is-diodati-edition .edition-trigger-code,
+body.is-diodati-edition .edition-offline-action,
 body.is-diodati-edition .edition-option-mark {
   color: #854d61;
 }
@@ -1642,6 +1644,7 @@ body.is-luther1912-edition .edition-switcher {
 body.is-luther1912-edition .edition-switcher label,
 body.is-luther1912-edition .edition-select-caret,
 body.is-luther1912-edition .edition-trigger-code,
+body.is-luther1912-edition .edition-offline-action,
 body.is-luther1912-edition .edition-option-mark {
   color: #9b5147;
 }
@@ -1698,7 +1701,8 @@ body.is-luther1912-edition .edition-option.is-selected .edition-option-check {
     animation: none;
   }
 }
-.edition-attribution {
+.edition-attribution,
+.edition-notice {
   margin: 0;
   padding: 0 5px;
   color: #777970;
@@ -1706,10 +1710,62 @@ body.is-luther1912-edition .edition-option.is-selected .edition-option-check {
   font-size: var(--type-caption);
   line-height: 1.5;
 }
+.edition-notice {
+  color: #9b5147;
+}
 .edition-attribution a {
   color: inherit;
   text-decoration-color: var(--brass-soft);
   text-underline-offset: 2px;
+}
+.edition-offline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 5px 0;
+  border-top: 1px solid rgba(169, 124, 53, 0.2);
+}
+.edition-offline[hidden] {
+  display: none;
+}
+.edition-offline-status {
+  color: #777970;
+  font-family: var(--serif);
+  font-size: var(--type-caption);
+  line-height: 1.4;
+}
+.edition-offline[data-state="saved"] .edition-offline-status {
+  color: var(--deep-teal);
+}
+.edition-offline[data-state="failed"] .edition-offline-status {
+  color: #9b5147;
+}
+.edition-offline-action {
+  flex: none;
+  padding: 4px 10px;
+  border: 1px solid rgba(169, 124, 53, 0.4);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--brass);
+  font-family: var(--sans);
+  font-size: var(--type-label);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+.edition-offline-action:hover,
+.edition-offline-action:focus-visible {
+  border-color: var(--brass);
+  background: #fffefa;
+}
+.edition-offline-action:disabled {
+  opacity: 0.6;
+  cursor: progress;
 }
 .testament-tabs {
   display: grid;
@@ -3511,10 +3567,16 @@ body.is-kjv-edition .app-shell.is-quiet-reading .verse {
   }
 }
 
-@media (max-width: 359px) {
+@media (max-width: 430px) {
   .verse-actions {
+    left: max(12px, env(safe-area-inset-left));
+    right: max(12px, env(safe-area-inset-right));
     grid-template-areas: "copy share" "cut clear";
-    grid-template-columns: max-content max-content;
+    grid-template-columns: minmax(0, 1fr) max-content;
+  }
+  .verse-copy-control {
+    min-width: 0;
+    max-width: 100%;
   }
 }
 
