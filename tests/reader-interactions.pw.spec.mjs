@@ -654,15 +654,26 @@ test("keeps selected-verse actions inside small mobile viewports across edition 
     await page.goto(`/${edition}/b/john/c/3/v/16`);
     await page.locator("#verse-16").click();
     await expect(page.locator("#verse-actions")).toBeVisible();
+    await expect(page.locator("#verse-actions")).toHaveCSS("grid-template-areas", '"copy share" "cut clear"');
+    await expect(page.locator("#clear-selected-verses")).toHaveCSS("min-height", "44px");
+    await expect(page.locator("#clear-selected-verses")).toHaveCSS("border-radius", "6px");
 
     for (const viewport of viewports) {
       await page.setViewportSize(viewport);
       await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
       await expect(page.locator("#share-selected-verses")).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
-      const [actions, bottomNavigation, shareButton] = await Promise.all([
+      await expect(page.locator("#clear-selected-verses")).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
+      const expectedAreas = viewport.width < 360
+        ? '"copy share" "cut clear"'
+        : '"copy share cut clear"';
+      await expect(page.locator("#verse-actions")).toHaveCSS("grid-template-areas", expectedAreas);
+      const [actions, bottomNavigation, shareButton, clearButton, clearIcon, clearLabel] = await Promise.all([
         page.locator("#verse-actions").boundingBox(),
         page.locator(".bottom-navigation").boundingBox(),
         page.locator("#share-selected-verses").boundingBox(),
+        page.locator("#clear-selected-verses").boundingBox(),
+        page.locator(".clear-control-icon").boundingBox(),
+        page.locator("#clear-selected-verses > span:last-child").boundingBox(),
       ]);
       expect(actions).not.toBeNull();
       expect(bottomNavigation).not.toBeNull();
@@ -673,6 +684,8 @@ test("keeps selected-verse actions inside small mobile viewports across edition 
       expect(bottomNavigation.y + bottomNavigation.height).toBeLessThanOrEqual(actions.y);
       expect(shareButton.width).toBeGreaterThanOrEqual(44);
       expect(shareButton.height).toBeGreaterThanOrEqual(44);
+      expect(Math.abs(clearIcon.y + clearIcon.height / 2 - clearButton.y - clearButton.height / 2)).toBeLessThan(1);
+      expect(Math.abs(clearLabel.y + clearLabel.height / 2 - clearButton.y - clearButton.height / 2)).toBeLessThan(1);
       expect(await page.locator("body").evaluate((element) => element.scrollWidth))
         .toBeLessThanOrEqual(viewport.width);
     }
@@ -1182,19 +1195,29 @@ for (const viewport of [
 
     const cutControl = page.locator("#cut-selected-verses");
     const copyControl = page.locator("#copy-selected-verses");
+    const shareControl = page.locator("#share-selected-verses");
     const clearControl = page.locator("#clear-selected-verses");
     const scrollToTop = page.locator("#scroll-to-top");
     await expect(cutControl).toBeVisible();
     await expect(scrollToTop).toBeVisible();
+    await expect(clearControl).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
 
     const cutBounds = await cutControl.boundingBox();
     const copyBounds = await copyControl.boundingBox();
+    const shareBounds = await shareControl.boundingBox();
     const clearBounds = await clearControl.boundingBox();
     const topBounds = await scrollToTop.boundingBox();
     const viewportBounds = page.viewportSize();
-    expect(cutBounds.y + cutBounds.height).toBeLessThanOrEqual(copyBounds.y + 2);
-    expect(topBounds.y + topBounds.height).toBeLessThanOrEqual(cutBounds.y);
-    for (const bounds of [cutBounds, copyBounds, clearBounds]) {
+    if (viewport.width < 360) {
+      expect(copyBounds.y + copyBounds.height).toBeLessThanOrEqual(cutBounds.y + 2);
+    } else {
+      expect(copyBounds.y).toBeCloseTo(cutBounds.y, 0);
+      expect(copyBounds.x + copyBounds.width).toBeLessThanOrEqual(shareBounds.x + 2);
+      expect(shareBounds.x + shareBounds.width).toBeLessThanOrEqual(cutBounds.x + 2);
+      expect(cutBounds.x + cutBounds.width).toBeLessThanOrEqual(clearBounds.x + 2);
+    }
+    expect(topBounds.y + topBounds.height).toBeLessThanOrEqual(copyBounds.y);
+    for (const bounds of [cutBounds, copyBounds, shareBounds, clearBounds]) {
       expect(bounds.x).toBeGreaterThanOrEqual(0);
       expect(bounds.x + bounds.width).toBeLessThanOrEqual(viewportBounds.width);
       expect(bounds.y + bounds.height).toBeLessThanOrEqual(viewportBounds.height);
