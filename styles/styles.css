@@ -3567,10 +3567,16 @@ body.is-kjv-edition .app-shell.is-quiet-reading .verse {
   }
 }
 
-@media (max-width: 359px) {
+@media (max-width: 430px) {
   .verse-actions {
+    left: max(12px, env(safe-area-inset-left));
+    right: max(12px, env(safe-area-inset-right));
     grid-template-areas: "copy share" "cut clear";
-    grid-template-columns: max-content max-content;
+    grid-template-columns: minmax(0, 1fr) max-content;
+  }
+  .verse-copy-control {
+    min-width: 0;
+    max-width: 100%;
   }
 }
 

@@ -628,6 +628,26 @@ test("switches editions at the same passage and canonicalizes legacy KJV links",
   await expect(page.locator("#verse-17 .verse-text")).toContainText("Denn Gott hat seinen Sohn nicht gesandt");
 });
 
+test("keeps highlighted verses selected when switching to another language for copying", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/kjv/b/john/c/3/v/16");
+  await page.locator("#verse-16").click();
+  await expect(page.locator("#verse-16")).toHaveAttribute("aria-pressed", "true");
+
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-option-krv").click();
+
+  await expect(page).toHaveURL(/\/krv\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("#verse-16")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("#verse-16")).toHaveClass(/is-copy-selected/);
+  await expect(page.locator("#verse-16 .verse-text")).toContainText("하나님이 세상을 이처럼 사랑하사");
+  await expect(page.locator("#copy-selected-verses")).toHaveText("1절 복사");
+
+  await page.locator("#copy-selected-verses").click();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toContain("하나님이 세상을 이처럼 사랑하사");
+});
+
 test("opens the Martin edition with native Psalm numbering and the French pastel theme", async ({ page }) => {
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.setViewportSize({ width: 390, height: 844 });
@@ -724,7 +744,7 @@ test("keeps selected-verse actions inside small mobile viewports across edition 
       await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
       await expect(page.locator("#share-selected-verses")).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
       await expect(page.locator("#clear-selected-verses")).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
-      const expectedAreas = viewport.width < 360
+      const expectedAreas = viewport.width <= 430
         ? '"copy share" "cut clear"'
         : '"copy share cut clear"';
       await expect(page.locator("#verse-actions")).toHaveCSS("grid-template-areas", expectedAreas);
@@ -1274,7 +1294,7 @@ for (const viewport of [
     const clearBounds = await clearControl.boundingBox();
     const topBounds = await scrollToTop.boundingBox();
     const viewportBounds = page.viewportSize();
-    if (viewport.width < 360) {
+    if (viewport.width <= 430) {
       expect(copyBounds.y + copyBounds.height).toBeLessThanOrEqual(cutBounds.y + 2);
     } else {
       expect(copyBounds.y).toBeCloseTo(cutBounds.y, 0);

@@ -485,6 +485,7 @@ async function changeEdition(editionId, { preserveFocus = false } = {}) {
   if (!EDITIONS[editionId] || editionId === state.editionId) return;
   const keepSidebarOpen = elements.sidebar.classList.contains("is-open");
   const { book, chapter, verse } = state;
+  const selectedVerses = [...state.selectedVerses];
   const searchQuery = state.searchQuery;
   const previousEditionId = state.editionId;
   state.searchRequestId += 1;
@@ -497,7 +498,9 @@ async function changeEdition(editionId, { preserveFocus = false } = {}) {
     return;
   }
   const verses = await scripture.loadChapter(book, chapter);
-  await openChapter(book, chapter, Math.min(verse, verses.length));
+  await openChapter(book, chapter, Math.min(verse, verses.length), {
+    selectedVersesToRestore: selectedVerses,
+  });
   animateEditionSwitch();
   requestAnimationFrame(() => {
     if (keepSidebarOpen) {
