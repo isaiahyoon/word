@@ -1025,6 +1025,30 @@ test("shows a back-to-top button on mobile and desktop", async ({ page }) => {
   await expect(scrollToTop).toBeHidden();
 });
 
+test("restores reading position and selected verses across reloads", async ({ page }) => {
+  await page.goto("/krv/b/john/c/3/v/16");
+  await page.locator("#verse-17").click();
+  await page.locator("#verse-21").click();
+
+  await page.reload();
+  await expect(page).toHaveURL(/\/krv\/b\/john\/c\/3\/v\/21$/);
+  await expect(page.locator("body")).toHaveClass(/is-krv-edition/);
+  await expect(page.locator("#verse-17")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("#verse-21")).toHaveAttribute("aria-pressed", "true");
+
+  await page.goto("/");
+  await expect(page.locator("#heading-book")).toHaveText("요한복음");
+  await expect(page.locator("#heading-chapter")).toHaveText("3");
+  await expect(page.locator("body")).toHaveClass(/is-krv-edition/);
+  await expect(page.locator("#verse-17")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("#verse-21")).toHaveAttribute("aria-pressed", "true");
+
+  await page.goto("/diodati/b/psalms/c/3/v/1");
+  await expect(page.locator("body")).toHaveClass(/is-diodati-edition/);
+  await expect(page.locator("#heading-book")).toHaveText("Salmi");
+  await expect(page.locator("#verse-1")).toHaveAttribute("aria-pressed", "false");
+});
+
 for (const viewport of [
   { width: 390, height: 844, label: "mobile" },
   { width: 1280, height: 900, label: "desktop" },

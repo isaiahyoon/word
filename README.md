@@ -42,6 +42,7 @@ and without him was not any thing made that was made.
 - Open the shortcut guide with `/` to see Mac and Windows keys for refresh, search, navigation, Quiet Mode, verse copying, and edition cycling with Tab/Shift+Tab.
 - Enter Quiet Mode for a calmer reading view, with subtle glimmer details throughout the interface.
 - Select verses and copy them in chapter order as a quoted passage, with each verse on its own line and a compressed reference below the closing quotation mark. The Cut button copies the same passage and clears the selection; `Cmd+X`/`Ctrl+X` does the same. Clicking a verse also updates its direct link. The feedback form lets readers send a note, with passage details included only by choice.
+- The reader remembers the current edition, passage, focused verse, and selected verses on this device, including after reopening the app.
 - Shared links use a high-resolution branded preview featuring The Word's sword emblem.
 - Install it as a standalone web app on Mac, iPhone, Android, or Windows using the browser's install option.
 
@@ -51,7 +52,7 @@ To install it on Mac, open the site in Safari and choose **File → Add to Dock*
 
 ## Privacy
 
-The Amazing Word is free to read, has no ads, and requires no account. Umami is the app's only analytics tool and is used for basic usage metrics, not advertising or ad targeting. Umami says its standard analytics process IP addresses transiently to distinguish visits and estimate approximate location, but does not store raw IPs in analytics records; its infrastructure may retain separate operational or security logs. Search runs locally in the browser rather than through an external search service.
+The Amazing Word is free to read, has no ads, and requires no account. Reading position and selected verses are saved in local browser storage on the device; this state is not sent to The Word or synced across devices, and browser and installed-app storage may differ by platform. Umami is the app's only analytics tool and is used for basic usage metrics, not advertising or ad targeting. Umami says its standard analytics process IP addresses transiently to distinguish visits and estimate approximate location, but does not store raw IPs in analytics records; its infrastructure may retain separate operational or security logs. Search runs locally in the browser rather than through an external search service.
 
 ## Run locally
 
