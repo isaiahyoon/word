@@ -247,6 +247,21 @@ test("keeps shortcut keycaps inside the dialog on short mobile screens", async (
   expect(scrollTop).toBeGreaterThan(0);
 });
 
+test("sets every shortcut keycap in the same font in every edition", async ({ page }) => {
+  for (const route of ["/kjv", "/krv", "/diodati", "/licht", "/japbungo", "/moh"]) {
+    await page.goto(`${route}/b/genesis/c/1/v/1`);
+    await page.locator("#shortcuts-open").click();
+    const fonts = await page.locator(".shortcut-row kbd").evaluateAll((keys) =>
+      keys.map((key) => {
+        const style = getComputedStyle(key);
+        return `${style.fontFamily}|${style.fontSize}|${style.fontWeight}`;
+      }),
+    );
+    expect(fonts.length).toBeGreaterThan(10);
+    expect(new Set(fonts).size, route).toBe(1);
+  }
+});
+
 test("shines shortcut keycaps on hover", async ({ page }) => {
   await page.goto("/");
   await page.locator("#shortcuts-open").click();

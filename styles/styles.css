@@ -1178,7 +1178,6 @@ a:focus-visible {
   width: 58px;
   flex: 0 0 58px;
   padding: 0 4px;
-  font-size: 12px;
 }
 .shortcut-row--previous > span {
   color: #4b5a40;
@@ -1196,7 +1195,7 @@ a:focus-visible {
   background: var(--shortcut-key-color);
   color: var(--shortcut-key-ink);
   font-family: var(--sans);
-  font-size: 16px;
+  font-size: var(--type-control);
   box-shadow: 0 2px 0 var(--shortcut-key-edge);
 }
 .shortcut-row--refresh kbd,
@@ -1206,7 +1205,6 @@ a:focus-visible {
   width: 116px;
   flex: 0 0 116px;
   padding: 0 5px;
-  font-size: 10px;
   white-space: nowrap;
 }
 .shortcut-row kbd::after {
