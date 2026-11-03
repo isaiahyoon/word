@@ -2587,7 +2587,7 @@ body.is-krv-edition .verse.is-copy-selected {
   left: max(12px, env(safe-area-inset-left));
   container-type: inline-size;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-end;
   gap: 4px;
@@ -3586,17 +3586,14 @@ body.is-kjv-edition .app-shell.is-quiet-reading .verse {
     right: max(14px, env(safe-area-inset-right));
     bottom: calc(70px + env(safe-area-inset-bottom));
   }
-  .verse-cut-control { padding: 0 13px; }
   .verse-copy-control {
     min-height: 44px;
-    max-width: calc(100vw - 24px);
-    padding: 0 12px;
   }
   .verse-share-control {
+    flex: none;
     width: 44px;
     height: 44px;
   }
-  .verse-clear-control { padding: 0 9px 0 7px; }
   .app-shell.has-copy-selection .reader {
     padding-bottom: 136px;
   }
@@ -3683,17 +3680,28 @@ body.is-kjv-edition .app-shell.is-quiet-reading .verse {
   }
 }
 
-/* Stack copy above the other actions once the single row no longer fits. */
+/* Keep the four actions on one row by scaling type and padding with the row width. */
 @container (max-width: 23rem) {
-  .verse-copy-control {
-    flex: 1 1 100%;
-    justify-content: center;
+  .verse-actions > button {
+    font-size: clamp(7px, 2.6cqi, var(--type-control-small));
   }
-  .verse-share-control,
-  .verse-cut-control,
+  .verse-copy-control {
+    gap: 2cqi;
+    padding: 0 2.4cqi;
+  }
+  .verse-cut-control {
+    padding: 0 2.4cqi;
+  }
   .verse-clear-control {
-    flex: 1 1 0;
-    justify-content: center;
+    gap: 1.2cqi;
+    padding: 0 2.4cqi 0 2cqi;
+  }
+}
+
+/* Drop the decorative copy icon when even scaled type cannot fit the row. */
+@container (max-width: 17rem) {
+  .copy-control-icon {
+    display: none;
   }
 }
 

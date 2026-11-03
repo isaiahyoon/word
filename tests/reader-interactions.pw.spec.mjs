@@ -796,7 +796,7 @@ for (const route of ["/kjv/b/john/c/3/v/16", "/krv/b/john/c/3/v/16"]) {
     await page.goto(route);
     await page.locator("#verse-16").click();
     await expect(page.locator("#verse-actions")).toHaveClass(/is-visible/);
-    await expect(page.locator("#verse-actions")).toHaveCSS("flex-wrap", "wrap");
+    await expect(page.locator("#verse-actions")).toHaveCSS("flex-wrap", "nowrap");
 
     const boxes = await page.locator("#verse-actions > button").evaluateAll((buttons) =>
       buttons.map((button) => {
@@ -1073,6 +1073,7 @@ test("keeps selected-verse actions inside small mobile viewports across edition 
   const editions = ["kjv", "krv", "moh"];
   const viewports = [
     { width: 320, height: 568 },
+    { width: 360, height: 780 },
     { width: 375, height: 667 },
     { width: 390, height: 844 },
     { width: 402, height: 874 },
@@ -1085,7 +1086,7 @@ test("keeps selected-verse actions inside small mobile viewports across edition 
     await page.goto(`/${edition}/b/john/c/3/v/16`);
     await page.locator("#verse-16").click();
     await expect(page.locator("#verse-actions")).toBeVisible();
-    await expect(page.locator("#verse-actions")).toHaveCSS("flex-wrap", "wrap");
+    await expect(page.locator("#verse-actions")).toHaveCSS("flex-wrap", "nowrap");
     await expect(page.locator("#clear-selected-verses")).toHaveCSS("min-height", "44px");
     await expect(page.locator("#clear-selected-verses")).toHaveCSS("border-radius", "6px");
 
@@ -1119,6 +1120,7 @@ test("keeps selected-verse actions inside small mobile viewports across edition 
       expect(shareButton.height).toBeGreaterThanOrEqual(44);
       expect(Math.abs(clearIcon.y + clearIcon.height / 2 - clearButton.y - clearButton.height / 2)).toBeLessThan(1);
       expect(Math.abs(clearLabel.y + clearLabel.height / 2 - clearButton.y - clearButton.height / 2)).toBeLessThan(1);
+      expect(new Set(actionButtons.map((button) => button.top)).size).toBe(1);
       for (const button of actionButtons) {
         expect(button.left).toBeGreaterThanOrEqual(0);
         expect(button.right).toBeLessThanOrEqual(viewport.width);
@@ -1733,14 +1735,10 @@ for (const viewport of [
     const clearBounds = await clearControl.boundingBox();
     const topBounds = await scrollToTop.boundingBox();
     const viewportBounds = page.viewportSize();
-    if (viewport.width <= 430) {
-      expect(copyBounds.y + copyBounds.height).toBeLessThanOrEqual(cutBounds.y + 2);
-    } else {
-      expect(copyBounds.y).toBeCloseTo(cutBounds.y, 0);
-      expect(copyBounds.x + copyBounds.width).toBeLessThanOrEqual(shareBounds.x + 2);
-      expect(shareBounds.x + shareBounds.width).toBeLessThanOrEqual(cutBounds.x + 2);
-      expect(cutBounds.x + cutBounds.width).toBeLessThanOrEqual(clearBounds.x + 2);
-    }
+    expect(copyBounds.y).toBeCloseTo(cutBounds.y, 0);
+    expect(copyBounds.x + copyBounds.width).toBeLessThanOrEqual(shareBounds.x + 2);
+    expect(shareBounds.x + shareBounds.width).toBeLessThanOrEqual(cutBounds.x + 2);
+    expect(cutBounds.x + cutBounds.width).toBeLessThanOrEqual(clearBounds.x + 2);
     const actionsBounds = await page.locator("#verse-actions").boundingBox();
     const overlaps = topBounds.x < actionsBounds.x + actionsBounds.width &&
       topBounds.x + topBounds.width > actionsBounds.x &&
