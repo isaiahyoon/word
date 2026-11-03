@@ -1389,6 +1389,31 @@ test("keeps the mobile navigation drawer open and focused after switching to KRV
   await expect(page.locator("#verse-16 .verse-text")).toContainText("하나님이 세상을 이처럼 사랑하사");
 });
 
+test("keeps the mobile navigation drawer above the verse action buttons", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/kjv/b/john/c/3/v/16");
+  await page.locator("#verse-16").click();
+  await expect(page.locator("#verse-actions")).toHaveClass(/is-visible/);
+
+  await page.locator("#menu-toggle").click();
+  await expect(page.locator("#sidebar")).toHaveClass(/is-open/);
+  await expect.poll(() => page.locator("#sidebar").evaluate((element) =>
+    getComputedStyle(element).transform,
+  )).toBe("matrix(1, 0, 0, 1, 0, 0)");
+
+  const topElementIsDrawer = await page.evaluate(() => {
+    const buttons = [...document.querySelectorAll("#verse-actions > button")];
+    const sidebar = document.querySelector("#sidebar");
+    const scrim = document.querySelector("#sidebar-scrim");
+    return buttons.every((button) => {
+      const box = button.getBoundingClientRect();
+      const top = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+      return sidebar.contains(top) || top === scrim;
+    });
+  });
+  expect(topElementIsDrawer).toBe(true);
+});
+
 test("opens the mobile navigation drawer with a right swipe from the left edge", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
