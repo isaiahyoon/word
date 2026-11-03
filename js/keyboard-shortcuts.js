@@ -94,7 +94,7 @@ export function bindKeyboardShortcuts({
       event.target.closest("input, textarea, select, [contenteditable='true']");
     const isFocusableControl =
       event.target instanceof Element &&
-      event.target.closest("button, a[href], input, textarea, select, [contenteditable='true'], [role='button'], [role='option'], [role='tab'], [tabindex]:not([tabindex='-1'])");
+      event.target.closest("button:not(.verse), a[href], input, textarea, select, [contenteditable='true'], [role='button'], [role='option'], [role='tab'], [tabindex]:not([tabindex='-1'])");
     const action = getNavigationAction(event.key, {
       dialogOpen: dialog.open,
       chapterPickerOpen,

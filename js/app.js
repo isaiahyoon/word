@@ -831,6 +831,7 @@ function renderChapter(focusRange = null) {
   for (const verse of verses) {
     const row = document.createElement("button");
     row.type = "button";
+    row.tabIndex = -1;
     const isFocused = focusRange && verse.verse >= focusRange.start && verse.verse <= focusRange.end;
     row.className = `verse${isFocused ? " is-focused" : ""}`;
     row.id = `verse-${verse.verse}`;

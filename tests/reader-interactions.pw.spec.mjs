@@ -321,6 +321,33 @@ test("styles edition cycling keycaps distinctly and preserves native Tab in cont
   await expect(slashRow).toHaveCount(1);
 });
 
+test("keeps search and verses out of the Tab order", async ({ page }) => {
+  await page.goto("/kjv/b/genesis/c/1/v/1");
+  await expect(page.locator("#search-input")).toHaveAttribute("tabindex", "-1");
+  await expect(page.locator(".verse").first()).toHaveAttribute("tabindex", "-1");
+
+  await page.locator("#verse-1").focus();
+  await page.keyboard.press("Tab");
+  await expect(page).toHaveURL(/\/krv\/b\/genesis\/c\/1\/v\/1$/);
+  await page.keyboard.press("Shift+Tab");
+  await expect(page).toHaveURL(/\/kjv\/b\/genesis\/c\/1\/v\/1$/);
+
+  await expect(page.locator("#search-input")).not.toBeFocused();
+  await expect(page.locator(".search-results")).toBeHidden();
+});
+
+test("Tab after choosing an edition does not walk the verses or focus search", async ({ page }) => {
+  await page.goto("/kjv/b/genesis/c/1/v/1");
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-options [data-edition='krv']").click();
+  await expect(page).toHaveURL(/\/krv\/b\/genesis\/c\/1\/v\/1$/);
+
+  await page.keyboard.press("Shift+Tab");
+  await expect(page.locator("#search-input")).not.toBeFocused();
+  await expect(page.locator(".search-results")).toBeHidden();
+  await expect(page.locator(".verse:focus")).toHaveCount(0);
+});
+
 test("keeps all editable text fields at 16px on touch devices", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
