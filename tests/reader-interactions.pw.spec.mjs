@@ -402,6 +402,10 @@ const overlays = [
     await page.locator("#verse-1").click();
     await page.locator("#share-selected-verses").click();
   }],
+  ["copy language menu", async (page) => {
+    await page.locator("#verse-1").click();
+    await page.locator("#copy-selected-verses").click();
+  }],
 ];
 
 for (const [name, open] of overlays) {
@@ -781,6 +785,7 @@ test("keeps highlighted verses selected when switching to another language for c
   await expect(page.locator("#copy-selected-verses")).toHaveText("1절 복사");
 
   await page.locator("#copy-selected-verses").click();
+  await page.locator("#share-language-menu [data-edition='krv']").click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
     .toContain("하나님이 세상을 이처럼 사랑하사");
 });
@@ -841,6 +846,7 @@ test("opens the Martin edition with native Psalm numbering and the French pastel
   await expect(page).toHaveURL(/\/moh\/b\/psalms\/c\/3\/v\/2$/);
   await expect(page.locator("#verse-2")).toHaveClass(/is-copy-selected/);
   await page.locator("#copy-selected-verses").click();
+  await page.locator("#share-language-menu [data-edition='martin1744']").click();
   const verseText = (await page.locator("#verse-2 .verse-text").textContent()).trim();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
     .toBe(`"${verseText}"\n\n- Psaumes 3:2`);
@@ -882,6 +888,7 @@ test("opens the RV1865 LUZ edition with source headings, Petrona, and Spanish ci
   await page.locator("#verse-1").click();
   await expect(page).toHaveURL(/\/luz\/b\/psalms\/c\/3\/v\/1$/);
   await page.locator("#copy-selected-verses").click();
+  await page.locator("#share-language-menu [data-edition='rv1865']").click();
   const verseText = (await page.locator("#verse-1 .verse-text").textContent()).trim();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
     .toBe(`"${verseText}"\n\n- Salmos 3:1`);
@@ -938,6 +945,26 @@ test("shares selected verse text natively and falls back to copying when sharing
   await expect(page.locator("#copy-status")).toHaveText("Sharing is unavailable here. Copied John 3:16 to clipboard.");
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
     .toBe(`"${verseText}"\n\n- John 3:16`);
+});
+
+test("copies selected verses in another language without changing the reading edition", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/kjv/b/john/c/3/v/16");
+  await page.locator("#verse-16").click();
+
+  const copyControl = page.locator("#copy-selected-verses");
+  await copyControl.click();
+  await expect(copyControl).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator("#share-language-menu")).toHaveAttribute("aria-label", "Choose a language to copy in");
+  await expect(page.locator("#share-language-menu [data-edition]")).toHaveCount(7);
+  await page.locator("#share-language-menu [data-edition='krv']").click();
+
+  const copiedText = await page.evaluate(() => navigator.clipboard.readText());
+  expect(copiedText).toContain("하나님이 세상을 이처럼 사랑하사");
+  expect(copiedText).toMatch(/- 요한복음 3:16$/);
+  await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("#verse-16")).toHaveAttribute("aria-pressed", "true");
+  await expect(copyControl).toHaveAttribute("aria-expanded", "false");
 });
 
 async function mockNativeShare(page) {
@@ -1101,7 +1128,12 @@ test("keeps selected-verse actions inside small mobile viewports across edition 
       expect(await page.locator("body").evaluate((element) => element.scrollWidth))
         .toBeLessThanOrEqual(viewport.width);
       if (viewport.width === 402) {
-        expect(new Set(actionButtons.map((button) => button.top)).size).toBe(1);
+        const rows = new Set(actionButtons.map((button) => button.top));
+        expect(rows.size).toBeLessThanOrEqual(2);
+        if (rows.size === 2) {
+          expect(actionButtons[0].top).toBeLessThan(actionButtons[1].top);
+          expect(new Set(actionButtons.slice(1).map((button) => button.top)).size).toBe(1);
+        }
       }
     }
   }
@@ -1333,6 +1365,7 @@ test("labels and copies Korean JapBungo fallback verses", async ({ page }) => {
 
     await page.locator(`#verse-${verse}`).click();
     await page.locator("#copy-selected-verses").click();
+    await page.locator("#share-language-menu [data-edition='japbungo']").click();
     await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
       .toContain("[KRV代替本文]");
     const copiedText = await page.evaluate(() => navigator.clipboard.readText());
@@ -1547,6 +1580,27 @@ test("shows a back-to-top button on mobile and desktop", async ({ page }) => {
   await expect(scrollToTop).toBeHidden();
 });
 
+for (const viewport of [
+  { width: 390, height: 844, label: "mobile" },
+  { width: 1280, height: 900, label: "desktop" },
+]) {
+  test(`keeps the back-to-top button in place when selecting verses on ${viewport.label}`, async ({ page }) => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto("/kjv/b/john/c/3/v/16");
+    const scrollToTop = page.locator("#scroll-to-top");
+
+    await page.evaluate(() => window.scrollTo(0, 800));
+    await expect(scrollToTop).toBeVisible();
+    const positionBeforeSelection = await scrollToTop.boundingBox();
+    await page.locator("#verse-16").click();
+    await expect(page.locator("#verse-actions")).toBeVisible();
+    const positionAfterSelection = await scrollToTop.boundingBox();
+
+    expect(positionAfterSelection.x).toBe(positionBeforeSelection.x);
+    expect(positionAfterSelection.y).toBe(positionBeforeSelection.y);
+  });
+}
+
 test("Space jumps to the top and is listed with a rainbow keycap", async ({ page }) => {
   await page.goto("/kjv/b/genesis/c/1/v/1");
   await page.locator("#verse-1").waitFor();
@@ -1687,7 +1741,12 @@ for (const viewport of [
       expect(shareBounds.x + shareBounds.width).toBeLessThanOrEqual(cutBounds.x + 2);
       expect(cutBounds.x + cutBounds.width).toBeLessThanOrEqual(clearBounds.x + 2);
     }
-    expect(topBounds.y + topBounds.height).toBeLessThanOrEqual(copyBounds.y);
+    const actionsBounds = await page.locator("#verse-actions").boundingBox();
+    const overlaps = topBounds.x < actionsBounds.x + actionsBounds.width &&
+      topBounds.x + topBounds.width > actionsBounds.x &&
+      topBounds.y < actionsBounds.y + actionsBounds.height &&
+      topBounds.y + topBounds.height > actionsBounds.y;
+    expect(overlaps).toBe(false);
     for (const bounds of [cutBounds, copyBounds, shareBounds, clearBounds]) {
       expect(bounds.x).toBeGreaterThanOrEqual(0);
       expect(bounds.x + bounds.width).toBeLessThanOrEqual(viewportBounds.width);
@@ -1705,15 +1764,15 @@ for (const viewport of [
 test("copies consecutive verses on every edition as separate lines with a compressed citation", async ({ page }) => {
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   const editions = [
-    ["kjv", "John"],
-    ["krv", "요한복음"],
-    ["diodati", "Giovanni"],
-    ["licht", "Johannes"],
-    ["japbungo", "ヨハネの福音書"],
+    ["kjv", "kjv", "John"],
+    ["krv", "krv", "요한복음"],
+    ["diodati", "diodati", "Giovanni"],
+    ["luther1912", "licht", "Johannes"],
+    ["japbungo", "japbungo", "ヨハネの福音書"],
   ];
 
-  for (const [edition, displayBook] of editions) {
-    await page.goto(`/${edition}/b/john/c/3/v/16`);
+  for (const [editionId, routeSegment, displayBook] of editions) {
+    await page.goto(`/${routeSegment}/b/john/c/3/v/16`);
     const verses = [16, 17, 18];
     const expectedLines = await Promise.all(verses.map(async (number) =>
       (await page.locator(`#verse-${number} .verse-text`).textContent()).trim(),
@@ -1721,6 +1780,7 @@ test("copies consecutive verses on every edition as separate lines with a compre
 
     for (const number of verses) await page.locator(`#verse-${number}`).click();
     await page.locator("#copy-selected-verses").click();
+    await page.locator(`#share-language-menu [data-edition='${editionId}']`).click();
 
     await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
       .toBe(`"${expectedLines.join("\n\n")}"\n\n- ${displayBook} 3:16-18`);
@@ -1782,6 +1842,7 @@ test("copies staggered verses in chapter order with separated reference ranges",
 
   for (const number of verses) await page.locator(`#verse-${number}`).click();
   await page.locator("#copy-selected-verses").click();
+  await page.locator("#share-language-menu [data-edition='kjv']").click();
 
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
     .toBe(`"${expectedText}"\n\n- Isaiah 3:10, 21-22`);
