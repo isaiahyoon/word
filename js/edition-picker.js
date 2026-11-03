@@ -152,6 +152,7 @@ export function createEditionPicker({
 
 export function createShareLanguageMenu({
   trigger,
+  copyTrigger,
   menu,
   editionIds,
   editions,
@@ -159,9 +160,15 @@ export function createShareLanguageMenu({
   onOpen,
   onSelect,
 }) {
-  function close() {
+  let activeTrigger = null;
+  let activeAction = null;
+
+  function close(returnFocus = false) {
     menu.hidden = true;
-    trigger.setAttribute("aria-expanded", "false");
+    activeTrigger?.setAttribute("aria-expanded", "false");
+    if (returnFocus) activeTrigger?.focus();
+    activeTrigger = null;
+    activeAction = null;
   }
 
   function createOption(editionId) {
@@ -185,29 +192,42 @@ export function createShareLanguageMenu({
     return option;
   }
 
-  function open() {
+  function open(actionTrigger, action) {
+    activeTrigger?.setAttribute("aria-expanded", "false");
+    activeTrigger = actionTrigger;
+    activeAction = action;
     menu.replaceChildren(...editionIds.map(createOption));
     menu.hidden = false;
-    trigger.setAttribute("aria-expanded", "true");
+    activeTrigger.setAttribute("aria-expanded", "true");
     menu.querySelector("[aria-current]")?.focus();
-    onOpen?.();
+    onOpen?.(action);
   }
 
-  trigger.addEventListener("click", () => {
-    if (menu.hidden) open();
-    else close();
-  });
+  for (const [actionTrigger, action] of [[trigger, "share"], [copyTrigger, "copy"]]) {
+    actionTrigger.addEventListener("click", () => {
+      if (menu.hidden || activeTrigger !== actionTrigger) open(actionTrigger, action);
+      else close(true);
+    });
+    actionTrigger.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        open(actionTrigger, action);
+      }
+    });
+  }
   menu.addEventListener("click", (event) => {
     const option = event.target.closest("[data-edition]");
-    if (option) onSelect(option.dataset.edition);
+    if (!option) return;
+    const action = activeAction;
+    close(true);
+    onSelect(option.dataset.edition, action);
   });
   menu.addEventListener("keydown", (event) => {
     const options = [...menu.querySelectorAll("[data-edition]")];
     const index = options.indexOf(document.activeElement);
     if (event.key === "Escape") {
       event.stopPropagation();
-      close();
-      trigger.focus();
+      close(true);
     } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
       const step = event.key === "ArrowDown" ? 1 : -1;
@@ -215,7 +235,12 @@ export function createShareLanguageMenu({
     }
   });
   document.addEventListener("click", (event) => {
-    if (!menu.hidden && !trigger.contains(event.target) && !menu.contains(event.target)) close();
+    if (
+      !menu.hidden &&
+      !trigger.contains(event.target) &&
+      !copyTrigger.contains(event.target) &&
+      !menu.contains(event.target)
+    ) close();
   });
 
   return { close, isOpen: () => !menu.hidden };

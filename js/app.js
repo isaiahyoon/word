@@ -109,12 +109,22 @@ const visualEffects = createVisualEffects({
 });
 const shareLanguageMenu = createShareLanguageMenu({
   trigger: elements.shareControl,
+  copyTrigger: elements.copyControl,
   menu: elements.shareLanguageMenu,
   editionIds: EDITION_IDS,
   editions: EDITIONS,
   getActiveEditionId: () => state.editionId,
-  onOpen: warmShareChapters,
-  onSelect: (editionId) => void shareSelectedVerses(editionId),
+  onOpen: (action) => {
+    elements.shareLanguageMenu.setAttribute(
+      "aria-label",
+      uiText(action === "copy" ? "copyInLanguage" : "shareInLanguage"),
+    );
+    warmShareChapters();
+  },
+  onSelect: (editionId, action) => {
+    if (action === "copy") void copySelectedVerses({ editionId });
+    else void shareSelectedVerses(editionId);
+  },
 });
 
 const testamentFor = (book) => book <= 39 ? "old" : "new";
@@ -290,8 +300,25 @@ function selectedVerseContent(store = scripture) {
   return { reference, text };
 }
 
-async function copySelectedVerses({ clearAfter = false } = {}) {
-  const content = selectedVerseContent();
+async function selectedVerseStore(editionId, action) {
+  const store = scriptureStores.get(editionId);
+  if (store.getChapter(state.book, state.chapter).length === 0) {
+    try {
+      await store.initialize();
+      await store.loadChapter(state.book, state.chapter);
+    } catch (error) {
+      console.error(`Could not load ${editionId} ${state.book}:${state.chapter} for ${action}`, error);
+      elements.copyStatus.textContent = uiText("chapterLoadFailed");
+      return null;
+    }
+  }
+  return store;
+}
+
+async function copySelectedVerses({ clearAfter = false, editionId = state.editionId } = {}) {
+  const store = await selectedVerseStore(editionId, "copying");
+  if (!store) return;
+  const content = selectedVerseContent(store);
   if (!content) return;
 
   try {
@@ -310,7 +337,7 @@ async function copySelectedVerses({ clearAfter = false } = {}) {
   }
 }
 
-// Chapters are warmed while the menu is open so sharing keeps the tap's user activation.
+// Preload chapters while the menu is open to preserve user activation for native sharing.
 function warmShareChapters() {
   const { book, chapter } = state;
   for (const store of scriptureStores.values()) {
@@ -319,18 +346,8 @@ function warmShareChapters() {
 }
 
 async function shareSelectedVerses(editionId = state.editionId) {
-  shareLanguageMenu.close();
-  const store = scriptureStores.get(editionId);
-  if (store.getChapter(state.book, state.chapter).length === 0) {
-    try {
-      await store.initialize();
-      await store.loadChapter(state.book, state.chapter);
-    } catch (error) {
-      console.error(`Could not load ${editionId} ${state.book}:${state.chapter} for sharing`, error);
-      elements.copyStatus.textContent = uiText("chapterLoadFailed");
-      return;
-    }
-  }
+  const store = await selectedVerseStore(editionId, "sharing");
+  if (!store) return;
   const content = selectedVerseContent(store);
   if (!content) return;
 
@@ -1441,7 +1458,6 @@ function bindEvents() {
     toggleVerseSelection(verseButton);
   });
   elements.cutControl.addEventListener("click", () => void copySelectedVerses({ clearAfter: true }));
-  elements.copyControl.addEventListener("click", () => void copySelectedVerses());
   elements.clearControl.addEventListener("click", clearVerseSelection);
   elements.feedbackOpen.addEventListener("click", () => {
     elements.feedbackError.hidden = true;
