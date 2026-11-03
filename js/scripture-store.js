@@ -74,6 +74,8 @@ export function createScriptureStore({
   rebuildBookNameIndex();
   let chapterCounts = [];
   let bookFiles = [];
+  let chapterFrontMatter = new Map();
+  let verseHeadings = new Map();
   let initialization;
   let textSearchIndex;
   let textSearchIndexPromise;
@@ -105,12 +107,38 @@ export function createScriptureStore({
           index.displayBookNames.length === canonicalBookNames.length &&
           index.displayBookNames.every((name) => typeof name === "string" && name.trim().length > 0)
         );
+        const indexChapterFrontMatter = index.chapterFrontMatter ?? {};
+        const indexVerseHeadings = index.verseHeadings ?? [];
+        const validChapterFrontMatter = typeof indexChapterFrontMatter === "object" &&
+          !Array.isArray(indexChapterFrontMatter) &&
+          Object.entries(indexChapterFrontMatter).every(([key, text]) =>
+            /^\d+:\d+$/.test(key) && typeof text === "string"
+          );
+        const validVerseHeadings = Array.isArray(indexVerseHeadings) &&
+          indexVerseHeadings.every(({ book, chapter, beforeVerse, text }) =>
+            Number.isInteger(book) && book >= 1 && book <= canonicalBookNames.length &&
+            Number.isInteger(chapter) && chapter >= 1 &&
+            Number.isInteger(beforeVerse) && beforeVerse >= 1 &&
+            typeof text === "string"
+          );
 
-        if (!validChapterCounts || !validBookFiles || !validDisplayBookNames) {
+        if (
+          !validChapterCounts ||
+          !validBookFiles ||
+          !validDisplayBookNames ||
+          !validChapterFrontMatter ||
+          !validVerseHeadings
+        ) {
           throw new Error("The scripture index is invalid");
         }
         chapterCounts = index.chapterCounts;
         bookFiles = index.bookFiles;
+        chapterFrontMatter = new Map(Object.entries(indexChapterFrontMatter));
+        verseHeadings = new Map();
+        for (const heading of indexVerseHeadings) {
+          const key = `${heading.book}:${heading.chapter}:${heading.beforeVerse}`;
+          verseHeadings.set(key, [...(verseHeadings.get(key) ?? []), heading.text]);
+        }
         if (index.displayBookNames) {
           activeDisplayBookNames = index.displayBookNames;
           rebuildBookNameIndex();
@@ -214,6 +242,14 @@ export function createScriptureStore({
 
   function getChapter(book, chapter) {
     return chapters.get(chapterKey(book, chapter)) ?? [];
+  }
+
+  function getChapterFrontMatter(book, chapter) {
+    return chapterFrontMatter.get(chapterKey(book, chapter)) ?? "";
+  }
+
+  function getVerseHeadings(book, chapter, beforeVerse) {
+    return verseHeadings.get(`${book}:${chapter}:${beforeVerse}`) ?? [];
   }
 
   function resolveBookNames(name) {
@@ -367,7 +403,17 @@ export function createScriptureStore({
     return [...navigationResults, ...textResults];
   }
 
-  return { initialize, chapterCount, bookName, bookOrder, loadChapter, getChapter, search };
+  return {
+    initialize,
+    chapterCount,
+    bookName,
+    bookOrder,
+    loadChapter,
+    getChapter,
+    getChapterFrontMatter,
+    getVerseHeadings,
+    search,
+  };
 }
 
 function normalizeBookName(name) {

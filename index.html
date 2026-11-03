@@ -43,7 +43,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Gelasio:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Noto+Sans+JP:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;600&family=Noto+Serif+KR:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Gelasio:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Noto+Sans+JP:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;600&family=Noto+Serif+KR:wght@400;500;600&family=Petrona:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/styles/theme.css" />
@@ -93,6 +93,7 @@
                 data-krv-label="개역한글"
                 data-japbungo-label="BUNGO-YAKU"
                 data-martin1744-label="DAVID MARTIN"
+                data-rv1865-label="REINA-VALERA"
                 data-glimmer="KING JAMES"
                 aria-hidden="true"
                 >KING JAMES</span
@@ -103,6 +104,7 @@
                 data-krv-label="1961"
                 data-japbungo-label="文語訳"
                 data-martin1744-label="1744"
+                data-rv1865-label="1865"
                 data-glimmer="VERSION"
                 aria-hidden="true"
                 >VERSION</span
@@ -111,13 +113,14 @@
           </span>
         </a>
         <script>
-          if (["krv", "japbungo", "moh"].includes(window.initialEditionId)) {
+          if (["krv", "japbungo", "moh", "luz"].includes(window.initialEditionId)) {
             const labelKey = {
               krv: "krvLabel",
               japbungo: "japbungoLabel",
               moh: "martin1744Label",
+              luz: "rv1865Label",
             }[window.initialEditionId];
-            const labelLanguage = window.initialEditionId === "krv" ? "ko" : window.initialEditionId === "moh" ? "fr" : "ja";
+            const labelLanguage = window.initialEditionId === "krv" ? "ko" : window.initialEditionId === "moh" ? "fr" : window.initialEditionId === "luz" ? "es" : "ja";
             for (const id of ["brand-edition-primary", "brand-edition-secondary"]) {
               const label = document.getElementById(id);
               label.textContent = label.dataset[labelKey];
@@ -353,6 +356,7 @@
               ><span class="meta-divider">·</span
               ><span id="testament-meta">Old Testament</span>
             </p>
+            <p class="chapter-source-heading" id="chapter-source-heading" hidden></p>
             <p class="quiet-welcome" id="quiet-welcome" hidden>
               Take your time. Begin anywhere.
             </p>
