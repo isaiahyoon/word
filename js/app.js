@@ -556,6 +556,11 @@ function cycleEdition(direction) {
   return editionCycleQueue;
 }
 
+function cycleEditionFromShortcut(direction) {
+  chapterPicker.close();
+  void cycleEdition(direction);
+}
+
 function animateEditionSwitch() {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
@@ -941,7 +946,11 @@ function navigate(offset) {
 }
 
 function selectTestament(testament) {
-  void openChapter(state.lastBookByTestament[testament], 1);
+  void openChapter(state.lastBookByTestament[testament], 1).then(() => {
+    if (!elements.sidebar.classList.contains("is-open")) {
+      document.querySelector(`#verse-${state.verse}`)?.focus({ preventScroll: true });
+    }
+  });
 }
 
 function navigateVerse(offset) {
@@ -1026,13 +1035,19 @@ function appendHighlighted(container, text, matchedTerms = [], language = EDITIO
 }
 
 function openSearchResult(verse) {
+  clearTimeout(state.searchTimer);
   state.searchRequestId += 1;
   state.searchActiveIndex = -1;
+  state.searchMatches = [];
+  state.searchShown = 0;
+  state.searchQuery = "";
   elements.searchResults.hidden = true;
+  elements.searchResults.replaceChildren();
   elements.searchInput.value = "";
   elements.searchInput.setAttribute("aria-expanded", "false");
   elements.searchInput.removeAttribute("aria-activedescendant");
-  void openChapter(verse.book, verse.chapter, verse.verse);
+  void openChapter(verse.book, verse.chapter, verse.verse)
+    .then(() => document.querySelector(`#verse-${state.verse}`)?.focus({ preventScroll: true }));
 }
 
 function setActiveSearchResult(index) {
@@ -1555,7 +1570,8 @@ function bindEvents() {
     openButton: document.querySelector("#shortcuts-open"),
     closeButton: document.querySelector("#shortcuts-close"),
     searchInput: elements.searchInput,
-    isChapterPickerOpen: () => chapterPicker.isOpen() || editionPicker.isOpen() || shareLanguageMenu.isOpen(),
+    isChapterPickerOpen: () => chapterPicker.isOpen(),
+    isMenuOpen: () => editionPicker.isOpen() || shareLanguageMenu.isOpen(),
     isOtherDialogOpen: () => elements.feedbackDialog.open,
     onPreviousChapter: () => navigate(-1),
     onNextChapter: () => navigate(1),
@@ -1564,8 +1580,8 @@ function bindEvents() {
     onOldTestament: () => selectTestament("old"),
     onNewTestament: () => selectTestament("new"),
     onToggleQuietReading: toggleQuietReadingMode,
-    onPreviousEdition: () => void cycleEdition(-1),
-    onNextEdition: () => void cycleEdition(1),
+    onPreviousEdition: () => cycleEditionFromShortcut(-1),
+    onNextEdition: () => cycleEditionFromShortcut(1),
     onHome: navigateHome,
     isSidebarOpen: () => elements.sidebar.classList.contains("is-open"),
     onEscape: () => {

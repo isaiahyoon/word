@@ -23,19 +23,12 @@ export function getNavigationAction(
     metaKey = false,
   } = {},
 ) {
-  if (
-    dialogOpen ||
-    chapterPickerOpen ||
-    isEditing ||
-    altKey ||
-    ctrlKey ||
-    metaKey
-  )
-    return null;
+  if (dialogOpen || altKey || ctrlKey || metaKey) return null;
   if (key === "Tab") {
     if (!allowEditionCycling) return null;
     return shiftKey ? "previousEdition" : "nextEdition";
   }
+  if (chapterPickerOpen || isEditing) return null;
   return (
     NAVIGATION_ACTIONS.get(key.length === 1 ? key.toLowerCase() : key) ?? null
   );
@@ -47,6 +40,7 @@ export function bindKeyboardShortcuts({
   closeButton,
   searchInput,
   isChapterPickerOpen,
+  isMenuOpen = () => false,
   isOtherDialogOpen = () => false,
   onPreviousChapter,
   onNextChapter,
@@ -78,7 +72,7 @@ export function bindKeyboardShortcuts({
       return;
     }
     const chapterPickerOpen = isChapterPickerOpen();
-    if (dialog.open || chapterPickerOpen || isOtherDialogOpen()) return;
+    if (dialog.open || isMenuOpen() || isOtherDialogOpen()) return;
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
       event.preventDefault();
       const bounds = searchInput.getBoundingClientRect();
@@ -92,14 +86,11 @@ export function bindKeyboardShortcuts({
     const isEditing =
       event.target instanceof Element &&
       event.target.closest("input, textarea, select, [contenteditable='true']");
-    const isFocusableControl =
-      event.target instanceof Element &&
-      event.target.closest("button:not(.verse), a[href], input, textarea, select, [contenteditable='true'], [role='button'], [role='option'], [role='tab'], [tabindex]:not([tabindex='-1'])");
     const action = getNavigationAction(event.key, {
       dialogOpen: dialog.open,
       chapterPickerOpen,
       isEditing: Boolean(isEditing),
-      allowEditionCycling: !isFocusableControl && !isSidebarOpen(),
+      allowEditionCycling: !isSidebarOpen(),
       shiftKey: event.shiftKey,
       altKey: event.altKey,
       ctrlKey: event.ctrlKey,

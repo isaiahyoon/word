@@ -188,8 +188,16 @@ describe("keyboard navigation shortcuts", () => {
       assert.equal(getNavigationAction("q", context), null);
       assert.equal(getNavigationAction("h", context), null);
       assert.equal(getNavigationAction("/", context), null);
+    }
+  });
+
+  it("keeps Tab cycling editions while typing or with the chapter picker open", () => {
+    for (const context of [{ isEditing: true }, { chapterPickerOpen: true }]) {
+      assert.equal(getNavigationAction("Tab", context), "nextEdition");
+      assert.equal(getNavigationAction("Tab", { ...context, shiftKey: true }), "previousEdition");
+    }
+    for (const context of [{ dialogOpen: true }, { altKey: true }, { ctrlKey: true }, { metaKey: true }]) {
       assert.equal(getNavigationAction("Tab", context), null);
-      assert.equal(getNavigationAction("Tab", { ...context, shiftKey: true }), null);
     }
   });
 
@@ -258,13 +266,15 @@ describe("keyboard navigation shortcuts", () => {
     assert.deepEqual(calls, []);
   });
 
-  it("preserves native Tab navigation from controls and the open sidebar", (testContext) => {
+  it("cycles editions from any focused control but leaves Tab native while the sidebar is open", (testContext) => {
     const { calls, press, setSidebarOpen } = createKeyboardHarness(testContext);
     const button = new globalThis.Element(false, true);
 
-    assert.equal(press("Tab", { target: button }), false);
-    assert.equal(press("Tab", { target: button, shiftKey: true }), false);
+    assert.equal(press("Tab", { target: button }), true);
+    assert.equal(press("Tab", { target: button, shiftKey: true }), true);
+    assert.deepEqual(calls, ["nextEdition", "previousEdition"]);
 
+    calls.length = 0;
     setSidebarOpen(true);
     assert.equal(press("Tab"), false);
     assert.equal(press("Tab", { shiftKey: true }), false);

@@ -307,18 +307,37 @@ test("styles edition cycling keycaps distinctly and preserves native Tab in cont
   expect(nextKeyColor).not.toBe(previousKeyColor);
   await page.locator("#shortcuts-close").click();
 
-  const searchInput = page.locator("#search-input");
-  await searchInput.focus();
-  await page.keyboard.press("Tab");
-  await expect.poll(() => searchInput.evaluate((element) => document.activeElement === element)).toBe(false);
-  await expect(page).toHaveURL(/\/$/);
-  await expect(page.locator("#edition-select-code")).toHaveText("KJV");
-
   await page.locator("#edition-select").click();
   await page.keyboard.press("Tab");
   await expect(page).toHaveURL(/\/$/);
   await expect(page.locator("#edition-select-code")).toHaveText("KJV");
   await expect(slashRow).toHaveCount(1);
+});
+
+const pathname = (page) => () => new URL(page.url()).pathname;
+
+test("Tab cycles editions from the focused search bar", async ({ page }) => {
+  await page.goto("/kjv/b/genesis/c/1/v/1");
+  await page.locator("#verse-1").waitFor();
+  await page.locator("#search-input").focus();
+
+  await page.keyboard.press("Tab");
+  await expect.poll(pathname(page)).toBe("/krv/b/genesis/c/1/v/1");
+  await page.keyboard.press("Shift+Tab");
+  await expect.poll(pathname(page)).toBe("/kjv/b/genesis/c/1/v/1");
+});
+
+test("Tab cycles editions and closes the open chapter picker", async ({ page }) => {
+  await page.goto("/kjv/b/genesis/c/1/v/1");
+  await page.locator("#verse-1").waitFor();
+  await page.locator("#chapter-select").click();
+  await expect(page.locator("#chapter-select")).toHaveAttribute("aria-expanded", "true");
+
+  await page.keyboard.press("Tab");
+  await expect.poll(pathname(page)).toBe("/krv/b/genesis/c/1/v/1");
+  await expect(page.locator("#chapter-select")).toHaveAttribute("aria-expanded", "false");
+  await page.keyboard.press("Shift+Tab");
+  await expect.poll(pathname(page)).toBe("/kjv/b/genesis/c/1/v/1");
 });
 
 test("keeps search and verses out of the Tab order", async ({ page }) => {
@@ -346,6 +365,47 @@ test("Tab after choosing an edition does not walk the verses or focus search", a
   await expect(page.locator("#search-input")).not.toBeFocused();
   await expect(page.locator(".search-results")).toBeHidden();
   await expect(page.locator(".verse:focus")).toHaveCount(0);
+});
+
+// Every overlay must hand Tab back to edition cycling once it closes.
+const overlays = [
+  ["shortcuts dialog", async (page) => page.locator("#shortcuts-open").click()],
+  ["feedback dialog", async (page) => page.locator("#feedback-open").click()],
+  ["chapter picker", async (page) => page.locator("#chapter-select").click()],
+  ["edition picker", async (page) => page.locator("#edition-select").click()],
+  ["share language menu", async (page) => {
+    await page.locator("#verse-1").click();
+    await page.locator("#share-selected-verses").click();
+  }],
+];
+
+for (const [name, open] of overlays) {
+  test(`Tab cycles editions after closing the ${name}`, async ({ page }) => {
+    await page.goto("/kjv/b/genesis/c/1/v/1");
+    await page.locator("#verse-1").waitFor();
+    await open(page);
+    await page.keyboard.press("Escape");
+
+    await page.keyboard.press("Tab");
+    await expect(page).toHaveURL(/\/krv\/b\/genesis\/c\/1\/v\/1$/);
+    await page.keyboard.press("Shift+Tab");
+    await expect(page).toHaveURL(/\/kjv\/b\/genesis\/c\/1\/v\/1$/);
+    await expect(page.locator("#search-input")).not.toBeFocused();
+  });
+}
+
+test("Tab cycles editions after switching testament", async ({ page }) => {
+  await page.goto("/kjv/b/genesis/c/1/v/1");
+  await page.locator("#verse-1").waitFor();
+  await page.locator('.testament-tab[data-testament="new"]').click();
+  await expect(page.locator('.testament-tab[data-testament="new"]')).toHaveAttribute("aria-selected", "true");
+  await expect(page.locator('.testament-tab[data-testament="new"]')).not.toBeFocused();
+
+  await page.keyboard.press("Tab");
+  await expect(page).toHaveURL(/\/krv\/b\/matthew\/c\/1\/v\/1$/);
+  await page.keyboard.press("Shift+Tab");
+  await expect(page).toHaveURL(/\/kjv\/b\/matthew\/c\/1\/v\/1$/);
+  await expect(page.locator("#search-input")).not.toBeFocused();
 });
 
 test("keeps all editable text fields at 16px on touch devices", async ({ page }) => {
@@ -502,6 +562,31 @@ test("highlights the first search result and opens it with Enter", async ({ page
   await searchInput.press("Enter");
   await expect(page).toHaveURL(/\/kjv\/b\/isaiah\/c\/27\/v\/1$/);
 });
+
+for (const openWith of ["Enter", "click"]) {
+  test(`Tab cycles editions after opening a search result with ${openWith}`, async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#verse-1").waitFor();
+    const searchInput = page.locator("#search-input");
+
+    await searchInput.fill("piercing sword");
+    await expect(page.locator(".search-result").first()).toContainText("Isaiah 27:1");
+    if (openWith === "Enter") await searchInput.press("Enter");
+    else await page.locator(".search-result").first().click();
+    await expect(page).toHaveURL(/\/kjv\/b\/isaiah\/c\/27\/v\/1$/);
+    await expect(searchInput).not.toBeFocused();
+
+    await page.keyboard.press("Tab");
+    await expect(page).toHaveURL(/\/krv\/b\/isaiah\/c\/27\/v\/1$/);
+    await expect(page.locator(".search-results")).toBeHidden();
+    await expect(searchInput).toHaveValue("");
+
+    await page.keyboard.press("Shift+Tab");
+    await expect(page).toHaveURL(/\/kjv\/b\/isaiah\/c\/27\/v\/1$/);
+    await expect(page.locator(".search-results")).toBeHidden();
+    await expect(searchInput).not.toBeFocused();
+  });
+}
 
 test("Cmd+K scrolls all the way to the top when the focused search bar is offscreen", async ({ page }) => {
   await page.goto("/");
