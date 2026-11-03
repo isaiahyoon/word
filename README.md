@@ -36,9 +36,9 @@ and without him was not any thing made that was made.
 
 ## Features
 
-- Read the King James Version (KJV), Korean Revised Version (KRV), Japanese Bungo-yaku (JapBungo), Italian Giovanni Diodati (1649), German Luther Bible (1912), and French David Martin Bible (1744), with edition-aware book navigation and direct links to passages. JapBungo has a green reading theme; Diodati has a pink gradient reading theme; Luther uses a pastel yellow gradient with red accents; Martin uses a blue-white-pink gradient.
-- Reader navigation, controls, status messages, accessible names, and alternate descriptions follow the selected edition language across the supported English, Korean, Italian, German, Japanese, and French interfaces; scripture text remains unchanged.
-- Search scripture by phrase or separate terms, with relevance ranking, fuzzy typo matching, and direct suggestions for books, chapters, and verses. German, Korean, Japanese, and French searches support localized book names and references; Korean searches also support common spelling variations.
+- Read the King James Version (KJV), Korean Revised Version (KRV), Japanese Bungo-yaku (JapBungo), Italian Giovanni Diodati (1649), German Luther Bible (1912), French David Martin Bible (1744), and Spanish Reina-Valera 1865, with edition-aware book navigation and direct links to passages. JapBungo has a green reading theme; Diodati has a pink gradient reading theme; Luther uses a pastel yellow gradient with red accents; Martin uses a blue-white-pink gradient; Reina-Valera uses the Verde y oro palette.
+- Reader navigation, controls, status messages, accessible names, and alternate descriptions follow the selected edition language across the supported English, Korean, Italian, German, Japanese, French, and Spanish interfaces; scripture text remains unchanged.
+- Search scripture by phrase or separate terms, with relevance ranking, fuzzy typo matching, and direct suggestions for books, chapters, and verses. German, Korean, Japanese, French, and Spanish searches support localized book names and references; Korean searches also support common spelling variations.
 - Choose chapters with the whimsical chapter picker, or move through the text with navigation buttons and keyboard shortcuts. On mobile, swipe right from the left screen edge to open book navigation, or swipe left across the open drawer to close it. A discreet back-to-top button appears while scrolling.
 - Open the shortcut guide with `/` to see Mac and Windows keys for refresh, search, navigation, Quiet Mode, verse copying, jumping to the top with Space, and edition cycling with Tab/Shift+Tab.
 - Enter Quiet Mode for a calmer reading view, with subtle glimmer details throughout the interface.
@@ -73,7 +73,7 @@ node tools/dev-server.mjs
 Then open [http://localhost:8000](http://localhost:8000).
 If port 8000 is occupied, choose another port with `PORT=8001 node tools/dev-server.mjs`.
 Check that the development server is running with `curl http://localhost:8000/health`.
-When deploying, configure the host to internally serve `index.html` for valid `/kjv/b/*`, `/krv/b/*`, `/diodati/b/*`, `/licht/b/*`, `/japbungo/b/*`, `/moh/b/*`, and legacy `/b/*` scripture routes while keeping the requested URL. Unknown paths should serve `404.html` with a 404 status.
+When deploying, configure the host to internally serve `index.html` for valid `/kjv/b/*`, `/krv/b/*`, `/diodati/b/*`, `/licht/b/*`, `/japbungo/b/*`, `/moh/b/*`, `/luz/b/*`, and legacy `/b/*` scripture routes while keeping the requested URL. Unknown paths should serve `404.html` with a 404 status.
 
 Scripture links identify their edition before the book route. Omitting the chapter opens chapter 1; omitting the verse opens and highlights verse 1:
 
@@ -87,6 +87,7 @@ Scripture links identify their edition before the book route. Omitting the chapt
 /licht/b/john/c/3/v/16
 /japbungo/b/john/c/3/v/16
 /moh/b/psalms/c/3/v/1
+/luz/b/psalms/c/3/v/1
 ```
 
 Existing unprefixed `/b/*` links continue to open KJV and are canonicalized to `/kjv/b/*`. Valid verse links scroll to the requested verses and highlight them briefly. Invalid books, chapters, or verse ranges open the 404 page, which links back to the reading room.
@@ -102,6 +103,7 @@ node tools/build-diodati-data.mjs
 node tools/build-luther-data.mjs
 node tools/build-japbungo-data.mjs
 node tools/build-martin-data.mjs
+npm run build:rv1865
 ```
 
 The KJV source is stored in `sources/kjv.json`; the 1961 KRV source is pinned in `sources/krv-1961.json`. KRV attribution is shown when selected. Its economic copyright term has expired according to the [Bible Society of Korea](https://www.bskorea.or.kr/bbs/board.php?bo_table=copyright_faq&wr_id=5); preserve the text and provide attribution.
@@ -113,6 +115,8 @@ Diodati text is stored in `sources/diodati.json` from the public-domain [Diodati
 The Luther Bible (1912) source is in `sources/luther_1912.json`; its verse text is sourced from the [Lai Siangtho Bible Database](https://github.com/laisiangtho/bible/blob/master/json/luther1912.json). The [eBible.org Lutherbibel 1912 page](https://ebible.org/details.php?id=deu1912) identifies the edition as public domain and provides downloadable formats. The edition uses the LUX picker code, the dropdown label `Lutherbibel · Licht im Wort`, the `/licht/` route, and a readable Gelasio serif with a pastel-yellow/red peach-calm theme. Its 66 books and 31,102 verse slots have been checked against KJV. Rebuild it with `node tools/build-luther-data.mjs`.
 
 The French [David Martin Bible (1744)](https://github.com/getbible/v2/tree/master/martin) is stored in `sources/martin_1744.json`. CrossWire JSword identifies its French Protestant versification as **Calvin**, the [Geneva/Olivetan system used by Martin](https://github.com/crosswire/jsword/blob/master/src/main/java/org/crosswire/jsword/versification/system/SystemCalvin.java). MOH preserves Martin's native references at `/moh/`; it does not relabel verses to KJV numbers. The generated index records 90 chapters whose Martin verse counts differ from KJV, and explicitly lists four empty source placeholders excluded from display (Psalms 69:37, 102:29, 108:14, and 140:14). The source contains 31,170 records, 31,166 non-empty verse texts, and KJV contains 31,102 verse slots. These count differences are not a complete passage-by-passage crosswalk; do not assume same-numbered verses always contain the same passage. MOH uses EB Garamond for French reading and display typography, selected from the [font study](studies/french-font-study.html). The edition uses a pastel blue upper-left, white center, and pink lower-right background. Rebuild it with `npm run build:martin`.
+
+The Spanish [Reina-Valera 1865](https://github.com/MC1171611/valera1865) source is pinned to commit `49887d89a88c30360234e56ef1d129ee3227a2ed` and its 2018 orthography update in `sources/rv1865.json`. The source project identifies its text as public domain and licenses its digital edition under CC0 1.0; attribution is shown in the reader. LUZ keeps the source's verse boundaries and alternate reference labels rather than applying an unverified KJV crosswalk. The source has 31,099 verses versus 31,102 KJV slots, with chapter-count differences in 1 Samuel 20, 1 Chronicles 3, 2 Chronicles 33, Psalms 13, and Jeremiah 39. The generated data also preserves 115 unnumbered chapter headings and 21 verse-section headings. LUZ uses the Verde y oro theme and Petrona for Spanish Scripture and edition headings. Rebuild the normalized source with `npm run import:rv1865` (requires network access to the pinned source), then build its reader data with `npm run build:rv1865`.
 
 ## Search
 
@@ -129,6 +133,8 @@ Diodati search uses Italian text and localized book names and references, includ
 Martin search uses French text and localized references, including `Psaumes 3:1` and `Psaumes 3:2`. References use Martin's native Calvin numbering; for example, Psalms 3:1 is its numbered psalm title and the first body verse is Psalms 3:2.
 
 Luther search uses German text and localized book names and references, including `1 Mose`, `Johannes 3:16`, and German terms with umlauts. It supports prefixes, separate terms, and typo tolerance for longer words.
+
+Reina-Valera search uses Spanish text and localized book names and references, including `Génesis`, `San Juan 1:1`, and source-native references such as `Salmos 3:1`. It supports accented terms, book-name prefixes, separate terms, and typo tolerance for longer words.
 
 The first text search loads and indexes the selected edition's verses in the browser. The index is reused for later searches in that edition; no search query is sent to an external search service. Results are shown 12 at a time as the list is scrolled. The index is separate for each edition.
 
@@ -150,7 +156,7 @@ GitHub Actions runs this full check on every push and pull request.
 
 ## Customize the palette
 
-Edit the shared typography tokens in `styles/typography.css`, the base color tokens in `styles/theme.css`, and component colors in `styles/styles.css`. The app and 404 page use Gelasio for display and reading with DM Sans for interface text; Diodati uses Cormorant Garamond for its Italian reading face, and Martin uses EB Garamond for French. The French font comparison is available in the [font study](studies/french-font-study.html). The base pastels are `--blue`, `--lavender`, `--yellow`, `--pink`, and `--green`; the chapter number's higher-contrast gradient stops are `--chapter-blue`, `--chapter-lavender`, `--chapter-pink`, and `--chapter-green`.
+Edit the shared typography tokens in `styles/typography.css`, the base color tokens in `styles/theme.css`, and component colors in `styles/styles.css`. The app and 404 page use Gelasio for display and reading with DM Sans for interface text; Diodati uses Cormorant Garamond for its Italian reading face, Martin uses EB Garamond for French, and Reina-Valera uses Petrona for Spanish Scripture and edition headings. The French font comparison is available in the [font study](studies/french-font-study.html). The base pastels are `--blue`, `--lavender`, `--yellow`, `--pink`, and `--green`; the chapter number's higher-contrast gradient stops are `--chapter-blue`, `--chapter-lavender`, `--chapter-pink`, and `--chapter-green`.
 
 ## License
 

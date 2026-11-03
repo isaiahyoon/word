@@ -285,6 +285,7 @@ test("cycles editions with Tab and Shift+Tab and wraps at both ends", async ({ p
     ["/licht", "de"],
     ["/japbungo", "ja"],
     ["/moh", "fr"],
+    ["/luz", "es"],
     ["/kjv", "en"],
   ]) {
     await page.keyboard.press("Tab");
@@ -294,6 +295,7 @@ test("cycles editions with Tab and Shift+Tab and wraps at both ends", async ({ p
   }
 
   for (const [route, language] of [
+    ["/luz", "es"],
     ["/moh", "fr"],
     ["/japbungo", "ja"],
     ["/licht", "de"],
@@ -869,7 +871,7 @@ test("opens the RV1865 LUZ edition with source headings, Petrona, and Spanish ci
   )).toContain("Petrona");
   expect(await page.locator("body").evaluate((element) =>
     getComputedStyle(element, "::before").backgroundImage,
-  )).toContain("rgb(174, 197, 159)");
+  )).toContain("rgba(174, 197, 159");
 
   const dimensions = await page.evaluate(() => ({
     clientWidth: document.documentElement.clientWidth,
@@ -888,7 +890,9 @@ test("opens the RV1865 LUZ edition with source headings, Petrona, and Spanish ci
   await expect(page.locator(".verse-section-heading").first()).toHaveText("ALEF.");
   await expect(page.locator(".verse-section-heading").nth(1)).toHaveText("BET.");
   await expect(page.locator(".verse-section-heading")).toHaveCount(22);
-  await expect(page.locator(".verse-section-heading").first()).not.toBeVisible();
+  expect(await page.locator(".verse-section-heading").first().evaluate((element) =>
+    element.closest("button"),
+  )).toBeNull();
 
   await page.goto("/kjv/b/john/c/3/v/16");
   await expect(page.locator("body")).not.toHaveClass(/is-rv1865-edition/);
@@ -920,7 +924,7 @@ test("shares selected verse text natively and falls back to copying when sharing
   await expect(page.locator("#share-selected-verses")).toHaveAttribute("aria-label", "Share 1 verse");
 
   await page.locator("#share-selected-verses").click();
-  await expect(page.locator("#share-language-menu [data-edition]")).toHaveCount(6);
+  await expect(page.locator("#share-language-menu [data-edition]")).toHaveCount(7);
   await page.locator("#share-language-menu [data-edition='martin1744']").click();
   await expect.poll(() => page.evaluate(() => window.sharedPayload.text)).toContain("Car Dieu a tant aimé le monde");
   await expect.poll(() => page.evaluate(() => window.sharedPayload.text)).toContain("- Jean 3:16");
@@ -956,7 +960,7 @@ test("closes the share language menu with Escape, outside clicks, and cleared se
   await expect(menu).toBeVisible();
   await expect(shareButton).toHaveAttribute("aria-expanded", "true");
   await expect(menu.locator("[aria-current]")).toBeFocused();
-  await expect(menu.locator("[data-edition]")).toHaveCount(6);
+  await expect(menu.locator("[data-edition]")).toHaveCount(7);
 
   await page.keyboard.press("Escape");
   await expect(menu).toBeHidden();
@@ -985,7 +989,7 @@ test("moves through the share language menu with the arrow keys and wraps at bot
   await expect(options.nth(1)).toBeFocused();
   await page.keyboard.press("ArrowUp");
   await page.keyboard.press("ArrowUp");
-  await expect(options.nth(5)).toBeFocused();
+  await expect(options.last()).toBeFocused();
   await page.keyboard.press("ArrowDown");
   await expect(options.nth(0)).toBeFocused();
 });
