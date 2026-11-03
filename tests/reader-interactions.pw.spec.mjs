@@ -263,7 +263,7 @@ test("sets every shortcut keycap in the same font in every edition", async ({ pa
 });
 
 test("shines shortcut keycaps on hover", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/", { waitUntil: "domcontentloaded" });
   await page.locator("#shortcuts-open").click();
   const keycap = page.locator(".shortcut-row kbd").first();
   await keycap.hover();
