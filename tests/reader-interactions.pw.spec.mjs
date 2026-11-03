@@ -800,22 +800,26 @@ test("shares in another language without waiting on the network once the menu ha
   expect(payload.text).toMatch(/- Johannes 3:16$/);
 });
 
-test("reports a load failure instead of sharing when the chosen edition cannot be fetched", async ({ page }) => {
-  await page.goto("/kjv/b/john/c/3/v/16");
-  await mockNativeShare(page);
-  await page.route("**/scripture/martin1744/books/43_john.json", (route) => route.abort());
-  await page.locator("#verse-16").click();
-  await page.locator("#share-selected-verses").click();
-  await page.locator("#share-language-menu [data-edition='martin1744']").click();
+test.describe("share load failures", () => {
+  test.use({ serviceWorkers: "block" });
 
-  await expect(page.locator("#copy-status")).toHaveText(
-    "We couldn’t open this book. Please check your network connection.",
-  );
-  expect(await page.evaluate(() => window.sharedPayloads.length)).toBe(0);
+  test("reports a load failure instead of sharing when the chosen edition cannot be fetched", async ({ page }) => {
+    await page.goto("/kjv/b/john/c/3/v/16");
+    await mockNativeShare(page);
+    await page.route("**/scripture/martin1744/**", (route) => route.abort());
+    await page.locator("#verse-16").click();
+    await page.locator("#share-selected-verses").click();
+    await page.locator("#share-language-menu [data-edition='martin1744']").click();
+
+    await expect(page.locator("#copy-status")).toHaveText(
+      "We couldn’t open this book. Please check your network connection.",
+    );
+    expect(await page.evaluate(() => window.sharedPayloads.length)).toBe(0);
+  });
 });
 
 test("leaves out selected verses that the chosen edition does not contain", async ({ page }) => {
-  await page.goto("/diodati/b/3-john/c/1/v/14");
+  await page.goto("/moh/b/3-john/c/1/v/14");
   await mockNativeShare(page);
   await page.locator("#verse-14").click();
   await page.locator("#verse-15").click();
