@@ -2,7 +2,7 @@ import { bindKeyboardShortcuts } from "./keyboard-shortcuts.js";
 import { createChapterPicker } from "./chapter-picker.js";
 import { createScriptureStore } from "./scripture-store.js";
 import { createVisualEffects } from "./visual-effects.js";
-import { createEditionPicker } from "./edition-picker.js";
+import { createEditionPicker, createShareLanguageMenu } from "./edition-picker.js";
 import { createOfflineEditions, registerServiceWorker } from "./offline.js";
 import { createOfflineControl } from "./offline-control.js";
 import { createScriptureRoutes, getVerseStep, isValidVerseRange, normalizeVerseRange } from "./scripture-routes.mjs";
@@ -107,6 +107,15 @@ const visualEffects = createVisualEffects({
   shell: document.querySelector(".app-shell"),
   verseList: elements.verseList
 });
+const shareLanguageMenu = createShareLanguageMenu({
+  trigger: elements.shareControl,
+  menu: elements.shareLanguageMenu,
+  editionIds: EDITION_IDS,
+  editions: EDITIONS,
+  getActiveEditionId: () => state.editionId,
+  onOpen: warmShareChapters,
+  onSelect: (editionId) => void shareSelectedVerses(editionId),
+});
 
 const testamentFor = (book) => book <= 39 ? "old" : "new";
 const bookName = (book) => scripture.bookName(book);
@@ -117,7 +126,7 @@ function updateCopyControl() {
   elements.verseActions.classList.toggle("is-visible", visible);
   elements.verseActions.setAttribute("aria-hidden", String(!visible));
   elements.verseActions.inert = !visible;
-  if (!visible) closeShareLanguageMenu();
+  if (!visible) shareLanguageMenu.close();
   elements.appShell.classList.toggle("has-copy-selection", visible);
   elements.copyControlLabel.textContent = visible
     ? uiText(count === 1 ? "copyOneVerse" : "copyManyVerses", { count })
@@ -301,42 +310,26 @@ async function copySelectedVerses({ clearAfter = false } = {}) {
   }
 }
 
-function closeShareLanguageMenu() {
-  elements.shareLanguageMenu.hidden = true;
-  elements.shareControl.setAttribute("aria-expanded", "false");
-}
-
-function openShareLanguageMenu() {
-  elements.shareLanguageMenu.replaceChildren(...EDITION_IDS.map((editionId) => {
-    const edition = EDITIONS[editionId];
-    const [code, language = edition.name] = edition.label.split(" · ");
-    const option = document.createElement("button");
-    option.type = "button";
-    option.className = "share-language-option";
-    option.setAttribute("role", "menuitem");
-    option.dataset.edition = editionId;
-    if (editionId === state.editionId) option.setAttribute("aria-current", "true");
-    option.lang = edition.language;
-    option.innerHTML = '<b class="share-language-code"></b><span class="share-language-name"></span>';
-    option.firstElementChild.textContent = edition.shortCode ?? code;
-    option.lastElementChild.textContent = language;
-    return option;
-  }));
-  elements.shareLanguageMenu.hidden = false;
-  elements.shareControl.setAttribute("aria-expanded", "true");
-  elements.shareLanguageMenu.querySelector("[aria-current]")?.focus();
+// Chapters are warmed while the menu is open so sharing keeps the tap's user activation.
+function warmShareChapters() {
+  const { book, chapter } = state;
+  for (const store of scriptureStores.values()) {
+    store.initialize().then(() => store.loadChapter(book, chapter)).catch(() => {});
+  }
 }
 
 async function shareSelectedVerses(editionId = state.editionId) {
-  closeShareLanguageMenu();
+  shareLanguageMenu.close();
   const store = scriptureStores.get(editionId);
-  try {
-    await store.initialize();
-    await store.loadChapter(state.book, state.chapter);
-  } catch (error) {
-    console.error(`Could not load ${editionId} ${state.book}:${state.chapter} for sharing`, error);
-    elements.copyStatus.textContent = uiText("chapterLoadFailed");
-    return;
+  if (store.getChapter(state.book, state.chapter).length === 0) {
+    try {
+      await store.initialize();
+      await store.loadChapter(state.book, state.chapter);
+    } catch (error) {
+      console.error(`Could not load ${editionId} ${state.book}:${state.chapter} for sharing`, error);
+      elements.copyStatus.textContent = uiText("chapterLoadFailed");
+      return;
+    }
   }
   const content = selectedVerseContent(store);
   if (!content) return;
@@ -1416,32 +1409,6 @@ function bindEvents() {
   });
   elements.cutControl.addEventListener("click", () => void copySelectedVerses({ clearAfter: true }));
   elements.copyControl.addEventListener("click", () => void copySelectedVerses());
-  elements.shareControl.addEventListener("click", () => {
-    if (elements.shareLanguageMenu.hidden) openShareLanguageMenu();
-    else closeShareLanguageMenu();
-  });
-  elements.shareLanguageMenu.addEventListener("click", (event) => {
-    const option = event.target.closest("[data-edition]");
-    if (option) void shareSelectedVerses(option.dataset.edition);
-  });
-  elements.shareLanguageMenu.addEventListener("keydown", (event) => {
-    const options = [...elements.shareLanguageMenu.querySelectorAll("[data-edition]")];
-    const index = options.indexOf(document.activeElement);
-    if (event.key === "Escape") {
-      event.stopPropagation();
-      closeShareLanguageMenu();
-      elements.shareControl.focus();
-    } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      event.preventDefault();
-      const step = event.key === "ArrowDown" ? 1 : -1;
-      options[(index + step + options.length) % options.length].focus();
-    }
-  });
-  document.addEventListener("click", (event) => {
-    if (!elements.shareLanguageMenu.hidden && !event.target.closest("#share-selected-verses, #share-language-menu")) {
-      closeShareLanguageMenu();
-    }
-  });
   elements.clearControl.addEventListener("click", clearVerseSelection);
   elements.feedbackOpen.addEventListener("click", () => {
     elements.feedbackError.hidden = true;
@@ -1587,7 +1554,7 @@ function bindEvents() {
     openButton: document.querySelector("#shortcuts-open"),
     closeButton: document.querySelector("#shortcuts-close"),
     searchInput: elements.searchInput,
-    isChapterPickerOpen: () => chapterPicker.isOpen() || editionPicker.isOpen(),
+    isChapterPickerOpen: () => chapterPicker.isOpen() || editionPicker.isOpen() || shareLanguageMenu.isOpen(),
     isOtherDialogOpen: () => elements.feedbackDialog.open,
     onPreviousChapter: () => navigate(-1),
     onNextChapter: () => navigate(1),

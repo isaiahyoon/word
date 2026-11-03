@@ -149,3 +149,74 @@ export function createEditionPicker({
 
   return { close, isOpen: () => !menu.hidden, render };
 }
+
+export function createShareLanguageMenu({
+  trigger,
+  menu,
+  editionIds,
+  editions,
+  getActiveEditionId,
+  onOpen,
+  onSelect,
+}) {
+  function close() {
+    menu.hidden = true;
+    trigger.setAttribute("aria-expanded", "false");
+  }
+
+  function createOption(editionId) {
+    const edition = editions[editionId];
+    const [labelCode, language = edition.name] = edition.label.split(" · ");
+    const option = document.createElement("button");
+    option.type = "button";
+    option.className = "share-language-option";
+    option.setAttribute("role", "menuitem");
+    option.dataset.edition = editionId;
+    option.lang = edition.language;
+    if (editionId === getActiveEditionId()) option.setAttribute("aria-current", "true");
+
+    const code = document.createElement("b");
+    code.className = "share-language-code";
+    code.textContent = edition.shortCode ?? labelCode;
+    const name = document.createElement("span");
+    name.className = "share-language-name";
+    name.textContent = language;
+    option.append(code, name);
+    return option;
+  }
+
+  function open() {
+    menu.replaceChildren(...editionIds.map(createOption));
+    menu.hidden = false;
+    trigger.setAttribute("aria-expanded", "true");
+    menu.querySelector("[aria-current]")?.focus();
+    onOpen?.();
+  }
+
+  trigger.addEventListener("click", () => {
+    if (menu.hidden) open();
+    else close();
+  });
+  menu.addEventListener("click", (event) => {
+    const option = event.target.closest("[data-edition]");
+    if (option) onSelect(option.dataset.edition);
+  });
+  menu.addEventListener("keydown", (event) => {
+    const options = [...menu.querySelectorAll("[data-edition]")];
+    const index = options.indexOf(document.activeElement);
+    if (event.key === "Escape") {
+      event.stopPropagation();
+      close();
+      trigger.focus();
+    } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const step = event.key === "ArrowDown" ? 1 : -1;
+      options[(index + step + options.length) % options.length].focus();
+    }
+  });
+  document.addEventListener("click", (event) => {
+    if (!menu.hidden && !trigger.contains(event.target) && !menu.contains(event.target)) close();
+  });
+
+  return { close, isOpen: () => !menu.hidden };
+}
