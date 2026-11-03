@@ -1,4 +1,4 @@
-import { expect, test } from "./support/offline-test.mjs";
+import { expect, test } from "./support/browser-test.mjs";
 
 test("saves an edition for offline reading and removes it again", async ({ page, context }) => {
   await page.goto("/kjv/b/john/c/3/v/16");

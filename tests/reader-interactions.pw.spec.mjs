@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./support/browser-test.mjs";
 
 test("localizes reader navigation and accessible controls for every edition", async ({ page }) => {
   const editions = [
@@ -675,7 +675,7 @@ test("refreshes the current passage only after a pull past the mobile threshold"
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/kjv/b/john/c/3/v/16");
-  await page.locator("#verse-16").waitFor();
+  await expect(page.locator("#verse-16")).toBeInViewport();
   await page.evaluate(() => window.scrollTo(0, 0));
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
 
@@ -1192,6 +1192,9 @@ test("auto-scrolls long edition labels only while the mobile sidebar is open", a
 test("scrolls long edition labels only when hovered on desktop", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/licht");
+  await page.addStyleTag({
+    content: "#edition-option-luther1912 .edition-option-description strong { width: 80px; }",
+  });
   const desktopTrack = page.locator("#edition-select-label .edition-scroll-text");
   await expect(desktopTrack).toHaveCSS("animation-name", "none");
   await page.locator("#edition-select").focus();
