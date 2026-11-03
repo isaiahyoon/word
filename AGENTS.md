@@ -21,6 +21,7 @@ Never go against Scripture, or regard it as false or untrustworthy. It will alwa
 # Testing
 
 - Every new app feature must include appropriate automated tests for its behavior.
+- After any significant behavioral change to the app, always run the full test suite with `npm run test:all` before finishing, and fix or report any failures.
 - When adding a scripture edition, test the full shared search contract in its language, including text matching, prefix and localized reference suggestions, exact and invalid references, fuzzy matching where supported, and result de-duplication. Extend edition-agnostic reader tests for routes, edition switching, verse selection, and copying to cover the new edition.
 
 # Code Quality
