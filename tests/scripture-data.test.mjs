@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { describe, it } from "node:test";
 import { BOOKS, bookFileName } from "../js/books.mjs";
+import { stripParagraphMarks } from "../tools/rv1865-text.mjs";
 
 describe("generated scripture data", () => {
   it("preserves every verse in the KJV source", async () => {
@@ -347,7 +348,7 @@ describe("generated scripture data", () => {
               references: record.alternateReferences,
             });
           }
-          return [record.verse, record.text];
+          return [record.verse, stripParagraphMarks(record.text)];
         });
         sourceVerseCount += verses.length;
         kjvVerseCount += canonical[chapter].length;
@@ -392,6 +393,11 @@ describe("generated scripture data", () => {
     ));
     assert.equal(firstSamuel[20][42][0], 43);
     assert.ok(!firstSamuel[20][42][1].startsWith("43"));
+    const allVerseText = (await Promise.all(manifest.bookFiles.map((file) =>
+      readFile(new URL(`../scripture/rv1865/books/${file}`, import.meta.url), "utf8")))).join("");
+    assert.ok(!allVerseText.includes("¶"));
+    assert.equal(stripParagraphMarks("¶ Y dijo Dios"), "Y dijo Dios");
+    assert.equal(stripParagraphMarks("sea con vosotros. Amén. ¶ Fue escrita"), "sea con vosotros. Amén. Fue escrita");
     await assertEditionMatchesSource(manifest, expectedBooks, "rv1865");
   });
 

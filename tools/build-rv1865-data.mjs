@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { BOOKS, bookFileName } from "../js/books.mjs";
+import { stripParagraphMarks } from "./rv1865-text.mjs";
 
 const sourceUrl = new URL("../sources/rv1865.json", import.meta.url);
 const canonicalIndexUrl = new URL("../scripture/kjv/index.json", import.meta.url);
@@ -65,7 +66,7 @@ for (const [bookIndex, sourceBook] of source.books.entries()) {
           references: record.alternateReferences,
         });
       }
-      verses.push([record.verse, record.text]);
+      verses.push([record.verse, stripParagraphMarks(record.text)]);
     }
 
     sourceVerseCount += verses.length;
