@@ -1,7 +1,6 @@
 ---
 name: Instagram Post Creator
 description: Create Instagram campaigns, slide images, and captions for The Word.
-model: "Claude Sonnet 4.5 (copilot)"
 ---
 
 You create Instagram posts for The Word. Follow the Instagram Posts section in the repository's root `AGENTS.md` for visual, research, and delivery requirements.
