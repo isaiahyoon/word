@@ -12,7 +12,7 @@ import {
 } from "../js/scripture-routes.mjs";
 import { createScriptureStore } from "../js/scripture-store.js";
 
-function createMockFetch(dataPath = "./scripture/kjv") {
+function createMockFetch(dataPath = "./scripture/kjv", indexMetadata = {}) {
   const requests = [];
   const chapterCounts = BOOKS.map((_, index) => (index === 42 ? 3 : 1));
   const bookFiles = BOOKS.map((_, index) => bookFileName(index + 1));
@@ -43,7 +43,7 @@ function createMockFetch(dataPath = "./scripture/kjv") {
       requests.push(url);
       const value =
         url === `${dataPath}/index.json`
-          ? { chapterCounts, bookFiles }
+          ? { chapterCounts, bookFiles, ...indexMetadata }
           : books[bookFiles.indexOf(url.split("/").at(-1))];
       if (!value) return { ok: false };
       return { ok: true, json: async () => value };
@@ -165,6 +165,22 @@ describe("scripture routes", () => {
       martinRoutes.buildPath(19, 3, { start: 2, end: 2 }, "martin1744"),
       "/moh/b/psalms/c/3/v/2",
     );
+
+    const rv1865Routes = createScriptureRoutes(BOOKS, "/", {
+      kjv: { routeSegment: "kjv" },
+      rv1865: { routeSegment: "luz" },
+    });
+    assert.deepEqual(rv1865Routes.parse("/luz/b/john/c/1/v/1"), {
+      editionId: "rv1865",
+      book: 43,
+      chapter: 1,
+      range: { start: 1, end: 1 },
+      legacy: false,
+    });
+    assert.equal(
+      rv1865Routes.buildPath(43, 1, { start: 1, end: 1 }, "rv1865"),
+      "/luz/b/john/c/1/v/1",
+    );
   });
 
   it("round-trips numbered and multiword book slugs", () => {
@@ -232,6 +248,24 @@ describe("scripture routes", () => {
 });
 
 describe("scripture store", () => {
+  it("loads optional frontmatter and section headings without numbering them as verses", async () => {
+    const mock = createMockFetch("./scripture/rv1865", {
+      chapterFrontMatter: { "19:3": "Salmo de David, cuando huía de delante de Absalom su hijo." },
+      verseHeadings: [{ book: 19, chapter: 119, beforeVerse: 9, text: "BET." }],
+    });
+    const store = createScriptureStore({
+      fetchImpl: mock.fetchImpl,
+      dataPath: "./scripture/rv1865",
+    });
+
+    await store.initialize();
+
+    assert.equal(store.getChapterFrontMatter(19, 3), "Salmo de David, cuando huía de delante de Absalom su hijo.");
+    assert.deepEqual(store.getVerseHeadings(19, 119, 9), ["BET."]);
+    assert.deepEqual(store.getVerseHeadings(19, 119, 8), []);
+    assert.deepEqual(store.getChapter(19, 3), []);
+  });
+
   it("loads a book once and returns the requested chapter", async () => {
     const mock = createMockFetch();
     const store = createScriptureStore({ fetchImpl: mock.fetchImpl });
@@ -568,6 +602,58 @@ describe("scripture store", () => {
     assert.deepEqual(await store.search("Anfangg xyz"), []);
 
     for (const query of ["Johannes 3:99", "Johannes 99:1"]) {
+      const matches = await store.search(query);
+      assert.ok(matches.every((match) => match.searchType !== "reference"), query);
+    }
+  });
+
+  it("searches RV1865 Spanish text, prefixes, localized references, and source numbering", async () => {
+    const fetchImpl = async (path) => {
+      const fileUrl = new URL(`../${path.replace(/^\.\//, "")}`, import.meta.url);
+      return { ok: true, json: async () => JSON.parse(await readFile(fileUrl, "utf8")) };
+    };
+    const store = createScriptureStore({
+      fetchImpl,
+      dataPath: "./scripture/rv1865",
+      language: "es",
+    });
+    await store.initialize();
+
+    assert.equal(store.bookName(1), "Génesis");
+    assert.equal(store.bookName(43), "San Juan");
+    assert.equal(store.bookName(19), "Salmos");
+
+    const bookPrefix = await store.search("Géne");
+    assert.equal(bookPrefix[0].searchType, "book");
+    assert.equal(bookPrefix[0].book, 1);
+
+    const chapter = await store.search("San Juan 1");
+    assert.equal(chapter[0].searchType, "chapter");
+    assert.equal(chapter[0].book, 43);
+    assert.equal(chapter[0].chapter, 1);
+
+    const reference = await store.search("San Juan 1:1");
+    assert.equal(reference[0].searchType, "reference");
+    assert.deepEqual(
+      { book: reference[0].book, chapter: reference[0].chapter, verse: reference[0].verse },
+      { book: 43, chapter: 1, verse: 1 },
+    );
+    assert.equal(reference.filter(({ book, chapter: chapterNumber, verse }) =>
+      book === 43 && chapterNumber === 1 && verse === 1).length, 1);
+
+    const textMatch = await store.search("vida luz");
+    assert.ok(textMatch.some(({ book, chapter: chapterNumber, verse }) =>
+      book === 43 && chapterNumber === 1 && verse === 4));
+    const fuzzyMatch = await store.search("tinieblaz");
+    assert.ok(fuzzyMatch.some(({ book, chapter: chapterNumber, verse }) =>
+      book === 43 && chapterNumber === 1 && verse === 5));
+
+    const psalmReference = await store.search("Salmos 3:1");
+    assert.equal(psalmReference[0].searchType, "reference");
+    assert.equal(psalmReference[0].book, 19);
+    assert.equal(psalmReference[0].text, "Jehová, ¡cuánto se han multiplicado mis enemigos! muchos se levantan contra mí.");
+
+    for (const query of ["Salmos 13:6", "San Juan 1:99", "Génesis 99:1"]) {
       const matches = await store.search(query);
       assert.ok(matches.every((match) => match.searchType !== "reference"), query);
     }

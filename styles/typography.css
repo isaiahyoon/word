@@ -7,6 +7,7 @@
   --sans-japanese: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
   --serif-italian: "Cormorant Garamond", "Gelasio", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   --serif-french: "EB Garamond", "Gelasio", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --serif-spanish: "Petrona", "Gelasio", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
 
   --type-brand: 23px;
   --type-display: clamp(42px, 5vw, 58px);

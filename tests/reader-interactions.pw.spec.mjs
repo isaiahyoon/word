@@ -263,7 +263,7 @@ test("sets every shortcut keycap in the same font in every edition", async ({ pa
 });
 
 test("shines shortcut keycaps on hover", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/", { waitUntil: "domcontentloaded" });
   await page.locator("#shortcuts-open").click();
   const keycap = page.locator(".shortcut-row kbd").first();
   await keycap.hover();
@@ -285,6 +285,7 @@ test("cycles editions with Tab and Shift+Tab and wraps at both ends", async ({ p
     ["/licht", "de"],
     ["/japbungo", "ja"],
     ["/moh", "fr"],
+    ["/luz", "es"],
     ["/kjv", "en"],
   ]) {
     await page.keyboard.press("Tab");
@@ -294,6 +295,7 @@ test("cycles editions with Tab and Shift+Tab and wraps at both ends", async ({ p
   }
 
   for (const [route, language] of [
+    ["/luz", "es"],
     ["/moh", "fr"],
     ["/japbungo", "ja"],
     ["/licht", "de"],
@@ -851,6 +853,56 @@ test("opens the Martin edition with native Psalm numbering and the French pastel
   await expect(page.locator("#verse-16 .verse-text")).toContainText("Car Dieu a tant aimé le monde");
 });
 
+test("opens the RV1865 LUZ edition with source headings, Petrona, and Spanish citations", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/luz/b/psalms/c/3/v/1");
+
+  await expect(page).toHaveURL(/\/luz\/b\/psalms\/c\/3\/v\/1$/);
+  await expect(page.locator("#edition-select-code")).toHaveText("LUZ");
+  await expect(page.locator("#edition-select-label")).toHaveText("Reina-Valera · Español");
+  await expect(page.locator("#verse-list")).toHaveAttribute("lang", "es");
+  await expect(page.locator("body")).toHaveClass(/is-rv1865-edition/);
+  await expect(page.locator("#chapter-source-heading")).toHaveText("Salmo de David, cuando huía de delante de Absalom su hijo.");
+  await expect(page.locator("#verse-1 .verse-text")).toContainText("Jehová, ¡cuánto se han multiplicado mis enemigos!");
+  await page.evaluate(() => document.fonts.load('18px "Petrona"'));
+  expect(await page.locator("#verse-1 .verse-text").evaluate((element) =>
+    getComputedStyle(element).fontFamily,
+  )).toContain("Petrona");
+  expect(await page.locator("body").evaluate((element) =>
+    getComputedStyle(element, "::before").backgroundImage,
+  )).toContain("rgba(174, 197, 159");
+
+  const dimensions = await page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+  expect(dimensions.scrollWidth).toBe(dimensions.clientWidth);
+
+  await page.locator("#verse-1").click();
+  await expect(page).toHaveURL(/\/luz\/b\/psalms\/c\/3\/v\/1$/);
+  await page.locator("#copy-selected-verses").click();
+  const verseText = (await page.locator("#verse-1 .verse-text").textContent()).trim();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toBe(`"${verseText}"\n\n- Salmos 3:1`);
+
+  await page.goto("/luz/b/psalms/c/119/v/9");
+  await expect(page.locator(".verse-section-heading").first()).toHaveText("ALEF.");
+  await expect(page.locator(".verse-section-heading").nth(1)).toHaveText("BET.");
+  await expect(page.locator(".verse-section-heading")).toHaveCount(22);
+  expect(await page.locator(".verse-section-heading").first().evaluate((element) =>
+    element.closest("button"),
+  )).toBeNull();
+
+  await page.goto("/kjv/b/john/c/3/v/16");
+  await expect(page.locator("body")).not.toHaveClass(/is-rv1865-edition/);
+  await page.locator("#menu-toggle").click();
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-option-rv1865").click();
+  await expect(page).toHaveURL(/\/luz\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("#verse-16 .verse-text")).toContainText("Porque de tal manera amó Dios al mundo");
+});
+
 test("shares selected verse text natively and falls back to copying when sharing is unavailable", async ({ page }) => {
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.setViewportSize({ width: 320, height: 568 });
@@ -872,7 +924,7 @@ test("shares selected verse text natively and falls back to copying when sharing
   await expect(page.locator("#share-selected-verses")).toHaveAttribute("aria-label", "Share 1 verse");
 
   await page.locator("#share-selected-verses").click();
-  await expect(page.locator("#share-language-menu [data-edition]")).toHaveCount(6);
+  await expect(page.locator("#share-language-menu [data-edition]")).toHaveCount(7);
   await page.locator("#share-language-menu [data-edition='martin1744']").click();
   await expect.poll(() => page.evaluate(() => window.sharedPayload.text)).toContain("Car Dieu a tant aimé le monde");
   await expect.poll(() => page.evaluate(() => window.sharedPayload.text)).toContain("- Jean 3:16");
@@ -908,7 +960,7 @@ test("closes the share language menu with Escape, outside clicks, and cleared se
   await expect(menu).toBeVisible();
   await expect(shareButton).toHaveAttribute("aria-expanded", "true");
   await expect(menu.locator("[aria-current]")).toBeFocused();
-  await expect(menu.locator("[data-edition]")).toHaveCount(6);
+  await expect(menu.locator("[data-edition]")).toHaveCount(7);
 
   await page.keyboard.press("Escape");
   await expect(menu).toBeHidden();
@@ -937,7 +989,7 @@ test("moves through the share language menu with the arrow keys and wraps at bot
   await expect(options.nth(1)).toBeFocused();
   await page.keyboard.press("ArrowUp");
   await page.keyboard.press("ArrowUp");
-  await expect(options.nth(5)).toBeFocused();
+  await expect(options.last()).toBeFocused();
   await page.keyboard.press("ArrowDown");
   await expect(options.nth(0)).toBeFocused();
 });
@@ -996,6 +1048,7 @@ test("keeps selected-verse actions inside small mobile viewports across edition 
     { width: 320, height: 568 },
     { width: 375, height: 667 },
     { width: 390, height: 844 },
+    { width: 402, height: 874 },
     { width: 430, height: 932 },
     { width: 568, height: 320 },
   ];
@@ -1047,6 +1100,9 @@ test("keeps selected-verse actions inside small mobile viewports across edition 
       }
       expect(await page.locator("body").evaluate((element) => element.scrollWidth))
         .toBeLessThanOrEqual(viewport.width);
+      if (viewport.width === 402) {
+        expect(new Set(actionButtons.map((button) => button.top)).size).toBe(1);
+      }
     }
   }
 });

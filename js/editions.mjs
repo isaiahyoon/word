@@ -108,6 +108,22 @@ export const EDITIONS = {
     attribution: "Bible de David Martin (1744) · domaine public",
     attributionUrl: "https://github.com/getbible/v2/tree/master/martin",
   },
+  rv1865: {
+    id: "rv1865",
+    routeSegment: "luz",
+    shortCode: "LUZ",
+    label: "Reina-Valera · Español",
+    name: "Reina-Valera 1865",
+    brandPrimary: "REINA-VALERA",
+    brandSecondary: "1865",
+    language: "es",
+    direction: "ltr",
+    dataPath: "./scripture/rv1865",
+    bookOrder: CANONICAL_BOOK_ORDER,
+    themeColor: "#edf3e8",
+    attribution: "Reina-Valera 1865 · revisión ortográfica de 2018 · CC0 1.0",
+    attributionUrl: "https://github.com/MC1171611/valera1865",
+  },
 };
 
 export const EDITION_IDS = Object.keys(EDITIONS);

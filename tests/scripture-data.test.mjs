@@ -302,6 +302,99 @@ describe("generated scripture data", () => {
     await assertEditionMatchesSource(manifest, expectedBooks, "martin1744");
   });
 
+  it("preserves RV1865 source numbering, alternate references, and Psalm headings", async () => {
+    const source = JSON.parse(await readFile(new URL("../sources/rv1865.json", import.meta.url), "utf8"));
+    const manifest = JSON.parse(await readFile(new URL("../scripture/rv1865/index.json", import.meta.url), "utf8"));
+    const canonicalIndex = JSON.parse(await readFile(new URL("../scripture/kjv/index.json", import.meta.url), "utf8"));
+    const expectedBooks = Array.from({ length: BOOKS.length }, () => new Map());
+    const numberingDifferences = [];
+    const alternateReferences = [];
+    let sourceVerseCount = 0;
+    let kjvVerseCount = 0;
+
+    assert.equal(source.metadata.editionId, "rv1865");
+    assert.equal(source.metadata.name, "Reina-Valera 1865");
+    assert.equal(source.metadata.sourceVersion, "2018 orthography update");
+    assert.equal(source.metadata.language, "es");
+    assert.equal(source.metadata.license, "CC0-1.0");
+    assert.equal(source.metadata.versification, "RV1865-2018");
+    assert.equal(source.books.length, BOOKS.length);
+    assert.equal(manifest.versification, "RV1865-2018");
+    assert.equal(manifest.displayBookNames[0], "Génesis");
+    assert.equal(manifest.displayBookNames[65], "Revelación");
+
+    for (const [bookIndex, sourceBook] of source.books.entries()) {
+      assert.equal(sourceBook.number, bookIndex + 1);
+      assert.equal(sourceBook.name, BOOKS[bookIndex]);
+      assert.equal(manifest.displayBookNames[bookIndex], sourceBook.displayName);
+      assert.equal(sourceBook.chapters.length, canonicalIndex.chapterCounts[bookIndex]);
+
+      const canonical = JSON.parse(await readFile(
+        new URL(`../scripture/kjv/books/${canonicalIndex.bookFiles[bookIndex]}`, import.meta.url),
+        "utf8",
+      ));
+      for (const [chapterIndex, sourceChapter] of sourceBook.chapters.entries()) {
+        const chapter = chapterIndex + 1;
+        assert.equal(sourceChapter.number, chapter);
+        const verses = sourceChapter.verses.map((record, verseIndex) => {
+          assert.equal(record.verse, verseIndex + 1);
+          assert.equal(typeof record.text, "string");
+          if (record.alternateReferences) {
+            alternateReferences.push({
+              book: bookIndex + 1,
+              chapter,
+              verse: record.verse,
+              references: record.alternateReferences,
+            });
+          }
+          return [record.verse, record.text];
+        });
+        sourceVerseCount += verses.length;
+        kjvVerseCount += canonical[chapter].length;
+        expectedBooks[bookIndex].set(chapter, verses);
+        if (verses.length !== canonical[chapter].length) {
+          numberingDifferences.push({
+            book: bookIndex + 1,
+            chapter,
+            sourceVerseCount: verses.length,
+            kjvVerseCount: canonical[chapter].length,
+          });
+        }
+      }
+    }
+
+    assert.equal(sourceVerseCount, 31099);
+    assert.equal(kjvVerseCount, 31102);
+    assert.equal(source.metadata.alternateReferenceCount, 38);
+    assert.equal(source.metadata.chapterFrontMatterCount, 115);
+    assert.equal(manifest.verseHeadings.length, 22);
+    assert.deepEqual(manifest.alternateReferences, alternateReferences);
+    assert.deepEqual(manifest.numberingDifferences, [
+      { book: 9, chapter: 20, sourceVerseCount: 43, kjvVerseCount: 42 },
+      { book: 13, chapter: 3, sourceVerseCount: 23, kjvVerseCount: 24 },
+      { book: 14, chapter: 33, sourceVerseCount: 24, kjvVerseCount: 25 },
+      { book: 19, chapter: 13, sourceVerseCount: 5, kjvVerseCount: 6 },
+      { book: 24, chapter: 39, sourceVerseCount: 17, kjvVerseCount: 18 },
+    ]);
+    assert.equal(
+      manifest.alternateReferences.find(({ book, chapter, verse }) => book === 9 && chapter === 20 && verse === 43)
+        .references[0],
+      "43",
+    );
+    assert.equal(manifest.chapterFrontMatter["19:3"], "Salmo de David, cuando huía de delante de Absalom su hijo.");
+    assert.deepEqual(manifest.verseHeadings.filter(({ book, chapter, beforeVerse }) => book === 19 && chapter === 119 && [1, 9].includes(beforeVerse)), [
+      { book: 19, chapter: 119, beforeVerse: 1, text: "ALEF." },
+      { book: 19, chapter: 119, beforeVerse: 9, text: "BET." },
+    ]);
+    const firstSamuel = JSON.parse(await readFile(
+      new URL(`../scripture/rv1865/books/${manifest.bookFiles[8]}`, import.meta.url),
+      "utf8",
+    ));
+    assert.equal(firstSamuel[20][42][0], 43);
+    assert.ok(!firstSamuel[20][42][1].startsWith("43"));
+    await assertEditionMatchesSource(manifest, expectedBooks, "rv1865");
+  });
+
   async function assertEditionMatchesSource(manifest, expectedBooks, edition) {
     assert.equal(manifest.edition, edition);
     assert.equal(manifest.bookFiles.length, BOOKS.length);

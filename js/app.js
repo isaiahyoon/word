@@ -479,6 +479,7 @@ function showEdition(editionId) {
   document.body.classList.toggle("is-luther1912-edition", editionId === "luther1912");
   document.body.classList.toggle("is-japbungo-edition", editionId === "japbungo");
   document.body.classList.toggle("is-martin1744-edition", editionId === "martin1744");
+  document.body.classList.toggle("is-rv1865-edition", editionId === "rv1865");
   document.querySelector('meta[name="description"]')?.setAttribute("content", uiText("metaDescription"));
   document.querySelector('meta[property="og:description"]')?.setAttribute("content", uiText("metaDescription"));
   document.querySelector('meta[name="twitter:description"]')?.setAttribute("content", uiText("metaDescription"));
@@ -826,6 +827,10 @@ function renderChapter(focusRange = null) {
   document.querySelector("#testament-meta").textContent = uiText(
     testament === "old" ? "oldTestamentFull" : "newTestamentFull",
   );
+  const chapterSourceHeading = document.querySelector("#chapter-source-heading");
+  chapterSourceHeading.textContent = scripture.getChapterFrontMatter(state.book, state.chapter);
+  chapterSourceHeading.lang = EDITIONS[state.editionId].language;
+  chapterSourceHeading.hidden = !chapterSourceHeading.textContent;
   document.title = `${name} ${state.chapter} — ${state.editionId === "kjv" ? "The Word" : `${EDITIONS[state.editionId].name} · The Word`}`;
 
   const chapterCount = scripture.chapterCount(state.book);
@@ -835,6 +840,15 @@ function renderChapter(focusRange = null) {
   visualEffects.clearScriptureGlow();
   elements.verseList.replaceChildren();
   for (const verse of verses) {
+    for (const headingText of scripture.getVerseHeadings(state.book, state.chapter, verse.verse)) {
+      const heading = document.createElement("p");
+      heading.className = "verse-section-heading";
+      heading.setAttribute("role", "heading");
+      heading.setAttribute("aria-level", "2");
+      heading.lang = EDITIONS[state.editionId].language;
+      heading.textContent = headingText;
+      elements.verseList.append(heading);
+    }
     const row = document.createElement("button");
     row.type = "button";
     row.tabIndex = -1;

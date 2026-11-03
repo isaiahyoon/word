@@ -13,6 +13,6 @@ export default defineConfig({
   webServer: {
     command: "PORT=4174 node tools/dev-server.mjs",
     url: "http://127.0.0.1:4174",
-    reuseExistingServer: false,
+    reuseExistingServer: process.env.PLAYWRIGHT_REUSE_SERVER === "1",
   },
 });
