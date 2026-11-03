@@ -140,6 +140,40 @@ body.is-martin1744-edition::before {
   background-color: #fff;
   background-image: linear-gradient(135deg, #dce8f8 0%, #fff 50%, #f5d6e2 100%);
 }
+body.is-rv1865-edition {
+  --canvas: #edf3e8;
+  --paper: #fffdf6;
+  --line: #dce4d4;
+  --blue: #d9e8e4;
+  --blue-strong: #a7c0a3;
+  --lavender: #e4e6d7;
+  --yellow: #f2e7c7;
+  --pink: #eed8d0;
+  --green: #d5e5ce;
+  --coral: #a75f48;
+  --deep-teal: #4f6448;
+  --navy-ink: #3b4a3b;
+  --brass: #9d7839;
+  --brass-soft: #d9c07f;
+  --brass-shadow: #b99a5c;
+  --chapter-blue: #a9c8b3;
+  --chapter-lavender: #d8ddc8;
+  --chapter-pink: #e8c8b8;
+  --chapter-green: #d5e2c6;
+  --focus: #667b55;
+  --focus-border: #9aaa79;
+  --focus-ring: rgba(102, 123, 85, 0.18);
+  --grain: rgba(85, 92, 65, 0.06);
+  --serif: var(--serif-spanish);
+}
+body.is-rv1865-edition::before {
+  opacity: 1;
+  background-color: #edf3e8;
+  background-image:
+    linear-gradient(132deg, rgba(174, 197, 159, 0.74), transparent 52%),
+    linear-gradient(312deg, rgba(218, 191, 124, 0.46), transparent 51%),
+    linear-gradient(28deg, rgba(238, 216, 208, 0.32), transparent 40%);
+}
 .pull-refresh-indicator {
   position: fixed;
   z-index: 20;
@@ -2367,6 +2401,14 @@ body.is-luther1912-edition .book-row.is-current .book-index {
   color: #617171;
   font-size: 10px;
 }
+.chapter-source-heading {
+  margin: 11px 0 0;
+  color: var(--deep-teal);
+  font-family: var(--serif);
+  font-size: var(--type-small-copy);
+  font-style: italic;
+  line-height: var(--line-copy);
+}
 .quiet-welcome {
   width: fit-content;
   margin: 15px 0 0;
@@ -2482,6 +2524,14 @@ body.is-krv-edition .verse.is-copy-selected {
   font-size: var(--type-label);
   font-weight: var(--weight-semibold);
   text-align: right;
+}
+.verse-section-heading {
+  margin: 21px 10px 3px 41px;
+  color: var(--deep-teal);
+  font-family: var(--serif);
+  font-size: 0.84em;
+  font-style: italic;
+  line-height: 1.45;
 }
 .verse-text {
   position: relative;
@@ -3627,6 +3677,7 @@ body.is-kjv-edition .app-shell.is-quiet-reading .verse {
     line-height: 1.72;
   }
   .verse-list { padding: 16px 10px 20px; }
+  .verse-section-heading { margin-left: 32px; }
   .verse-number {
     font-size: 8px;
   }
