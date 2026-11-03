@@ -1751,6 +1751,8 @@ for (const viewport of [
       expect(bounds.y + bounds.height).toBeLessThanOrEqual(viewportBounds.height);
     }
 
+    expect(clearBounds.x + clearBounds.width).toBeCloseTo(topBounds.x + topBounds.width, 0);
+
     await cutControl.click();
     await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
       .toBe(`"${verseText}"\n\n- John 3:16`);

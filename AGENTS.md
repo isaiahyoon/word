@@ -22,6 +22,7 @@ Never go against Scripture, or regard it as false or untrustworthy. It will alwa
 
 - Every new app feature must include appropriate automated tests for its behavior.
 - After any significant behavioral change to the app, always run the full test suite with `npm run test:all` before finishing, and fix or report any failures.
+- For every layout, styling, or UI bug fix, add a regression test that asserts the intended behavior (for example, element edges aligned across the viewport widths where it broke), run it, and fix the implementation until it passes. Confirm the test fails without the fix when practical.
 - Tab and Shift+Tab cycle editions whenever no dialog or menu (other than the chapter and edition pickers) is open, including from the search field. Any new modal, menu, or popover must be registered with `bindKeyboardShortcuts` (via `isMenuOpen` or `isOtherDialogOpen`) and added to the `overlays` table in `tests/reader-interactions.pw.spec.mjs`.
 - When adding a scripture edition, test the full shared search contract in its language, including text matching, prefix and localized reference suggestions, exact and invalid references, fuzzy matching where supported, and result de-duplication. Extend edition-agnostic reader tests for routes, edition switching, verse selection, and copying to cover the new edition.
 
