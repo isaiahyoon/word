@@ -132,6 +132,7 @@
             <input
               id="search-input"
               type="search"
+              tabindex="-1"
               role="combobox"
               aria-autocomplete="list"
               aria-controls="search-results"
@@ -222,6 +223,7 @@
               class="testament-tab is-active"
               data-testament="old"
               role="tab"
+              tabindex="-1"
               aria-selected="true"
             >
               Old <span>39</span>
@@ -231,6 +233,7 @@
               class="testament-tab"
               data-testament="new"
               role="tab"
+              tabindex="-1"
               aria-selected="false"
             >
               New <span>27</span>
@@ -598,6 +601,10 @@
           <div class="shortcut-row shortcut-row--cut">
             <kbd aria-label="Command X or Control X">⌘X / Ctrl+X</kbd>
             <span>Copy and clear selection</span>
+          </div>
+          <div class="shortcut-row shortcut-row--scroll-top">
+            <kbd aria-label="Space bar">Space</kbd>
+            <span>Jump to top</span>
           </div>
           <div class="shortcut-row shortcut-row--edition-next">
             <kbd aria-label="Tab key">Tab</kbd>

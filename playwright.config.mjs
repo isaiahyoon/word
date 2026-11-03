@@ -3,6 +3,8 @@ import { defineConfig } from "@playwright/test";
 export default defineConfig({
   testDir: "./tests",
   testMatch: "**/*.pw.spec.mjs",
+  fullyParallel: true,
+  workers: process.env.CI ? 2 : "100%",
   use: {
     baseURL: "http://127.0.0.1:4174",
     browserName: "chromium",

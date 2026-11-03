@@ -53,7 +53,7 @@ function createKeyboardHarness(testContext) {
     };
   }
 
-  let chapterPickerOpen = false;
+  let pickerOpen = false;
   let sidebarOpen = false;
   const openButton = createButton(
     () => dialog.showModal(),
@@ -67,7 +67,7 @@ function createKeyboardHarness(testContext) {
       getBoundingClientRect: () => searchInputBounds,
       focus: (options) => calls.push(["search", options]),
     },
-    isChapterPickerOpen: () => chapterPickerOpen,
+    isPickerOpen: () => pickerOpen,
     onPreviousChapter: () => calls.push("previousChapter"),
     onNextChapter: () => calls.push("nextChapter"),
     onPreviousVerse: () => calls.push("previousVerse"),
@@ -78,6 +78,7 @@ function createKeyboardHarness(testContext) {
     onPreviousEdition: () => calls.push("previousEdition"),
     onNextEdition: () => calls.push("nextEdition"),
     onHome: () => calls.push("home"),
+    onScrollToTop: () => calls.push("scrollToTop"),
     onEscape: () => calls.push("escape"),
     isSidebarOpen: () => sidebarOpen,
   });
@@ -108,8 +109,8 @@ function createKeyboardHarness(testContext) {
     calls,
     dialog,
     press,
-    setChapterPickerOpen: (open) => {
-      chapterPickerOpen = open;
+    setPickerOpen: (open) => {
+      pickerOpen = open;
     },
     setSidebarOpen: (open) => {
       sidebarOpen = open;
@@ -149,6 +150,23 @@ describe("keyboard navigation shortcuts", () => {
     assert.equal(getNavigationAction("/"), "openShortcuts");
   });
 
+  it("maps Space to scrolling to the top", () => {
+    assert.equal(getNavigationAction(" "), "scrollToTop");
+    assert.equal(getNavigationAction(" ", { isEditing: true }), null);
+    assert.equal(getNavigationAction(" ", { pickerOpen: true }), null);
+  });
+
+  it("scrolls on Space except from activatable controls or with Shift", (testContext) => {
+    const { calls, press } = createKeyboardHarness(testContext);
+    const button = new globalThis.Element(false, true);
+
+    assert.equal(press(" "), true);
+    assert.deepEqual(calls, ["scrollToTop"]);
+    assert.equal(press(" ", { target: button }), false);
+    assert.equal(press(" ", { shiftKey: true }), false);
+    assert.deepEqual(calls, ["scrollToTop"]);
+  });
+
   it("maps Tab and Shift+Tab to forward and backward edition cycling", () => {
     assert.equal(getNavigationAction("Tab"), "nextEdition");
     assert.equal(getNavigationAction("Tab", { shiftKey: true }), "previousEdition");
@@ -176,7 +194,7 @@ describe("keyboard navigation shortcuts", () => {
     const guardedContexts = [
       { isEditing: true },
       { dialogOpen: true },
-      { chapterPickerOpen: true },
+      { pickerOpen: true },
       { altKey: true },
       { ctrlKey: true },
       { metaKey: true },
@@ -188,8 +206,16 @@ describe("keyboard navigation shortcuts", () => {
       assert.equal(getNavigationAction("q", context), null);
       assert.equal(getNavigationAction("h", context), null);
       assert.equal(getNavigationAction("/", context), null);
+    }
+  });
+
+  it("keeps Tab cycling editions while typing or with the chapter picker open", () => {
+    for (const context of [{ isEditing: true }, { pickerOpen: true }]) {
+      assert.equal(getNavigationAction("Tab", context), "nextEdition");
+      assert.equal(getNavigationAction("Tab", { ...context, shiftKey: true }), "previousEdition");
+    }
+    for (const context of [{ dialogOpen: true }, { altKey: true }, { ctrlKey: true }, { metaKey: true }]) {
       assert.equal(getNavigationAction("Tab", context), null);
-      assert.equal(getNavigationAction("Tab", { ...context, shiftKey: true }), null);
     }
   });
 
@@ -246,25 +272,27 @@ describe("keyboard navigation shortcuts", () => {
   });
 
   it("keeps navigation keys available to typing and open pickers", (testContext) => {
-    const { calls, press, setChapterPickerOpen } =
+    const { calls, press, setPickerOpen } =
       createKeyboardHarness(testContext);
     const input = new globalThis.Element(true);
 
     assert.equal(press("q", { target: input }), false);
     assert.equal(press("h", { target: input }), false);
-    setChapterPickerOpen(true);
+    setPickerOpen(true);
     assert.equal(press("ArrowDown"), false);
     assert.equal(press("o"), false);
     assert.deepEqual(calls, []);
   });
 
-  it("preserves native Tab navigation from controls and the open sidebar", (testContext) => {
+  it("cycles editions from any focused control but leaves Tab native while the sidebar is open", (testContext) => {
     const { calls, press, setSidebarOpen } = createKeyboardHarness(testContext);
     const button = new globalThis.Element(false, true);
 
-    assert.equal(press("Tab", { target: button }), false);
-    assert.equal(press("Tab", { target: button, shiftKey: true }), false);
+    assert.equal(press("Tab", { target: button }), true);
+    assert.equal(press("Tab", { target: button, shiftKey: true }), true);
+    assert.deepEqual(calls, ["nextEdition", "previousEdition"]);
 
+    calls.length = 0;
     setSidebarOpen(true);
     assert.equal(press("Tab"), false);
     assert.equal(press("Tab", { shiftKey: true }), false);
