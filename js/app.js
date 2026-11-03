@@ -2,7 +2,7 @@ import { bindKeyboardShortcuts } from "./keyboard-shortcuts.js";
 import { createChapterPicker } from "./chapter-picker.js";
 import { createScriptureStore } from "./scripture-store.js";
 import { createVisualEffects } from "./visual-effects.js";
-import { createEditionPicker } from "./edition-picker.js";
+import { createEditionPicker, createShareLanguageMenu } from "./edition-picker.js";
 import { createOfflineEditions, registerServiceWorker } from "./offline.js";
 import { createOfflineControl } from "./offline-control.js";
 import { createScriptureRoutes, getVerseStep, isValidVerseRange, normalizeVerseRange } from "./scripture-routes.mjs";
@@ -42,6 +42,7 @@ const elements = {
   copyControl: document.querySelector("#copy-selected-verses"),
   copyControlLabel: document.querySelector("#copy-selected-label"),
   shareControl: document.querySelector("#share-selected-verses"),
+  shareLanguageMenu: document.querySelector("#share-language-menu"),
   clearControl: document.querySelector("#clear-selected-verses"),
   copyStatus: document.querySelector("#copy-status"),
   feedbackOpen: document.querySelector("#feedback-open"),
@@ -106,6 +107,15 @@ const visualEffects = createVisualEffects({
   shell: document.querySelector(".app-shell"),
   verseList: elements.verseList
 });
+const shareLanguageMenu = createShareLanguageMenu({
+  trigger: elements.shareControl,
+  menu: elements.shareLanguageMenu,
+  editionIds: EDITION_IDS,
+  editions: EDITIONS,
+  getActiveEditionId: () => state.editionId,
+  onOpen: warmShareChapters,
+  onSelect: (editionId) => void shareSelectedVerses(editionId),
+});
 
 const testamentFor = (book) => book <= 39 ? "old" : "new";
 const bookName = (book) => scripture.bookName(book);
@@ -116,6 +126,7 @@ function updateCopyControl() {
   elements.verseActions.classList.toggle("is-visible", visible);
   elements.verseActions.setAttribute("aria-hidden", String(!visible));
   elements.verseActions.inert = !visible;
+  if (!visible) shareLanguageMenu.close();
   elements.appShell.classList.toggle("has-copy-selection", visible);
   elements.copyControlLabel.textContent = visible
     ? uiText(count === 1 ? "copyOneVerse" : "copyManyVerses", { count })
@@ -224,7 +235,7 @@ function updateVerseLocation(verseNumber) {
   if (window.location.pathname !== path) window.history.replaceState(null, "", path);
 }
 
-function formatSelectedVerseReference(verseNumbers) {
+function formatSelectedVerseReference(verseNumbers, store = scripture) {
   const ranges = [];
   let start = verseNumbers[0];
   let end = start;
@@ -238,7 +249,7 @@ function formatSelectedVerseReference(verseNumbers) {
     start = end = verseNumber;
   }
   ranges.push(start === end ? String(start) : `${start}-${end}`);
-  return `${bookName(state.book)} ${state.chapter}:${ranges.join(", ")}`;
+  return `${store.bookName(state.book)} ${state.chapter}:${ranges.join(", ")}`;
 }
 
 async function writeClipboardText(text) {
@@ -263,12 +274,12 @@ async function writeClipboardText(text) {
   if (!copied) throw new Error("Clipboard copy failed");
 }
 
-function selectedVerseContent() {
-  const selectedVerses = scripture.getChapter(state.book, state.chapter)
+function selectedVerseContent(store = scripture) {
+  const selectedVerses = store.getChapter(state.book, state.chapter)
     .filter((verse) => state.selectedVerses.has(verse.verse));
   if (selectedVerses.length === 0) return null;
 
-  const reference = formatSelectedVerseReference(selectedVerses.map((verse) => verse.verse));
+  const reference = formatSelectedVerseReference(selectedVerses.map((verse) => verse.verse), store);
   const copiedVerses = selectedVerses.map((verse) => {
     const sourceLabel = verse.sourceEdition === "krv" ? ` [${uiText("sourceFallback")}]` : "";
     const verseText = `${verse.text.trim()}${sourceLabel}`;
@@ -299,8 +310,28 @@ async function copySelectedVerses({ clearAfter = false } = {}) {
   }
 }
 
-async function shareSelectedVerses() {
-  const content = selectedVerseContent();
+// Chapters are warmed while the menu is open so sharing keeps the tap's user activation.
+function warmShareChapters() {
+  const { book, chapter } = state;
+  for (const store of scriptureStores.values()) {
+    store.initialize().then(() => store.loadChapter(book, chapter)).catch(() => {});
+  }
+}
+
+async function shareSelectedVerses(editionId = state.editionId) {
+  shareLanguageMenu.close();
+  const store = scriptureStores.get(editionId);
+  if (store.getChapter(state.book, state.chapter).length === 0) {
+    try {
+      await store.initialize();
+      await store.loadChapter(state.book, state.chapter);
+    } catch (error) {
+      console.error(`Could not load ${editionId} ${state.book}:${state.chapter} for sharing`, error);
+      elements.copyStatus.textContent = uiText("chapterLoadFailed");
+      return;
+    }
+  }
+  const content = selectedVerseContent(store);
   if (!content) return;
 
   if (typeof navigator.share !== "function") {
@@ -1378,7 +1409,6 @@ function bindEvents() {
   });
   elements.cutControl.addEventListener("click", () => void copySelectedVerses({ clearAfter: true }));
   elements.copyControl.addEventListener("click", () => void copySelectedVerses());
-  elements.shareControl.addEventListener("click", () => void shareSelectedVerses());
   elements.clearControl.addEventListener("click", clearVerseSelection);
   elements.feedbackOpen.addEventListener("click", () => {
     elements.feedbackError.hidden = true;
@@ -1524,7 +1554,7 @@ function bindEvents() {
     openButton: document.querySelector("#shortcuts-open"),
     closeButton: document.querySelector("#shortcuts-close"),
     searchInput: elements.searchInput,
-    isChapterPickerOpen: () => chapterPicker.isOpen() || editionPicker.isOpen(),
+    isChapterPickerOpen: () => chapterPicker.isOpen() || editionPicker.isOpen() || shareLanguageMenu.isOpen(),
     isOtherDialogOpen: () => elements.feedbackDialog.open,
     onPreviousChapter: () => navigate(-1),
     onNextChapter: () => navigate(1),
