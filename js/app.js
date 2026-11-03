@@ -42,6 +42,7 @@ const elements = {
   copyControl: document.querySelector("#copy-selected-verses"),
   copyControlLabel: document.querySelector("#copy-selected-label"),
   shareControl: document.querySelector("#share-selected-verses"),
+  shareLanguageMenu: document.querySelector("#share-language-menu"),
   clearControl: document.querySelector("#clear-selected-verses"),
   copyStatus: document.querySelector("#copy-status"),
   feedbackOpen: document.querySelector("#feedback-open"),
@@ -116,6 +117,7 @@ function updateCopyControl() {
   elements.verseActions.classList.toggle("is-visible", visible);
   elements.verseActions.setAttribute("aria-hidden", String(!visible));
   elements.verseActions.inert = !visible;
+  if (!visible) closeShareLanguageMenu();
   elements.appShell.classList.toggle("has-copy-selection", visible);
   elements.copyControlLabel.textContent = visible
     ? uiText(count === 1 ? "copyOneVerse" : "copyManyVerses", { count })
@@ -224,7 +226,7 @@ function updateVerseLocation(verseNumber) {
   if (window.location.pathname !== path) window.history.replaceState(null, "", path);
 }
 
-function formatSelectedVerseReference(verseNumbers) {
+function formatSelectedVerseReference(verseNumbers, store = scripture) {
   const ranges = [];
   let start = verseNumbers[0];
   let end = start;
@@ -238,7 +240,7 @@ function formatSelectedVerseReference(verseNumbers) {
     start = end = verseNumber;
   }
   ranges.push(start === end ? String(start) : `${start}-${end}`);
-  return `${bookName(state.book)} ${state.chapter}:${ranges.join(", ")}`;
+  return `${store.bookName(state.book)} ${state.chapter}:${ranges.join(", ")}`;
 }
 
 async function writeClipboardText(text) {
@@ -263,12 +265,12 @@ async function writeClipboardText(text) {
   if (!copied) throw new Error("Clipboard copy failed");
 }
 
-function selectedVerseContent() {
-  const selectedVerses = scripture.getChapter(state.book, state.chapter)
+function selectedVerseContent(store = scripture) {
+  const selectedVerses = store.getChapter(state.book, state.chapter)
     .filter((verse) => state.selectedVerses.has(verse.verse));
   if (selectedVerses.length === 0) return null;
 
-  const reference = formatSelectedVerseReference(selectedVerses.map((verse) => verse.verse));
+  const reference = formatSelectedVerseReference(selectedVerses.map((verse) => verse.verse), store);
   const copiedVerses = selectedVerses.map((verse) => {
     const sourceLabel = verse.sourceEdition === "krv" ? ` [${uiText("sourceFallback")}]` : "";
     const verseText = `${verse.text.trim()}${sourceLabel}`;
@@ -299,8 +301,44 @@ async function copySelectedVerses({ clearAfter = false } = {}) {
   }
 }
 
-async function shareSelectedVerses() {
-  const content = selectedVerseContent();
+function closeShareLanguageMenu() {
+  elements.shareLanguageMenu.hidden = true;
+  elements.shareControl.setAttribute("aria-expanded", "false");
+}
+
+function openShareLanguageMenu() {
+  elements.shareLanguageMenu.replaceChildren(...EDITION_IDS.map((editionId) => {
+    const edition = EDITIONS[editionId];
+    const [code, language = edition.name] = edition.label.split(" · ");
+    const option = document.createElement("button");
+    option.type = "button";
+    option.className = "share-language-option";
+    option.setAttribute("role", "menuitem");
+    option.dataset.edition = editionId;
+    if (editionId === state.editionId) option.setAttribute("aria-current", "true");
+    option.lang = edition.language;
+    option.innerHTML = '<b class="share-language-code"></b><span class="share-language-name"></span>';
+    option.firstElementChild.textContent = edition.shortCode ?? code;
+    option.lastElementChild.textContent = language;
+    return option;
+  }));
+  elements.shareLanguageMenu.hidden = false;
+  elements.shareControl.setAttribute("aria-expanded", "true");
+  elements.shareLanguageMenu.querySelector("[aria-current]")?.focus();
+}
+
+async function shareSelectedVerses(editionId = state.editionId) {
+  closeShareLanguageMenu();
+  const store = scriptureStores.get(editionId);
+  try {
+    await store.initialize();
+    await store.loadChapter(state.book, state.chapter);
+  } catch (error) {
+    console.error(`Could not load ${editionId} ${state.book}:${state.chapter} for sharing`, error);
+    elements.copyStatus.textContent = uiText("chapterLoadFailed");
+    return;
+  }
+  const content = selectedVerseContent(store);
   if (!content) return;
 
   if (typeof navigator.share !== "function") {
@@ -1378,7 +1416,32 @@ function bindEvents() {
   });
   elements.cutControl.addEventListener("click", () => void copySelectedVerses({ clearAfter: true }));
   elements.copyControl.addEventListener("click", () => void copySelectedVerses());
-  elements.shareControl.addEventListener("click", () => void shareSelectedVerses());
+  elements.shareControl.addEventListener("click", () => {
+    if (elements.shareLanguageMenu.hidden) openShareLanguageMenu();
+    else closeShareLanguageMenu();
+  });
+  elements.shareLanguageMenu.addEventListener("click", (event) => {
+    const option = event.target.closest("[data-edition]");
+    if (option) void shareSelectedVerses(option.dataset.edition);
+  });
+  elements.shareLanguageMenu.addEventListener("keydown", (event) => {
+    const options = [...elements.shareLanguageMenu.querySelectorAll("[data-edition]")];
+    const index = options.indexOf(document.activeElement);
+    if (event.key === "Escape") {
+      event.stopPropagation();
+      closeShareLanguageMenu();
+      elements.shareControl.focus();
+    } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const step = event.key === "ArrowDown" ? 1 : -1;
+      options[(index + step + options.length) % options.length].focus();
+    }
+  });
+  document.addEventListener("click", (event) => {
+    if (!elements.shareLanguageMenu.hidden && !event.target.closest("#share-selected-verses, #share-language-menu")) {
+      closeShareLanguageMenu();
+    }
+  });
   elements.clearControl.addEventListener("click", clearVerseSelection);
   elements.feedbackOpen.addEventListener("click", () => {
     elements.feedbackError.hidden = true;

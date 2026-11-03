@@ -706,15 +706,24 @@ test("shares selected verse text natively and falls back to copying when sharing
   await page.locator("#verse-16").click();
   const verseText = (await page.locator("#verse-16 .verse-text").textContent()).trim();
   await page.locator("#share-selected-verses").click();
+  await page.locator("#share-language-menu [data-edition='kjv']").click();
   await expect.poll(() => page.evaluate(() => window.sharedPayload)).toEqual({
     text: `"${verseText}"\n\n- John 3:16`,
   });
   await expect(page.locator("#share-selected-verses")).toHaveAttribute("aria-label", "Share 1 verse");
 
+  await page.locator("#share-selected-verses").click();
+  await expect(page.locator("#share-language-menu [data-edition]")).toHaveCount(6);
+  await page.locator("#share-language-menu [data-edition='martin1744']").click();
+  await expect.poll(() => page.evaluate(() => window.sharedPayload.text)).toContain("Car Dieu a tant aimé le monde");
+  await expect.poll(() => page.evaluate(() => window.sharedPayload.text)).toContain("- Jean 3:16");
+  await expect(page).toHaveURL(/\/kjv\//);
+
   await page.evaluate(() => {
     Object.defineProperty(navigator, "share", { configurable: true, value: undefined });
   });
   await page.locator("#share-selected-verses").click();
+  await page.locator("#share-language-menu [data-edition='kjv']").click();
   await expect(page.locator("#copy-status")).toHaveText("Sharing is unavailable here. Copied John 3:16 to clipboard.");
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
     .toBe(`"${verseText}"\n\n- John 3:16`);
