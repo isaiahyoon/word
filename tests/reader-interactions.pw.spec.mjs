@@ -648,6 +648,30 @@ test("keeps highlighted verses selected when switching to another language for c
     .toContain("하나님이 세상을 이처럼 사랑하사");
 });
 
+for (const route of ["/kjv/b/john/c/3/v/16", "/krv/b/john/c/3/v/16"]) {
+  test(`keeps desktop verse actions within the viewport on ${route}`, async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(route);
+    await page.locator("#verse-16").click();
+    await expect(page.locator("#verse-actions")).toHaveClass(/is-visible/);
+    await expect(page.locator("#verse-actions")).toHaveCSS("flex-wrap", "wrap");
+
+    const boxes = await page.locator("#verse-actions > button").evaluateAll((buttons) =>
+      buttons.map((button) => {
+        const { left, right, top, bottom } = button.getBoundingClientRect();
+        return { left, right, top, bottom };
+      }),
+    );
+    expect(boxes).toHaveLength(4);
+    for (const box of boxes) {
+      expect(box.left).toBeGreaterThanOrEqual(0);
+      expect(box.right).toBeLessThanOrEqual(1280);
+      expect(box.top).toBeGreaterThanOrEqual(0);
+      expect(box.bottom).toBeLessThanOrEqual(800);
+    }
+  });
+}
+
 test("opens the Martin edition with native Psalm numbering and the French pastel theme", async ({ page }) => {
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.setViewportSize({ width: 390, height: 844 });
@@ -846,7 +870,7 @@ test("keeps selected-verse actions inside small mobile viewports across edition 
     await page.goto(`/${edition}/b/john/c/3/v/16`);
     await page.locator("#verse-16").click();
     await expect(page.locator("#verse-actions")).toBeVisible();
-    await expect(page.locator("#verse-actions")).toHaveCSS("grid-template-areas", '"copy share" "cut clear"');
+    await expect(page.locator("#verse-actions")).toHaveCSS("flex-wrap", "wrap");
     await expect(page.locator("#clear-selected-verses")).toHaveCSS("min-height", "44px");
     await expect(page.locator("#clear-selected-verses")).toHaveCSS("border-radius", "6px");
 
@@ -855,17 +879,19 @@ test("keeps selected-verse actions inside small mobile viewports across edition 
       await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
       await expect(page.locator("#share-selected-verses")).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
       await expect(page.locator("#clear-selected-verses")).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
-      const expectedAreas = viewport.width <= 430
-        ? '"copy share" "cut clear"'
-        : '"copy share cut clear"';
-      await expect(page.locator("#verse-actions")).toHaveCSS("grid-template-areas", expectedAreas);
-      const [actions, bottomNavigation, shareButton, clearButton, clearIcon, clearLabel] = await Promise.all([
+      const [actions, bottomNavigation, shareButton, clearButton, clearIcon, clearLabel, actionButtons] = await Promise.all([
         page.locator("#verse-actions").boundingBox(),
         page.locator(".bottom-navigation").boundingBox(),
         page.locator("#share-selected-verses").boundingBox(),
         page.locator("#clear-selected-verses").boundingBox(),
         page.locator(".clear-control-icon").boundingBox(),
         page.locator("#clear-selected-verses > span:last-child").boundingBox(),
+        page.locator("#verse-actions > button").evaluateAll((buttons) =>
+          buttons.map((button) => {
+            const { left, right, top, bottom } = button.getBoundingClientRect();
+            return { left, right, top, bottom };
+          }),
+        ),
       ]);
       expect(actions).not.toBeNull();
       expect(bottomNavigation).not.toBeNull();
@@ -878,6 +904,12 @@ test("keeps selected-verse actions inside small mobile viewports across edition 
       expect(shareButton.height).toBeGreaterThanOrEqual(44);
       expect(Math.abs(clearIcon.y + clearIcon.height / 2 - clearButton.y - clearButton.height / 2)).toBeLessThan(1);
       expect(Math.abs(clearLabel.y + clearLabel.height / 2 - clearButton.y - clearButton.height / 2)).toBeLessThan(1);
+      for (const button of actionButtons) {
+        expect(button.left).toBeGreaterThanOrEqual(0);
+        expect(button.right).toBeLessThanOrEqual(viewport.width);
+        expect(button.top).toBeGreaterThanOrEqual(0);
+        expect(button.bottom).toBeLessThanOrEqual(viewport.height);
+      }
       expect(await page.locator("body").evaluate((element) => element.scrollWidth))
         .toBeLessThanOrEqual(viewport.width);
     }
