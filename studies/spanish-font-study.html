@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#eef4e8" />
+    <meta name="description" content="A comparison of three serif typefaces using Reina-Valera 1865 Spanish Scripture." />
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Arapey:ital@0;1&family=Bitter:wght@400;600&family=Brygada+1918:wght@400;600&family=Crimson+Text:wght@400;600&family=DM+Sans:wght@400;500;600;700&family=Domine:wght@400;600&family=Gelasio:wght@400;500;600&family=IBM+Plex+Serif:wght@400;600&family=Lusitana:wght@400;700&family=Petrona:wght@400;600&family=Piazzolla:opsz,wght@8..30,400;8..30,600&display=swap"
+      rel="stylesheet"
+    />
+    <title>Spanish Typeface Study · The Word</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #28332d;
+        --muted: #687267;
+        --rule: rgba(57, 72, 59, 0.17);
+        --paper: #fbfaf6;
+        --green: #e8f0e2;
+        --gold: #f2e7c7;
+        --coral: #c97e61;
+        --serif-display: "Gelasio", Georgia, serif;
+        --sans: "DM Sans", "Avenir Next", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        min-width: 320px;
+        margin: 0;
+        background: linear-gradient(132deg, var(--green) 0%, var(--paper) 51%, var(--gold) 100%);
+        color: var(--ink);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      main {
+        width: min(1200px, 100%);
+        margin: 0 auto;
+        padding: 48px 30px 64px;
+      }
+
+      header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(240px, 370px);
+        align-items: end;
+        gap: 30px;
+        margin-bottom: 30px;
+        padding-bottom: 22px;
+        border-bottom: 1px solid var(--rule);
+      }
+
+      .eyebrow,
+      .specimen-index,
+      .specimen-role,
+      .reference {
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        color: #647d57;
+      }
+
+      h1 {
+        margin: 0;
+        font-family: var(--serif-display);
+        font-size: 42px;
+        font-weight: 500;
+        line-height: 1.08;
+      }
+
+      .intro {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.7;
+      }
+
+      .specimens {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .specimen {
+        --specimen-font: Georgia, serif;
+        min-width: 0;
+        padding: 21px 22px 23px;
+        border: 1px solid var(--rule);
+        border-top: 3px solid #819571;
+        border-radius: 6px;
+        background: rgba(255, 254, 250, 0.88);
+      }
+
+      .specimen:nth-child(3n + 2) { border-top-color: #b18c41; }
+      .specimen:nth-child(3n) { border-top-color: var(--coral); }
+
+      .specimen-header {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        min-height: 25px;
+        margin-bottom: 22px;
+      }
+
+      .specimen-index { color: #758968; }
+      .specimen:nth-child(3n + 2) .specimen-index { color: #987733; }
+      .specimen:nth-child(3n) .specimen-index { color: #a75e47; }
+
+      h2 {
+        min-width: 0;
+        margin: 0;
+        font-family: var(--specimen-font);
+        font-size: 20px;
+        font-weight: 400;
+      }
+
+      .specimen-role {
+        margin-left: auto;
+        color: var(--muted);
+        font-size: 9px;
+        text-align: right;
+      }
+
+      .specimen-display {
+        margin: 0 0 15px;
+        font-family: var(--specimen-font);
+        font-size: 28px;
+        font-weight: 400;
+        line-height: 1.16;
+      }
+
+      .reference {
+        display: block;
+        margin-bottom: 11px;
+        color: var(--muted);
+        font-family: var(--sans);
+        font-size: 9px;
+      }
+
+      .passage {
+        margin: 0;
+        font-family: var(--specimen-font);
+        font-size: 17px;
+        font-weight: 400;
+        line-height: 1.66;
+      }
+
+      .verse-number {
+        color: #647d57;
+        font-family: var(--sans);
+        font-size: 10px;
+        font-weight: 600;
+        vertical-align: 0.35em;
+      }
+
+      .specimen:nth-child(3n + 2) .verse-number { color: #987733; }
+      .specimen:nth-child(3n) .verse-number { color: #a75e47; }
+
+      .accent-row {
+        margin-top: 20px;
+        padding-top: 11px;
+        border-top: 1px solid rgba(57, 72, 59, 0.12);
+      }
+
+      .accent-label {
+        display: block;
+        margin-bottom: 7px;
+        color: var(--muted);
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .accents {
+        font-family: var(--specimen-font);
+        font-size: 18px;
+      }
+
+      footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        margin-top: 20px;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.6;
+      }
+
+      @media (max-width: 900px) {
+        .specimens { grid-template-columns: 1fr; }
+        .specimen { padding: 20px; }
+        .passage { max-width: 68ch; }
+      }
+
+      @media (max-width: 600px) {
+        main { padding: 30px 17px 44px; }
+        header { grid-template-columns: 1fr; gap: 12px; }
+        h1 { font-size: 34px; }
+        .specimens { gap: 11px; }
+        .specimen { padding: 18px 17px 20px; }
+        .specimen-display { font-size: 26px; }
+        .passage { font-size: 16px; }
+        footer { flex-direction: column; }
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .specimen { animation: settle-in 420ms both; }
+        .specimen:nth-child(2) { animation-delay: 50ms; }
+        .specimen:nth-child(3) { animation-delay: 100ms; }
+      }
+
+      @keyframes settle-in {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    </style>
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="83c99f62-84e3-4c00-b8d6-71acdd602637"></script>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <p class="eyebrow">The Word · LUZ · Reina-Valera 1865</p>
+          <h1>Spanish type study</h1>
+        </div>
+        <p class="intro">The same passage in nine serif faces. Compare the letterforms, accents, and reading rhythm at both heading and Scripture sizes.</p>
+      </header>
+
+      <section class="specimens" id="specimens" aria-label="Nine Spanish serif type specimens"></section>
+
+      <template id="specimen-template">
+        <article class="specimen">
+          <div class="specimen-header">
+            <span class="specimen-index"></span>
+            <h2 class="specimen-name"></h2>
+            <span class="specimen-role"></span>
+          </div>
+          <h3 class="specimen-display" lang="es">El Verbo</h3>
+          <span class="reference">San Juan 1:1–5</span>
+          <p class="passage" lang="es"><sup class="verse-number">1</sup> En el principio ya era el Verbo; y el Verbo era con Dios, y Dios era el Verbo. <sup class="verse-number">2</sup> Éste era en el principio con Dios. <sup class="verse-number">3</sup> Todas las cosas por éste fueron hechas; y sin él nada de lo que es hecho, fue hecho. <sup class="verse-number">4</sup> En él estaba la vida, y la vida era la luz de los hombres. <sup class="verse-number">5</sup> Y la luz en las tinieblas resplandece; y las tinieblas no la comprendieron.</p>
+          <div class="accent-row"><span class="accent-label">Spanish characters</span><span class="accents" lang="es">á · é · í · ó · ú · ñ · ü · ¿? · ¡!</span></div>
+        </article>
+      </template>
+
+      <footer>
+        <span>Specimen text: Reina-Valera 1865, 2018 orthography edition · CC0 source.</span>
+        <span>Nine new serif candidates; DM Sans remains the interface face.</span>
+      </footer>
+    </main>
+    <script>
+      const families = [
+        ["Arapey", "Elegant · light"],
+        ["Bitter", "Slab · grounded"],
+        ["Brygada 1918", "Historic · distinctive"],
+        ["Crimson Text", "Classic · literary"],
+        ["Domine", "Formal · sturdy"],
+        ["IBM Plex Serif", "Modern · restrained"],
+        ["Lusitana", "Old-style · bookish"],
+        ["Petrona", "Warm · balanced"],
+        ["Piazzolla", "Expressive · versatile"],
+      ];
+      const specimenTemplate = document.querySelector("#specimen-template");
+      const specimenList = document.querySelector("#specimens");
+
+      families.forEach(([family, note], index) => {
+        const specimen = specimenTemplate.content.firstElementChild.cloneNode(true);
+        specimen.style.setProperty("--specimen-font", `"${family}", Georgia, serif`);
+        specimen.querySelector(".specimen-index").textContent = String(index + 1).padStart(2, "0");
+        specimen.querySelector(".specimen-name").textContent = family;
+        specimen.querySelector(".specimen-role").textContent = note;
+        specimenList.append(specimen);
+      });
+    </script>
+  </body>
+</html>
