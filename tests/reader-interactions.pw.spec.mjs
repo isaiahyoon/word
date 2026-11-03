@@ -851,6 +851,54 @@ test("opens the Martin edition with native Psalm numbering and the French pastel
   await expect(page.locator("#verse-16 .verse-text")).toContainText("Car Dieu a tant aimé le monde");
 });
 
+test("opens the RV1865 LUZ edition with source headings, Petrona, and Spanish citations", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/luz/b/psalms/c/3/v/1");
+
+  await expect(page).toHaveURL(/\/luz\/b\/psalms\/c\/3\/v\/1$/);
+  await expect(page.locator("#edition-select-code")).toHaveText("LUZ");
+  await expect(page.locator("#edition-select-label")).toHaveText("Reina-Valera · Español");
+  await expect(page.locator("#verse-list")).toHaveAttribute("lang", "es");
+  await expect(page.locator("body")).toHaveClass(/is-rv1865-edition/);
+  await expect(page.locator("#chapter-source-heading")).toHaveText("Salmo de David, cuando huía de delante de Absalom su hijo.");
+  await expect(page.locator("#verse-1 .verse-text")).toContainText("Jehová, ¡cuánto se han multiplicado mis enemigos!");
+  await page.evaluate(() => document.fonts.load('18px "Petrona"'));
+  expect(await page.locator("#verse-1 .verse-text").evaluate((element) =>
+    getComputedStyle(element).fontFamily,
+  )).toContain("Petrona");
+  expect(await page.locator("body").evaluate((element) =>
+    getComputedStyle(element, "::before").backgroundImage,
+  )).toContain("rgb(174, 197, 159)");
+
+  const dimensions = await page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+  expect(dimensions.scrollWidth).toBe(dimensions.clientWidth);
+
+  await page.locator("#verse-1").click();
+  await expect(page).toHaveURL(/\/luz\/b\/psalms\/c\/3\/v\/1$/);
+  await page.locator("#copy-selected-verses").click();
+  const verseText = (await page.locator("#verse-1 .verse-text").textContent()).trim();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toBe(`"${verseText}"\n\n- Salmos 3:1`);
+
+  await page.goto("/luz/b/psalms/c/119/v/9");
+  await expect(page.locator(".verse-section-heading").first()).toHaveText("ALEF.");
+  await expect(page.locator(".verse-section-heading").nth(1)).toHaveText("BET.");
+  await expect(page.locator(".verse-section-heading")).toHaveCount(22);
+  await expect(page.locator(".verse-section-heading").first()).not.toBeVisible();
+
+  await page.goto("/kjv/b/john/c/3/v/16");
+  await expect(page.locator("body")).not.toHaveClass(/is-rv1865-edition/);
+  await page.locator("#menu-toggle").click();
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-option-rv1865").click();
+  await expect(page).toHaveURL(/\/luz\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("#verse-16 .verse-text")).toContainText("Porque de tal manera amó Dios al mundo");
+});
+
 test("shares selected verse text natively and falls back to copying when sharing is unavailable", async ({ page }) => {
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.setViewportSize({ width: 320, height: 568 });

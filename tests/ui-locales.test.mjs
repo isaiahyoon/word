@@ -43,6 +43,14 @@ describe("reader interface locales", () => {
     assert.equal(formatUiText(UI_LOCALES.en, "unregisteredMessage"), "unregisteredMessage");
   });
 
+  it("localizes Spanish reader controls and dynamic verse messages", () => {
+    const locale = getUiLocale("es");
+    assert.equal(locale.searchInput, "Buscar en las Escrituras");
+    assert.equal(locale.shareInLanguage, "Compartir en otro idioma");
+    assert.equal(formatUiText(locale, "previousChapter", { reference: "San Juan 2" }), "Capítulo anterior: San Juan 2");
+    assert.equal(formatUiText(locale, "offlineSavingProgress", { done: 2, total: 5 }), "Guardando 2 de 5…");
+  });
+
   it("localizes offline progress, saved state, and removal for every language", async () => {
     for (const [language, locale] of Object.entries(UI_LOCALES)) {
       const root = createElement();
