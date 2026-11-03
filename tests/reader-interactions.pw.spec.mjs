@@ -996,6 +996,7 @@ test("keeps selected-verse actions inside small mobile viewports across edition 
     { width: 320, height: 568 },
     { width: 375, height: 667 },
     { width: 390, height: 844 },
+    { width: 402, height: 874 },
     { width: 430, height: 932 },
     { width: 568, height: 320 },
   ];
@@ -1047,6 +1048,9 @@ test("keeps selected-verse actions inside small mobile viewports across edition 
       }
       expect(await page.locator("body").evaluate((element) => element.scrollWidth))
         .toBeLessThanOrEqual(viewport.width);
+      if (viewport.width === 402) {
+        expect(new Set(actionButtons.map((button) => button.top)).size).toBe(1);
+      }
     }
   }
 });

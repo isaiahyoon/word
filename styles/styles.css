@@ -3636,7 +3636,7 @@ body.is-kjv-edition .app-shell.is-quiet-reading .verse {
 }
 
 /* Stack copy above the other actions once the single row no longer fits. */
-@container (max-width: 25rem) {
+@container (max-width: 23rem) {
   .verse-copy-control {
     flex: 1 1 100%;
     justify-content: center;
