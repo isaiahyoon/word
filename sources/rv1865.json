@@ -17,7 +17,7 @@
     "versificationNote": "Use source verse boundaries and preserve va labels; no unverified KJV crosswalk is assumed.",
     "sourceVerseCount": 31099,
     "alternateReferenceCount": 38,
-    "chapterFrontMatterCount": 127,
+    "chapterFrontMatterCount": 115,
     "verseHeadingCount": 21
   },
   "books": [
@@ -59618,7 +59618,7 @@
               "text": "Porque el justo Jehová amó las justicias: al recto mirará su rostro."
             }
           ],
-          "frontMatter": "Al Vencedor. Salmo de David."
+          "frontMatter": "Al Vencedor."
         },
         {
           "number": 12,
@@ -59716,7 +59716,7 @@
               "text": "¡Quién diese de Sión la salud de Israel, tornando Jehová la cautividad de su pueblo! Gozárse ha Jacob, y alegrarse ha Israel."
             }
           ],
-          "frontMatter": "Al Vencedor. Salmo de David."
+          "frontMatter": "Al Vencedor."
         },
         {
           "number": 15,
@@ -60064,7 +60064,7 @@
               "text": "Que engrandece las saludes de su rey, y que hace misericordia a su ungido David, y a su simiente para siempre."
             }
           ],
-          "frontMatter": "Al Vencedor: Salmo del siervo de Jehová, de David, el cual habló a Jehová las palabras de este cántico el día que le libró Jehová de mano de todos sus enemigos, y de mano de Saul: Y dijo:"
+          "frontMatter": "Al Vencedor:"
         },
         {
           "number": 19,
@@ -60525,8 +60525,7 @@
               "verse": 22,
               "text": "Redime, o! Dios, a Israel de todas sus angustias."
             }
-          ],
-          "frontMatter": "Salmo de David."
+          ]
         },
         {
           "number": 26,
@@ -60579,8 +60578,7 @@
               "verse": 12,
               "text": "Mi pie ha estado en rectitud, y en las congregaciones bendeciré a Jehová."
             }
-          ],
-          "frontMatter": "Salmo de David."
+          ]
         },
         {
           "number": 27,
@@ -60641,8 +60639,7 @@
               "verse": 14,
               "text": "Espera a Jehová, esfuérzate, y esfuércese tu corazón: y espera a Jehová."
             }
-          ],
-          "frontMatter": "Salmo de David."
+          ]
         },
         {
           "number": 28,
@@ -60683,8 +60680,7 @@
               "verse": 9,
               "text": "Salva a tu pueblo, y bendice a tu heredad: y pastoréalos, y ensálzalos para siempre."
             }
-          ],
-          "frontMatter": "Salmo de David."
+          ]
         },
         {
           "number": 29,
@@ -60939,8 +60935,7 @@
               "verse": 11,
               "text": "Alegráos en Jehová, y gozáos justos: y cantád todos los rectos de corazón."
             }
-          ],
-          "frontMatter": "Salmo de David: Masquil."
+          ]
         },
         {
           "number": 33,
@@ -61126,8 +61121,7 @@
               "verse": 22,
               "text": "Redime Jehová la vida de sus siervos; y no serán asolados todos los que en él confían."
             }
-          ],
-          "frontMatter": "Salmo de David; cuando mudó su semblante delante de Abimelec; y él le echó, y se fue."
+          ]
         },
         {
           "number": 35,
@@ -61244,8 +61238,7 @@
               "verse": 28,
               "text": "Y mi lengua hablará de tu justicia; todo el día de tu loor."
             }
-          ],
-          "frontMatter": "Salmo de David."
+          ]
         },
         {
           "number": 36,
@@ -61299,7 +61292,7 @@
               "text": "Allí cayeron los obradores de iniquidad; fueron rempujados, y no pudieron levantarse."
             }
           ],
-          "frontMatter": "Al Vencedor: Salmo, del siervo de Jehová, de David."
+          "frontMatter": "Al Vencedor:"
         },
         {
           "number": 37,
@@ -61464,8 +61457,7 @@
               "verse": 40,
               "text": "Y Jehová los ayudó, y los escapa, y los escapará de los impíos: y los salvará, por cuanto esperaron en él."
             }
-          ],
-          "frontMatter": "Salmo de David."
+          ]
         },
         {
           "number": 38,
@@ -62918,7 +62910,7 @@
               "text": "En Dios haremos proezas; y él pisará nuestros enemigos."
             }
           ],
-          "frontMatter": "Al Vencedor: sobre Susanhedut: Mictam de David, para enseñar: cuando tuvo guerra contra Aram-naharaim y contra Aram-sobat: y volvió Joab, e hirió a Edom en el valle de las salinas y mató a doce mil."
+          "frontMatter": "Al Vencedor: sobre Susanhedut: Mictam de David, para enseñar: cuando tuvo guerra contra Aram-naharaim y contra Aram-sobat: y volvió Joab, e hirió a Edom en el valle de las salinas"
         },
         {
           "number": 61,
@@ -62956,7 +62948,7 @@
               "text": "Así cantaré tu nombre para siempre, pagando mis votos cada día."
             }
           ],
-          "frontMatter": "Al Vencedor sobre Neginot. Salmo de David."
+          "frontMatter": "Al Vencedor sobre Neginot."
         },
         {
           "number": 62,
@@ -63792,8 +63784,7 @@
               "verse": 20,
               "text": "Acábanse las oraciones de David, hijo de Isaí."
             }
-          ],
-          "frontMatter": "Salmo para Salomón."
+          ]
         },
         {
           "number": 73,
@@ -64699,7 +64690,7 @@
               "text": "Y Dios le hubiera mantenido de grosura de trigo: y de miel de la piedra te hubiera hartado."
             }
           ],
-          "frontMatter": "Al Vencedor sobre Gitit. Salmo de Asaf."
+          "frontMatter": "Al Vencedor sobre Gitit."
         },
         {
           "number": 82,
@@ -66175,8 +66166,7 @@
               "verse": 22,
               "text": "Bendecíd a Jehová todas sus obras en todos los lugares de su señorío. Bendice alma mía a Jehová."
             }
-          ],
-          "frontMatter": "Salmo de David."
+          ]
         },
         {
           "number": 104,
@@ -66704,7 +66694,7 @@
               "text": "Bendito Jehová Dios de Israel desde el siglo y hasta el siglo; y diga todo el pueblo: Amén, Alelu-Jah."
             }
           ],
-          "frontMatter": "Alelu-Jah."
+          "frontMatter": "Alelu-"
         },
         {
           "number": 107,
@@ -67149,7 +67139,7 @@
               "text": "El principio de la sabiduría es el temor de Jehová; entendimiento bueno es a todos los que guardan sus mandamientos: su loor permanece para siempre."
             }
           ],
-          "frontMatter": "Alelu-Jah."
+          "frontMatter": "Alelu-"
         },
         {
           "number": 112,
@@ -67195,7 +67185,7 @@
               "text": "¶ El impío verá, y airarse ha: sus dientes crujirá, y carcomerse ha: el deseo de los impíos perecerá."
             }
           ],
-          "frontMatter": "Alelu-Jah."
+          "frontMatter": "Alelu-"
         },
         {
           "number": 113,
@@ -67237,7 +67227,7 @@
               "text": "Que hace habitar en familia a la estéril, tornándola madre de hijos alegre. Alelu-Jah."
             }
           ],
-          "frontMatter": "Alelu-Jah."
+          "frontMatter": "Alelu-"
         },
         {
           "number": 114,
@@ -68276,8 +68266,11 @@
               "text": "Yo me perdí, como oveja que se pierde: busca a tu siervo, porque no me he olvidado de tus mandamientos."
             }
           ],
-          "frontMatter": "ALEF.",
           "verseHeadings": [
+            {
+              "beforeVerse": 1,
+              "text": "ALEF."
+            },
             {
               "beforeVerse": 9,
               "text": "BET."
@@ -68946,7 +68939,7 @@
               "text": "Bendito Jehová de Sión, el que mora en Jerusalem. Alelu-Jah."
             }
           ],
-          "frontMatter": "Alelu-Jah."
+          "frontMatter": "Alelu-"
         },
         {
           "number": 136,
@@ -69133,8 +69126,7 @@
               "verse": 8,
               "text": "Jehová cumplirá por mí, Jehová, tu misericordia es para siempre; no dejarás la obra de tus manos."
             }
-          ],
-          "frontMatter": "Salmo de David."
+          ]
         },
         {
           "number": 139,
@@ -69630,7 +69622,7 @@
               "text": "Reinará Jehová para siempre: tu Dios, o! Sión, por generación y generación. Alelu-Jah."
             }
           ],
-          "frontMatter": "Alelu-Jah."
+          "frontMatter": "Alelu-"
         },
         {
           "number": 147,
@@ -69777,7 +69769,7 @@
               "text": "Él ensalzó el cuerno de su pueblo: alábenle todos sus misericordiosos: los hijos de Israel, el pueblo a él cercano. Alelu-Jah."
             }
           ],
-          "frontMatter": "Alelu-Jah."
+          "frontMatter": "Alelu-"
         },
         {
           "number": 149,
@@ -69819,7 +69811,7 @@
               "text": "Para hacer en ellos el juicio escrito: esta será la gloria de todos sus piadosos. Alelu-Jah."
             }
           ],
-          "frontMatter": "Alelu-Jah."
+          "frontMatter": "Alelu-"
         },
         {
           "number": 150,
@@ -69849,7 +69841,7 @@
               "text": "Todo espíritu alabe a Jehová. Alelu-Jah."
             }
           ],
-          "frontMatter": "Alelu-Jah."
+          "frontMatter": "Alelu-"
         }
       ]
     },

@@ -4,6 +4,8 @@
     "build:diodati": "node tools/build-diodati-data.mjs",
     "build:luther": "node tools/build-luther-data.mjs",
     "build:martin": "node tools/build-martin-data.mjs",
+    "build:rv1865": "node tools/build-rv1865-data.mjs",
+    "import:rv1865": "node tools/import-rv1865-source.mjs",
     "lint:css": "stylelint \"**/*.css\"",
     "test": "node --test tests/*.test.mjs",
     "test:ui": "playwright test",
@@ -12,7 +14,8 @@
   "devDependencies": {
     "@playwright/test": "^1.64.1",
     "stylelint": "^17.16.0",
-    "stylelint-config-recommended": "^18.0.0"
+    "stylelint-config-recommended": "^18.0.0",
+    "usfm-js": "^3.5.0"
   },
   "dependencies": {
     "minisearch": "7.2.0"
