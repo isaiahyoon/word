@@ -1193,8 +1193,14 @@ test("scrolls long edition labels only when hovered on desktop", async ({ page }
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/licht");
   await page.addStyleTag({
-    content: "#edition-option-luther1912 .edition-option-description strong { width: 80px; }",
+    content: `
+      #edition-select-label,
+      #edition-option-luther1912 .edition-option-description strong {
+        width: 80px;
+      }
+    `,
   });
+  await expect(page.locator("#edition-select-label")).toHaveClass(/is-overflowing/);
   const desktopTrack = page.locator("#edition-select-label .edition-scroll-text");
   await expect(desktopTrack).toHaveCSS("animation-name", "none");
   await page.locator("#edition-select").focus();
