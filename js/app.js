@@ -558,6 +558,7 @@ function cycleEdition(direction) {
 
 function cycleEditionFromShortcut(direction) {
   chapterPicker.close();
+  editionPicker.close();
   void cycleEdition(direction);
 }
 
@@ -1379,6 +1380,13 @@ function bindMobileSidebarSwipe() {
   document.addEventListener("touchcancel", reset, { passive: true });
 }
 
+function scrollToPageTop() {
+  const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ? "instant"
+    : "smooth";
+  window.scrollTo({ top: 0, behavior });
+}
+
 function bindScrollToTop() {
   function updateVisibility() {
     const scrollTop = Math.max(window.scrollY, document.scrollingElement?.scrollTop ?? 0);
@@ -1387,12 +1395,7 @@ function bindScrollToTop() {
 
   window.addEventListener("scroll", updateVisibility, { passive: true });
   window.addEventListener("resize", updateVisibility, { passive: true });
-  elements.scrollToTop.addEventListener("click", () => {
-    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-      ? "instant"
-      : "smooth";
-    window.scrollTo({ top: 0, behavior });
-  });
+  elements.scrollToTop.addEventListener("click", scrollToPageTop);
   updateVisibility();
 }
 
@@ -1570,8 +1573,8 @@ function bindEvents() {
     openButton: document.querySelector("#shortcuts-open"),
     closeButton: document.querySelector("#shortcuts-close"),
     searchInput: elements.searchInput,
-    isChapterPickerOpen: () => chapterPicker.isOpen(),
-    isMenuOpen: () => editionPicker.isOpen() || shareLanguageMenu.isOpen(),
+    isPickerOpen: () => chapterPicker.isOpen() || editionPicker.isOpen(),
+    isMenuOpen: () => shareLanguageMenu.isOpen(),
     isOtherDialogOpen: () => elements.feedbackDialog.open,
     onPreviousChapter: () => navigate(-1),
     onNextChapter: () => navigate(1),
@@ -1583,6 +1586,7 @@ function bindEvents() {
     onPreviousEdition: () => cycleEditionFromShortcut(-1),
     onNextEdition: () => cycleEditionFromShortcut(1),
     onHome: navigateHome,
+    onScrollToTop: scrollToPageTop,
     isSidebarOpen: () => elements.sidebar.classList.contains("is-open"),
     onEscape: () => {
       const returnFocusToChapterPicker = chapterPicker.isOpen();

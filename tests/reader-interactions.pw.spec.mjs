@@ -306,11 +306,6 @@ test("styles edition cycling keycaps distinctly and preserves native Tab in cont
   expect(previousKeyColor).toContain("linear-gradient");
   expect(nextKeyColor).not.toBe(previousKeyColor);
   await page.locator("#shortcuts-close").click();
-
-  await page.locator("#edition-select").click();
-  await page.keyboard.press("Tab");
-  await expect(page).toHaveURL(/\/$/);
-  await expect(page.locator("#edition-select-code")).toHaveText("KJV");
   await expect(slashRow).toHaveCount(1);
 });
 
@@ -336,6 +331,19 @@ test("Tab cycles editions and closes the open chapter picker", async ({ page }) 
   await page.keyboard.press("Tab");
   await expect.poll(pathname(page)).toBe("/krv/b/genesis/c/1/v/1");
   await expect(page.locator("#chapter-select")).toHaveAttribute("aria-expanded", "false");
+  await page.keyboard.press("Shift+Tab");
+  await expect.poll(pathname(page)).toBe("/kjv/b/genesis/c/1/v/1");
+});
+
+test("Tab cycles editions and closes the open edition picker", async ({ page }) => {
+  await page.goto("/kjv/b/genesis/c/1/v/1");
+  await page.locator("#verse-1").waitFor();
+  await page.locator("#edition-select").click();
+  await expect(page.locator("#edition-select")).toHaveAttribute("aria-expanded", "true");
+
+  await page.keyboard.press("Tab");
+  await expect.poll(pathname(page)).toBe("/krv/b/genesis/c/1/v/1");
+  await expect(page.locator("#edition-select")).toHaveAttribute("aria-expanded", "false");
   await page.keyboard.press("Shift+Tab");
   await expect.poll(pathname(page)).toBe("/kjv/b/genesis/c/1/v/1");
 });
@@ -1441,6 +1449,32 @@ test("shows a back-to-top button on mobile and desktop", async ({ page }) => {
   await scrollToTop.click();
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
   await expect(scrollToTop).toBeHidden();
+});
+
+test("Space jumps to the top and is listed with a rainbow keycap", async ({ page }) => {
+  await page.goto("/kjv/b/genesis/c/1/v/1");
+  await page.locator("#verse-1").waitFor();
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(420);
+
+  await page.keyboard.press("Space");
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+  await expect(page.locator("#verse-1")).toHaveAttribute("aria-pressed", "false");
+
+  await page.locator("#shortcuts-open").click();
+  const row = page.locator(".shortcut-row--scroll-top");
+  await expect(row.locator("kbd")).toHaveText("Space");
+  await expect(row.locator("span")).toHaveText("Jump to top");
+  const background = await row.locator("kbd").evaluate((element) => getComputedStyle(element).backgroundImage);
+  expect(background.match(/rgb\(/g)).toHaveLength(6);
+});
+
+test("Space still activates focused buttons instead of scrolling", async ({ page }) => {
+  await page.goto("/kjv/b/genesis/c/1/v/1");
+  await page.locator("#verse-1").waitFor();
+  await page.locator("#shortcuts-open").focus();
+  await page.keyboard.press("Space");
+  await expect(page.locator("#shortcuts-dialog")).toHaveAttribute("open", "");
 });
 
 test("restores reading position and selected verses across reloads", async ({ page }) => {

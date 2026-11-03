@@ -1150,6 +1150,19 @@ a:focus-visible {
   --shortcut-key-ink: #435953;
   --shortcut-key-edge: #b7cec5;
 }
+.shortcut-row--scroll-top {
+  --shortcut-key-color: linear-gradient(
+    135deg,
+    #f4b3b0,
+    #f6cd9b 20%,
+    #f3eaa9 40%,
+    #bde1a4 60%,
+    #a8d7e0 80%,
+    #c8b7eb
+  );
+  --shortcut-key-ink: #4f4a5c;
+  --shortcut-key-edge: #d4c3d6;
+}
 .shortcut-row--edition-next {
   --shortcut-key-color: linear-gradient(135deg, #fff1bd, #f3c58f 48%, #d97968);
   --shortcut-key-ink: #563e38;
@@ -1160,6 +1173,7 @@ a:focus-visible {
   --shortcut-key-ink: #42435f;
   --shortcut-key-edge: #b1b8d2;
 }
+.shortcut-row--scroll-top kbd,
 .shortcut-row--edition-previous kbd {
   width: 58px;
   flex: 0 0 58px;

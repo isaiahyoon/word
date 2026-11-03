@@ -8,13 +8,17 @@ const NAVIGATION_ACTIONS = new Map([
   ["q", "toggleQuietReading"],
   ["h", "goHome"],
   ["/", "openShortcuts"],
+  [" ", "scrollToTop"],
 ]);
+
+// Space natively activates these, except verse buttons, which Space scrolls past.
+const SPACE_ACTIVATED_CONTROLS = "button:not(.verse), a[href], summary, select, [role='option'], [role='tab'], [role='menuitem']";
 
 export function getNavigationAction(
   key,
   {
     dialogOpen = false,
-    chapterPickerOpen = false,
+    pickerOpen = false,
     isEditing = false,
     allowEditionCycling = true,
     shiftKey = false,
@@ -28,7 +32,7 @@ export function getNavigationAction(
     if (!allowEditionCycling) return null;
     return shiftKey ? "previousEdition" : "nextEdition";
   }
-  if (chapterPickerOpen || isEditing) return null;
+  if (pickerOpen || isEditing) return null;
   return (
     NAVIGATION_ACTIONS.get(key.length === 1 ? key.toLowerCase() : key) ?? null
   );
@@ -39,7 +43,7 @@ export function bindKeyboardShortcuts({
   openButton,
   closeButton,
   searchInput,
-  isChapterPickerOpen,
+  isPickerOpen,
   isMenuOpen = () => false,
   isOtherDialogOpen = () => false,
   onPreviousChapter,
@@ -52,6 +56,7 @@ export function bindKeyboardShortcuts({
   onPreviousEdition,
   onNextEdition,
   onHome,
+  onScrollToTop,
   onEscape,
   isSidebarOpen = () => false,
 }) {
@@ -71,7 +76,7 @@ export function bindKeyboardShortcuts({
       onEscape();
       return;
     }
-    const chapterPickerOpen = isChapterPickerOpen();
+    const pickerOpen = isPickerOpen();
     if (dialog.open || isMenuOpen() || isOtherDialogOpen()) return;
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
       event.preventDefault();
@@ -86,9 +91,14 @@ export function bindKeyboardShortcuts({
     const isEditing =
       event.target instanceof Element &&
       event.target.closest("input, textarea, select, [contenteditable='true']");
+    const isSpaceActivatingControl =
+      event.key === " " &&
+      (event.shiftKey ||
+        (event.target instanceof Element && event.target.closest(SPACE_ACTIVATED_CONTROLS)));
+    if (isSpaceActivatingControl) return;
     const action = getNavigationAction(event.key, {
       dialogOpen: dialog.open,
-      chapterPickerOpen,
+      pickerOpen,
       isEditing: Boolean(isEditing),
       allowEditionCycling: !isSidebarOpen(),
       shiftKey: event.shiftKey,
@@ -109,6 +119,7 @@ export function bindKeyboardShortcuts({
       previousEdition: onPreviousEdition,
       nextEdition: onNextEdition,
       goHome: onHome,
+      scrollToTop: onScrollToTop,
       openShortcuts: () => openButton.click(),
     };
     event.preventDefault();
