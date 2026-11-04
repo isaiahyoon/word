@@ -111,13 +111,13 @@ test("localizes reader navigation and accessible controls for every edition", as
 
 test("localizes and emphasizes the reader's About link for every edition", async ({ page }) => {
   const editions = [
-    { route: "/kjv", label: "About" },
-    { route: "/krv", label: "소개" },
-    { route: "/diodati", label: "Informazioni" },
-    { route: "/licht", label: "Über uns" },
-    { route: "/japbungo", label: "このサイトについて" },
-    { route: "/moh", label: "À propos" },
-    { route: "/luz", label: "Acerca de" },
+    { route: "/kjv", label: "About", font: "Gelasio" },
+    { route: "/krv", label: "소개", font: "Noto Serif KR" },
+    { route: "/diodati", label: "Informazioni", font: "Cormorant Garamond" },
+    { route: "/licht", label: "Über uns", font: "Gelasio" },
+    { route: "/japbungo", label: "このサイトについて", font: "Noto Serif JP" },
+    { route: "/moh", label: "À propos", font: "EB Garamond" },
+    { route: "/luz", label: "Acerca de", font: "Petrona" },
   ];
 
   for (const viewport of [
@@ -133,6 +133,7 @@ test("localizes and emphasizes the reader's About link for every edition", async
       await expect(aboutLink).toHaveText(edition.label);
       await expect(aboutLink).toHaveCSS("font-size", viewport.width <= 640 ? "11px" : "15px");
       await expect(aboutLink).toHaveCSS("font-weight", "500");
+      await expect(aboutLink).toHaveCSS("font-family", new RegExp(edition.font));
       await expect(aboutLink).toHaveCSS("text-decoration-line", "none");
 
       const palette = await aboutLink.evaluate((element) => {

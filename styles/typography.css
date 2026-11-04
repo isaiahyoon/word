@@ -38,3 +38,12 @@
   --line-quiet-reading: 1.9;
   --tracking-label: 1.1px;
 }
+
+/* Interface text follows each edition's serif; scripture keeps its own faces. */
+body {
+  --ui-serif: var(--serif);
+}
+
+body.is-krv-edition {
+  --ui-serif: var(--serif-korean-ui);
+}

@@ -11,7 +11,7 @@ body {
   background-color: var(--canvas);
   background-image: radial-gradient(var(--grain) 0.65px, transparent 0.65px);
   background-size: 7px 7px;
-  font-family: var(--sans);
+  font-family: var(--ui-serif);
   font-size: var(--type-copy);
   -webkit-font-smoothing: antialiased;
 }
@@ -532,7 +532,7 @@ a:focus-visible {
 }
 .topbar-note .glimmer-text {
   color: var(--navy-ink);
-  font-family: var(--sans);
+  font-family: var(--ui-serif);
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 .theme-dots i:nth-child(1) {
@@ -593,7 +593,7 @@ a:focus-visible {
   gap: 7px;
   padding: 8px 0;
   color: var(--navy-ink);
-  font-family: var(--serif);
+  font-family: var(--ui-serif);
   font-size: 15px;
   font-weight: 500;
   text-decoration: none;
@@ -1489,7 +1489,7 @@ a:focus-visible {
 }
 .book-total span {
   color: #8a8b83;
-  font-family: var(--sans);
+  font-family: var(--ui-serif);
   font-size: var(--type-caption);
 }
 .edition-switcher {
@@ -1560,7 +1560,7 @@ a:focus-visible {
   place-items: center;
   border-right: 1px solid rgba(169, 124, 53, 0.24);
   color: var(--brass);
-  font-family: var(--sans);
+  font-family: var(--ui-serif);
   font-size: 9px;
   font-weight: var(--weight-bold);
   letter-spacing: 0;
@@ -1645,7 +1645,7 @@ a:focus-visible {
   min-width: 0;
   display: grid;
   gap: 2px;
-  font-family: var(--sans);
+  font-family: var(--ui-serif);
 }
 .edition-option-description strong {
   display: block;
@@ -1846,7 +1846,7 @@ body.is-luther1912-edition .edition-option.is-selected .edition-option-check {
   border-radius: 3px;
   background: rgba(255, 255, 255, 0.76);
   color: var(--brass);
-  font-family: var(--sans);
+  font-family: var(--ui-serif);
   font-size: var(--type-label);
   font-weight: var(--weight-bold);
   letter-spacing: var(--tracking-label);
@@ -2257,7 +2257,7 @@ body.is-luther1912-edition .book-row.is-current .book-index {
 }
 .select-caret {
   color: #85857c;
-  font-family: var(--sans);
+  font-family: var(--ui-serif);
   font-size: 14px;
   line-height: 1;
 }
@@ -2623,7 +2623,7 @@ body.is-krv-edition .verse.is-copy-selected {
   border-radius: 3px;
   background: rgba(255, 255, 255, 0.52);
   color: #315863;
-  font-family: var(--sans);
+  font-family: var(--ui-serif);
   font-size: 9px;
   font-weight: var(--weight-semibold);
   line-height: 1.4;
@@ -2690,7 +2690,7 @@ body.is-krv-edition .verse.is-copy-selected {
   min-height: 44px;
   white-space: nowrap;
   border-radius: 6px;
-  font-family: var(--sans);
+  font-family: var(--ui-serif);
   font-size: var(--type-control-small);
   font-weight: var(--weight-semibold);
   opacity: 0;
@@ -2829,7 +2829,7 @@ body.is-krv-edition .verse.is-copy-selected {
 }
 .share-language-code {
   color: var(--deep-teal);
-  font-family: var(--sans);
+  font-family: var(--ui-serif);
   font-size: var(--type-micro);
   font-weight: var(--weight-semibold);
   letter-spacing: 0.8px;
@@ -3576,7 +3576,6 @@ body.is-kjv-edition .app-shell.is-quiet-reading .verse {
   }
   .topbar-about {
     gap: 6px;
-    font-family: var(--sans);
     font-size: 11px;
     font-weight: 500;
   }
@@ -3667,6 +3666,7 @@ body.is-kjv-edition .app-shell.is-quiet-reading .verse {
   }
   .reader-topline {
     align-items: flex-start;
+    gap: 12px;
   }
   .breadcrumbs {
     gap: 6px;
