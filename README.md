@@ -4,7 +4,7 @@
 
 The Amazing Word is a quiet, free place to read Scripture on the web. It is built to make the text easy to find, move through, and carry with you, without asking you to create an account or pay to read.
 
-The [About page](./about.html) introduces the reader's features, guiding convictions, and installation steps in English, Korean, Italian, German, Japanese, French, and Spanish. It follows the reader's saved edition by default; use its language menu to choose another language.
+The [About page](./about.html) introduces the reader's features and installation steps in English, Korean, Italian, German, Japanese, French, and Spanish, with its guiding conviction given a prominent, localized feature. It follows the reader's saved edition by default; use its language menu to choose another language.
 
 ```
 "All scripture is given by inspiration of God,
