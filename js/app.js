@@ -6,14 +6,10 @@ import { createEditionPicker, createShareLanguageMenu } from "./edition-picker.j
 import { createOfflineEditions, registerServiceWorker } from "./offline.js";
 import { createOfflineControl } from "./offline-control.js";
 import { createScriptureRoutes, getVerseStep, isValidVerseRange, normalizeVerseRange } from "./scripture-routes.mjs";
-import { BOOKS } from "./books.mjs";
+import { BOOKS, BOOK_TITLES } from "./books.mjs";
+import { logger } from "./logger.js";
 import { DEFAULT_EDITION, EDITIONS, EDITION_IDS } from "./editions.mjs";
 import { applyUiLocale, formatUiText, getUiLocale } from "./ui-locales.mjs";
-
-const BOOK_TITLES = [
-  "The First Book of Moses", "The Second Book of Moses", "The Third Book of Moses", "The Fourth Book of Moses", "The Fifth Book of Moses", "The Book of Joshua", "The Book of Judges", "The Book of Ruth", "The First Book of Samuel", "The Second Book of Samuel", "The First Book of the Kings", "The Second Book of the Kings", "The First Book of the Chronicles", "The Second Book of the Chronicles", "The Book of Ezra", "The Book of Nehemiah", "The Book of Esther", "The Book of Job", "The Book of Psalms", "The Proverbs", "Ecclesiastes", "The Song of Solomon", "The Book of the Prophet Isaiah", "The Book of the Prophet Jeremiah", "The Lamentations of Jeremiah", "The Book of the Prophet Ezekiel", "The Book of Daniel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi",
-  "The Gospel According to St. Matthew", "The Gospel According to St. Mark", "The Gospel According to St. Luke", "The Gospel According to St. John", "The Acts of the Apostles", "The Epistle of Paul the Apostle to the Romans", "The First Epistle of Paul the Apostle to the Corinthians", "The Second Epistle of Paul the Apostle to the Corinthians", "The Epistle of Paul the Apostle to the Galatians", "The Epistle of Paul the Apostle to the Ephesians", "The Epistle of Paul the Apostle to the Philippians", "The Epistle of Paul the Apostle to the Colossians", "The First Epistle of Paul the Apostle to the Thessalonians", "The Second Epistle of Paul the Apostle to the Thessalonians", "The First Epistle of Paul the Apostle to Timothy", "The Second Epistle of Paul the Apostle to Timothy", "The Epistle of Paul to Titus", "The Epistle of Paul to Philemon", "The Epistle of Paul the Apostle to the Hebrews", "The General Epistle of James", "The First Epistle General of Peter", "The Second Epistle General of Peter", "The First Epistle General of John", "The Second Epistle of John", "The Third Epistle of John", "The General Epistle of Jude", "The Revelation of St. John the Divine"
-];
 
 const CHAPTER_GRADIENT_COLORS = ["var(--chapter-blue)", "var(--chapter-lavender)", "var(--chapter-pink)", "var(--chapter-green)"];
 const state = { editionId: DEFAULT_EDITION, book: 1, chapter: 1, verse: 1, selectedVerses: new Set(), testament: "old", lastBookByTestament: { old: 1, new: 40 }, chapterRequestId: 0, searchTimer: null, searchRequestId: 0, searchMatches: [], searchQuery: "", searchShown: 0, searchActiveIndex: -1 };
@@ -307,7 +303,7 @@ async function selectedVerseStore(editionId, action) {
       await store.initialize();
       await store.loadChapter(state.book, state.chapter);
     } catch (error) {
-      console.error(`Could not load ${editionId} ${state.book}:${state.chapter} for ${action}`, error);
+      logger.error("Chapter load failed", { action, editionId, book: state.book, chapter: state.chapter, error });
       elements.copyStatus.textContent = uiText("chapterLoadFailed");
       return null;
     }
@@ -332,7 +328,7 @@ async function copySelectedVerses({ clearAfter = false, editionId = state.editio
     elements.copyStatus.textContent = uiText("copiedReference", { reference: content.reference });
     copyFeedbackTimer = setTimeout(updateCopyControl, 1600);
   } catch (error) {
-    console.error(error);
+    logger.error("Copy failed", { editionId: state.editionId, error });
     elements.copyStatus.textContent = uiText("copyFailed");
   }
 }
@@ -356,7 +352,7 @@ async function shareSelectedVerses(editionId = state.editionId) {
       await writeClipboardText(content.text);
       elements.copyStatus.textContent = uiText("shareUnavailableCopied", { reference: content.reference });
     } catch (error) {
-      console.error(error);
+      logger.error("Share fallback copy failed", { editionId: state.editionId, error });
       elements.copyStatus.textContent = uiText("shareCopyFailed");
     }
     return;
@@ -367,7 +363,7 @@ async function shareSelectedVerses(editionId = state.editionId) {
     elements.copyStatus.textContent = uiText("sharedReference", { reference: content.reference });
   } catch (error) {
     if (error?.name === "AbortError") return;
-    console.error(error);
+    logger.error("Share failed", { editionId: state.editionId, error });
     elements.copyStatus.textContent = uiText("shareFailed");
   }
 }
@@ -421,7 +417,7 @@ async function submitReaderFeedback(event) {
     elements.feedbackSuccess.hidden = false;
     elements.feedbackSuccess.focus();
   } catch (error) {
-    console.error(error);
+    logger.error("Feedback submission failed", { error });
     elements.feedbackError.hidden = false;
     elements.feedbackSubmit.disabled = false;
     elements.feedbackError.focus();
@@ -565,7 +561,7 @@ async function changeEdition(editionId, { preserveFocus = false } = {}) {
 
 function cycleEdition(direction) {
   editionCycleQueue = editionCycleQueue
-    .catch((error) => console.error(error))
+    .catch((error) => logger.error("Edition switch failed", { editionId: state.editionId, error }))
     .then(() => {
       const currentIndex = EDITION_IDS.indexOf(state.editionId);
       const nextIndex = (currentIndex + direction + EDITION_IDS.length) % EDITION_IDS.length;
@@ -740,14 +736,14 @@ async function openChapter(book, chapter, requestedRange = null, {
   elements.verseList.textContent = uiText("loadingPlace");
 
   try {
-    await scripture.loadChapter(book, chapter);
+    await logger.measure("Chapter load", { editionId: state.editionId, book, chapter }, () => scripture.loadChapter(book, chapter));
   } catch (error) {
     if (requestId !== state.chapterRequestId) return;
     if (error instanceof RangeError) {
       showInvalidScripturePath();
       return;
     }
-    console.error(error);
+    logger.error("Chapter load failed", { editionId: state.editionId, book, chapter, error });
     elements.verseList.removeAttribute("aria-busy");
     elements.verseList.textContent = uiText("chapterLoadFailed");
     return;
@@ -988,7 +984,7 @@ function selectTestament(testament) {
 function navigateVerse(offset) {
   verseNavigationQueue = verseNavigationQueue
     .then(() => moveToAdjacentVerse(offset))
-    .catch((error) => console.error(error));
+    .catch((error) => logger.error("Verse navigation failed", { editionId: state.editionId, error }));
 }
 
 async function moveToAdjacentVerse(offset) {
@@ -1187,14 +1183,14 @@ async function search(query, requestId) {
 
   let matches;
   try {
-    matches = await scripture.search(trimmed);
+    matches = await logger.measure("Search", { editionId: state.editionId }, () => scripture.search(trimmed));
     if (requestId !== state.searchRequestId || trimmed !== elements.searchInput.value.trim()) return;
 
     elements.searchResults.replaceChildren();
     state.searchMatches = matches;
   } catch (error) {
     if (requestId !== state.searchRequestId) return;
-    console.error(error);
+    logger.error("Search failed", { editionId: state.editionId, error });
     elements.searchResults.replaceChildren();
     const message = document.createElement("div");
     message.className = "search-empty";
@@ -1641,6 +1637,6 @@ function bindEvents() {
 }
 
 initialize().catch((error) => {
-  console.error(error);
+  logger.error("Reader initialization failed", { error });
   elements.verseList.textContent = uiText("bibleLoadFailed");
 });

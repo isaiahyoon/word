@@ -1,3 +1,4 @@
+import { logger as defaultLogger } from "./logger.js";
 import { preloadEditionFonts } from "./offline-fonts.js";
 
 export const EDITION_CACHE = "the-word-editions";
@@ -5,7 +6,7 @@ const downloadConcurrency = 4;
 
 export function registerServiceWorker({
   serviceWorker = globalThis.navigator?.serviceWorker,
-  logger = console,
+  logger = defaultLogger,
 } = {}) {
   if (!serviceWorker) return Promise.resolve(null);
   return serviceWorker.register("/sw.js").catch((error) => {
@@ -19,7 +20,7 @@ export function createOfflineEditions({
   fetchImpl = fetch,
   baseUrl = globalThis.document?.baseURI,
   preloadFonts = preloadEditionFonts,
-  logger = console,
+  logger = defaultLogger,
 } = {}) {
   const supported = Boolean(cacheStorage);
   const resolve = (path) => new URL(path, baseUrl).href;
