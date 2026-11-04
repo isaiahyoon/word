@@ -580,6 +580,57 @@ a:focus-visible {
     color 0.2s ease,
     transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  gap: clamp(10px, 1.6vw, 21px);
+}
+.topbar-about {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 0;
+  color: #777970;
+  font-family: var(--serif);
+  font-size: 14px;
+  text-decoration: none;
+  transition: color 0.18s ease;
+}
+.topbar-about::before {
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--brass);
+  content: "";
+  transform: rotate(45deg);
+  transition: background 0.18s ease, box-shadow 0.18s ease;
+}
+.topbar-about::after {
+  position: absolute;
+  right: 0;
+  bottom: 3px;
+  left: 13px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--brass-soft), transparent);
+  content: "";
+  transform: scaleX(0.5);
+  transform-origin: left;
+  transition: transform 0.18s ease;
+}
+.topbar-about:hover,
+.topbar-about:focus-visible {
+  color: var(--deep-teal);
+}
+.topbar-about:hover::before,
+.topbar-about:focus-visible::before {
+  background: var(--yellow);
+  box-shadow: 0 0 0 3px rgba(221, 193, 141, 0.2);
+}
+.topbar-about:hover::after,
+.topbar-about:focus-visible::after {
+  transform: scaleX(1);
+}
 .shortcuts-trigger::before {
   position: absolute;
   z-index: -1;
@@ -2943,6 +2994,7 @@ body.is-krv-edition .bottom-chapter strong {
 }
 .site-footer {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 18px;
   padding-top: 24px;
@@ -3288,6 +3340,11 @@ body.is-kjv-edition .app-shell.is-quiet-reading .verse {
     grid-template-columns: 235px minmax(220px, 1fr) auto;
     gap: 16px;
   }
+  .topbar-actions {
+    grid-column: 3;
+    grid-row: 1;
+    gap: 14px;
+  }
   .topbar-note {
     display: none;
   }
@@ -3511,9 +3568,22 @@ body.is-kjv-edition .app-shell.is-quiet-reading .verse {
     font-size: 7px;
     letter-spacing: 0.9px;
   }
-  .shortcuts-trigger {
+  .topbar-actions {
     grid-column: 3;
     grid-row: 1;
+    gap: 8px;
+  }
+  .topbar-about {
+    gap: 6px;
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .topbar-about::before {
+    width: 5px;
+    height: 5px;
+  }
+  .shortcuts-trigger {
     width: 34px;
     min-height: 34px;
     padding: 0;

@@ -31,8 +31,33 @@ describe("development server", () => {
     assert.match(html, /property="og:image" content="https:\/\/theamazingword\.org\/assets\/social-preview\.png"/);
     assert.match(html, /name="twitter:card" content="summary_large_image"/);
     assert.match(html, /name="twitter:image" content="https:\/\/theamazingword\.org\/assets\/social-preview\.png"/);
+    assert.match(html, /class="topbar-about" href="\/about"/);
+    assert.match(html, /class="topbar-actions"[\s\S]*class="shortcuts-trigger"/);
     assert.match(html, /class="site-footer-instagram"\s+href="https:\/\/www\.instagram\.com\/theamazingwordapp\/"\s+target="_blank"\s+rel="noopener noreferrer"/);
     assert.match(html, /aria-label="Visit The Word on Instagram, opens in a new tab"/);
+  });
+
+  it("serves the About page at its clean route with install and support details", async () => {
+    const [aboutResponse, slashResponse] = await Promise.all([
+      fetch(`${origin}/about`),
+      fetch(`${origin}/about/`),
+    ]);
+    const [html, slashHtml] = await Promise.all([
+      aboutResponse.text(),
+      slashResponse.text(),
+    ]);
+
+    assert.equal(aboutResponse.status, 200);
+    assert.equal(slashResponse.status, 200);
+    assert.match(html, /<title>About — The Word<\/title>/);
+    assert.match(html, /rel="apple-touch-icon" href="\/assets\/apple-touch-icon\.png"/);
+    assert.match(html, /The King James Version is the canonical foundation/);
+    assert.match(html, /Add to Dock/);
+    assert.match(html, /Add to Home Screen/);
+    assert.match(html, /Install app/);
+    assert.match(html, /Install this site as an app/);
+    assert.match(html, /https:\/\/buymeacoffee\.com\/isaiahyoon/);
+    assert.match(slashHtml, /id="install-title"/);
   });
 
   it("reports server liveness at /health", async () => {
@@ -95,15 +120,29 @@ describe("development server", () => {
   it("serves the app shell for scripture deep links", async () => {
     for (const path of [
       "/kjv/b/joshua/c/1/v/1-10",
+      "/kjv/b/joshua/c/1/v/1-10/",
       "/krv/b/joshua/c/1/v/1-10",
+      "/krv/b/joshua/c/1/v/1-10/",
+      "/diodati/b/joshua/c/1/v/1-10/",
       "/licht/b/joshua/c/1/v/1-10",
+      "/licht/b/joshua/c/1/v/1-10/",
+      "/japbungo/b/joshua/c/1/v/1-10/",
       "/moh/b/psalms/c/3/v/1",
+      "/moh/b/psalms/c/3/v/1/",
+      "/luz/b/psalms/c/3/v/1/",
+      "/luz/b/psalms/c/3/v/1/",
       "/moh",
+      "/moh/",
       "/licht",
+      "/licht/",
       "/kjv",
+      "/kjv/",
       "/krv",
+      "/krv/",
       "/b/joshua/c/1/v/1-10",
+      "/b/joshua/c/1/v/1-10/",
       "/b/john/3/16",
+      "/b/john/3/16/",
     ]) {
       const response = await fetch(`${origin}${path}`);
 
@@ -115,11 +154,18 @@ describe("development server", () => {
   it("keeps scripture rewrites ahead of the branded fallback", async () => {
     const response = await fetch(`${origin}/_redirects`);
     const redirects = await response.text();
+    const aboutRewriteIndex = redirects.indexOf("/about        /about.html 200");
+    const aboutSlashRewriteIndex = redirects.indexOf("/about/       /about.html 200");
+    const editionRewriteIndex = redirects.indexOf("/:edition /index.html 200");
+    const editionSlashRewriteIndex = redirects.indexOf("/:edition/ /index.html 200");
     const fallbackIndex = redirects.indexOf("/*        /404.html    404");
 
     assert.equal(response.status, 200);
+    assert.ok(aboutRewriteIndex >= 0 && aboutRewriteIndex < editionRewriteIndex);
+    assert.ok(aboutSlashRewriteIndex >= 0 && aboutSlashRewriteIndex < editionRewriteIndex);
+    assert.ok(editionSlashRewriteIndex >= 0 && editionSlashRewriteIndex < fallbackIndex);
     assert.notEqual(fallbackIndex, -1);
-    for (const route of ["/kjv/b/*", "/krv/b/*", "/diodati/b/*", "/licht/b/*", "/japbungo/b/*", "/moh/b/*", "/b/*"]) {
+    for (const route of ["/about", "/kjv/b/*", "/krv/b/*", "/diodati/b/*", "/licht/b/*", "/japbungo/b/*", "/moh/b/*", "/luz/b/*", "/b/*"]) {
       assert.ok(redirects.indexOf(route) < fallbackIndex, `${route} precedes the 404 fallback`);
     }
   });

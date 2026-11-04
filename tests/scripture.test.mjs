@@ -74,6 +74,16 @@ describe("scripture routes", () => {
     assert.equal(futureEditionRoutes.parse("/future-edition").editionId, "future-edition");
   });
 
+  it("accepts an optional trailing slash on reader routes", () => {
+    for (const path of [
+      "/kjv/",
+      "/krv/b/john/c/3/v/16/",
+      "/b/john/3/16/",
+    ]) {
+      assert.deepEqual(routes.parse(path), routes.parse(path.slice(0, -1)), path);
+    }
+  });
+
   it("defaults legacy KJV routes to verse one", () => {
     assert.deepEqual(routes.parse("/b/john"), {
       editionId: "kjv",

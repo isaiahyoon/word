@@ -52,7 +52,8 @@ export function createDevServer(projectRoot = root) {
       return;
     }
 
-    let filePath = resolve(projectRoot, `.${pathname}`);
+    const requestPath = pathname === "/about/" ? "/about" : pathname;
+    let filePath = resolve(projectRoot, requestPath === "/about" ? "./about.html" : `.${requestPath}`);
     let statusCode = 200;
     if (pathname === "/404.html") statusCode = 404;
     if (filePath !== projectRoot && !filePath.startsWith(`${projectRoot}${sep}`)) {
