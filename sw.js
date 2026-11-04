@@ -8,6 +8,7 @@ const SHELL_URLS = [
   "/manifest.webmanifest",
   "/styles/theme.css",
   "/styles/typography.css",
+  "/styles/editions.css",
   "/styles/styles.css",
   "/js/app.js",
   "/js/books.mjs",

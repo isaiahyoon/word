@@ -246,7 +246,7 @@ describe("development server", () => {
   });
 
   it("uses the Cobalt Roof Tile gradient for the KRV backdrop", async () => {
-    const response = await fetch(`${origin}/styles/styles.css`);
+    const response = await fetch(`${origin}/styles/editions.css`);
     const styles = await response.text();
 
     assert.equal(response.status, 200);
@@ -254,6 +254,25 @@ describe("development server", () => {
       styles,
       /body\.is-krv-edition::before\s*\{[^}]*background-image:\s*linear-gradient\(128deg,\s*#bed8ea,\s*#e8f1f4 58%,\s*#c3d3e5\)/s,
     );
+  });
+
+  it("keeps edition palettes and interface tokens in the edition sheet", async () => {
+    const [readerResponse, editionsResponse, stylesResponse] = await Promise.all([
+      fetch(origin),
+      fetch(`${origin}/styles/editions.css`),
+      fetch(`${origin}/styles/styles.css`),
+    ]);
+    const [readerHtml, editionsCss, stylesCss] = await Promise.all([
+      readerResponse.text(),
+      editionsResponse.text(),
+      stylesResponse.text(),
+    ]);
+
+    assert.match(readerHtml, /href="\/styles\/editions\.css"/);
+    assert.equal(editionsResponse.status, 200);
+    assert.match(editionsCss, /body\.is-diodati-edition\s*\{[^}]*--switcher-border:/s);
+    assert.match(editionsCss, /body\.is-luther1912-edition\s*\{[^}]*--book-current-fill:/s);
+    assert.doesNotMatch(stylesCss, /body\.is-[a-z0-9]+-edition\s*\{[^}]*--canvas:/s);
   });
 
   it("reduces the verse loading message size", async () => {
