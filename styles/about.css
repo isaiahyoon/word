@@ -2,6 +2,28 @@
   box-sizing: border-box;
 }
 
+:root:lang(ko) {
+  --serif: var(--serif-korean-ui);
+  --sans: var(--sans-korean-scripture);
+}
+
+:root:lang(ja) {
+  --serif: var(--serif-japanese);
+  --sans: var(--sans-japanese);
+}
+
+:root:lang(it) {
+  --serif: var(--serif-italian);
+}
+
+:root:lang(fr) {
+  --serif: var(--serif-french);
+}
+
+:root:lang(es) {
+  --serif: var(--serif-spanish);
+}
+
 body {
   --about-blue-light: #e8f1f4;
   --about-blue-mid: #bed8ea;
