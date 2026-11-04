@@ -140,6 +140,10 @@ Reina-Valera search uses Spanish text and localized book names and references, i
 
 The first text search loads and indexes the selected edition's verses in the browser. The index is reused for later searches in that edition; no search query is sent to an external search service. Results are shown 12 at a time as the list is scrolled. The index is separate for each edition.
 
+## Diagnostics
+
+Failures such as a chapter that cannot load, a failed search, or a failed copy are written to the browser console as `[the-word]` messages with identifiers like the edition, book, and chapter. Search text is never logged, and nothing is sent to an external service. To see how long chapter loads and searches take, run `localStorage.setItem("the-word.debug", "1")` in the console and reload; remove the key to turn timing off.
+
 ## Tests
 
 Run the CSS linter and the route, keyboard-shortcut, scripture-store,

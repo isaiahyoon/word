@@ -1,5 +1,6 @@
 import { ABOUT_LOCALES } from "./about-locales.mjs";
 import { EDITIONS } from "./editions.mjs";
+import { logger } from "./logger.js";
 
 const languageTrigger = document.querySelector("#about-language");
 const languageMenu = document.querySelector("#about-language-options");
@@ -13,7 +14,7 @@ function getSavedLanguage() {
     const language = EDITIONS[savedState?.editionId]?.language;
     return Object.hasOwn(ABOUT_LOCALES, language) ? language : "en";
   } catch (error) {
-    console.warn("Could not read the saved edition for About page localization.", error);
+    logger.warn("Could not read the saved edition for About page localization", { error });
     return "en";
   }
 }

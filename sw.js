@@ -15,6 +15,7 @@ const SHELL_URLS = [
   "/js/edition-picker.js",
   "/js/editions.mjs",
   "/js/keyboard-shortcuts.js",
+  "/js/logger.js",
   "/js/offline.js",
   "/js/offline-control.js",
   "/js/offline-fonts.js",
