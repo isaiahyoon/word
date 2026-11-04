@@ -4,6 +4,8 @@
 
 The Amazing Word is a quiet, free place to read Scripture on the web. It is built to make the text easy to find, move through, and carry with you, without asking you to create an account or pay to read.
 
+The [About page](./about.html) introduces the reader's features, guiding convictions, and installation steps in English, Korean, Italian, German, Japanese, French, and Spanish. It follows the reader's saved edition by default; use its language menu to choose another language.
+
 ```
 "All scripture is given by inspiration of God,
 and is profitable for doctrine, for reproof,
@@ -73,7 +75,7 @@ node tools/dev-server.mjs
 Then open [http://localhost:8000](http://localhost:8000).
 If port 8000 is occupied, choose another port with `PORT=8001 node tools/dev-server.mjs`.
 Check that the development server is running with `curl http://localhost:8000/health`.
-When deploying, configure the host to internally serve `index.html` for valid `/kjv/b/*`, `/krv/b/*`, `/diodati/b/*`, `/licht/b/*`, `/japbungo/b/*`, `/moh/b/*`, `/luz/b/*`, and legacy `/b/*` scripture routes while keeping the requested URL. Unknown paths should serve `404.html` with a 404 status.
+When deploying, configure the host to internally serve `index.html` for valid `/kjv/b/*`, `/krv/b/*`, `/diodati/b/*`, `/licht/b/*`, `/japbungo/b/*`, `/moh/b/*`, `/luz/b/*`, and legacy `/b/*` scripture routes while keeping the requested URL. These reader routes accept an optional trailing slash. Serve `/about` and `/about/` from `about.html`; unknown paths should serve `404.html` with a 404 status.
 
 Scripture links identify their edition before the book route. Omitting the chapter opens chapter 1; omitting the verse opens and highlights verse 1:
 

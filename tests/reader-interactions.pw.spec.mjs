@@ -1,5 +1,53 @@
 import { expect, test } from "./support/browser-test.mjs";
 
+test("presents the About page and installation options at desktop and mobile widths", async ({ page }) => {
+  for (const viewport of [
+    { width: 320, height: 740 },
+    { width: 390, height: 844 },
+    { width: 1280, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/kjv/b/genesis/c/1");
+    const aboutLink = page.getByRole("link", { name: "About" });
+    const shortcutsButton = page.getByRole("button", { name: "Show keyboard shortcuts" });
+    await expect(aboutLink).toBeVisible();
+    await expect(shortcutsButton).toBeVisible();
+    const [aboutBounds, shortcutsBounds] = await Promise.all([
+      aboutLink.boundingBox(),
+      shortcutsButton.boundingBox(),
+    ]);
+    expect(aboutBounds).not.toBeNull();
+    expect(shortcutsBounds).not.toBeNull();
+    expect(aboutBounds.x + aboutBounds.width).toBeLessThanOrEqual(shortcutsBounds.x);
+    await page.goto("/about");
+
+    await expect(page).toHaveTitle("About — The Word");
+    await expect(page.getByRole("heading", { name: "A quiet place to meet the text." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Install The Word." })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Buy Me a Coffee/ })).toHaveAttribute(
+      "href",
+      "https://buymeacoffee.com/isaiahyoon",
+    );
+    const installPositions = await page.locator(".install-item").evaluateAll((items) =>
+      Object.fromEntries(items.map((item) => {
+        const bounds = item.getBoundingClientRect();
+        return [item.classList[1].replace("install-item--", ""), {
+          x: bounds.x,
+          y: bounds.y,
+        }];
+      })),
+    );
+    expect(installPositions.mac.y).toBeLessThan(installPositions.windows.y);
+    expect(installPositions.iphone.y).toBeLessThan(installPositions.android.y);
+    expect(Math.abs(installPositions.mac.y - installPositions.iphone.y)).toBeLessThan(2);
+    expect(Math.abs(installPositions.windows.y - installPositions.android.y)).toBeLessThan(2);
+    expect(installPositions.mac.x).toBeLessThan(installPositions.iphone.x);
+    expect(installPositions.windows.x).toBeLessThan(installPositions.android.x);
+    expect(await page.locator("html").evaluate((element) => element.scrollWidth))
+      .toBeLessThanOrEqual(viewport.width);
+  }
+});
+
 test("localizes reader navigation and accessible controls for every edition", async ({ page }) => {
   const editions = [
     { route: "/kjv", language: "en", navigation: "Open book navigation", previous: "Previous chapter:", chapter: "Choose Genesis chapter", chapterOption: "Genesis chapter 2", testament: "Old", offlineStatus: "Not saved for offline", save: "Save", cut: "Cut", previewAlt: "The Word prism sword emblem beside the Scripture reader name", shortcutTitle: "Keyboard shortcuts", shortcutHome: "Go to homepage", feedbackTitle: "Leave me a note", feedbackBug: "A small snag" },
