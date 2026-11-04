@@ -1,0 +1,241 @@
+
+
+@keyframes page-in {
+  from {
+    opacity: 0.4;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes chapter-tap {
+  58% {
+    transform: scale(1.22);
+  }
+}
+@keyframes chapter-flower-turn {
+  0% {
+    opacity: 0.55;
+    transform: rotate(-24deg) scale(0.82);
+  }
+  68% {
+    transform: rotate(12deg) scale(1.12);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+  }
+}
+@keyframes chapter-gold-sparkle {
+  0% {
+    opacity: 0;
+    transform: scale(0.25) rotate(-30deg);
+  }
+  34% {
+    opacity: 1;
+    transform: scale(1.25) rotate(4deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--sparkle-drift-x), var(--sparkle-drift-y))
+      scale(0.3) rotate(38deg);
+  }
+}
+@keyframes chapter-panel-press {
+  42% {
+    width: 24px;
+    filter: brightness(1.12);
+  }
+}
+@keyframes chapter-selection-bloom {
+  0% {
+    transform: scale(0.94);
+    box-shadow:
+      0 2px 0 #e9aebf,
+      0 0 0 0 rgba(209, 132, 153, 0);
+  }
+  45% {
+    transform: scale(1.08);
+    box-shadow:
+      0 2px 0 #e9aebf,
+      0 0 0 6px rgba(209, 132, 153, 0.2);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow:
+      0 2px 0 #e9aebf,
+      0 0 0 0 rgba(209, 132, 153, 0);
+  }
+}
+@keyframes shortcut-metal-sheen {
+  to {
+    background-position: -35% 0;
+  }
+}
+@keyframes shortcut-silver-sheen {
+  to {
+    background-position:
+      -35% 0,
+      0 0;
+  }
+}
+@keyframes shortcuts-sheen {
+  0% {
+    opacity: 0;
+    background-position: 135% 0;
+  }
+  18%,
+  72% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    background-position: -35% 0;
+  }
+}
+@keyframes mobile-chapter-sweep-previous {
+  0% {
+    opacity: 0;
+    transform: translate(5px, -50%) scaleX(0.55);
+  }
+  32% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(21px, -50%) scaleX(1);
+  }
+}
+@keyframes mobile-chapter-sweep-next {
+  0% {
+    opacity: 0;
+    transform: translate(-5px, -50%) scaleX(0.55);
+  }
+  32% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-21px, -50%) scaleX(1);
+  }
+}
+@keyframes mobile-destination-peek {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  18%,
+  72% {
+    opacity: 1;
+  }
+}
+@keyframes text-glimmer {
+  0% {
+    background-position: 135% 0;
+    opacity: 0;
+  }
+  16%,
+  70% {
+    opacity: 0.95;
+  }
+  100% {
+    background-position: -35% 0;
+    opacity: 0;
+  }
+}
+@keyframes scripture-bloom {
+  0% {
+    filter: drop-shadow(0 0 1px hsl(var(--rainbow-hue) 100% 68% / 0.3));
+  }
+  38% {
+    filter: drop-shadow(0 0 7px hsl(var(--rainbow-hue) 100% 68% / 0.95))
+      drop-shadow(
+        0 0 19px hsl(calc(var(--rainbow-hue) + 145deg) 100% 67% / 0.75)
+      );
+  }
+  100% {
+    filter: drop-shadow(0 0 3px hsl(var(--rainbow-hue) 100% 68% / 0.8))
+      drop-shadow(
+        0 0 9px hsl(calc(var(--rainbow-hue) + 145deg) 100% 67% / 0.52)
+      );
+  }
+}
+@keyframes logo-spin-settle {
+  0% {
+    transform: rotate(-7deg);
+  }
+  44% {
+    transform: rotate(1073deg);
+  }
+  59% {
+    transform: rotate(1099deg);
+  }
+  71% {
+    transform: rotate(1067deg);
+  }
+  82% {
+    transform: rotate(1081deg);
+  }
+  92% {
+    transform: rotate(1070deg);
+  }
+  100% {
+    transform: rotate(1073deg);
+  }
+}
+@keyframes control-glimmer {
+  0% {
+    opacity: 0;
+    background-position: 135% 0;
+  }
+  16%,
+  72% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    background-position: -35% 0;
+  }
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes chapter-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes quiet-welcome-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes verse-glow {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  20%,
+  65% {
+    opacity: 1;
+  }
+}
