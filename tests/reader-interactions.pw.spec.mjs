@@ -109,6 +109,68 @@ test("localizes reader navigation and accessible controls for every edition", as
   await expect(page.locator("#edition-offline-status")).toHaveText("오프라인 저장 안 됨");
 });
 
+test("localizes and emphasizes the reader's About link for every edition", async ({ page }) => {
+  const editions = [
+    { route: "/kjv", label: "About" },
+    { route: "/krv", label: "소개" },
+    { route: "/diodati", label: "Informazioni" },
+    { route: "/licht", label: "Über uns" },
+    { route: "/japbungo", label: "このサイトについて" },
+    { route: "/moh", label: "À propos" },
+    { route: "/luz", label: "Acerca de" },
+  ];
+
+  for (const viewport of [
+    { width: 320, height: 740 },
+    { width: 390, height: 844 },
+    { width: 1280, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    for (const edition of editions) {
+      await page.goto(`${edition.route}/b/genesis/c/1`);
+      const aboutLink = page.locator(".topbar-about");
+      await expect(page.locator("#verse-1")).toBeVisible();
+      await expect(aboutLink).toHaveText(edition.label);
+      await expect(aboutLink).toHaveCSS("font-size", viewport.width <= 640 ? "11px" : "15px");
+      await expect(aboutLink).toHaveCSS("font-weight", "500");
+      await expect(aboutLink).toHaveCSS("text-decoration-line", "none");
+
+      const palette = await aboutLink.evaluate((element) => {
+        const resolveColor = (variable) => {
+          const probe = document.createElement("span");
+          probe.style.color = `var(${variable})`;
+          document.body.append(probe);
+          const color = getComputedStyle(probe).color;
+          probe.remove();
+          return color;
+        };
+        return {
+          navy: resolveColor("--navy-ink"),
+          gold: resolveColor("--brass"),
+        };
+      });
+      await expect(aboutLink).toHaveCSS("color", palette.navy);
+      await aboutLink.hover();
+      await expect(aboutLink).toHaveCSS("color", palette.gold);
+
+      const decoration = await aboutLink.evaluate((element) => ({
+        diamondBorderStyle: getComputedStyle(element, "::before").borderTopStyle,
+        underlineBackground: getComputedStyle(element, "::after").backgroundImage,
+      }));
+      expect(decoration.diamondBorderStyle).toBe("solid");
+      expect(decoration.underlineBackground).toContain("linear-gradient");
+      const linkBounds = await aboutLink.boundingBox();
+      expect(linkBounds).not.toBeNull();
+      expect(linkBounds.x + linkBounds.width).toBeLessThanOrEqual(viewport.width);
+    }
+  }
+
+  await page.goto("/kjv/b/genesis/c/1");
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-option-krv").click();
+  await expect(page.locator(".topbar-about")).toHaveText("소개");
+});
+
 test("centers the chapter picker within a mobile viewport", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/kjv/b/john/c/3/v/16");

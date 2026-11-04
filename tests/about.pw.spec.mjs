@@ -1,4 +1,5 @@
 import { ABOUT_LOCALES } from "../js/about-locales.mjs";
+import { EDITIONS } from "../js/editions.mjs";
 import { expect, test } from "./support/browser-test.mjs";
 
 const localizedHeadings = {
@@ -19,6 +20,7 @@ test("localizes About page content, metadata, and accessible names", async ({ pa
     await expect(page).toHaveTitle(locale.pageTitle);
     await expect(page.locator("#page-title")).toHaveText(localizedHeadings[language]);
     await expect(page.locator("#about-language")).toHaveAttribute("aria-label", locale.languageLabel);
+    await expect(page.locator('[data-about="ethosCopyOne"]')).toHaveText(locale.ethosCopyOne);
     await expect(page.locator(".brand")).toHaveAttribute("aria-label", locale.brandHome);
     await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", locale.metaDescription);
     await expect(page.locator(".return-link")).toHaveText(`${locale.returnToReading} →`);
@@ -32,16 +34,22 @@ test("localizes About page content, metadata, and accessible names", async ({ pa
 });
 
 test("uses the saved reader edition and keeps an explicit About language in the URL", async ({ page }) => {
-  await page.addInitScript(() => {
-    window.localStorage.setItem("the-word.reader-state.v1:/", JSON.stringify({
-      version: 1,
-      editionId: "rv1865",
-    }));
-  });
   await page.goto("/about/");
 
-  await expect(page.locator("html")).toHaveAttribute("lang", "es");
-  await expect(page).toHaveTitle(ABOUT_LOCALES.es.pageTitle);
+  for (const edition of Object.values(EDITIONS)) {
+    await page.evaluate((editionId) => {
+      window.localStorage.setItem("the-word.reader-state.v1:/", JSON.stringify({
+        version: 1,
+        editionId,
+      }));
+    }, edition.id);
+    await page.reload();
+
+    await expect(page.locator("html")).toHaveAttribute("lang", edition.language);
+    await expect(page).toHaveTitle(ABOUT_LOCALES[edition.language].pageTitle);
+    await expect(page.locator('[data-about="ethosCopyOne"]'))
+      .toHaveText(ABOUT_LOCALES[edition.language].ethosCopyOne);
+  }
 
   await page.locator("#about-language").click();
   await page.getByRole("option", { name: "한국어" }).click();
@@ -125,6 +133,20 @@ test("keeps About controls clear of each other and the viewport across mobile an
   for (const borderBackground of borderBackgrounds) {
     expect(borderBackground.match(/linear-gradient/g)).toHaveLength(2);
   }
+
+  const ethosSection = page.locator(".ethos-section");
+  await expect(ethosSection).toHaveCSS("border-radius", "12px");
+  await expect(ethosSection).toHaveCSS("box-shadow", /rgba/);
+  const ethosCopySizes = await ethosSection.locator("p:not(.eyebrow)").evaluateAll((elements) =>
+    elements.map((element) => Number.parseFloat(getComputedStyle(element).fontSize)),
+  );
+  expect(ethosCopySizes[0]).toBeGreaterThan(ethosCopySizes[1]);
+
+  const openReaderLink = page.locator(".primary-link");
+  await expect(openReaderLink).toHaveCSS("min-height", "48px");
+  await expect(openReaderLink).toHaveCSS("border-color", "rgb(226, 195, 109)");
+  await expect(openReaderLink).toHaveCSS("background-image", /linear-gradient/);
+  await expect(openReaderLink).toHaveCSS("box-shadow", /rgb\(212, 184, 110\)/);
 
   await firstCard.hover();
   await expect.poll(() => firstCard.evaluate((element) => getComputedStyle(element).transform))

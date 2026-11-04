@@ -398,11 +398,16 @@ h1 {
 }
 
 .section-heading h2,
-.ethos-section h2,
 .support-note h2 {
   margin-bottom: 0;
   font-size: clamp(30px, 4vw, 42px);
   line-height: 1.12;
+}
+
+.ethos-section h2 {
+  margin-bottom: 0;
+  font-size: clamp(34px, 4.4vw, 48px);
+  line-height: 1.08;
 }
 
 .feature-grid {
@@ -497,19 +502,31 @@ h1 {
 
 .ethos-section {
   display: grid;
-  grid-template-columns: 90px minmax(0, 650px);
+  grid-template-columns: 58px minmax(0, 650px);
   justify-content: center;
-  gap: 22px;
-  padding: 49px clamp(22px, 5vw, 70px);
-  border-top: 1px solid rgba(71, 72, 67, 0.13);
-  border-bottom: 1px solid rgba(71, 72, 67, 0.13);
-  background: linear-gradient(112deg, rgba(220, 235, 222, 0.38), rgba(255, 253, 249, 0.56) 52%, rgba(255, 242, 197, 0.33));
+  gap: clamp(18px, 3vw, 34px);
+  padding: clamp(34px, 5vw, 58px) clamp(24px, 6vw, 78px);
+  border: 1px solid rgba(127, 157, 184, 0.44);
+  border-radius: 12px;
+  background:
+    linear-gradient(112deg, rgba(220, 235, 222, 0.7), rgba(255, 253, 249, 0.86) 52%, rgba(255, 242, 197, 0.58)),
+    var(--canvas);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 12px 30px rgba(74, 105, 134, 0.09);
 }
 
 .ethos-ornament {
-  padding-top: 8px;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  margin-top: 2px;
+  border: 1px solid rgba(177, 139, 57, 0.38);
+  border-radius: 50%;
+  background: rgba(255, 253, 249, 0.72);
   color: var(--brass);
-  font-size: 32px;
+  font-size: 22px;
   text-align: center;
 }
 
@@ -521,6 +538,14 @@ h1 {
 .ethos-section p:not(.eyebrow) {
   max-width: 650px;
   margin-top: 16px;
+}
+
+.ethos-section .ethos-foundation {
+  padding-left: 18px;
+  border-left: 2px solid var(--brass-soft);
+  color: var(--ink);
+  font-size: clamp(17px, 1.5vw, 20px);
+  line-height: 1.65;
 }
 
 .install-section {
@@ -715,8 +740,7 @@ h1 {
   }
 
   .ethos-ornament {
-    padding: 0;
-    text-align: left;
+    margin: 0 0 4px;
   }
 
   .install-section {

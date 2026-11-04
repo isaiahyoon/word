@@ -1,4 +1,5 @@
 const ENGLISH = {
+  about: "About",
   openNavigation: "Open book navigation",
   closeNavigation: "Close book navigation",
   bookNavigation: "Book navigation",
@@ -173,6 +174,7 @@ const ENGLISH = {
 export const UI_LOCALES = {
   en: ENGLISH,
   ko: {
+    about: "소개",
     openNavigation: "책 탐색 열기", closeNavigation: "책 탐색 닫기", bookNavigation: "책 탐색", home: "The Word 홈", socialPreviewAlt: "성경 읽기 서비스 이름 옆에 있는 The Word 프리즘 검 문양", metaDescription: "원하는 속도로 성경을 찾아 읽을 수 있는 조용한 검색형 성경 읽기 도구입니다.", searchInput: "성경 검색",
     searchPlaceholder: "구절이나 문구 찾기...", searchResults: "검색 결과", showShortcuts: "키보드 단축키 보기",
     keyboardShortcuts: "키보드 단축키", shortcuts: "단축키", readingRoom: "말씀을 읽는 곳", books: "권",
@@ -228,6 +230,7 @@ export const UI_LOCALES = {
     feedbackSuccessTitle: "쪽지가 읽기 공간에 도착했습니다.", feedbackSuccessBody: "이 작은 공간을 함께 키워 주셔서 감사합니다.", done: "완료",
   },
   it: {
+    about: "Informazioni",
     openNavigation: "Apri la navigazione dei libri", closeNavigation: "Chiudi la navigazione dei libri", bookNavigation: "Navigazione dei libri", home: "Home di The Word", socialPreviewAlt: "Emblema della spada prismatica di The Word accanto al nome del lettore biblico", metaDescription: "Un lettore biblico discreto e consultabile per esplorare le Scritture con i propri tempi.", searchInput: "Cerca nelle Scritture",
     searchPlaceholder: "Cerca un versetto o una frase...", searchResults: "Risultati della ricerca", showShortcuts: "Mostra le scorciatoie da tastiera",
     keyboardShortcuts: "Scorciatoie da tastiera", shortcuts: "SCORCIATOIE", readingRoom: "IL TUO SPAZIO DI LETTURA", books: "libri",
@@ -281,6 +284,7 @@ export const UI_LOCALES = {
     feedbackSend: "Invia messaggio", feedbackSuccessTitle: "Il tuo messaggio è arrivato alla sala di lettura.", feedbackSuccessBody: "Grazie per aiutare questo piccolo spazio a crescere.", done: "Fatto",
   },
   de: {
+    about: "Über uns",
     openNavigation: "Buchnavigation öffnen", closeNavigation: "Buchnavigation schließen", bookNavigation: "Buchnavigation", home: "The Word Startseite", socialPreviewAlt: "Prismenschwert-Emblem von The Word neben dem Namen des Bibelleseprogramms", metaDescription: "Ein ruhiger, durchsuchbarer Bibelleseplatz, um die Schrift im eigenen Tempo zu erkunden.", searchInput: "In der Bibel suchen",
     searchPlaceholder: "Vers oder Textstelle suchen...", searchResults: "Suchergebnisse", showShortcuts: "Tastenkürzel anzeigen",
     keyboardShortcuts: "Tastenkürzel", shortcuts: "TASTENKÜRZEL", readingRoom: "DEIN LESEBEREICH", books: "Bücher",
@@ -334,6 +338,7 @@ export const UI_LOCALES = {
     feedbackSend: "Nachricht senden", feedbackSuccessTitle: "Deine Nachricht ist im Lesebereich angekommen.", feedbackSuccessBody: "Danke, dass du diesen kleinen Ort mitgestaltest.", done: "Fertig",
   },
   ja: {
+    about: "このサイトについて",
     openNavigation: "書名ナビゲーションを開く", closeNavigation: "書名ナビゲーションを閉じる", bookNavigation: "書名ナビゲーション", home: "The Word ホーム", socialPreviewAlt: "聖書リーダー名の横にあるThe Wordのプリズムの剣の紋章", metaDescription: "自分のペースで聖書を探し読める、静かで検索しやすい読書ツールです。", searchInput: "聖書を検索",
     searchPlaceholder: "節や語句を検索...", searchResults: "検索結果", showShortcuts: "キーボードショートカットを表示",
     keyboardShortcuts: "キーボードショートカット", shortcuts: "ショートカット", readingRoom: "あなたの読書室", books: "巻",
@@ -387,6 +392,7 @@ export const UI_LOCALES = {
     feedbackSuccessBody: "この小さな場所を一緒に育ててくださり、ありがとうございます。", done: "完了",
   },
   fr: {
+    about: "À propos",
     openNavigation: "Ouvrir la navigation des livres", closeNavigation: "Fermer la navigation des livres", bookNavigation: "Navigation des livres", home: "Accueil de The Word", socialPreviewAlt: "Emblème de l’épée prismatique de The Word à côté du nom du lecteur biblique", metaDescription: "Un lecteur biblique calme et consultable pour explorer les Écritures à votre rythme.", searchInput: "Rechercher dans les Écritures",
     searchPlaceholder: "Chercher un verset ou une expression...", searchResults: "Résultats de recherche", showShortcuts: "Afficher les raccourcis clavier",
     keyboardShortcuts: "Raccourcis clavier", shortcuts: "RACCOURCIS", readingRoom: "VOTRE ESPACE DE LECTURE", books: "livres",
@@ -440,6 +446,7 @@ export const UI_LOCALES = {
     feedbackSend: "Envoyer le message", feedbackSuccessTitle: "Votre message est arrivé dans l’espace de lecture.", feedbackSuccessBody: "Merci de contribuer à faire grandir ce petit endroit.", done: "Terminé",
   },
   es: {
+    about: "Acerca de",
     openNavigation: "Abrir navegación de libros",
     closeNavigation: "Cerrar navegación de libros",
     bookNavigation: "Navegación de libros",
