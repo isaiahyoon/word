@@ -1,6 +1,7 @@
 {
     "chat.tools.terminal.autoApprove": {
         "gh": true,
-        "sips": true
+        "sips": true,
+        "cp": true
     }
 }

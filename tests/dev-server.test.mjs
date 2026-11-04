@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { once } from "node:events";
+import { readdir, readFile } from "node:fs/promises";
 import { after, before, describe, it } from "node:test";
 import { createDevServer } from "../tools/dev-server.mjs";
 
@@ -35,6 +36,21 @@ describe("development server", () => {
     assert.match(html, /class="topbar-actions"[\s\S]*class="shortcuts-trigger"/);
     assert.match(html, /class="site-footer-instagram"\s+href="https:\/\/www\.instagram\.com\/theamazingwordapp\/"\s+target="_blank"\s+rel="noopener noreferrer"/);
     assert.match(html, /aria-label="Visit The Word on Instagram, opens in a new tab"/);
+  });
+
+  it("gives every HTML page a shared-link preview image", async () => {
+    const root = new URL("../", import.meta.url);
+    const studies = (await readdir(new URL("studies/", root))).filter((name) => name.endsWith(".html"));
+    const pages = ["index.html", "about.html", "404.html", ...studies.map((name) => `studies/${name}`)];
+
+    for (const page of pages) {
+      const html = await readFile(new URL(page, root), "utf8");
+      assert.match(html, /property="og:title"/, `${page} has og:title`);
+      assert.match(html, /property="og:description"/, `${page} has og:description`);
+      assert.match(html, /property="og:image" content="https:\/\/theamazingword\.org\/assets\/social-preview\.png"/, `${page} has og:image`);
+      assert.match(html, /name="twitter:card" content="summary_large_image"/, `${page} has twitter:card`);
+      assert.match(html, /name="twitter:image" content="https:\/\/theamazingword\.org\/assets\/social-preview\.png"/, `${page} has twitter:image`);
+    }
   });
 
   it("serves the About page at its clean route with install and support details", async () => {

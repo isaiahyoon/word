@@ -43,6 +43,7 @@ export function createEditionPicker({
     frame.dataset.scrollText = "";
     frame.title = text;
     resizeObserver?.observe(track);
+    resizeObserver?.observe(frame);
   }
 
   const resizeObserver = typeof ResizeObserver === "function"

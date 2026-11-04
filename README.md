@@ -47,6 +47,7 @@ and without him was not any thing made that was made.
 - Select verses and copy or share them in chapter order as a quoted passage, with each verse on its own line and a compressed reference below the closing quotation mark. Selections stay highlighted when switching editions, so you can copy the same passage in another language. Copy and Share each open a small language menu listing every edition; choosing one copies the passage in that language or opens the device's native sharing interface, with copying as the fallback when sharing is unavailable. The Cut button copies the passage in the current edition and clears the selection; `Cmd+X`/`Ctrl+X` does the same. Clicking a verse also updates its direct link. The feedback form lets readers send a note, with passage details included only by choice.
 - The reader remembers the current edition, passage, focused verse, and selected verses on this device, including after reopening the app.
 - Shared links use a high-resolution branded preview featuring The Word's sword emblem.
+- Every page, including About, the 404 page, and the design studies, carries the same preview so any shared link unfurls with the sword emblem.
 - Install it as a standalone web app on Mac, iPhone, Android, or Windows using the browser's install option.
 - Save any edition for offline reading from the Reading Edition panel. Each edition is saved separately and can be removed at any time.
 
