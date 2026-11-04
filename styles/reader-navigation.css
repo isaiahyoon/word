@@ -34,7 +34,7 @@
 }
 .book-total span {
   color: #8a8b83;
-  font-family: var(--ui-serif);
+  font-family: var(--sans);
   font-size: var(--type-caption);
 }
 .edition-switcher {
@@ -105,7 +105,7 @@
   place-items: center;
   border-right: 1px solid rgba(169, 124, 53, 0.24);
   color: var(--brass);
-  font-family: var(--ui-serif);
+  font-family: var(--sans);
   font-size: 9px;
   font-weight: var(--weight-bold);
   letter-spacing: 0;
@@ -190,7 +190,7 @@
   min-width: 0;
   display: grid;
   gap: 2px;
-  font-family: var(--ui-serif);
+  font-family: var(--sans);
 }
 .edition-option-description strong {
   display: block;
@@ -303,7 +303,7 @@
   border-radius: 3px;
   background: rgba(255, 255, 255, 0.76);
   color: var(--brass);
-  font-family: var(--ui-serif);
+  font-family: var(--sans);
   font-size: var(--type-label);
   font-weight: var(--weight-bold);
   letter-spacing: var(--tracking-label);

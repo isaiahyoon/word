@@ -111,13 +111,13 @@ test("localizes reader navigation and accessible controls for every edition", as
 
 test("localizes and emphasizes the reader's About link for every edition", async ({ page }) => {
   const editions = [
-    { route: "/kjv", label: "About", font: "Gelasio" },
-    { route: "/krv", label: "소개", font: "Noto Serif KR" },
-    { route: "/diodati", label: "Informazioni", font: "Cormorant Garamond" },
-    { route: "/licht", label: "Über uns", font: "Gelasio" },
-    { route: "/japbungo", label: "このサイトについて", font: "Noto Serif JP" },
-    { route: "/moh", label: "À propos", font: "EB Garamond" },
-    { route: "/luz", label: "Acerca de", font: "Petrona" },
+    { route: "/kjv", label: "About", font: "Gelasio", interfaceFont: "DM Sans" },
+    { route: "/krv", label: "소개", font: "Noto Serif KR", interfaceFont: "DM Sans" },
+    { route: "/diodati", label: "Informazioni", font: "Cormorant Garamond", interfaceFont: "DM Sans" },
+    { route: "/licht", label: "Über uns", font: "Gelasio", interfaceFont: "DM Sans" },
+    { route: "/japbungo", label: "このサイトについて", font: "Noto Serif JP", interfaceFont: "Noto Sans JP" },
+    { route: "/moh", label: "À propos", font: "EB Garamond", interfaceFont: "DM Sans" },
+    { route: "/luz", label: "Acerca de", font: "Petrona", interfaceFont: "DM Sans" },
   ];
 
   for (const viewport of [
@@ -130,6 +130,7 @@ test("localizes and emphasizes the reader's About link for every edition", async
       await page.goto(`${edition.route}/b/genesis/c/1`);
       const aboutLink = page.locator(".topbar-about");
       await expect(page.locator("#verse-1")).toBeVisible();
+      await expect(page.locator("body")).toHaveCSS("font-family", new RegExp(edition.interfaceFont));
       await expect(aboutLink).toHaveText(edition.label);
       await expect(aboutLink).toHaveCSS("font-size", viewport.width <= 640 ? "11px" : "15px");
       await expect(aboutLink).toHaveCSS("font-weight", "500");

@@ -121,7 +121,7 @@
 }
 .topbar-note .glimmer-text {
   color: var(--navy-ink);
-  font-family: var(--ui-serif);
+  font-family: var(--sans);
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 .theme-dots i:nth-child(1) {
@@ -182,7 +182,7 @@
   gap: 7px;
   padding: 8px 0;
   color: var(--navy-ink);
-  font-family: var(--ui-serif);
+  font-family: var(--about-link-serif);
   font-size: 15px;
   font-weight: 500;
   text-decoration: none;

@@ -202,7 +202,7 @@
 }
 .select-caret {
   color: #85857c;
-  font-family: var(--ui-serif);
+  font-family: var(--sans);
   font-size: 14px;
   line-height: 1;
 }
@@ -568,7 +568,7 @@ body.is-krv-edition .verse.is-copy-selected {
   border-radius: 3px;
   background: rgba(255, 255, 255, 0.52);
   color: #315863;
-  font-family: var(--ui-serif);
+  font-family: var(--sans);
   font-size: 9px;
   font-weight: var(--weight-semibold);
   line-height: 1.4;
@@ -635,7 +635,7 @@ body.is-krv-edition .verse.is-copy-selected {
   min-height: 44px;
   white-space: nowrap;
   border-radius: 6px;
-  font-family: var(--ui-serif);
+  font-family: var(--sans);
   font-size: var(--type-control-small);
   font-weight: var(--weight-semibold);
   opacity: 0;
@@ -774,7 +774,7 @@ body.is-krv-edition .verse.is-copy-selected {
 }
 .share-language-code {
   color: var(--deep-teal);
-  font-family: var(--ui-serif);
+  font-family: var(--sans);
   font-size: var(--type-micro);
   font-weight: var(--weight-semibold);
   letter-spacing: 0.8px;

@@ -39,11 +39,11 @@
   --tracking-label: 1.1px;
 }
 
-/* Interface text follows each edition's serif; scripture keeps its own faces. */
+/* The reader's About link keeps its edition-specific serif. */
 body {
-  --ui-serif: var(--serif);
+  --about-link-serif: var(--serif);
 }
 
 body.is-krv-edition {
-  --ui-serif: var(--serif-korean-ui);
+  --about-link-serif: var(--serif-korean-ui);
 }

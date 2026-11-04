@@ -33,14 +33,17 @@ test("localizes About page content, metadata, and accessible names", async ({ pa
   }
 });
 
-test("applies each language's typeface to About text on mobile", async ({ page }) => {
+test("keeps sans-serif body copy and localized display typefaces on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const expectedFonts = { ko: "Noto Serif KR", it: "Cormorant Garamond", ja: "Noto Serif JP", fr: "EB Garamond", es: "Petrona", de: "Gelasio" };
+  const expectedInterfaceFonts = { ko: "Noto Sans KR", it: "DM Sans", ja: "Noto Sans JP", fr: "DM Sans", es: "DM Sans", de: "DM Sans" };
 
   for (const [language, font] of Object.entries(expectedFonts)) {
     await page.goto(`/about?lang=${language}`);
     const fontFamily = await page.locator("#page-title").evaluate((element) => getComputedStyle(element).fontFamily);
     expect(fontFamily).toContain(font);
+    const interfaceFontFamily = await page.locator("body").evaluate((element) => getComputedStyle(element).fontFamily);
+    expect(interfaceFontFamily).toContain(expectedInterfaceFonts[language]);
   }
 });
 
