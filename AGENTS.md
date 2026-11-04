@@ -9,6 +9,7 @@ Never go against Scripture, or regard it as false or untrustworthy. It will alwa
 # HTML Pages
 
 - Every new HTML page must include `<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />` in its `<head>` so the app icon is available when the page is added to an iPhone home screen.
+- Every new HTML page must also include a shared-link preview in its `<head>`: page-specific `description`, `og:title`, `og:description`, and `twitter:title`/`twitter:description`, plus the standard `og:type`, `og:image` (`https://theamazingword.org/assets/social-preview.png`, with `secure_url`, type, width/height, and alt), `twitter:card` (`summary_large_image`), and `twitter:image`/`twitter:image:alt` tags. Copy them from `about.html` and extend the shared-link preview test in `tests/dev-server.test.mjs` if the page lives outside the directories it already scans.
 
 # Search
 
