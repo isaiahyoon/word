@@ -11,7 +11,7 @@ body {
   background-color: var(--canvas);
   background-image: radial-gradient(var(--grain) 0.65px, transparent 0.65px);
   background-size: 7px 7px;
-  font-family: var(--ui-serif);
+  font-family: var(--sans);
   font-size: var(--type-copy);
   -webkit-font-smoothing: antialiased;
 }

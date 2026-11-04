@@ -4,10 +4,12 @@
 
 :root:lang(ko) {
   --serif: var(--serif-korean-ui);
+  --sans: var(--sans-korean-scripture);
 }
 
 :root:lang(ja) {
   --serif: var(--serif-japanese);
+  --sans: var(--sans-japanese);
 }
 
 :root:lang(it) {
@@ -38,7 +40,7 @@ body {
     linear-gradient(135deg, rgba(220, 232, 235, 0.38), transparent 42%, rgba(245, 236, 212, 0.26));
   background-size: 7px 7px, auto, auto, 100% 100%;
   background-attachment: fixed;
-  font-family: var(--ui-serif);
+  font-family: var(--sans);
   font-size: var(--type-copy);
   -webkit-font-smoothing: antialiased;
 }
