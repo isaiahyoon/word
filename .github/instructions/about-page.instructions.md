@@ -8,3 +8,5 @@ description: "Use when adding or changing reader features, supported editions, o
 - Do not edit the About page for unrelated internal refactors or changes that do not affect its content.
 - When a relevant change also affects the README, update both in the same change and keep their descriptions consistent.
 - Preserve the page's restrained visual style, accessible markup, and mobile layout. Add or adjust focused tests when its content, links, or layout behavior changes.
+- Style the opened state of every About-page dropdown or popover, including its panel, options, selected state, focus state, and dismissal behavior; styling only the trigger is incomplete.
+- Verify About-page interactive controls while open at mobile and desktop widths using the local app, and cover their visual bounds and keyboard interaction in focused browser tests.

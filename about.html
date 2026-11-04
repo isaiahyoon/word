@@ -37,20 +37,41 @@
             <small data-about="brandDescriptor">BIBLE READER</small>
           </span>
         </a>
-        <select
-          id="about-language"
-          aria-label="About page language"
-          data-about-aria-label="languageLabel"
-        >
-          <option value="en">English</option>
-          <option value="ko">한국어</option>
-          <option value="it">Italiano</option>
-          <option value="de">Deutsch</option>
-          <option value="ja">日本語</option>
-          <option value="fr">Français</option>
-          <option value="es">Español</option>
-        </select>
-        <a class="return-link" href="/"><span data-about="returnToReading">Return to reading</span> <span aria-hidden="true">→</span></a>
+        <div class="language-control">
+          <button
+            id="about-language"
+            class="language-trigger"
+            type="button"
+            aria-label="About page language"
+            aria-haspopup="listbox"
+            aria-expanded="false"
+            aria-controls="about-language-options"
+            data-about-aria-label="languageLabel"
+          >
+            <span class="language-current">English</span>
+            <span class="language-chevron" aria-hidden="true"></span>
+          </button>
+          <div
+            id="about-language-options"
+            class="language-menu"
+            role="listbox"
+            aria-label="About page language"
+            data-about-aria-label="languageLabel"
+            hidden
+          >
+            <button type="button" class="language-option" role="option" data-language="en" aria-selected="true">English</button>
+            <button type="button" class="language-option" role="option" data-language="ko" aria-selected="false">한국어</button>
+            <button type="button" class="language-option" role="option" data-language="it" aria-selected="false">Italiano</button>
+            <button type="button" class="language-option" role="option" data-language="de" aria-selected="false">Deutsch</button>
+            <button type="button" class="language-option" role="option" data-language="ja" aria-selected="false">日本語</button>
+            <button type="button" class="language-option" role="option" data-language="fr" aria-selected="false">Français</button>
+            <button type="button" class="language-option" role="option" data-language="es" aria-selected="false">Español</button>
+          </div>
+        </div>
+        <a class="return-link" href="/">
+          <span data-about="returnToReading">Return to reading</span>
+          <span aria-hidden="true">→</span>
+        </a>
       </header>
 
       <main>
