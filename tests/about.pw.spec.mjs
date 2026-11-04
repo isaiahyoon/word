@@ -33,6 +33,17 @@ test("localizes About page content, metadata, and accessible names", async ({ pa
   }
 });
 
+test("applies each language's typeface to About text on mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const expectedFonts = { ko: "Noto Serif KR", it: "Cormorant Garamond", ja: "Noto Serif JP", fr: "EB Garamond", es: "Petrona", de: "Gelasio" };
+
+  for (const [language, font] of Object.entries(expectedFonts)) {
+    await page.goto(`/about?lang=${language}`);
+    const fontFamily = await page.locator("#page-title").evaluate((element) => getComputedStyle(element).fontFamily);
+    expect(fontFamily).toContain(font);
+  }
+});
+
 test("uses the saved reader edition and keeps an explicit About language in the URL", async ({ page }) => {
   await page.goto("/about/");
 

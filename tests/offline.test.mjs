@@ -176,10 +176,15 @@ describe("service worker", () => {
 
   it("precaches only files that exist", async () => {
     const source = await readFile(new URL("../sw.js", import.meta.url), "utf8");
+    const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
     const list = source.match(/const SHELL_URLS = \[([\s\S]*?)\];/)[1];
     const urls = [...list.matchAll(/"([^"]+)"/g)].map((match) => match[1]);
+    const stylesheetUrls = [...html.matchAll(/href="(\/styles\/[^"]+\.css)"/g)].map(([, url]) => url);
 
     assert.ok(urls.length > 0);
+    for (const url of stylesheetUrls) {
+      assert.ok(urls.includes(url), `${url} is available offline`);
+    }
     for (const url of urls) {
       const path = url === "/" ? "/index.html" : url;
       await access(fileURLToPath(new URL(`..${path}`, import.meta.url)));

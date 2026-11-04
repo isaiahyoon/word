@@ -1,0 +1,161 @@
+
+.chapter-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  padding: 23px 0 28px;
+  color: #a2a198;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 1.3px;
+}
+.footer-ornament {
+  color: var(--lavender);
+}
+.footer-ornament svg {
+  width: 11px;
+  height: 11px;
+  display: block;
+}
+.bottom-navigation {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.bottom-chapter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: #77786f;
+  text-align: left;
+  cursor: pointer;
+}
+.bottom-chapter:hover {
+  background: rgba(255, 255, 255, 0.62);
+}
+.bottom-chapter > span:first-child:last-child,
+.bottom-chapter > span:last-child {
+  color: #8daab0;
+  font-size: 18px;
+}
+.bottom-chapter.next {
+  text-align: right;
+}
+.bottom-chapter small,
+.bottom-chapter strong {
+  display: block;
+}
+.bottom-chapter small {
+  margin-bottom: 3px;
+  color: #999991;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.9px;
+}
+.bottom-chapter strong {
+  color: #4d4e48;
+  font-family: var(--serif);
+  font-size: 13px;
+  font-weight: 500;
+}
+body.is-krv-edition .bottom-chapter strong {
+  font-family: var(--serif-korean-ui);
+  letter-spacing: 0;
+}
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px;
+  padding-top: 24px;
+}
+.site-footer a,
+.site-footer button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #92928a;
+  font-size: 10px;
+  text-decoration: none;
+  transition: color 0.16s;
+}
+.external-link-icon {
+  display: inline-flex;
+  align-items: center;
+}
+.external-link-icon svg {
+  width: 9px;
+  height: 9px;
+  display: block;
+}
+.site-footer button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+}
+.site-footer a:hover,
+.site-footer button:hover {
+  color: #628694;
+}
+.site-footer a.site-footer-instagram:hover {
+  color: var(--coral);
+}
+.site-footer a.site-footer-github:hover {
+  color: #0c2340;
+}
+.mobile-chapter-cues {
+  display: none;
+}
+.mobile-menu,
+.sidebar-scrim {
+  display: none;
+}
+
+.app-shell.is-quiet-reading {
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  padding: 0;
+  background: var(--paper);
+}
+.app-shell.is-quiet-reading .topbar,
+.app-shell.is-quiet-reading .sidebar,
+.app-shell.is-quiet-reading .sidebar-scrim,
+.app-shell.is-quiet-reading .mobile-chapter-cues,
+.app-shell.is-quiet-reading .chapter-footer,
+.app-shell.is-quiet-reading .bottom-navigation,
+.app-shell.is-quiet-reading .site-footer {
+  display: none !important;
+}
+.app-shell.is-quiet-reading .workspace {
+  min-height: 100vh;
+  display: block;
+}
+.app-shell.is-quiet-reading .reader {
+  width: min(100%, 860px);
+  min-height: 100vh;
+  padding: 48px clamp(28px, 6vw, 80px) 88px;
+  animation: none;
+}
+.app-shell.has-copy-selection .reader {
+  padding-bottom: 132px;
+}
+.app-shell.is-quiet-reading .chapter-heading {
+  padding-top: 40px;
+}
+.app-shell.is-quiet-reading .verse {
+  padding: 11px 0;
+  font-size: calc(var(--type-quiet-reading) + var(--verse-font-size-adjustment));
+  line-height: var(--line-quiet-reading);
+}
+body.is-kjv-edition .app-shell.is-quiet-reading .verse {
+  font-size: calc(var(--type-quiet-reading) + var(--verse-font-size-adjustment));
+}

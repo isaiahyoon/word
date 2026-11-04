@@ -19,6 +19,20 @@ describe("development server", () => {
     await once(server, "close");
   });
 
+  async function fetchReaderStyles() {
+    const response = await fetch(origin);
+    const html = await response.text();
+    const paths = [...html.matchAll(/href="(\/styles\/[^"]+\.css)"/g)].map(([, path]) => path);
+    const stylesheets = await Promise.all(paths.map((path) => fetch(`${origin}${path}`)));
+
+    assert.ok(paths.includes("/styles/styles.css"));
+    const styles = await Promise.all(stylesheets.map(async (stylesheet) => {
+      assert.equal(stylesheet.status, 200);
+      return stylesheet.text();
+    }));
+    return styles.join("\n");
+  }
+
   it("serves the reader at the root", async () => {
     const response = await fetch(origin);
 
@@ -229,14 +243,11 @@ describe("development server", () => {
   });
 
   it("uses deep teal and brass accents in chapter navigation", async () => {
-    const [themeResponse, stylesResponse] = await Promise.all([
+    const [themeResponse, styles] = await Promise.all([
       fetch(`${origin}/styles/theme.css`),
-      fetch(`${origin}/styles/styles.css`),
+      fetchReaderStyles(),
     ]);
-    const [theme, styles] = await Promise.all([
-      themeResponse.text(),
-      stylesResponse.text(),
-    ]);
+    const theme = await themeResponse.text();
 
     assert.match(theme, /--deep-teal:/);
     assert.match(theme, /--brass:/);
@@ -246,7 +257,7 @@ describe("development server", () => {
   });
 
   it("uses the Cobalt Roof Tile gradient for the KRV backdrop", async () => {
-    const response = await fetch(`${origin}/styles/styles.css`);
+    const response = await fetch(`${origin}/styles/editions.css`);
     const styles = await response.text();
 
     assert.equal(response.status, 200);
@@ -256,23 +267,37 @@ describe("development server", () => {
     );
   });
 
-  it("reduces the verse loading message size", async () => {
-    const response = await fetch(`${origin}/styles/styles.css`);
-    const styles = await response.text();
+  it("keeps edition palettes and interface tokens in the edition sheet", async () => {
+    const [readerResponse, editionsResponse, stylesResponse] = await Promise.all([
+      fetch(origin),
+      fetch(`${origin}/styles/editions.css`),
+      fetch(`${origin}/styles/styles.css`),
+    ]);
+    const [readerHtml, editionsCss, stylesCss] = await Promise.all([
+      readerResponse.text(),
+      editionsResponse.text(),
+      stylesResponse.text(),
+    ]);
 
-    assert.equal(response.status, 200);
+    assert.match(readerHtml, /href="\/styles\/editions\.css"/);
+    assert.equal(editionsResponse.status, 200);
+    assert.match(editionsCss, /body\.is-diodati-edition\s*\{[^}]*--switcher-border:/s);
+    assert.match(editionsCss, /body\.is-luther1912-edition\s*\{[^}]*--book-current-fill:/s);
+    assert.doesNotMatch(stylesCss, /body\.is-[a-z0-9]+-edition\s*\{[^}]*--canvas:/s);
+  });
+
+  it("reduces the verse loading message size", async () => {
+    const styles = await fetchReaderStyles();
+
     assert.match(styles, /\.verse-list\[aria-busy="true"\]\s*\{[^}]*font-size:\s*14px;/s);
   });
 
   it("serves the accessible chapter sparkle trigger and metallic animation", async () => {
-    const [readerResponse, stylesResponse] = await Promise.all([
+    const [readerResponse, stylesCss] = await Promise.all([
       fetch(origin),
-      fetch(`${origin}/styles/styles.css`),
+      fetchReaderStyles(),
     ]);
-    const [readerHtml, stylesCss] = await Promise.all([
-      readerResponse.text(),
-      stylesResponse.text(),
-    ]);
+    const readerHtml = await readerResponse.text();
 
     assert.match(readerHtml, /class="chapter-sparkles" aria-hidden="true"/);
     assert.match(
@@ -284,14 +309,11 @@ describe("development server", () => {
   });
 
   it("documents testament shortcuts with their theme gradients", async () => {
-    const [readerResponse, stylesResponse] = await Promise.all([
+    const [readerResponse, styles] = await Promise.all([
       fetch(origin),
-      fetch(`${origin}/styles/styles.css`),
+      fetchReaderStyles(),
     ]);
-    const [html, styles] = await Promise.all([
-      readerResponse.text(),
-      stylesResponse.text(),
-    ]);
+    const html = await readerResponse.text();
 
     assert.match(html, /<kbd aria-label="O key">O<\/kbd>/);
     assert.match(html, /<kbd aria-label="N key">N<\/kbd>/);
@@ -380,14 +402,11 @@ describe("development server", () => {
   });
 
   it("serves the quiet reading toggle and focus-mode styles", async () => {
-    const [readerResponse, stylesResponse] = await Promise.all([
+    const [readerResponse, stylesCss] = await Promise.all([
       fetch(origin),
-      fetch(`${origin}/styles/styles.css`),
+      fetchReaderStyles(),
     ]);
-    const [readerHtml, stylesCss] = await Promise.all([
-      readerResponse.text(),
-      stylesResponse.text(),
-    ]);
+    const readerHtml = await readerResponse.text();
 
     assert.match(readerHtml, /id="quiet-view-toggle"/);
     assert.match(readerHtml, /aria-pressed="false"/);

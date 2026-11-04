@@ -2,6 +2,26 @@
   box-sizing: border-box;
 }
 
+:root:lang(ko) {
+  --serif: var(--serif-korean-ui);
+}
+
+:root:lang(ja) {
+  --serif: var(--serif-japanese);
+}
+
+:root:lang(it) {
+  --serif: var(--serif-italian);
+}
+
+:root:lang(fr) {
+  --serif: var(--serif-french);
+}
+
+:root:lang(es) {
+  --serif: var(--serif-spanish);
+}
+
 body {
   --about-blue-light: #e8f1f4;
   --about-blue-mid: #bed8ea;
@@ -18,7 +38,7 @@ body {
     linear-gradient(135deg, rgba(220, 232, 235, 0.38), transparent 42%, rgba(245, 236, 212, 0.26));
   background-size: 7px 7px, auto, auto, 100% 100%;
   background-attachment: fixed;
-  font-family: var(--sans);
+  font-family: var(--ui-serif);
   font-size: var(--type-copy);
   -webkit-font-smoothing: antialiased;
 }

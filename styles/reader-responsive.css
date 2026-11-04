@@ -1,0 +1,464 @@
+
+@media (min-width: 1250px) {
+  .chapter-heading {
+    padding-top: 66px;
+  }
+  .verse {
+    font-size: calc(19px + var(--verse-font-size-adjustment));
+  }
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    padding: 0 24px;
+  }
+  .topbar {
+    grid-template-columns: 235px minmax(220px, 1fr) auto;
+    gap: 16px;
+  }
+  .topbar-actions {
+    grid-column: 3;
+    grid-row: 1;
+    gap: 14px;
+  }
+  .topbar-note {
+    display: none;
+  }
+  .workspace {
+    grid-template-columns: 235px minmax(0, 1fr);
+  }
+  .mobile-chapter-cues {
+    position: fixed;
+    z-index: 4;
+    inset: 132px 0 0;
+    display: block;
+    pointer-events: none;
+  }
+  .mobile-chapter-button {
+    position: absolute;
+    top: 58%;
+    width: 36px;
+    height: 88px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transform: translateY(-50%);
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    pointer-events: auto;
+    touch-action: manipulation;
+  }
+  .mobile-chapter-button--previous {
+    left: 0;
+  }
+  .mobile-chapter-button--next {
+    right: 0;
+  }
+  .mobile-chapter-button::before {
+    position: absolute;
+    width: 20px;
+    height: 78px;
+    border: 1px solid rgba(125, 115, 171, 0.2);
+    border-left: 0;
+    border-radius: 0 13px 13px 0;
+    background: linear-gradient(
+      90deg,
+      rgba(220, 215, 247, 0.14),
+      rgba(220, 215, 247, 0.72) 78%,
+      rgba(255, 255, 255, 0.82)
+    );
+    box-shadow:
+      3px 2px 12px rgba(104, 92, 155, 0.12),
+      inset -2px 0 5px rgba(255, 255, 255, 0.8);
+    content: "";
+    transition:
+      filter 0.16s,
+      box-shadow 0.16s;
+  }
+  .mobile-chapter-button--next::before {
+    border: 1px solid rgba(214, 143, 169, 0.22);
+    border-right: 0;
+    border-radius: 13px 0 0 13px;
+    background: linear-gradient(
+      270deg,
+      rgba(250, 212, 224, 0.2),
+      rgba(250, 212, 224, 0.78) 78%,
+      rgba(255, 255, 255, 0.84)
+    );
+    box-shadow:
+      -3px 2px 12px rgba(196, 116, 149, 0.14),
+      inset 2px 0 5px rgba(255, 255, 255, 0.85);
+  }
+  .mobile-chapter-button::after {
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    width: 24px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.92),
+      transparent
+    );
+    content: "";
+    opacity: 0;
+    pointer-events: none;
+  }
+  .mobile-chapter-button--previous::after {
+    left: 4px;
+  }
+  .mobile-chapter-button--next::after {
+    right: 4px;
+    transform: translateY(-50%) scaleX(0.55);
+  }
+  .mobile-chapter-button.did-navigate::before {
+    animation: chapter-panel-press 0.42s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .mobile-chapter-button:hover::before,
+  .mobile-chapter-button:focus-visible::before,
+  .mobile-chapter-button:active::before {
+    filter: brightness(1.08);
+  }
+  .mobile-chapter-destination {
+    position: absolute;
+    z-index: 3;
+    top: 50%;
+    max-width: 116px;
+    overflow: hidden;
+    padding: 6px 9px;
+    border: 1px solid rgba(141, 180, 196, 0.34);
+    border-radius: 12px;
+    background: rgba(251, 250, 246, 0.96);
+    color: #51534f;
+    font-family: var(--serif);
+    font-size: 11px;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-50%);
+  }
+  .mobile-chapter-button--previous .mobile-chapter-destination {
+    left: 28px;
+  }
+  .mobile-chapter-button--next .mobile-chapter-destination {
+    right: 28px;
+  }
+  .mobile-chapter-button.did-navigate .mobile-chapter-destination {
+    animation: mobile-destination-peek 0.42s ease-out both;
+  }
+  .mobile-chapter-grip {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .mobile-chapter-grip i {
+    width: 2px;
+    height: 2px;
+    display: block;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.42;
+  }
+  .mobile-chapter-grip b {
+    margin-top: -3px;
+    font-family: var(--serif);
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1;
+  }
+  .mobile-chapter-button--previous .mobile-chapter-grip {
+    color: #6d6c9b;
+  }
+  .mobile-chapter-button--next .mobile-chapter-grip {
+    color: #aa6482;
+  }
+  .mobile-chapter-button:active .mobile-chapter-grip {
+    transform: scale(0.88);
+  }
+  .mobile-chapter-button--previous.did-navigate::after {
+    animation: mobile-chapter-sweep-previous 0.42s ease-out both;
+  }
+  .mobile-chapter-button--next.did-navigate::after {
+    animation: mobile-chapter-sweep-next 0.42s ease-out both;
+  }
+  .mobile-chapter-button.did-navigate .mobile-chapter-grip {
+    animation: chapter-tap 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .sidebar {
+    padding-right: 15px;
+  }
+  .reader {
+    padding-right: 34px;
+    padding-left: 34px;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    padding: 0 17px;
+  }
+  .topbar {
+    height: 132px;
+    align-content: center;
+    grid-template-columns: 32px 1fr auto;
+    gap: 10px;
+  }
+  .mobile-menu {
+    width: 30px;
+    height: 34px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    padding: 5px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+  .mobile-menu span {
+    width: 18px;
+    height: 1.5px;
+    background: #55574f;
+  }
+  .brand {
+    gap: 9px;
+  }
+  .brand-mark {
+    width: 29px;
+    height: 29px;
+  }
+  .brand-copy strong {
+    font-size: 20px;
+  }
+  .brand-copy small {
+    font-size: 7px;
+    letter-spacing: 0.9px;
+  }
+  .topbar-actions {
+    grid-column: 3;
+    grid-row: 1;
+    gap: 8px;
+  }
+  .topbar-about {
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .topbar-about::before {
+    width: 5px;
+    height: 5px;
+  }
+  .shortcuts-trigger {
+    width: 34px;
+    min-height: 34px;
+    padding: 0;
+  }
+  .shortcuts-trigger-label {
+    display: none;
+  }
+  .search-wrap {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin: 0 0 10px;
+  }
+  .search-box {
+    height: 40px;
+  }
+  .search-box input {
+    font-size: 16px;
+  }
+  .search-box kbd {
+    display: none;
+  }
+  .workspace {
+    min-height: calc(100vh - 133px);
+    display: block;
+  }
+  .sidebar {
+    position: fixed;
+    z-index: 31;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(310px, 86vw);
+    height: 100dvh;
+    min-height: 0;
+    padding: 24px 19px 16px;
+    border-right: 1px solid var(--line);
+    background: var(--paper);
+    box-shadow: 14px 0 45px rgba(42, 41, 37, 0.08);
+    transform: translateX(-105%);
+    transition: transform 0.24s ease;
+  }
+  .sidebar.is-open {
+    transform: translateX(0);
+  }
+  .sidebar-scrim {
+    position: fixed;
+    z-index: 30;
+    inset: 0;
+    display: block;
+    background: rgba(40, 40, 36, 0.28);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.24s ease;
+  }
+  .sidebar-scrim.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .reader {
+    padding: 17px 5px 35px;
+  }
+  .verse-actions {
+    right: max(14px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+  }
+  .scroll-to-top {
+    right: max(14px, env(safe-area-inset-right));
+    bottom: calc(70px + env(safe-area-inset-bottom));
+  }
+  .verse-copy-control {
+    min-height: 44px;
+  }
+  .verse-share-control {
+    flex: none;
+    width: 44px;
+    height: 44px;
+  }
+  .app-shell.has-copy-selection .reader {
+    padding-bottom: 136px;
+  }
+  .reader-topline {
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .breadcrumbs {
+    gap: 6px;
+    padding-top: 10px;
+    font-size: 8px;
+    letter-spacing: 0.55px;
+  }
+  .chapter-navigation {
+    gap: 5px;
+  }
+  .chapter-label {
+    display: none;
+  }
+  .chapter-arrow {
+    width: 29px;
+    height: 29px;
+  }
+  .chapter-select {
+    min-width: 62px;
+  }
+  .quiet-view-toggle {
+    min-height: 30px;
+    padding: 0 8px;
+    font-size: var(--type-micro);
+  }
+  .chapter-heading {
+    padding: 42px 0 23px;
+  }
+  .app-shell.is-quiet-reading .reader {
+    padding: 28px 20px 72px;
+  }
+  .app-shell.is-quiet-reading .reader-topline {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+  .app-shell.is-quiet-reading .breadcrumbs {
+    grid-column: 1 / -1;
+  }
+  .app-shell.is-quiet-reading .chapter-navigation {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .app-shell.is-quiet-reading .quiet-view-toggle {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+  }
+  .app-shell.is-quiet-reading .chapter-heading {
+    padding-top: 32px;
+  }
+  .app-shell.is-quiet-reading .verse {
+    font-size: calc(var(--type-quiet-reading-mobile) + var(--verse-font-size-adjustment));
+    line-height: 1.85;
+  }
+  body.is-kjv-edition .app-shell.is-quiet-reading .verse {
+    font-size: calc(var(--type-quiet-reading-mobile) + var(--verse-font-size-adjustment));
+  }
+  .chapter-heading h1 {
+    font-size: 45px;
+  }
+  .shortcuts-panel {
+    padding: 23px 21px 19px;
+  }
+  .verse {
+    grid-template-columns: 27px minmax(0, 1fr);
+    gap: 5px;
+    padding: 7px 4px 7px 0;
+    font-size: 17px;
+    line-height: 1.72;
+  }
+  .verse-list { padding: 16px 10px 20px; }
+  .verse-section-heading { margin-left: 32px; }
+  .verse-number {
+    font-size: 8px;
+  }
+  .reader-rule {
+    margin-bottom: 19px;
+  }
+}
+
+/* Keep the four actions on one row by scaling type and padding with the row width. */
+@container (max-width: 23rem) {
+  .verse-actions > button {
+    font-size: clamp(7px, 2.6cqi, var(--type-control-small));
+  }
+  .verse-copy-control {
+    gap: 2cqi;
+    padding: 0 2.4cqi;
+  }
+  .verse-cut-control {
+    padding: 0 2.4cqi;
+  }
+  .verse-clear-control {
+    gap: 1.2cqi;
+    padding: 0 2.4cqi 0 2cqi;
+  }
+}
+
+/* Drop the decorative copy icon when even scaled type cannot fit the row. */
+@container (max-width: 17rem) {
+  .copy-control-icon {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-box:focus-within {
+    animation: none;
+    box-shadow: 0 0 0 3px rgba(199, 169, 93, 0.3), 0 0 16px rgba(191, 142, 49, 0.24);
+  }
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
