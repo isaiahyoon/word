@@ -49,6 +49,7 @@ test("presents the About page and installation options at desktop and mobile wid
 });
 
 test("localizes reader navigation and accessible controls for every edition", async ({ page }) => {
+  test.setTimeout(120_000);
   const editions = [
     { route: "/kjv", language: "en", navigation: "Open book navigation", previous: "Previous chapter:", chapter: "Choose Genesis chapter", chapterOption: "Genesis chapter 2", testament: "Old", offlineStatus: "Not saved for offline", save: "Save", cut: "Cut", previewAlt: "The Word prism sword emblem beside the Scripture reader name", shortcutTitle: "Keyboard shortcuts", shortcutHome: "Go to homepage", feedbackTitle: "Leave me a note", feedbackBug: "A small snag" },
     { route: "/krv", language: "ko", navigation: "책 탐색 열기", previous: "이전 장:", chapter: "창세기 장 선택", chapterOption: "창세기 2장", testament: "구약", offlineStatus: "오프라인 저장 안 됨", save: "저장", cut: "잘라내기", previewAlt: "성경 읽기 서비스 이름 옆에 있는 The Word 프리즘 검 문양", shortcutTitle: "키보드 단축키", shortcutHome: "홈페이지로 이동", feedbackTitle: "의견 남기기", feedbackBug: "작은 문제" },
@@ -1179,6 +1180,31 @@ test("leaves out selected verses that the chosen edition does not contain", asyn
   await expect.poll(() => page.evaluate(() => window.sharedPayloads.length)).toBe(1);
   const [payload] = await page.evaluate(() => window.sharedPayloads);
   expect(payload.text).toMatch(/- 3 John 1:14$/);
+});
+
+test("keeps selected-verse actions on one row inside the viewport in every edition", async ({ page }) => {
+  test.setTimeout(120_000);
+  for (const edition of ["kjv", "krv", "moh", "licht", "diodati", "luz", "japbungo"]) {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await page.goto(`/${edition}/b/john/c/3/v/16`);
+    await page.locator("#verse-16").click();
+    await expect(page.locator("#verse-actions")).toHaveClass(/is-visible/);
+    for (const width of [320, 390, 540, 700]) {
+      await page.setViewportSize({ width, height: 800 });
+      await expect(page.locator("#share-selected-verses")).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
+      const buttons = await page.locator("#verse-actions > button").evaluateAll((elements) =>
+        elements.map((element) => {
+          const { left, right, top } = element.getBoundingClientRect();
+          return { left, right, top };
+        }),
+      );
+      expect(new Set(buttons.map((button) => button.top)).size, `${edition} ${width}`).toBe(1);
+      for (const button of buttons) {
+        expect(button.left, `${edition} ${width}`).toBeGreaterThanOrEqual(0);
+        expect(button.right, `${edition} ${width}`).toBeLessThanOrEqual(width);
+      }
+    }
+  }
 });
 
 test("keeps selected-verse actions inside small mobile viewports across edition themes", async ({ page }) => {

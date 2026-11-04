@@ -424,8 +424,10 @@
 }
 
 /* Keep the four actions on one row by scaling type and padding with the row width. */
-@container (max-width: 23rem) {
+@container (max-width: 40rem) {
   .verse-actions > button {
+    min-width: 0;
+    overflow: hidden;
     font-size: clamp(7px, 2.6cqi, var(--type-control-small));
   }
   .verse-copy-control {
