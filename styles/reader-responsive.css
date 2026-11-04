@@ -13,7 +13,7 @@
     padding: 0 24px;
   }
   .topbar {
-    grid-template-columns: 235px minmax(220px, 1fr) auto;
+    grid-template-columns: minmax(0, 235px) minmax(120px, 1fr) auto;
     gap: 16px;
   }
   .topbar-actions {
@@ -26,6 +26,9 @@
   }
   .workspace {
     grid-template-columns: 235px minmax(0, 1fr);
+  }
+  .reader-topline {
+    flex-wrap: wrap;
   }
   .mobile-chapter-cues {
     position: fixed;
@@ -344,7 +347,9 @@
     gap: 12px;
   }
   .breadcrumbs {
-    gap: 6px;
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: 2px 6px;
     padding-top: 10px;
     font-size: 8px;
     letter-spacing: 0.55px;

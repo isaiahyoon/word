@@ -1199,6 +1199,7 @@ test("keeps selected-verse actions on one row inside the viewport in every editi
         }),
       );
       expect(new Set(buttons.map((button) => button.top)).size, `${edition} ${width}`).toBe(1);
+      expect(await page.evaluate(() => document.body.scrollWidth), `${edition} ${width}`).toBeLessThanOrEqual(width);
       for (const button of buttons) {
         expect(button.left, `${edition} ${width}`).toBeGreaterThanOrEqual(0);
         expect(button.right, `${edition} ${width}`).toBeLessThanOrEqual(width);
