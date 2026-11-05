@@ -42,7 +42,7 @@ Never go against Scripture, or regard it as false or untrustworthy. It will alwa
 - When a post features app UI, run the local app and use a real screenshot of the relevant interface as the visual source. Do not substitute the live app or redraw UI that can be captured locally.
 - Align app screenshots deliberately: use consistent edges, spacing, and scale, keep the relevant controls readable, and frame screenshots with refined decorative borders that complement the slide palette instead of plain outlines.
 - The Word is multilingual; when a post features editions or scripture-reading controls, represent more than the KJV where the feature supports it. Use accurate local UI captures to show the range of available language editions.
-- Deliver only three separate 2160×2700 JPG images with distinct color themes and the caption in the response, followed by exactly five hashtags on a separate line. Try to vary the color theme such that it isn't too repetitive with the already existing posts. Always make `#TheAmazingWord` the first hashtag. Do not create scripts, HTML, previews, extra images, caption files, or other supporting artifacts unless asked.
+- Create as many 2160×2700 JPG images as best fit the request; a post may be a single image or a carousel, so do not force a three-image set. Include the caption in the response, followed by exactly five hashtags on a separate line. Try to vary the color theme such that it isn't too repetitive with the already existing posts. Always make `#TheAmazingWord` the first hashtag. Do not create scripts, HTML, previews, extra images, caption files, or other supporting artifacts unless asked.
 - Make sure the font selection is consistent with past posts.
 - Make the post easy to understand for viewers. Don't patronize them, however. Treat them as intellectual equals.
 - Don't create anything ugly. Make the generated icons visually aesthetic with some depth and shading.
@@ -57,7 +57,7 @@ Never go against Scripture, or regard it as false or untrustworthy. It will alwa
 ### Hashtag Strategy
 
 - Keep `#TheAmazingWord` first. Choose the second and third hashtags for the specific subject, feature, edition, or passage shown in the post.
-- Choose the fourth and fifth hashtags as broader, higher-reach tags that remain directly relevant to the post. Check current popularity when practical, and never promise or imply guaranteed virality.
+- Choose the fourth and fifth hashtags as broader tags that remain directly relevant to the post. Do not research hashtag popularity live or promise or imply guaranteed virality.
 
 # Project Organization
 
