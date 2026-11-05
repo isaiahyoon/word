@@ -66,6 +66,7 @@ describe("scripture routes", () => {
         chapter: 1,
         range: { start: 1, end: 1 },
         legacy: false,
+        editionRoot: true,
       });
     }
 

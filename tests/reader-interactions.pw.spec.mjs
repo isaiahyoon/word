@@ -313,6 +313,51 @@ test("renders the wordmark with a muted brass body and navy outline", async ({ p
   )).toBe("text-glimmer");
 });
 
+test("brand link returns to the active edition root", async ({ page }) => {
+  await page.goto("/moh/b/genesis/c/1");
+  const brand = page.locator(".brand");
+  await expect(brand).toHaveAttribute("href", "/moh");
+
+  await brand.click();
+
+  await expect(page).toHaveURL(/\/moh$/);
+  await expect(page.locator("html")).toHaveAttribute("lang", "fr");
+  await expect(page.locator("#verse-1")).toBeVisible();
+});
+
+test("brand link clears highlighted verses and goes to the base URL on KJV", async ({ page }) => {
+  await page.goto("/kjv/b/john/c/3/v/16");
+  const brand = page.locator(".brand");
+  await expect(brand).toHaveAttribute("href", "/");
+
+  await page.locator("#verse-16").click();
+  await expect(page.locator(".verse.is-copy-selected")).toHaveCount(1);
+  await page.locator("#verse-16 .verse-text").selectText();
+
+  await brand.click();
+
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.locator(".verse.is-copy-selected")).toHaveCount(0);
+  expect(await page.evaluate(() => window.getSelection().toString())).toBe("");
+  expect(await page.evaluate(() =>
+    Object.values(localStorage).some((value) => value.includes('"selectedVerses":[16]')),
+  )).toBe(false);
+});
+
+test("brand link lands at the top of the page, not at the saved verse", async ({ page }) => {
+  for (const [route, home] of [["/kjv", "/"], ["/moh", "/moh"]]) {
+    await page.goto(`${route}/b/psalms/c/119/v/170`);
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(500);
+
+    await page.locator(".brand").click();
+
+    await expect(page).toHaveURL(new RegExp(`${home}$`));
+    await expect(page.locator("#verse-1")).toBeVisible();
+    await page.waitForTimeout(1200);
+    expect(await page.evaluate(() => window.scrollY), route).toBe(0);
+  }
+});
+
 test("accents the four-color brand mark without changing its spin", async ({ page }) => {
   await page.goto("/");
   const mark = page.locator(".brand-mark");
