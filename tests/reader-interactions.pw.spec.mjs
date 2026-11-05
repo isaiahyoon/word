@@ -325,10 +325,33 @@ test("brand link returns to the active edition root", async ({ page }) => {
   await expect(page.locator("#verse-1")).toBeVisible();
 });
 
-test("brand link clears highlighted verses and goes to the base URL on KJV", async ({ page }) => {
+for (const segment of ["kjv", "krv", "diodati", "licht", "japbungo", "moh", "luz"]) {
+  test(`brand link on ${segment} returns to its edition root`, async ({ page }) => {
+    await page.goto(`/${segment}/b/1-samuel/c/1/v/1`);
+    const brand = page.locator(".brand");
+    await expect(brand).toHaveAttribute("href", `/${segment}`);
+
+    await brand.click();
+
+    await expect(page).toHaveURL(new RegExp(`/${segment}$`));
+    await expect(page.locator("#verse-1")).toBeVisible();
+  });
+
+  test(`h shortcut on ${segment} returns to its edition root`, async ({ page }) => {
+    await page.goto(`/${segment}/b/1-samuel/c/1/v/1`);
+    await expect(page.locator(".brand")).toHaveAttribute("href", `/${segment}`);
+
+    await page.keyboard.press("h");
+
+    await expect(page).toHaveURL(new RegExp(`/${segment}$`));
+    await expect(page.locator("#verse-1")).toBeVisible();
+  });
+}
+
+test("brand link clears highlighted verses and goes to the KJV edition root", async ({ page }) => {
   await page.goto("/kjv/b/john/c/3/v/16");
   const brand = page.locator(".brand");
-  await expect(brand).toHaveAttribute("href", "/");
+  await expect(brand).toHaveAttribute("href", "/kjv");
 
   await page.locator("#verse-16").click();
   await expect(page.locator(".verse.is-copy-selected")).toHaveCount(1);
@@ -336,7 +359,7 @@ test("brand link clears highlighted verses and goes to the base URL on KJV", asy
 
   await brand.click();
 
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/kjv$/);
   await expect(page.locator(".verse.is-copy-selected")).toHaveCount(0);
   expect(await page.evaluate(() => window.getSelection().toString())).toBe("");
   expect(await page.evaluate(() =>
@@ -345,7 +368,7 @@ test("brand link clears highlighted verses and goes to the base URL on KJV", asy
 });
 
 test("brand link lands at the top of the page, not at the saved verse", async ({ page }) => {
-  for (const [route, home] of [["/kjv", "/"], ["/moh", "/moh"]]) {
+  for (const [route, home] of [["/kjv", "/kjv"], ["/moh", "/moh"]]) {
     await page.goto(`${route}/b/psalms/c/119/v/170`);
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(500);
 
