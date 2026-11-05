@@ -481,9 +481,7 @@ function showEdition(editionId) {
   if (!edition || !store) throw new RangeError(`Unknown edition: ${editionId}`);
 
   state.editionId = editionId;
-  elements.brand.href = editionId === DEFAULT_EDITION
-    ? appBasePath
-    : new URL(edition.routeSegment, document.baseURI).pathname;
+  elements.brand.href = new URL(edition.routeSegment, document.baseURI).pathname;
   scripture = store;
   document.documentElement.lang = edition.language;
   uiLocale = getUiLocale(edition.language);
@@ -659,8 +657,9 @@ async function restoreLocationFromPath() {
 }
 
 function navigateHome() {
-  if (window.location.pathname !== appBasePath || window.location.search || window.location.hash) {
-    window.history.pushState(null, "", appBasePath);
+  const editionRootPath = new URL(EDITIONS[state.editionId].routeSegment, document.baseURI).pathname;
+  if (window.location.pathname !== editionRootPath || window.location.search || window.location.hash) {
+    window.history.pushState(null, "", editionRootPath);
   }
   void restoreLocationFromPath();
 }
