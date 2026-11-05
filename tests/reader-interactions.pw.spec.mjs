@@ -381,28 +381,35 @@ test("brand link lands at the top of the page, not at the saved verse", async ({
   }
 });
 
-test("accents the four-color brand mark without changing its spin", async ({ page }) => {
-  await page.goto("/");
-  const mark = page.locator(".brand-mark");
-  const tiles = mark.locator("i");
-  await expect(tiles).toHaveCount(4);
-  expect(await tiles.evaluateAll((elements) => elements.map((element) => getComputedStyle(element).backgroundColor))).toEqual([
-    "rgb(222, 254, 252)",
-    "rgb(220, 215, 247)",
-    "rgb(250, 212, 224)",
-    "rgb(214, 242, 185)",
-  ]);
-  expect(await tiles.evaluateAll((elements) => elements.map((element) => getComputedStyle(element).borderTopLeftRadius))).toEqual([
-    "5px",
-    "1.5px",
-    "1.5px",
-    "1.5px",
-  ]);
-  await expect(tiles.first()).toHaveCSS("border-top-color", "rgba(34, 59, 85, 0.52)");
-  expect(await tiles.first().evaluate((element) => getComputedStyle(element).boxShadow)).toContain("169, 124, 53");
+test("adds gold borders and sparkles to the four-square brand mark", async ({ page }) => {
+  for (const route of ["/", "/about?lang=en", "/404.html"]) {
+    await page.goto(route);
+    const mark = page.locator(".brand-mark");
+    const tiles = mark.locator("i");
+    await expect(tiles).toHaveCount(4);
+    expect(await tiles.evaluateAll((elements) => elements.map((element) => getComputedStyle(element).backgroundColor))).toEqual([
+      "rgb(222, 254, 252)",
+      "rgb(220, 215, 247)",
+      "rgb(250, 212, 224)",
+      "rgb(255, 254, 207)",
+    ]);
+    await expect(tiles.first()).toHaveCSS("border-top-color", "rgba(169, 124, 53, 0.82)");
+    expect(await tiles.first().evaluate((element) => getComputedStyle(element).boxShadow))
+      .toContain("169, 124, 53");
 
-  await mark.hover();
-  await expect(mark).toHaveCSS("animation-name", "logo-spin-settle");
+    if (route === "/") {
+      await mark.hover();
+      await expect(mark).toHaveCSS("animation-name", "logo-spin-settle");
+      await expect.poll(() =>
+        mark.evaluate((element) => getComputedStyle(element, "::after").animationName),
+      ).toBe("brand-mark-sparkle");
+    } else {
+      await page.locator(".brand").hover();
+      await expect.poll(() =>
+        mark.evaluate((element) => getComputedStyle(element, "::after").animationName),
+      ).toBe("brand-mark-sparkle");
+    }
+  }
 });
 
 test("keeps shortcut keycaps inside the dialog on short mobile screens", async ({ page }) => {
