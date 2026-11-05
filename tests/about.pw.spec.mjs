@@ -43,10 +43,24 @@ test("localizes About page content, metadata, and accessible names", async ({ pa
   }
 });
 
-test("saves the chosen install language and opens the reader in that edition", async ({ page }) => {
+test("prepares the selected manifest before offering the native install prompt", async ({ page }) => {
   await page.goto("/about?lang=en");
 
   await page.locator('input[name="install-language"][value="rv1865"]').check();
+  await page.getByRole("button", { name: ABOUT_LOCALES.en.installLanguageContinue }).click();
+  await expect(page).toHaveURL(/\/about\?lang=en&install=rv1865#install-title$/);
+  await expect(page.locator('link[rel="manifest"]'))
+    .toHaveAttribute("href", "/assets/install-manifests/rv1865.webmanifest");
+  const cdp = await page.context().newCDPSession(page);
+  try {
+    const manifest = await cdp.send("Page.getAppManifest");
+    expect(manifest.errors).toEqual([]);
+    expect(manifest.manifest.startUrl).toBe(new URL("/?install=rv1865", page.url()).href);
+    expect((await cdp.send("Page.getInstallabilityErrors")).installabilityErrors).toEqual([]);
+  } finally {
+    await cdp.detach();
+  }
+  await expect(page.locator("#install-language-status")).toHaveText(ABOUT_LOCALES.en.installLanguageSaved);
   await page.evaluate(() => {
     const event = new Event("beforeinstallprompt", { cancelable: true });
     event.prompt = async () => {
@@ -57,7 +71,6 @@ test("saves the chosen install language and opens the reader in that edition", a
   });
   await page.getByRole("button", { name: ABOUT_LOCALES.en.installLanguageContinue }).click();
 
-  await expect(page.locator("#install-language-status")).toHaveText(ABOUT_LOCALES.en.installLanguageSaved);
   await expect.poll(() => page.evaluate(() => window.installPromptRequested)).toBe(true);
   await expect.poll(() => page.evaluate(() => window.localStorage.getItem("the-word.default-edition.v1")))
     .toBe("rv1865");
@@ -79,10 +92,71 @@ test("saves the install language when the browser uses manual installation steps
   await page.locator('input[name="install-language"][value="japbungo"]').check();
   await page.getByRole("button", { name: ABOUT_LOCALES.fr.installLanguageContinue }).click();
 
+  await expect(page).toHaveURL(/install=japbungo/);
   await expect(page.locator("#install-language-status"))
     .toHaveText(ABOUT_LOCALES.fr.installLanguageSaved);
+  await page.locator("#about-language").click();
+  await page.getByRole("option", { name: "English" }).click();
+  await expect(page.locator("#install-language-status"))
+    .toHaveText(ABOUT_LOCALES.en.installLanguageSaved);
   await expect.poll(() => page.evaluate(() => window.localStorage.getItem("the-word.default-edition.v1")))
     .toBe("japbungo");
+});
+
+for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
+  test(`carries each selected edition to isolated installation storage at ${viewport.width}px`, async ({ page, browser }) => {
+    await page.setViewportSize(viewport);
+    for (const edition of Object.values(EDITIONS)) {
+      await page.goto("/about?lang=en");
+      await page.locator(`input[name="install-language"][value="${edition.id}"]`).check();
+      await page.getByRole("button", { name: ABOUT_LOCALES.en.installLanguageContinue }).click();
+      await expect(page).toHaveURL(new RegExp(`install=${edition.id}`));
+      const manifestUrl = await page.locator('link[rel="manifest"]').getAttribute("href");
+      const manifest = await page.evaluate(async (url) => (await fetch(url)).json(), manifestUrl);
+      expect(manifest.start_url).toBe(`/?install=${edition.id}`);
+
+      const installedContext = await browser.newContext({ viewport });
+      try {
+        await installedContext.route(/^https:\/\/(fonts\.(googleapis|gstatic)\.com|cloud\.umami\.is)\//, (route) => route.abort());
+        const installedPage = await installedContext.newPage();
+        await installedPage.goto(new URL(manifest.start_url, page.url()).href);
+        await expect(installedPage.locator("#verse-1")).toBeVisible();
+        await expect(installedPage.locator("html")).toHaveAttribute("lang", edition.language);
+        await expect.poll(() => installedPage.evaluate(() => localStorage.getItem("the-word.default-edition.v1")))
+          .toBe(edition.id);
+      } finally {
+        await installedContext.close();
+      }
+    }
+  });
+}
+
+test("uses a later reader edition on subsequent installed launches", async ({ page }) => {
+  await page.goto("/?install=rv1865");
+  await expect(page.locator("html")).toHaveAttribute("lang", "es");
+  await page.locator("#edition-select").click();
+  await page.locator('#edition-options [data-edition="krv"]').click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "ko");
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("the-word.default-edition.v1")))
+    .toBe("krv");
+  await page.goto("/?install=rv1865");
+  await expect(page.locator("html")).toHaveAttribute("lang", "ko");
+  await page.goto("/diodati");
+  await expect(page.locator("html")).toHaveAttribute("lang", "it");
+});
+
+test("redirects an iOS-style home-screen About URL to the selected reader", async ({ page }) => {
+  await page.addInitScript(() => Object.defineProperty(navigator, "standalone", { value: true }));
+  await page.goto("/about?lang=en&install=japbungo");
+  await expect(page).toHaveURL(/\/\?install=japbungo$/);
+  await expect(page.locator("html")).toHaveAttribute("lang", "ja");
+});
+
+test("ignores an unknown installation edition", async ({ page }) => {
+  await page.goto("/?install=constructor");
+  await expect(page.locator("#verse-1")).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("the-word.default-edition.v1"))).toBeNull();
 });
 
 test("supports keyboard selection of the default install language", async ({ page }) => {

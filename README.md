@@ -48,12 +48,14 @@ and without him was not any thing made that was made.
 - The reader remembers the current edition, passage, focused verse, and selected verses on this device, including after reopening the app.
 - Shared links use a high-resolution branded preview featuring The Amazing Word's sword emblem.
 - Every page, including About, the 404 page, and the design studies, carries the same preview so any shared link unfurls with the sword emblem.
-- Choose a default reading language before installing. The installed app opens in that edition on its next visit; the choice is stored on the device and can be changed by switching editions in the reader. Install it as a standalone web app on Mac, iPhone, Android, or Windows using the browser's install option.
+- Choose a default reading language before installing. The install entry point carries that choice even when the installed app has separate storage; switching editions in the reader updates the default for that app or browser. Install it as a standalone web app on Mac, iPhone, Android, or Windows using the browser's install option.
 - Save any edition for offline reading from the Reading Edition panel. Each edition is saved separately and can be removed at any time.
 
 ## App Installation
 
-Before installing, choose a default reading language in the About page's install section. On browsers that support it, **Continue to install** opens the browser's native installation prompt; otherwise, the language is saved and you can follow the platform steps below. The installed app opens in the chosen edition on its next visit. The choice is stored on the device and follows later edition changes in the reader.
+Before installing, choose a default reading language in the About page's install section and select **Continue to install**. Install from the resulting page using the browser menu below; if the browser offers an installation prompt, select **Continue to install** again to open it. The selected edition is included in the installation entry point so a new installed app can use it even when its storage is separate from the browser. Browser installation behavior varies by platform. To change the default afterwards, open the Reading Edition picker in the installed app or browser and select another edition; future launches in that same storage use the new choice. Browser and installed-app preferences may be separate. If storage is cleared or unavailable, the original installation choice may be used again.
+
+Edition-specific install manifests are generated from `js/editions.mjs` and the main manifest with `npm run build:install-manifests`; regenerate them when edition names or the shared manifest change.
 
 To install it on Mac, open the site in Safari and choose **File → Add to Dock**. On iPhone, open it in Safari, tap **Share**, then **Add to Home Screen**. On Android, open it in Chrome, open the menu, and choose **Install app** or **Add to Home screen**. On Windows, open the site in Microsoft Edge and choose **Settings and more → Apps → Install this site as an app**; in Chrome, choose **Cast, save, and share → Install page as app**. Menu labels may vary by browser version. The installed app loads the latest version when it is online. Offline, it opens the reader from the last saved copy of the app and can read only the editions saved for offline use (see below).
 

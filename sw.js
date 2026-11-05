@@ -1,12 +1,15 @@
-const SHELL_CACHE = "the-word-shell-v1";
+const SHELL_CACHE = "the-word-shell-v2";
 const EDITION_CACHE = "the-word-editions";
 const FONT_CACHE = "the-word-fonts-v1";
 const FONT_HOSTS = new Set(["fonts.googleapis.com", "fonts.gstatic.com"]);
 const SHELL_URLS = [
   "/",
   "/index.html",
+  "/about.html",
   "/manifest.webmanifest",
   "/styles/theme.css",
+  "/styles/about.css",
+  "/styles/brand-mark.css",
   "/styles/typography.css",
   "/styles/editions.css",
   "/styles/styles.css",
@@ -19,6 +22,8 @@ const SHELL_URLS = [
   "/styles/reader-effects.css",
   "/styles/reader-responsive.css",
   "/js/app.js",
+  "/js/about.js",
+  "/js/about-locales.mjs",
   "/js/books.mjs",
   "/js/chapter-picker.js",
   "/js/edition-picker.js",
@@ -83,8 +88,10 @@ async function navigationResponse(request) {
   try {
     return await fetch(request);
   } catch (error) {
-    const reader = await caches.match("/index.html", { cacheName: SHELL_CACHE });
-    if (reader) return reader;
+    const pathname = new URL(request.url).pathname;
+    const fallback = pathname === "/about" || pathname === "/about/" ? "/about.html" : "/index.html";
+    const page = await caches.match(fallback, { cacheName: SHELL_CACHE });
+    if (page) return page;
     throw error;
   }
 }

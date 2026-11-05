@@ -182,10 +182,23 @@ function readSavedReaderState() {
 function readDefaultEdition() {
   try {
     const editionId = window.localStorage.getItem(defaultEditionStorageKey);
-    return EDITIONS[editionId] ? editionId : null;
+    return Object.hasOwn(EDITIONS, editionId) ? editionId : null;
   } catch {
     return null;
   }
+}
+
+function initialInstallEdition() {
+  const editionId = new URLSearchParams(window.location.search).get("install");
+  if (!Object.hasOwn(EDITIONS, editionId)) return null;
+  const savedEdition = readDefaultEdition();
+  if (savedEdition) return savedEdition;
+  try {
+    window.localStorage.setItem(defaultEditionStorageKey, editionId);
+  } catch (error) {
+    logger.warn("Could not save the installed app's default edition", { editionId, error });
+  }
+  return editionId;
 }
 
 function saveReaderState() {
@@ -634,10 +647,9 @@ async function restoreLocationFromPath() {
 
   const savedState = readSavedReaderState();
   const savedLocation = route.home ? savedState : null;
-  await activateEdition((route.home ? readDefaultEdition() : null) ?? savedLocation?.editionId ?? route.editionId);
+  await activateEdition((route.home ? readDefaultEdition() ?? initialInstallEdition() : null) ?? savedLocation?.editionId ?? route.editionId);
   const canRestoreSavedLocation = savedLocation &&
     savedLocation.chapter <= scripture.chapterCount(savedLocation.book);
-  if (savedLocation && !canRestoreSavedLocation) await activateEdition(route.editionId);
 
   const routeMatchesSavedState = savedState && !route.home &&
     savedState.editionId === route.editionId &&
@@ -709,7 +721,7 @@ async function initialize() {
   void registerServiceWorker();
   const initialRoute = scriptureRoutes.parse(window.location.pathname);
   const savedEditionId = initialRoute?.home
-    ? readDefaultEdition() ?? readSavedReaderState()?.editionId
+    ? readDefaultEdition() ?? initialInstallEdition() ?? readSavedReaderState()?.editionId
     : null;
   let editionLoadError = null;
   await activateEdition(savedEditionId ?? initialRoute?.editionId ?? DEFAULT_EDITION)

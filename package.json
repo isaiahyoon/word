@@ -5,6 +5,7 @@
     "build:luther": "node tools/build-luther-data.mjs",
     "build:martin": "node tools/build-martin-data.mjs",
     "build:rv1865": "node tools/build-rv1865-data.mjs",
+    "build:install-manifests": "node tools/build-install-manifests.mjs",
     "import:rv1865": "node tools/import-rv1865-source.mjs",
     "lint:css": "stylelint \"**/*.css\"",
     "test": "node --test tests/*.test.mjs",

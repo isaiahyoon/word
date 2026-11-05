@@ -3,6 +3,7 @@ import { once } from "node:events";
 import { readdir, readFile } from "node:fs/promises";
 import { after, before, describe, it } from "node:test";
 import { createDevServer } from "../tools/dev-server.mjs";
+import { EDITIONS } from "../js/editions.mjs";
 
 describe("development server", () => {
   const server = createDevServer();
@@ -81,6 +82,7 @@ describe("development server", () => {
     assert.equal(slashResponse.status, 200);
     assert.match(html, /<title>About — The Amazing Word<\/title>/);
     assert.match(html, /rel="apple-touch-icon" href="\/assets\/apple-touch-icon\.png"/);
+    assert.match(html, /name="apple-mobile-web-app-capable" content="yes"/);
     assert.match(html, /The King James Version is the canonical foundation/);
     assert.match(html, /Add to Dock/);
     assert.match(html, /Add to Home Screen/);
@@ -89,6 +91,22 @@ describe("development server", () => {
     assert.match(html, /id="install-language-form"/);
     assert.match(html, /https:\/\/buymeacoffee\.com\/isaiahyoon/);
     assert.match(slashHtml, /id="install-title"/);
+  });
+
+  it("serves an up-to-date install manifest for each edition", async () => {
+    const shared = await (await fetch(`${origin}/manifest.webmanifest`)).json();
+    for (const edition of Object.values(EDITIONS)) {
+      const response = await fetch(`${origin}/assets/install-manifests/${edition.id}.webmanifest`);
+      assert.equal(response.status, 200);
+      assert.match(response.headers.get("content-type"), /application\/manifest\+json/);
+      assert.deepEqual(await response.json(), {
+        ...shared,
+        name: edition.appName,
+        short_name: edition.appName,
+        lang: edition.language,
+        start_url: `/?install=${edition.id}`,
+      });
+    }
   });
 
   it("reports server liveness at /health", async () => {

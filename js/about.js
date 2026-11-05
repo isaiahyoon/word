@@ -1,6 +1,7 @@
 import { ABOUT_LOCALES } from "./about-locales.mjs";
 import { EDITIONS } from "./editions.mjs";
 import { logger } from "./logger.js";
+import { registerServiceWorker } from "./offline.js";
 
 const languageTrigger = document.querySelector("#about-language");
 const languageMenu = document.querySelector("#about-language-options");
@@ -12,11 +13,31 @@ const installLanguageStatus = document.querySelector("#install-language-status")
 const installLanguageOptions = document.querySelector("#install-language-options");
 let activeLanguage = "en";
 let installPromptEvent = null;
+let installStatusKey = null;
+const installEditionId = new URLSearchParams(window.location.search).get("install");
+const validInstallEdition = Object.hasOwn(EDITIONS, installEditionId) ? installEditionId : null;
+
+if (validInstallEdition) {
+  if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone) {
+    window.location.replace(`/?install=${encodeURIComponent(validInstallEdition)}`);
+  } else {
+    const manifest = document.createElement("link");
+    manifest.rel = "manifest";
+    manifest.href = `/assets/install-manifests/${validInstallEdition}.webmanifest`;
+    document.head.append(manifest);
+  }
+}
+void registerServiceWorker();
+
+function setInstallStatus(key) {
+  installStatusKey = key;
+  installLanguageStatus.textContent = ABOUT_LOCALES[activeLanguage][key];
+}
 
 function getDefaultEditionId() {
   try {
     const editionId = window.localStorage.getItem(defaultEditionKey);
-    return EDITIONS[editionId] ? editionId : null;
+    return Object.hasOwn(EDITIONS, editionId) ? editionId : null;
   } catch (error) {
     logger.warn("Could not read the default reading language", { error });
     return null;
@@ -66,6 +87,7 @@ function applyLanguage(language) {
   for (const option of languageOptions) {
     option.setAttribute("aria-selected", String(option === selectedOption));
   }
+  if (installStatusKey) setInstallStatus(installStatusKey);
 }
 
 function closeLanguageMenu({ restoreFocus = false } = {}) {
@@ -106,10 +128,13 @@ for (const [editionId, edition] of Object.entries(EDITIONS)) {
   installLanguageOptions.append(label);
 }
 
-const initialInstallEdition = getDefaultEditionId() ?? Object.values(EDITIONS)
+const initialInstallEdition = validInstallEdition ?? getDefaultEditionId() ?? Object.values(EDITIONS)
   .find((edition) => edition.language === activeLanguage)?.id ?? "kjv";
 const initialInstallOption = installLanguageForm.querySelector(`[value="${initialInstallEdition}"]`);
 if (initialInstallOption) initialInstallOption.checked = true;
+if (validInstallEdition) {
+  setInstallStatus("installLanguageSaved");
+}
 
 window.addEventListener("beforeinstallprompt", (event) => {
   event.preventDefault();
@@ -118,24 +143,37 @@ window.addEventListener("beforeinstallprompt", (event) => {
 
 window.addEventListener("appinstalled", () => {
   installPromptEvent = null;
-  installLanguageStatus.textContent = ABOUT_LOCALES[activeLanguage].installLanguageInstalled;
+  setInstallStatus("installLanguageInstalled");
 });
 
 installLanguageForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const editionId = new FormData(installLanguageForm).get("install-language");
-  if (!EDITIONS[editionId]) return;
+  if (!Object.hasOwn(EDITIONS, editionId)) {
+    logger.error("Invalid default reading edition selected");
+    setInstallStatus("installLanguageFailed");
+    return;
+  }
 
   try {
     window.localStorage.setItem(defaultEditionKey, editionId);
   } catch (error) {
     logger.error("Could not save the default reading language", { editionId, error });
-    installLanguageStatus.textContent = ABOUT_LOCALES[activeLanguage].installLanguageFailed;
+    setInstallStatus("installLanguageFailed");
+    return;
+  }
+
+  if (editionId !== validInstallEdition) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("install", editionId);
+    url.searchParams.set("lang", activeLanguage);
+    url.hash = "install-title";
+    window.location.assign(url);
     return;
   }
 
   if (!installPromptEvent) {
-    installLanguageStatus.textContent = ABOUT_LOCALES[activeLanguage].installLanguageSaved;
+    setInstallStatus("installLanguageSaved");
     return;
   }
 
@@ -144,10 +182,10 @@ installLanguageForm.addEventListener("submit", async (event) => {
   try {
     await promptEvent.prompt();
     await promptEvent.userChoice;
-    installLanguageStatus.textContent = ABOUT_LOCALES[activeLanguage].installLanguageSaved;
+    setInstallStatus("installLanguageSaved");
   } catch (error) {
     logger.error("Native app installation prompt failed", { editionId, error });
-    installLanguageStatus.textContent = ABOUT_LOCALES[activeLanguage].installLanguageSaved;
+    setInstallStatus("installLanguageSaved");
   }
 });
 
