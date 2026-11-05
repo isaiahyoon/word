@@ -46,12 +46,14 @@ and without him was not any thing made that was made.
 - Enter Quiet Mode for a calmer reading view, with subtle glimmer details throughout the interface.
 - Select verses and copy or share them in chapter order as a quoted passage, with each verse on its own line and a compressed reference below the closing quotation mark. Selections stay highlighted when switching editions, so you can copy the same passage in another language. Copy and Share each open a small language menu listing every edition; choosing one copies the passage in that language or opens the device's native sharing interface, with copying as the fallback when sharing is unavailable. The Cut button copies the passage in the current edition and clears the selection; `Cmd+X`/`Ctrl+X` does the same. Clicking a verse also updates its direct link. The feedback form lets readers send a note, with passage details included only by choice.
 - The reader remembers the current edition, passage, focused verse, and selected verses on this device, including after reopening the app.
-- Shared links use a high-resolution branded preview featuring The Word's sword emblem.
+- Shared links use a high-resolution branded preview featuring The Amazing Word's sword emblem.
 - Every page, including About, the 404 page, and the design studies, carries the same preview so any shared link unfurls with the sword emblem.
-- Install it as a standalone web app on Mac, iPhone, Android, or Windows using the browser's install option.
+- Choose a default reading language before installing. The installed app opens in that edition on its next visit; the choice is stored on the device and can be changed by switching editions in the reader. Install it as a standalone web app on Mac, iPhone, Android, or Windows using the browser's install option.
 - Save any edition for offline reading from the Reading Edition panel. Each edition is saved separately and can be removed at any time.
 
 ## App Installation
+
+Before installing, choose a default reading language in the About page's install section. On browsers that support it, **Continue to install** opens the browser's native installation prompt; otherwise, the language is saved and you can follow the platform steps below. The installed app opens in the chosen edition on its next visit. The choice is stored on the device and follows later edition changes in the reader.
 
 To install it on Mac, open the site in Safari and choose **File → Add to Dock**. On iPhone, open it in Safari, tap **Share**, then **Add to Home Screen**. On Android, open it in Chrome, open the menu, and choose **Install app** or **Add to Home screen**. On Windows, open the site in Microsoft Edge and choose **Settings and more → Apps → Install this site as an app**; in Chrome, choose **Cast, save, and share → Install page as app**. Menu labels may vary by browser version. The installed app loads the latest version when it is online. Offline, it opens the reader from the last saved copy of the app and can read only the editions saved for offline use (see below).
 
@@ -63,7 +65,7 @@ A service worker (`sw.js`) keeps the reader's code available offline. It checks 
 
 ## Privacy
 
-The Amazing Word is free to read, has no ads, and requires no account. Reading position and selected verses are saved in local browser storage on the device; offline editions are saved in the browser's cache storage on the device. This state is not sent to The Word or synced across devices, and browser and installed-app storage may differ by platform. Umami is the app's only analytics tool and is used for basic usage metrics, not advertising or ad targeting. Umami says its standard analytics process IP addresses transiently to distinguish visits and estimate approximate location, but does not store raw IPs in analytics records; its infrastructure may retain separate operational or security logs. Search runs locally in the browser rather than through an external search service.
+The Amazing Word is free to read, has no ads, and requires no account. Reading position and selected verses are saved in local browser storage on the device; offline editions are saved in the browser's cache storage on the device. This state is not sent to The Amazing Word or synced across devices, and browser and installed-app storage may differ by platform. Umami is the app's only analytics tool and is used for basic usage metrics, not advertising or ad targeting. Umami says its standard analytics process IP addresses transiently to distinguish visits and estimate approximate location, but does not store raw IPs in analytics records; its infrastructure may retain separate operational or security logs. Search runs locally in the browser rather than through an external search service.
 
 ## Run locally
 
@@ -171,4 +173,4 @@ Proprietary code and design owned by Isaiah Yoon may not be copied, modified, di
 
 ## Support the project
 
-If The Word has helped you find a verse faster than flipping pages, you can [buy me a coffee](https://www.buymeacoffee.com/isaiahyoon). The verses are free; caffeine, less so.
+If The Amazing Word has helped you find a verse faster than flipping pages, you can [buy me a coffee](https://www.buymeacoffee.com/isaiahyoon). The verses are free; caffeine, less so.

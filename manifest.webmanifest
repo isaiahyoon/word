@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "The Word",
-  "short_name": "The Word",
+  "name": "The Amazing Word",
+  "short_name": "The Amazing Word",
   "description": "A quiet, searchable reader for exploring Scripture at your own pace.",
   "start_url": "/",
   "scope": "/",

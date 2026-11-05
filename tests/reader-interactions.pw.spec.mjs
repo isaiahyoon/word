@@ -21,9 +21,9 @@ test("presents the About page and installation options at desktop and mobile wid
     expect(aboutBounds.x + aboutBounds.width).toBeLessThanOrEqual(shortcutsBounds.x);
     await page.goto("/about");
 
-    await expect(page).toHaveTitle("About — The Word");
+    await expect(page).toHaveTitle("About — The Amazing Word");
     await expect(page.getByRole("heading", { name: "A quiet place to meet the text." })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Install The Word." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Install The Amazing Word." })).toBeVisible();
     await expect(page.getByRole("link", { name: /Buy Me a Coffee/ })).toHaveAttribute(
       "href",
       "https://buymeacoffee.com/isaiahyoon",
@@ -51,19 +51,19 @@ test("presents the About page and installation options at desktop and mobile wid
 test("localizes reader navigation and accessible controls for every edition", async ({ page }) => {
   test.setTimeout(120_000);
   const editions = [
-    { route: "/kjv", language: "en", navigation: "Open book navigation", previous: "Previous chapter:", chapter: "Choose Genesis chapter", chapterOption: "Genesis chapter 2", testament: "Old", offlineStatus: "Not saved for offline", save: "Save", cut: "Cut", previewAlt: "The Word prism sword emblem beside the Scripture reader name", shortcutTitle: "Keyboard shortcuts", shortcutHome: "Go to homepage", feedbackTitle: "Leave me a note", feedbackBug: "A small snag" },
-    { route: "/krv", language: "ko", navigation: "책 탐색 열기", previous: "이전 장:", chapter: "창세기 장 선택", chapterOption: "창세기 2장", testament: "구약", offlineStatus: "오프라인 저장 안 됨", save: "저장", cut: "잘라내기", previewAlt: "성경 읽기 서비스 이름 옆에 있는 The Word 프리즘 검 문양", shortcutTitle: "키보드 단축키", shortcutHome: "홈페이지로 이동", feedbackTitle: "의견 남기기", feedbackBug: "작은 문제" },
-    { route: "/diodati", language: "it", navigation: "Apri la navigazione dei libri", previous: "Capitolo precedente:", chapter: "Scegli il capitolo di Genesi", chapterOption: "Genesi, capitolo 2", testament: "Antico", offlineStatus: "Non salvata per l’uso offline", save: "Salva", cut: "Taglia", previewAlt: "Emblema della spada prismatica di The Word accanto al nome del lettore biblico", shortcutTitle: "Scorciatoie da tastiera", shortcutHome: "Vai alla pagina iniziale", feedbackTitle: "Lasciami un messaggio", feedbackBug: "Un piccolo problema" },
-    { route: "/licht", language: "de", navigation: "Buchnavigation öffnen", previous: "Vorheriges Kapitel:", chapter: "Kapitel von ", chapterOption: "1 Mose, Kapitel 2", testament: "Altes", offlineStatus: "Nicht offline gespeichert", save: "Speichern", cut: "Ausschneiden", previewAlt: "Prismenschwert-Emblem von The Word neben dem Namen des Bibelleseprogramms", shortcutTitle: "Tastenkürzel", shortcutHome: "Zur Startseite", feedbackTitle: "Hinterlasse eine Nachricht", feedbackBug: "Ein kleines Problem" },
-    { route: "/japbungo", language: "ja", navigation: "書名ナビゲーションを開く", previous: "前の章：", chapter: "創世記の章を選択", chapterOption: "創世記 2章", testament: "旧約", offlineStatus: "オフライン用に未保存", save: "保存", cut: "切り取る", previewAlt: "聖書リーダー名の横にあるThe Wordのプリズムの剣の紋章", shortcutTitle: "キーボードショートカット", shortcutHome: "ホームページへ移動", feedbackTitle: "ご意見をお聞かせください", feedbackBug: "小さな不具合" },
-    { route: "/moh", language: "fr", navigation: "Ouvrir la navigation des livres", previous: "Chapitre précédent :", chapter: "Choisir le chapitre de Genèse", chapterOption: "Genèse, chapitre 2", testament: "Ancien", offlineStatus: "Non enregistré hors connexion", save: "Enregistrer", cut: "Couper", previewAlt: "Emblème de l’épée prismatique de The Word à côté du nom du lecteur biblique", shortcutTitle: "Raccourcis clavier", shortcutHome: "Aller à la page d’accueil", feedbackTitle: "Laissez-moi un mot", feedbackBug: "Un petit souci" },
+    { route: "/kjv", language: "en", navigation: "Open book navigation", previous: "Previous chapter:", chapter: "Choose Genesis chapter", chapterOption: "Genesis chapter 2", testament: "Old", offlineStatus: "Not saved for offline", save: "Save", cut: "Cut", previewAlt: "The Amazing Word prism sword emblem beside the Scripture reader name", shortcutTitle: "Keyboard shortcuts", shortcutHome: "Go to homepage", feedbackTitle: "Leave me a note", feedbackBug: "A small snag" },
+    { route: "/krv", language: "ko", navigation: "책 탐색 열기", previous: "이전 장:", chapter: "창세기 장 선택", chapterOption: "창세기 2장", testament: "구약", offlineStatus: "오프라인 저장 안 됨", save: "저장", cut: "잘라내기", previewAlt: "성경 읽기 서비스 이름 옆에 있는 놀라운 말씀 프리즘 검 문양", shortcutTitle: "키보드 단축키", shortcutHome: "홈페이지로 이동", feedbackTitle: "의견 남기기", feedbackBug: "작은 문제" },
+    { route: "/diodati", language: "it", navigation: "Apri la navigazione dei libri", previous: "Capitolo precedente:", chapter: "Scegli il capitolo di Genesi", chapterOption: "Genesi, capitolo 2", testament: "Antico", offlineStatus: "Non salvata per l’uso offline", save: "Salva", cut: "Taglia", previewAlt: "Emblema della spada prismatica della Parola Meravigliosa accanto al nome del lettore biblico", shortcutTitle: "Scorciatoie da tastiera", shortcutHome: "Vai alla pagina iniziale", feedbackTitle: "Lasciami un messaggio", feedbackBug: "Un piccolo problema" },
+    { route: "/licht", language: "de", navigation: "Buchnavigation öffnen", previous: "Vorheriges Kapitel:", chapter: "Kapitel von ", chapterOption: "1 Mose, Kapitel 2", testament: "Altes", offlineStatus: "Nicht offline gespeichert", save: "Speichern", cut: "Ausschneiden", previewAlt: "Prismenschwert-Emblem vom Wunderbaren Wort neben dem Namen des Bibelleseprogramms", shortcutTitle: "Tastenkürzel", shortcutHome: "Zur Startseite", feedbackTitle: "Hinterlasse eine Nachricht", feedbackBug: "Ein kleines Problem" },
+    { route: "/japbungo", language: "ja", navigation: "書名ナビゲーションを開く", previous: "前の章：", chapter: "創世記の章を選択", chapterOption: "創世記 2章", testament: "旧約", offlineStatus: "オフライン用に未保存", save: "保存", cut: "切り取る", previewAlt: "聖書リーダー名の横にある驚くべき御言葉のプリズムの剣の紋章", shortcutTitle: "キーボードショートカット", shortcutHome: "ホームページへ移動", feedbackTitle: "ご意見をお聞かせください", feedbackBug: "小さな不具合" },
+    { route: "/moh", language: "fr", navigation: "Ouvrir la navigation des livres", previous: "Chapitre précédent :", chapter: "Choisir le chapitre de Genèse", chapterOption: "Genèse, chapitre 2", testament: "Ancien", offlineStatus: "Non enregistré hors connexion", save: "Enregistrer", cut: "Couper", previewAlt: "Emblème de l’épée prismatique de la Parole Merveilleuse à côté du nom du lecteur biblique", shortcutTitle: "Raccourcis clavier", shortcutHome: "Aller à la page d’accueil", feedbackTitle: "Laissez-moi un mot", feedbackBug: "Un petit souci" },
   ];
 
   for (const edition of editions) {
     await page.goto(`${edition.route}/b/genesis/c/1`);
     await expect(page.locator("#verse-1")).toBeVisible();
     await expect(page.locator("html")).toHaveAttribute("lang", edition.language);
-    await expect(page.locator('meta[property="og:image:alt"]')).toHaveAttribute("content", edition.previewAlt ?? "The Word prism sword emblem beside the Scripture reader name");
+    await expect(page.locator('meta[property="og:image:alt"]')).toHaveAttribute("content", edition.previewAlt ?? "The Amazing Word prism sword emblem beside the Scripture reader name");
     await expect(page.locator("#menu-toggle")).toHaveAttribute("aria-label", edition.navigation);
     await expect(page.locator("#edition-offline-status")).toHaveText(edition.offlineStatus);
     await expect(page.locator("#edition-offline-action")).toHaveText(edition.save);
@@ -1623,7 +1623,7 @@ test("omits 3 John 1:15 from the KJV edition", async ({ page }) => {
   await expect(page.locator("#verse-15")).toHaveCount(0);
 
   await page.goto("/kjv/b/3-john/c/1/v/15");
-  await expect(page).toHaveTitle("Page Not Found — The Word");
+  await expect(page).toHaveTitle("Page Not Found — The Amazing Word");
 });
 
 test("supports keyboard navigation in the edition menu", async ({ page }) => {

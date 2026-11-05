@@ -6,9 +6,27 @@ const languageTrigger = document.querySelector("#about-language");
 const languageMenu = document.querySelector("#about-language-options");
 const languageOptions = [...languageMenu.querySelectorAll("[data-language]")];
 const readerStateKey = "the-word.reader-state.v1:/";
+const defaultEditionKey = "the-word.default-edition.v1";
+const installLanguageForm = document.querySelector("#install-language-form");
+const installLanguageStatus = document.querySelector("#install-language-status");
+const installLanguageOptions = document.querySelector("#install-language-options");
 let activeLanguage = "en";
+let installPromptEvent = null;
+
+function getDefaultEditionId() {
+  try {
+    const editionId = window.localStorage.getItem(defaultEditionKey);
+    return EDITIONS[editionId] ? editionId : null;
+  } catch (error) {
+    logger.warn("Could not read the default reading language", { error });
+    return null;
+  }
+}
 
 function getSavedLanguage() {
+  const defaultEditionId = getDefaultEditionId();
+  if (defaultEditionId) return EDITIONS[defaultEditionId].language;
+
   try {
     const savedState = JSON.parse(window.localStorage.getItem(readerStateKey));
     const language = EDITIONS[savedState?.editionId]?.language;
@@ -71,6 +89,67 @@ function chooseLanguage(language) {
 }
 
 applyLanguage(getInitialLanguage());
+
+for (const [editionId, edition] of Object.entries(EDITIONS)) {
+  const label = document.createElement("label");
+  label.className = "install-language-option";
+  const input = document.createElement("input");
+  input.type = "radio";
+  input.name = "install-language";
+  input.value = editionId;
+  input.required = true;
+  const languageName = document.createElement("span");
+  languageName.lang = edition.language;
+  languageName.dir = edition.direction;
+  languageName.textContent = edition.languageName;
+  label.append(input, languageName);
+  installLanguageOptions.append(label);
+}
+
+const initialInstallEdition = getDefaultEditionId() ?? Object.values(EDITIONS)
+  .find((edition) => edition.language === activeLanguage)?.id ?? "kjv";
+const initialInstallOption = installLanguageForm.querySelector(`[value="${initialInstallEdition}"]`);
+if (initialInstallOption) initialInstallOption.checked = true;
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  installPromptEvent = event;
+});
+
+window.addEventListener("appinstalled", () => {
+  installPromptEvent = null;
+  installLanguageStatus.textContent = ABOUT_LOCALES[activeLanguage].installLanguageInstalled;
+});
+
+installLanguageForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const editionId = new FormData(installLanguageForm).get("install-language");
+  if (!EDITIONS[editionId]) return;
+
+  try {
+    window.localStorage.setItem(defaultEditionKey, editionId);
+  } catch (error) {
+    logger.error("Could not save the default reading language", { editionId, error });
+    installLanguageStatus.textContent = ABOUT_LOCALES[activeLanguage].installLanguageFailed;
+    return;
+  }
+
+  if (!installPromptEvent) {
+    installLanguageStatus.textContent = ABOUT_LOCALES[activeLanguage].installLanguageSaved;
+    return;
+  }
+
+  const promptEvent = installPromptEvent;
+  installPromptEvent = null;
+  try {
+    await promptEvent.prompt();
+    await promptEvent.userChoice;
+    installLanguageStatus.textContent = ABOUT_LOCALES[activeLanguage].installLanguageSaved;
+  } catch (error) {
+    logger.error("Native app installation prompt failed", { editionId, error });
+    installLanguageStatus.textContent = ABOUT_LOCALES[activeLanguage].installLanguageSaved;
+  }
+});
 
 languageTrigger.addEventListener("click", () => {
   if (languageMenu.hidden) openLanguageMenu();
