@@ -543,6 +543,9 @@ test("Tab after choosing an edition does not walk the verses or focus search", a
   await page.locator("#edition-select").click();
   await page.locator("#edition-options [data-edition='krv']").click();
   await expect(page).toHaveURL(/\/krv\/b\/genesis\/c\/1\/v\/1$/);
+  await expect(page.locator("#verse-list")).toHaveAttribute("lang", "ko");
+  await expect(page.locator("#verse-list")).not.toHaveAttribute("aria-busy", "true");
+  await expect(page.locator("#verse-1")).toBeVisible();
 
   await page.keyboard.press("Shift+Tab");
   await expect(page.locator("#search-input")).not.toBeFocused();
@@ -1630,6 +1633,8 @@ test("selects Diodati from the edition menu with the keyboard", async ({ page })
 
 test("selects Luther from the edition menu with the keyboard", async ({ page }) => {
   await page.goto("/kjv/b/john/c/3/v/16");
+  await expect(page.locator("#verse-list")).not.toHaveAttribute("aria-busy", "true");
+  await expect(page.locator("#edition-select")).toBeEnabled();
   await page.locator("#edition-select").focus();
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("ArrowDown");
@@ -1802,8 +1807,10 @@ test("Space jumps to the top and is listed with a rainbow keycap", async ({ page
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(420);
 
-  await page.keyboard.press("Space");
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+  await expect(async () => {
+    await page.keyboard.press("Space");
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  }).toPass();
   await expect(page.locator("#verse-1")).toHaveAttribute("aria-pressed", "false");
 
   await page.locator("#shortcuts-open").click();

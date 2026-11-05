@@ -25,6 +25,7 @@ test("saves an edition for offline reading and removes it again", async ({ page,
 
 test("keeps each edition's offline status separate", async ({ page }) => {
   await page.goto("/kjv/b/john/c/3/v/16");
+  await page.evaluate(() => navigator.serviceWorker.ready);
   await page.locator("#edition-offline-action").click();
   await expect(page.locator("#edition-offline-status")).toHaveText("Available offline");
 
