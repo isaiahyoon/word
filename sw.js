@@ -9,7 +9,6 @@ const SHELL_URLS = [
   "/manifest.webmanifest",
   "/styles/theme.css",
   "/styles/about.css",
-  "/styles/brand-mark.css",
   "/styles/typography.css",
   "/styles/editions.css",
   "/styles/styles.css",

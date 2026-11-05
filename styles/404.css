@@ -68,18 +68,22 @@ a:focus-visible {
 
 .brand-mark i:nth-child(1) {
   border-radius: 8px 3px 3px;
+  background: var(--blue);
 }
 
 .brand-mark i:nth-child(2) {
   border-radius: 3px 8px 3px 3px;
+  background: var(--lavender);
 }
 
 .brand-mark i:nth-child(3) {
   border-radius: 3px 3px 3px 8px;
+  background: var(--pink);
 }
 
 .brand-mark i:nth-child(4) {
   border-radius: 3px 3px 8px;
+  background: var(--green);
 }
 
 .brand-name {
