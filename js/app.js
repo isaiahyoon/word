@@ -79,6 +79,7 @@ const elements = {
   editionOffline: document.querySelector("#edition-offline"),
   editionOfflineStatus: document.querySelector("#edition-offline-status"),
   editionOfflineAction: document.querySelector("#edition-offline-action"),
+  brand: document.querySelector(".brand"),
   brandEditionPrimary: document.querySelector("#brand-edition-primary"),
   brandEditionSecondary: document.querySelector("#brand-edition-secondary")
 };
@@ -480,6 +481,9 @@ function showEdition(editionId) {
   if (!edition || !store) throw new RangeError(`Unknown edition: ${editionId}`);
 
   state.editionId = editionId;
+  elements.brand.href = editionId === DEFAULT_EDITION
+    ? appBasePath
+    : new URL(edition.routeSegment, document.baseURI).pathname;
   scripture = store;
   document.documentElement.lang = edition.language;
   uiLocale = getUiLocale(edition.language);
@@ -641,6 +645,7 @@ async function restoreLocationFromPath() {
   await openChapter(reference.book, reference.chapter, range, {
     updateHistory: false,
     selectedVersesToRestore: stateToRestore?.selectedVerses,
+    startAtTop: route.home || route.editionRoot,
   });
   if (route.legacy) {
     const canonicalPath = scriptureRoutes.buildPath(
@@ -720,6 +725,7 @@ async function openChapter(book, chapter, requestedRange = null, {
   updateHistory = true,
   direction = 0,
   selectedVersesToRestore = [],
+  startAtTop = false,
 } = {}) {
   if (updateHistory) elements.quietWelcome.hidden = true;
   state.selectedVerses.clear();
@@ -763,6 +769,11 @@ async function openChapter(book, chapter, requestedRange = null, {
   if (range) {
     requestAnimationFrame(() => {
       if (requestId !== state.chapterRequestId) return;
+      if (startAtTop) {
+        window.scrollTo({ top: 0, behavior: "instant" });
+        requestAnimationFrame(visualEffects.triggerChapterGlimmers);
+        return;
+      }
       document.querySelector(`#verse-${range.start}`)?.scrollIntoView({
         behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
         block: "center",
@@ -1455,6 +1466,10 @@ function bindEvents() {
   });
   elements.cutControl.addEventListener("click", () => void copySelectedVerses({ clearAfter: true }));
   elements.clearControl.addEventListener("click", clearVerseSelection);
+  elements.brand.addEventListener("click", () => {
+    clearVerseSelection();
+    window.getSelection()?.removeAllRanges();
+  });
   elements.feedbackOpen.addEventListener("click", () => {
     elements.feedbackError.hidden = true;
     elements.feedbackCategoryError.hidden = true;

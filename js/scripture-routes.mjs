@@ -36,6 +36,7 @@ export function createScriptureRoutes(books, basePath = "/", editions = ["kjv"])
         chapter: 1,
         range: { start: 1, end: 1 },
         legacy: false,
+        editionRoot: true,
       };
     }
     const segments = legacy ? pathSegments : pathSegments.slice(1);
