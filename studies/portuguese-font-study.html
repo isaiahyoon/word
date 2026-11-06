@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#F4F0E7" />
+    <meta
+      name="description"
+      content="Compare 22 serif typefaces for comfortable Portuguese Scripture reading in The Word."
+    />
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;500;600&family=Bitter:wght@400;500;600&family=Bodoni+Moda:wght@400;500;600&family=Cardo:wght@400;700&family=Cormorant+Garamond:wght@400;500;600&family=Crimson+Pro:wght@400;500;600&family=DM+Serif+Text:wght@400&family=EB+Garamond:wght@400;500;600&family=Fraunces:wght@400;500;600&family=Gelasio:wght@400;500;600&family=Libre+Baskerville:wght@400;700&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&family=Lora:wght@400;500;600&family=Merriweather:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Noto+Serif:wght@400;500;600&family=PT+Serif:wght@400;700&family=Petrona:wght@400;500;600&family=Playfair+Display:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Spectral:wght@400;500;600&family=Vollkorn:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <title>Portuguese Type Study · The Word</title>
+    <meta property="og:title" content="Portuguese Type Study · The Word" />
+    <meta
+      property="og:description"
+      content="Compare 22 serif typefaces and a pastel Portuguese-flag palette for the Almeida 1911 reader."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://theamazingword.org/assets/social-preview.png" />
+    <meta property="og:image:secure_url" content="https://theamazingword.org/assets/social-preview.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="The Word prism sword emblem beside the Scripture reader name" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Portuguese Type Study · The Word" />
+    <meta
+      name="twitter:description"
+      content="Compare 22 serif typefaces and a pastel Portuguese-flag palette for the Almeida 1911 reader."
+    />
+    <meta name="twitter:image" content="https://theamazingword.org/assets/social-preview.png" />
+    <meta name="twitter:image:alt" content="The Word prism sword emblem beside the Scripture reader name" />
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #383833;
+        --muted: #77756e;
+        --rule: rgba(68, 61, 48, 0.16);
+        --paper: #f4f0e7;
+        --flag-green: #dde9dc;
+        --flag-red: #e8cfca;
+        --flag-gold: #e5d6a5;
+        --serif-display: "Gelasio", "Iowan Old Style", Georgia, serif;
+        --sans: "DM Sans", "Avenir Next", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        min-width: 320px;
+        margin: 0;
+        background:
+          radial-gradient(rgba(82, 79, 64, 0.045) 0.7px, transparent 0.7px) 0 0 / 8px 8px,
+          linear-gradient(135deg, var(--flag-green), #fbf8f2 45%, var(--flag-red));
+        color: var(--ink);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      main {
+        width: min(1180px, 100%);
+        margin: 0 auto;
+        padding: 46px 28px 64px;
+      }
+
+      header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(250px, 390px);
+        align-items: end;
+        gap: 30px;
+        margin-bottom: 24px;
+        padding-bottom: 22px;
+        border-bottom: 1px solid var(--rule);
+      }
+
+      .eyebrow,
+      .specimen-index,
+      .specimen-role,
+      .accent-label,
+      .swatch-label {
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow {
+        margin: 0 0 9px;
+        color: #647d61;
+      }
+
+      h1 {
+        margin: 0;
+        font-family: var(--serif-display);
+        font-size: clamp(32px, 4vw, 48px);
+        font-weight: 500;
+        line-height: 1.05;
+      }
+
+      .intro {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.7;
+      }
+
+      .palette {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin: 0 0 25px;
+      }
+
+      .swatch {
+        display: flex;
+        min-height: 62px;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 10px 12px;
+        border: 1px solid rgba(68, 61, 48, 0.1);
+        border-radius: 6px;
+        color: #4a4942;
+        font-size: 11px;
+      }
+
+      .swatch-paper { background: var(--paper); }
+      .swatch-green { background: var(--flag-green); }
+      .swatch-red { background: var(--flag-red); }
+      .swatch-gold { background: var(--flag-gold); }
+      .swatch-label { font-size: 9px; }
+
+      .study-note {
+        margin: 0 0 16px;
+        color: #68665e;
+        font-size: 12px;
+        line-height: 1.65;
+      }
+
+      .specimens {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 13px;
+      }
+
+      .specimen {
+        --specimen-font: Georgia, serif;
+        min-width: 0;
+        overflow: hidden;
+        padding: 19px 21px 17px;
+        border: 1px solid var(--rule);
+        border-radius: 6px;
+        background: rgba(255, 253, 250, 0.88);
+        box-shadow: 0 5px 16px rgba(58, 52, 43, 0.035);
+      }
+
+      .specimen-header {
+        display: flex;
+        align-items: baseline;
+        gap: 9px;
+        margin-bottom: 14px;
+      }
+
+      .specimen-index { color: #71856b; }
+
+      h2 {
+        min-width: 0;
+        margin: 0;
+        font-family: var(--specimen-font);
+        font-size: 19px;
+        font-weight: 500;
+      }
+
+      .specimen-role {
+        margin-left: auto;
+        color: var(--muted);
+        font-size: 8px;
+        text-align: right;
+      }
+
+      .phrase {
+        margin: 0 0 7px;
+        font-family: var(--specimen-font);
+        font-size: 23px;
+        font-weight: 500;
+        line-height: 1.3;
+      }
+
+      .paragraph {
+        margin: 0;
+        color: #514f48;
+        font-family: var(--specimen-font);
+        font-size: 17px;
+        font-weight: 400;
+        line-height: 1.6;
+      }
+
+      .accent-row {
+        display: flex;
+        align-items: baseline;
+        gap: 9px;
+        margin-top: 13px;
+        padding-top: 9px;
+        border-top: 1px solid rgba(68, 61, 48, 0.1);
+      }
+
+      .accent-label { color: #817966; font-size: 8px; }
+      .accents { font-family: var(--specimen-font); font-size: 14px; }
+
+      .font-gelasio { --specimen-font: "Gelasio", Georgia, serif; }
+      .font-eb-garamond { --specimen-font: "EB Garamond", Georgia, serif; }
+      .font-petrona { --specimen-font: "Petrona", Georgia, serif; }
+      .font-cormorant-garamond { --specimen-font: "Cormorant Garamond", Georgia, serif; }
+      .font-literata { --specimen-font: "Literata", Georgia, serif; }
+      .font-source-serif-4 { --specimen-font: "Source Serif 4", Georgia, serif; }
+      .font-alegreya { --specimen-font: "Alegreya", Georgia, serif; }
+      .font-lora { --specimen-font: "Lora", Georgia, serif; }
+      .font-crimson-pro { --specimen-font: "Crimson Pro", Georgia, serif; }
+      .font-spectral { --specimen-font: "Spectral", Georgia, serif; }
+      .font-newsreader { --specimen-font: "Newsreader", Georgia, serif; }
+      .font-vollkorn { --specimen-font: "Vollkorn", Georgia, serif; }
+      .font-pt-serif { --specimen-font: "PT Serif", Georgia, serif; }
+      .font-merriweather { --specimen-font: "Merriweather", Georgia, serif; }
+      .font-libre-baskerville { --specimen-font: "Libre Baskerville", Georgia, serif; }
+      .font-cardo { --specimen-font: "Cardo", Georgia, serif; }
+      .font-noto-serif { --specimen-font: "Noto Serif", Georgia, serif; }
+      .font-bitter { --specimen-font: "Bitter", Georgia, serif; }
+      .font-playfair-display { --specimen-font: "Playfair Display", Georgia, serif; }
+      .font-fraunces { --specimen-font: "Fraunces", Georgia, serif; }
+      .font-bodoni-moda { --specimen-font: "Bodoni Moda", Georgia, serif; }
+      .font-dm-serif-text { --specimen-font: "DM Serif Text", Georgia, serif; }
+
+      footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        margin-top: 22px;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.6;
+      }
+
+      @media (max-width: 700px) {
+        main { padding: 30px 17px 48px; }
+        header { grid-template-columns: 1fr; gap: 12px; }
+        .palette { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+        .specimens { grid-template-columns: 1fr; gap: 10px; }
+        .specimen { padding: 17px 16px 15px; }
+        .phrase { font-size: 22px; }
+        footer { flex-direction: column; }
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .specimen { animation: settle-in 420ms both; }
+        .specimen:nth-child(2n) { animation-delay: 45ms; }
+        .specimen:nth-child(3n) { animation-delay: 80ms; }
+      }
+
+      @keyframes settle-in {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <p class="eyebrow">The Word · Portuguese · ALM 1911</p>
+          <h1>Twenty-two typefaces, one reading page</h1>
+        </div>
+        <p class="intro">
+          Compare the same Portuguese lines in 22 serif families. Notice the
+          accents, open shapes, reading rhythm, and how each face feels at a
+          sustained text size.
+        </p>
+      </header>
+
+      <section class="palette" aria-label="Proposed pastel Portuguese flag palette">
+        <div class="swatch swatch-paper"><span class="swatch-label">Warm ivory · base</span><span>#F4F0E7</span></div>
+        <div class="swatch swatch-green"><span class="swatch-label">Pastel green</span><span>#DDE9DC</span></div>
+        <div class="swatch swatch-red"><span class="swatch-label">Muted red</span><span>#E8CFCA</span></div>
+        <div class="swatch swatch-gold"><span class="swatch-label">Soft gold</span><span>#E5D6A5</span></div>
+      </section>
+
+      <p class="study-note">
+        The Portuguese sample below was written for this study; it is not Almeida
+        1911 text. The ALM text will be used for a final reading check after its
+        distribution basis is documented.
+      </p>
+
+      <section class="specimens" aria-label="Twenty-two Portuguese serif type specimens">
+        <article class="specimen font-gelasio" data-family="Gelasio">
+          <div class="specimen-header"><span class="specimen-index">01</span><h2>Gelasio</h2><span class="specimen-role">In app · body</span></div>
+          <p class="phrase" lang="pt">Às seis, a manhã abriu sobre a praça.</p>
+          <p class="paragraph" lang="pt">O relógio marcava três horas; a chuva parou, e o café ainda estava quente. A cidade despertava devagar, entre vozes, árvores e janelas abertas.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="pt">Á À Â Ã É Ê Í Ó Ô Õ Ú Ü Ç · á à â ã é ê í ó ô õ ú ü ç</span></div>
+        </article>
+        <article class="specimen font-eb-garamond" data-family="EB Garamond">
+          <div class="specimen-header"><span class="specimen-index">02</span><h2>EB Garamond</h2><span class="specimen-role">In app · body</span></div>
+          <p class="phrase" lang="pt">Às seis, a manhã abriu sobre a praça.</p>
+          <p class="paragraph" lang="pt">O relógio marcava três horas; a chuva parou, e o café ainda estava quente. A cidade despertava devagar, entre vozes, árvores e janelas abertas.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="pt">Á À Â Ã É Ê Í Ó Ô Õ Ú Ü Ç · á à â ã é ê í ó ô õ ú ü ç</span></div>
+        </article>
+        <article class="specimen font-petrona" data-family="Petrona">
+          <div class="specimen-header"><span class="specimen-index">03</span><h2>Petrona</h2><span class="specimen-role">In app · body</span></div>
+          <p class="phrase" lang="pt">Às seis, a manhã abriu sobre a praça.</p>
+          <p class="paragraph" lang="pt">O relógio marcava três horas; a chuva parou, e o café ainda estava quente. A cidade despertava devagar, entre vozes, árvores e janelas abertas.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="pt">Á À Â Ã É Ê Í Ó Ô Õ Ú Ü Ç · á à â ã é ê í ó ô õ ú ü ç</span></div>
+        </article>
+        <article class="specimen font-cormorant-garamond" data-family="Cormorant Garamond">
+          <div class="specimen-header"><span class="specimen-index">04</span><h2>Cormorant Garamond</h2><span class="specimen-role">In app · body + display</span></div>
+          <p class="phrase" lang="pt">Às seis, a manhã abriu sobre a praça.</p>
+          <p class="paragraph" lang="pt">O relógio marcava três horas; a chuva parou, e o café ainda estava quente. A cidade despertava devagar, entre vozes, árvores e janelas abertas.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="pt">Á À Â Ã É Ê Í Ó Ô Õ Ú Ü Ç · á à â ã é ê í ó ô õ ú ü ç</span></div>
+        </article>
+        <article class="specimen font-literata" data-family="Literata">
+          <div class="specimen-header"><span class="specimen-index">05</span><h2>Literata</h2><span class="specimen-role">Body · digital reading</span></div>
+          <p class="phrase" lang="pt">Às seis, a manhã abriu sobre a praça.</p>
+          <p class="paragraph" lang="pt">O relógio marcava três horas; a chuva parou, e o café ainda estava quente. A cidade despertava devagar, entre vozes, árvores e janelas abertas.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="pt">Á À Â Ã É Ê Í Ó Ô Õ Ú Ü Ç · á à â ã é ê í ó ô õ ú ü ç</span></div>
+        </article>
+        <article class="specimen font-source-serif-4" data-family="Source Serif 4">
+          <div class="specimen-header"><span class="specimen-index">06</span><h2>Source Serif 4</h2><span class="specimen-role">Body · editorial</span></div>
+          <p class="phrase" lang="pt">Às seis, a manhã abriu sobre a praça.</p>
+          <p class="paragraph" lang="pt">O relógio marcava três horas; a chuva parou, e o café ainda estava quente. A cidade despertava devagar, entre vozes, árvores e janelas abertas.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="pt">Á À Â Ã É Ê Í Ó Ô Õ Ú Ü Ç · á à â ã é ê í ó ô õ ú ü ç</span></div>
+        </article>
+        <article class="specimen font-alegreya" data-family="Alegreya">
+          <div class="specimen-header"><span class="specimen-index">07</span><h2>Alegreya</h2><span class="specimen-role">Body · humanist</span></div>
+          <p class="phrase" lang="pt">Às seis, a manhã abriu sobre a praça.</p>
+          <p class="paragraph" lang="pt">O relógio marcava três horas; a chuva parou, e o café ainda estava quente. A cidade despertava devagar, entre vozes, árvores e janelas abertas.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="pt">Á À Â Ã É Ê Í Ó Ô Õ Ú Ü Ç · á à â ã é ê í ó ô õ ú ü ç</span></div>
+        </article>
+        <article class="specimen font-lora" data-family="Lora">
+          <div class="specimen-header"><span class="specimen-index">08</span><h2>Lora</h2><span class="specimen-role">Body · warm</span></div>
+          <p class="phrase" lang="pt">Às seis, a manhã abriu sobre a praça.</p>
+          <p class="paragraph" lang="pt">O relógio marcava três horas; a chuva parou, e o café ainda estava quente. A cidade despertava devagar, entre vozes, árvores e janelas abertas.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="pt">Á À Â Ã É Ê Í Ó Ô Õ Ú Ü Ç · á à â ã é ê í ó ô õ ú ü ç</span></div>
+        </article>
+        <article class="specimen font-crimson-pro" data-family="Crimson Pro">
+          <div class="specimen-header"><span class="specimen-index">09</span><h2>Crimson Pro</h2><span class="specimen-role">Body · old-style</span></div>
+          <p class="phrase" lang="pt">Às seis, a manhã abriu sobre a praça.</p>
+          <p class="paragraph" lang="pt">O relógio marcava três horas; a chuva parou, e o café ainda estava quente. A cidade despertava devagar, entre vozes, árvores e janelas abertas.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="pt">Á À Â Ã É Ê Í Ó Ô Õ Ú Ü Ç · á à â ã é ê í ó ô õ ú ü ç</span></div>
+        </article>
+        <article class="specimen font-spectral" data-family="Spectral">
+          <div class="specimen-header"><span class="specimen-index">10</span><h2>Spectral</h2><span class="specimen-role">Body · screen-minded</span></div>
+          <p class="phrase" lang="pt">Às seis, a manhã abriu sobre a praça.</p>
+          <p class="paragraph" lang="pt">O relógio marcava três horas; a chuva parou, e o café ainda estava quente. A cidade despertava devagar, entre vozes, árvores e janelas abertas.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="pt">Á À Â Ã É Ê Í Ó Ô Õ Ú Ü Ç · á à â ã é ê í ó ô õ ú ü ç</span></div>
+        </article>
+        <article class="specimen font-newsreader" data-family="Newsreader">
+          <div class="specimen-header"><span class="specimen-index">11</span><h2>Newsreader</h2><span class="specimen-role">Body · editorial</span></div>
+          <p class="phrase" lang="pt">Às seis, a manhã abriu sobre a praça.</p>
+          <p class="paragraph" lang="pt">O relógio marcava três horas; a chuva parou, e o café ainda estava quente. A cidade despertava devagar, entre vozes, árvores e janelas abertas.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="pt">Á À Â Ã É Ê Í Ó Ô Õ Ú Ü Ç · á à â ã é ê í ó ô õ ú ü ç</span></div>
+        </article>
+        <article class="specimen font-vollkorn" data-family="Vollkorn">
+          <div class="specimen-header"><span class="specimen-index">12</span><h2>Vollkorn</h2><span class="specimen-role">Body · sturdy</span></div>
+          <p class="phrase" lang="pt">Às seis, a manhã abriu sobre a praça.</p>
+          <p class="paragraph" lang="pt">O relógio marcava três horas; a chuva parou, e o café ainda estava quente. A cidade despertava devagar, entre vozes, árvores e janelas abertas.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="pt">Á À Â Ã É Ê Í Ó Ô Õ Ú Ü Ç · á à â ã é ê í ó ô õ ú ü ç</span></div>
+        </article>
+        <article class="specimen font-pt-serif" data-family="PT Serif">
+          <div class="specimen-header"><span class="specimen-index">13</span><h2>PT Serif</h2><span class="specimen-role">Body · practical</span></div>
+          <p class="phrase" lang="pt">Às seis, a manhã abriu sobre a praça.</p>
+          <p class="paragraph" lang="pt">O relógio marcava três horas; a chuva parou, e o café ainda estava quente. A cidade despertava devagar, entre vozes, árvores e janelas abertas.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="pt">Á À Â Ã É Ê Í Ó Ô Õ Ú Ü Ç · á à â ã é ê í ó ô õ ú ü ç</span></div>
+        </article>
+        <article class="specimen font-merriweather" data-family="Merriweather">
+          <div class="specimen-header"><span class="specimen-index">14</span><h2>Merriweather</h2><span class="specimen-role">Body · open shapes</span></div>
+          <p class="phrase" lang="pt">Às seis, a manhã abriu sobre a praça.</p>
+          <p class="paragraph" lang="pt">O relógio marcava três horas; a chuva parou, e o café ainda estava quente. A cidade despertava devagar, entre vozes, árvores e janelas abertas.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="pt">Á À Â Ã É Ê Í Ó Ô Õ Ú Ü Ç · á à â ã é ê í ó ô õ ú ü ç</span></div>
+        </article>
+        <article class="specimen font-libre-baskerville" data-family="Libre Baskerville">
+          <div class="specimen-header"><span class="specimen-index">15</span><h2>Libre Baskerville</h2><span class="specimen-role">Body · classic</span></div>
+          <p class="phrase" lang="pt">Às seis, a manhã abriu sobre a praça.</p>
+          <p class="paragraph" lang="pt">O relógio marcava três horas; a chuva parou, e o café ainda estava quente. A cidade despertava devagar, entre vozes, árvores e janelas abertas.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="pt">Á À Â Ã É Ê Í Ó Ô Õ Ú Ü Ç · á à â ã é ê í ó ô õ ú ü ç</span></div>
+        </article>
+        <article class="specimen font-cardo" data-family="Cardo">
+          <div class="specimen-header"><span class="specimen-index">16</span><h2>Cardo</h2><span class="specimen-role">Body · scholarly</span></div>
+          <p class="phrase" lang="pt">Às seis, a manhã abriu sobre a praça.</p>
+          <p class="paragraph" lang="pt">O relógio marcava três horas; a chuva parou, e o café ainda estava quente. A cidade despertava devagar, entre vozes, árvores e janelas abertas.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="pt">Á À Â Ã É Ê Í Ó Ô Õ Ú Ü Ç · á à â ã é ê í ó ô õ ú ü ç</span></div>
+        </article>
+        <article class="specimen font-noto-serif" data-family="Noto Serif">
+          <div class="specimen-header"><span class="specimen-index">17</span><h2>Noto Serif</h2><span class="specimen-role">Body · broad coverage</span></div>
+          <p class="phrase" lang="pt">Às seis, a manhã abriu sobre a praça.</p>
+          <p class="paragraph" lang="pt">O relógio marcava três horas; a chuva parou, e o café ainda estava quente. A cidade despertava devagar, entre vozes, árvores e janelas abertas.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="pt">Á À Â Ã É Ê Í Ó Ô Õ Ú Ü Ç · á à â ã é ê í ó ô õ ú ü ç</span></div>
+        </article>
+        <article class="specimen font-bitter" data-family="Bitter">
+          <div class="specimen-header"><span class="specimen-index">18</span><h2>Bitter</h2><span class="specimen-role">Body · robust slab</span></div>
+          <p class="phrase" lang="pt">Às seis, a manhã abriu sobre a praça.</p>
+          <p class="paragraph" lang="pt">O relógio marcava três horas; a chuva parou, e o café ainda estava quente. A cidade despertava devagar, entre vozes, árvores e janelas abertas.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="pt">Á À Â Ã É Ê Í Ó Ô Õ Ú Ü Ç · á à â ã é ê í ó ô õ ú ü ç</span></div>
+        </article>
+        <article class="specimen font-playfair-display" data-family="Playfair Display">
+          <div class="specimen-header"><span class="specimen-index">19</span><h2>Playfair Display</h2><span class="specimen-role">Display · high contrast</span></div>
+          <p class="phrase" lang="pt">Às seis, a manhã abriu sobre a praça.</p>
+          <p class="paragraph" lang="pt">O relógio marcava três horas; a chuva parou, e o café ainda estava quente. A cidade despertava devagar, entre vozes, árvores e janelas abertas.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="pt">Á À Â Ã É Ê Í Ó Ô Õ Ú Ü Ç · á à â ã é ê í ó ô õ ú ü ç</span></div>
+        </article>
+        <article class="specimen font-fraunces" data-family="Fraunces">
+          <div class="specimen-header"><span class="specimen-index">20</span><h2>Fraunces</h2><span class="specimen-role">Display · expressive</span></div>
+          <p class="phrase" lang="pt">Às seis, a manhã abriu sobre a praça.</p>
+          <p class="paragraph" lang="pt">O relógio marcava três horas; a chuva parou, e o café ainda estava quente. A cidade despertava devagar, entre vozes, árvores e janelas abertas.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="pt">Á À Â Ã É Ê Í Ó Ô Õ Ú Ü Ç · á à â ã é ê í ó ô õ ú ü ç</span></div>
+        </article>
+        <article class="specimen font-bodoni-moda" data-family="Bodoni Moda">
+          <div class="specimen-header"><span class="specimen-index">21</span><h2>Bodoni Moda</h2><span class="specimen-role">Display · formal</span></div>
+          <p class="phrase" lang="pt">Às seis, a manhã abriu sobre a praça.</p>
+          <p class="paragraph" lang="pt">O relógio marcava três horas; a chuva parou, e o café ainda estava quente. A cidade despertava devagar, entre vozes, árvores e janelas abertas.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="pt">Á À Â Ã É Ê Í Ó Ô Õ Ú Ü Ç · á à â ã é ê í ó ô õ ú ü ç</span></div>
+        </article>
+        <article class="specimen font-dm-serif-text" data-family="DM Serif Text">
+          <div class="specimen-header"><span class="specimen-index">22</span><h2>DM Serif Text</h2><span class="specimen-role">Display · compact</span></div>
+          <p class="phrase" lang="pt">Às seis, a manhã abriu sobre a praça.</p>
+          <p class="paragraph" lang="pt">O relógio marcava três horas; a chuva parou, e o café ainda estava quente. A cidade despertava devagar, entre vozes, árvores e janelas abertas.</p>
+          <div class="accent-row"><span class="accent-label">Accents</span><span class="accents" lang="pt">Á À Â Ã É Ê Í Ó Ô Õ Ú Ü Ç · á à â ã é ê í ó ô õ ú ü ç</span></div>
+        </article>
+      </section>
+
+      <footer>
+        <span>All 22 cards use the same original Portuguese sample and accent row.</span>
+        <span>Study only · no ALM 1911 text or edition data is included.</span>
+      </footer>
+    </main>
+  </body>
+</html>

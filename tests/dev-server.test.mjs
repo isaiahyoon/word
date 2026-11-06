@@ -68,6 +68,22 @@ describe("development server", () => {
     }
   });
 
+  it("serves the Portuguese font study with its 22 specimens and pastel palette", async () => {
+    const response = await fetch(`${origin}/studies/portuguese-font-study.html`);
+    const html = await response.text();
+    const families = [...html.matchAll(/data-family="([^"]+)"/g)].map(([, family]) => family);
+
+    assert.equal(response.status, 200);
+    assert.match(html, /<title>Portuguese Type Study · The Word<\/title>/);
+    assert.match(html, /rel="apple-touch-icon" href="\/assets\/apple-touch-icon\.png"/);
+    assert.match(html, /Portuguese serif type specimens/);
+    assert.equal(families.length, 22);
+    assert.equal(new Set(families).size, 22);
+    for (const color of ["#F4F0E7", "#DDE9DC", "#E8CFCA", "#E5D6A5"]) {
+      assert.ok(html.includes(color), `study includes ${color}`);
+    }
+  });
+
   it("serves the About page at its clean route with install and support details", async () => {
     const [aboutResponse, slashResponse] = await Promise.all([
       fetch(`${origin}/about`),
