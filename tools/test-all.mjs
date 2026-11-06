@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 
 const suites = [
   ["lint:css", ["run", "lint:css"]],
+  ["lint:js", ["run", "lint:js"]],
   ["unit", ["test"]],
   ["ui", ["run", "test:ui"]],
 ];

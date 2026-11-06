@@ -216,4 +216,23 @@ describe("service worker", () => {
       await access(fileURLToPath(new URL(`..${path}`, import.meta.url)));
     }
   });
+
+  it("precaches every reader module dependency", async () => {
+    const source = await readFile(new URL("../sw.js", import.meta.url), "utf8");
+    const list = source.match(/const SHELL_URLS = \[([\s\S]*?)\];/)[1];
+    const urls = new Set([...list.matchAll(/"([^"]+)"/g)].map((match) => match[1]));
+    const visited = new Set();
+
+    async function visitModule(path) {
+      if (visited.has(path)) return;
+      visited.add(path);
+      assert.ok(urls.has(path), `${path} is available offline`);
+      const moduleSource = await readFile(new URL(`..${path}`, import.meta.url), "utf8");
+      for (const [, specifier] of moduleSource.matchAll(/from\s+["'](\.\.?\/[^"']+)["']/g)) {
+        await visitModule(new URL(specifier, `https://example.test${path}`).pathname);
+      }
+    }
+
+    await visitModule("/js/app.js");
+  });
 });

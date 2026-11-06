@@ -63,7 +63,6 @@ const displayBookNames = [];
 let sourceVerseCount = 0;
 
 for (const [bookIndex, sourceBook] of sourceBooks.entries()) {
-  const bookNumber = bookIndex + 1;
   if (sourceBook.name === null || sourceBook.chapters.size !== canonicalIndex.chapterCounts[bookIndex]) {
     throw new Error(`Unexpected Luther book or chapter coverage for ${BOOKS[bookIndex]}`);
   }
