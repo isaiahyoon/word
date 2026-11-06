@@ -518,6 +518,7 @@ function showEdition(editionId) {
   document.body.classList.toggle("is-japbungo-edition", editionId === "japbungo");
   document.body.classList.toggle("is-martin1744-edition", editionId === "martin1744");
   document.body.classList.toggle("is-rv1865-edition", editionId === "rv1865");
+  document.body.classList.toggle("is-alm1911-edition", editionId === "alm1911");
   document.querySelector('meta[name="description"]')?.setAttribute("content", uiText("metaDescription"));
   document.querySelector('meta[property="og:description"]')?.setAttribute("content", uiText("metaDescription"));
   document.querySelector('meta[name="twitter:description"]')?.setAttribute("content", uiText("metaDescription"));

@@ -19,6 +19,8 @@ test("localizes About page content, metadata, and accessible names", async ({ pa
     await expect(page.locator("html")).toHaveAttribute("lang", language);
     await expect(page).toHaveTitle(locale.pageTitle);
     await expect(page.locator("#page-title")).toHaveText(localizedHeadings[language]);
+    await expect(page.locator('[data-about="editionsTitle"]')).toHaveText(locale.editionsTitle);
+    await expect(page.locator('[data-about="editionsCopy"]')).toHaveText(locale.editionsCopy);
     await expect(page.locator("[data-about-app-name]"))
       .toHaveText(Object.values(EDITIONS).find((edition) => edition.language === language).appName);
     await expect(page.locator("#about-language")).toHaveAttribute("aria-label", locale.languageLabel);
@@ -46,7 +48,8 @@ test("localizes About page content, metadata, and accessible names", async ({ pa
 });
 
 test("uses the selected edition name as the installed app title in every language", async ({ page }) => {
-  for (const edition of Object.values(EDITIONS)) {
+  for (const edition of Object.values(EDITIONS)
+    .filter(({ language }) => Object.hasOwn(ABOUT_LOCALES, language))) {
     await page.goto(`/about?lang=${edition.language}&install=${edition.id}`);
 
     await expect(page).toHaveTitle(edition.appName);
@@ -225,7 +228,8 @@ test("keeps the four-square brand mark square across About languages on mobile",
 test("uses the saved reader edition and keeps an explicit About language in the URL", async ({ page }) => {
   await page.goto("/about/");
 
-  for (const edition of Object.values(EDITIONS)) {
+  for (const edition of Object.values(EDITIONS)
+    .filter(({ language }) => Object.hasOwn(ABOUT_LOCALES, language))) {
     await page.evaluate((editionId) => {
       window.localStorage.setItem("the-word.reader-state.v1:/", JSON.stringify({
         version: 1,

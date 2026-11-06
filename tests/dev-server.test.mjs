@@ -201,7 +201,8 @@ describe("development server", () => {
       "/moh/b/psalms/c/3/v/1",
       "/moh/b/psalms/c/3/v/1/",
       "/luz/b/psalms/c/3/v/1/",
-      "/luz/b/psalms/c/3/v/1/",
+      "/alm/b/john/c/3/v/16",
+      "/alm/b/john/c/3/v/16/",
       "/moh",
       "/moh/",
       "/licht",
@@ -210,6 +211,8 @@ describe("development server", () => {
       "/kjv/",
       "/krv",
       "/krv/",
+      "/alm",
+      "/alm/",
       "/b/joshua/c/1/v/1-10",
       "/b/joshua/c/1/v/1-10/",
       "/b/john/3/16",
@@ -236,7 +239,7 @@ describe("development server", () => {
     assert.ok(aboutSlashRewriteIndex >= 0 && aboutSlashRewriteIndex < editionRewriteIndex);
     assert.ok(editionSlashRewriteIndex >= 0 && editionSlashRewriteIndex < fallbackIndex);
     assert.notEqual(fallbackIndex, -1);
-    for (const route of ["/about", "/kjv/b/*", "/krv/b/*", "/diodati/b/*", "/licht/b/*", "/japbungo/b/*", "/moh/b/*", "/luz/b/*", "/b/*"]) {
+    for (const route of ["/about", "/kjv/b/*", "/krv/b/*", "/diodati/b/*", "/licht/b/*", "/japbungo/b/*", "/moh/b/*", "/luz/b/*", "/alm/b/*", "/b/*"]) {
       assert.ok(redirects.indexOf(route) < fallbackIndex, `${route} precedes the 404 fallback`);
     }
   });

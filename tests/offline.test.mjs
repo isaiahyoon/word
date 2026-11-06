@@ -159,6 +159,32 @@ describe("offline fonts", () => {
     assert.deepEqual(fetched, [["https://fonts.googleapis.com/css2?family=Gelasio", { mode: "no-cors" }]]);
     assert.deepEqual(faces.map((item) => item.loaded), [true, false, true, false, false]);
   });
+
+  it("loads the nearest Cardo face used by Portuguese scripture and headings", async () => {
+    const faces = [face("Cardo", "400"), face("Cardo", "700")];
+    const elements = {
+      "#verse-list": "verses",
+      ".chapter-heading h1": "heading",
+      ".book-name": "book",
+    };
+    const portugueseStyles = new Map([
+      ["verses", { fontFamily: '"Cardo", Georgia', fontWeight: "400", fontStyle: "normal" }],
+      ["heading", { fontFamily: '"Cardo", Georgia', fontWeight: "500", fontStyle: "normal" }],
+      ["book", { fontFamily: '"Cardo", Georgia', fontWeight: "400", fontStyle: "normal" }],
+    ]);
+
+    await preloadEditionFonts({
+      doc: {
+        fonts: faces,
+        querySelectorAll: () => [{ href: "https://fonts.googleapis.com/css2?family=Cardo" }],
+        querySelector: (selector) => elements[selector],
+      },
+      fetchImpl: async () => {},
+      getStyle: (element) => portugueseStyles.get(element),
+    });
+
+    assert.deepEqual(faces.map((item) => item.loaded), [true, false]);
+  });
 });
 
 describe("service worker", () => {

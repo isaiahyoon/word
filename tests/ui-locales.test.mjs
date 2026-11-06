@@ -51,6 +51,15 @@ describe("reader interface locales", () => {
     assert.equal(formatUiText(locale, "offlineSavingProgress", { done: 2, total: 5 }), "Guardando 2 de 5…");
   });
 
+  it("localizes Portuguese reader controls and dynamic passage messages", () => {
+    const locale = getUiLocale("pt");
+    assert.equal(locale.searchInput, "Pesquisar as Escrituras");
+    assert.equal(locale.copyInLanguage, "Escolher um idioma para copiar");
+    assert.equal(formatUiText(locale, "chooseChapter", { book: "Gênesis", chapter: 2 }), "Escolher capítulo de Gênesis, atualmente 2");
+    assert.equal(formatUiText(locale, "offlineSavingProgress", { done: 2, total: 5 }), "Salvando 2 de 5…");
+    assert.equal(formatUiText(locale, "previousChapter", { reference: "João 3" }), "Capítulo anterior: João 3");
+  });
+
   it("localizes offline progress, saved state, and removal for every language", async () => {
     for (const [language, locale] of Object.entries(UI_LOCALES)) {
       const root = createElement();

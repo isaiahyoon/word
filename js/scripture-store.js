@@ -54,6 +54,7 @@ export function createScriptureStore({
   const bookIndexes = new Map();
   const bookOrderIndexes = new Map(bookOrder.map((book, index) => [book, index]));
   let activeDisplayBookNames = displayBookNames;
+  let activeBookNameAliases = [];
   let bookNamesByLength = [];
   const japaneseTokenizer = language === "ja" ? createJapaneseTokenizer() : null;
   if (
@@ -68,6 +69,11 @@ export function createScriptureStore({
     [...canonicalBookNames, ...activeDisplayBookNames].forEach((name, index) => {
       const bookIndex = index % canonicalBookNames.length;
       bookIndexes.set(normalizeBookName(name), bookIndex + 1);
+    });
+    activeBookNameAliases.forEach((aliases, bookIndex) => {
+      for (const name of aliases) {
+        bookIndexes.set(normalizeBookName(name), bookIndex + 1);
+      }
     });
     bookNamesByLength = [...bookIndexes.keys()].sort((left, right) => right.length - left.length);
   }
@@ -107,6 +113,14 @@ export function createScriptureStore({
           index.displayBookNames.length === canonicalBookNames.length &&
           index.displayBookNames.every((name) => typeof name === "string" && name.trim().length > 0)
         );
+        const validBookNameAliases = index.bookNameAliases === undefined || (
+          Array.isArray(index.bookNameAliases) &&
+          index.bookNameAliases.length === canonicalBookNames.length &&
+          index.bookNameAliases.every((aliases) =>
+            Array.isArray(aliases) &&
+            aliases.every((name) => typeof name === "string" && name.trim().length > 0)
+          )
+        );
         const indexChapterFrontMatter = index.chapterFrontMatter ?? {};
         const indexVerseHeadings = index.verseHeadings ?? [];
         const validChapterFrontMatter = typeof indexChapterFrontMatter === "object" &&
@@ -126,6 +140,7 @@ export function createScriptureStore({
           !validChapterCounts ||
           !validBookFiles ||
           !validDisplayBookNames ||
+          !validBookNameAliases ||
           !validChapterFrontMatter ||
           !validVerseHeadings
         ) {
@@ -141,6 +156,11 @@ export function createScriptureStore({
         }
         if (index.displayBookNames) {
           activeDisplayBookNames = index.displayBookNames;
+        }
+        if (index.bookNameAliases) {
+          activeBookNameAliases = index.bookNameAliases;
+        }
+        if (index.displayBookNames || index.bookNameAliases) {
           rebuildBookNameIndex();
         }
       })().catch((error) => {

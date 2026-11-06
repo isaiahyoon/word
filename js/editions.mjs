@@ -13,6 +13,46 @@ export const MARTIN_BOOK_NAMES = [
   "Matthieu", "Marc", "Luc", "Jean", "Actes des Apôtres", "Romains", "1 Corinthiens", "2 Corinthiens", "Galates", "Éphésiens", "Philippiens", "Colossiens", "1 Thessaloniciens", "2 Thessaloniciens", "1 Timothée", "2 Timothée", "Tite", "Philémon", "Hébreux", "Jacques", "1 Pierre", "2 Pierre", "1 Jean", "2 Jean", "3 Jean", "Jude", "Apocalypse",
 ];
 
+export const ALM_BOOK_NAMES = [
+  "Gênesis", "Êxodo", "Levítico", "Números", "Deuteronômio", "Josué", "Juízes", "Rute", "1 Samuel", "2 Samuel", "1 Reis", "2 Reis", "1 Crônicas", "2 Crônicas", "Esdras", "Neemias", "Ester", "Jó", "Salmos", "Provérbios", "Eclesiastes", "Cântico dos Cânticos", "Isaías", "Jeremias", "Lamentações", "Ezequiel", "Daniel", "Oséias", "Joel", "Amós", "Obadias", "Jonas", "Miquéias", "Naum", "Habacuque", "Sofonias", "Ageu", "Zacarias", "Malaquias",
+  "Mateus", "Marcos", "Lucas", "João", "Atos", "Romanos", "1 Coríntios", "2 Coríntios", "Gálatas", "Efésios", "Filipenses", "Colossenses", "1 Tessalonicenses", "2 Tessalonicenses", "1 Timóteo", "2 Timóteo", "Tito", "Filemom", "Hebreus", "Tiago", "1 Pedro", "2 Pedro", "1 João", "2 João", "3 João", "Judas", "Apocalipse",
+];
+
+export const ALM_BOOK_NAME_ALIASES = Array.from({ length: BOOKS.length }, () => []);
+const almAliasesByBook = {
+  1: ["Génesis"],
+  5: ["Deuteronómio"],
+  9: ["I Samuel"],
+  10: ["II Samuel"],
+  11: ["I Reis"],
+  12: ["II Reis"],
+  13: ["1 Crónicas", "I Crónicas"],
+  14: ["2 Crónicas", "II Crónicas"],
+  18: ["Job"],
+  22: ["Cantares"],
+  28: ["Oseias"],
+  31: ["Abdias"],
+  33: ["Miqueias"],
+  35: ["Habacuc"],
+  44: ["Atos dos Apóstolos", "Actos dos Apóstolos"],
+  46: ["I Coríntios"],
+  47: ["II Coríntios"],
+  52: ["I Tessalonicenses"],
+  53: ["II Tessalonicenses"],
+  54: ["I Timóteo"],
+  55: ["II Timóteo"],
+  57: ["Filémon"],
+  60: ["I Pedro"],
+  61: ["II Pedro"],
+  62: ["I João"],
+  63: ["II João"],
+  64: ["III João"],
+  66: ["Apocalipse de João"],
+};
+for (const [book, aliases] of Object.entries(almAliasesByBook)) {
+  ALM_BOOK_NAME_ALIASES[Number(book) - 1] = aliases;
+}
+
 export const EDITIONS = {
   kjv: {
     id: "kjv",
@@ -137,6 +177,25 @@ export const EDITIONS = {
     themeColor: "#edf3e8",
     attribution: "Reina-Valera 1865 · revisión ortográfica de 2018 · CC0 1.0",
     attributionUrl: "https://github.com/MC1171611/valera1865",
+  },
+  alm1911: {
+    id: "alm1911",
+    routeSegment: "alm",
+    shortCode: "ALM",
+    label: "Almeida 1911",
+    name: "Reimpressão de 1911 da edição de 1900",
+    brandPrimary: "ALMEIDA",
+    brandSecondary: "1911",
+    language: "pt",
+    languageName: "Português",
+    appName: "A Palavra Maravilhosa",
+    direction: "ltr",
+    dataPath: "./scripture/alm1911",
+    bookOrder: CANONICAL_BOOK_ORDER,
+    displayBookNames: ALM_BOOK_NAMES,
+    themeColor: "#f4f0e7",
+    attribution: "Project Gutenberg · reimpressão de 1911 da edição de 1900 · Dados de damarals/biblias† · MIT para a estrutura do banco · direitos do texto variam por jurisdição.",
+    attributionUrl: "https://github.com/damarals/biblias",
   },
 };
 

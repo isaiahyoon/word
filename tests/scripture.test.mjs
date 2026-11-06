@@ -3,7 +3,12 @@ import { performance } from "node:perf_hooks";
 import { readFile } from "node:fs/promises";
 import { describe, it } from "node:test";
 import { BOOKS, bookFileName } from "../js/books.mjs";
-import { KRV_BOOK_NAMES, MARTIN_BOOK_NAMES } from "../js/editions.mjs";
+import {
+  ALM_BOOK_NAMES,
+  ALM_BOOK_NAME_ALIASES,
+  KRV_BOOK_NAMES,
+  MARTIN_BOOK_NAMES,
+} from "../js/editions.mjs";
 import {
   createScriptureRoutes,
   getVerseStep,
@@ -192,6 +197,23 @@ describe("scripture routes", () => {
       rv1865Routes.buildPath(43, 1, { start: 1, end: 1 }, "rv1865"),
       "/luz/b/john/c/1/v/1",
     );
+
+    const alm1911Routes = createScriptureRoutes(BOOKS, "/", {
+      kjv: { routeSegment: "kjv" },
+      alm1911: { routeSegment: "alm" },
+    });
+    assert.deepEqual(alm1911Routes.parse("/alm/b/john/c/3/v/16"), {
+      editionId: "alm1911",
+      book: 43,
+      chapter: 3,
+      range: { start: 16, end: 16 },
+      legacy: false,
+    });
+    assert.equal(
+      alm1911Routes.buildPath(43, 3, { start: 16, end: 16 }, "alm1911"),
+      "/alm/b/john/c/3/v/16",
+    );
+    assert.equal(alm1911Routes.parse("/alm").editionId, "alm1911");
   });
 
   it("round-trips numbered and multiword book slugs", () => {
@@ -328,6 +350,92 @@ describe("scripture store", () => {
     }
     assert.ok(mock.requests.includes("./scripture/krv/index.json"));
     assert.ok(mock.requests.includes("./scripture/krv/books/43_john.json"));
+  });
+
+  it("searches Portuguese text, Brazilian and European book names, references, and typos", async () => {
+    const dataPath = "./scripture/alm1911";
+    const mock = createMockFetch(dataPath, {
+      displayBookNames: ALM_BOOK_NAMES,
+      bookNameAliases: ALM_BOOK_NAME_ALIASES,
+    });
+    const fetchImpl = async (url) => {
+      if (url === `${dataPath}/books/1_genesis.json`) {
+        return {
+          ok: true,
+          json: async () => ({
+            1: [[1, "No principio creou Deus os céus e a terra; e o Espírito de Deus se movia sobre as águas."]],
+          }),
+        };
+      }
+      if (url === `${dataPath}/books/43_john.json`) {
+        return {
+          ok: true,
+          json: async () => ({
+            1: [[1, "No princípio era o Verbo."]],
+            2: [[1, "Jesus foi convidado para as bodas."]],
+            3: Array.from({ length: 16 }, (_, index) => [
+              index + 1,
+              index === 15
+                ? "Porque Deus amou o mundo de tal maneira."
+                : `Versículo de João, número ${index + 1}.`,
+            ]),
+          }),
+        };
+      }
+      return mock.fetchImpl(url);
+    };
+    const store = createScriptureStore({
+      fetchImpl,
+      dataPath,
+      editionId: "alm1911",
+      language: "pt",
+      displayBookNames: ALM_BOOK_NAMES,
+    });
+    await store.initialize();
+
+    assert.equal(store.bookName(1), "Gênesis");
+    const brazilianPrefix = await store.search("Gên");
+    assert.equal(brazilianPrefix[0].searchType, "book");
+    assert.equal(brazilianPrefix[0].book, 1);
+    const europeanPrefix = await store.search("Gén");
+    assert.equal(europeanPrefix[0].searchType, "book");
+    assert.equal(europeanPrefix[0].book, 1);
+    const europeanBookName = await store.search("Deuteronómio");
+    assert.equal(europeanBookName[0].searchType, "book");
+    assert.equal(europeanBookName[0].book, 5);
+    const europeanMultiwordBookName = await store.search("Actos dos Apóstolos");
+    assert.equal(europeanMultiwordBookName[0].searchType, "book");
+    assert.equal(europeanMultiwordBookName[0].book, 44);
+
+    const textMatches = await store.search("creou");
+    assert.deepEqual(
+      textMatches.map(({ book, chapter, verse }) => ({ book, chapter, verse })),
+      [{ book: 1, chapter: 1, verse: 1 }],
+    );
+    const fuzzyMatches = await store.search("principioo");
+    assert.ok(fuzzyMatches.some(({ book, chapter, verse, searchType }) =>
+      book === 1 && chapter === 1 && verse === 1 && searchType === "text"
+    ));
+
+    const exactReference = await store.search("João 3:16");
+    assert.equal(exactReference[0].searchType, "reference");
+    assert.deepEqual(
+      { book: exactReference[0].book, chapter: exactReference[0].chapter, verse: exactReference[0].verse },
+      { book: 43, chapter: 3, verse: 16 },
+    );
+    assert.equal(exactReference.filter(({ book, chapter, verse }) =>
+      book === 43 && chapter === 3 && verse === 16).length, 1);
+    const europeanReference = await store.search("Génesis 1:1");
+    assert.equal(europeanReference[0].searchType, "reference");
+    assert.deepEqual(
+      { book: europeanReference[0].book, chapter: europeanReference[0].chapter, verse: europeanReference[0].verse },
+      { book: 1, chapter: 1, verse: 1 },
+    );
+
+    for (const query of ["João 3:99", "João 22:1"]) {
+      const matches = await store.search(query);
+      assert.ok(matches.every((match) => match.searchType !== "reference"), query);
+    }
   });
 
   it("searches exact references and rejects missing verses", async () => {

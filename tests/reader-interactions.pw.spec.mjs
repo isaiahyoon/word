@@ -58,6 +58,7 @@ test("localizes reader navigation and accessible controls for every edition", as
     { route: "/licht", language: "de", navigation: "Buchnavigation öffnen", previous: "Vorheriges Kapitel:", chapter: "Kapitel von ", chapterOption: "1 Mose, Kapitel 2", testament: "Altes", offlineStatus: "Nicht offline gespeichert", save: "Speichern", cut: "Ausschneiden", previewAlt: "Prismenschwert-Emblem vom Wunderbaren Wort neben dem Namen des Bibelleseprogramms", shortcutTitle: "Tastenkürzel", shortcutHome: "Zur Startseite", feedbackTitle: "Hinterlasse eine Nachricht", feedbackBug: "Ein kleines Problem" },
     { route: "/japbungo", language: "ja", navigation: "書名ナビゲーションを開く", previous: "前の章：", chapter: "創世記の章を選択", chapterOption: "創世記 2章", testament: "旧約", offlineStatus: "オフライン用に未保存", save: "保存", cut: "切り取る", previewAlt: "聖書リーダー名の横にある驚くべき御言葉のプリズムの剣の紋章", shortcutTitle: "キーボードショートカット", shortcutHome: "ホームページへ移動", feedbackTitle: "ご意見をお聞かせください", feedbackBug: "小さな不具合" },
     { route: "/moh", language: "fr", navigation: "Ouvrir la navigation des livres", previous: "Chapitre précédent :", chapter: "Choisir le chapitre de Genèse", chapterOption: "Genèse, chapitre 2", testament: "Ancien", offlineStatus: "Non enregistré hors connexion", save: "Enregistrer", cut: "Couper", previewAlt: "Emblème de l’épée prismatique de la Parole Merveilleuse à côté du nom du lecteur biblique", shortcutTitle: "Raccourcis clavier", shortcutHome: "Aller à la page d’accueil", feedbackTitle: "Laissez-moi un mot", feedbackBug: "Un petit souci" },
+    { route: "/alm", language: "pt", navigation: "Abrir navegação dos livros", previous: "Capítulo anterior:", chapter: "Escolher capítulo de Gênesis", chapterOption: "Gênesis, capítulo 2", testament: "Antigo", offlineStatus: "Não salvo para leitura offline", save: "Salvar", cut: "Recortar", previewAlt: "Emblema da espada prismática de A Palavra Maravilhosa ao lado do nome do leitor bíblico", shortcutTitle: "Atalhos de teclado", shortcutHome: "Ir para a página inicial", feedbackTitle: "Deixe uma mensagem", feedbackBug: "Um pequeno problema" },
   ];
 
   for (const edition of editions) {
@@ -75,6 +76,7 @@ test("localizes reader navigation and accessible controls for every edition", as
       de: "In der Bibel suchen",
       ja: "聖書を検索",
       fr: "Rechercher dans les Écritures",
+      pt: "Pesquisar as Escrituras",
     }[edition.language]);
     await expect(page.locator(".testament-tabs [role='tab']").first()).toContainText(edition.testament);
     expect(await page.locator("#previous-chapter").getAttribute("aria-label")).toContain(edition.previous);
@@ -93,6 +95,7 @@ test("localizes reader navigation and accessible controls for every edition", as
       de: "Tastenkürzel schließen",
       ja: "キーボードショートカットを閉じる",
       fr: "Fermer les raccourcis clavier",
+      pt: "Fechar atalhos de teclado",
     }[edition.language]);
     await page.locator("#shortcuts-close").click();
 
@@ -120,6 +123,7 @@ test("localizes and emphasizes the reader's About link for every edition", async
     { route: "/japbungo", label: "このサイトについて", font: "Noto Serif JP", interfaceFont: "Noto Sans JP" },
     { route: "/moh", label: "À propos", font: "EB Garamond", interfaceFont: "DM Sans" },
     { route: "/luz", label: "Acerca de", font: "Petrona", interfaceFont: "DM Sans" },
+    { route: "/alm", label: "Sobre", font: "Cardo", interfaceFont: "DM Sans" },
   ];
 
   for (const viewport of [
@@ -173,6 +177,91 @@ test("localizes and emphasizes the reader's About link for every edition", async
   await page.locator("#edition-select").click();
   await page.locator("#edition-option-krv").click();
   await expect(page.locator(".topbar-about")).toHaveText("소개");
+});
+
+test("applies the Almeida palette and Cardo, and keeps its open edition menu usable", async ({ page }) => {
+  for (const viewport of [
+    { width: 320, height: 740 },
+    { width: 390, height: 844 },
+    { width: 1280, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/alm/b/john/c/3/v/16");
+    await expect(page.locator("html")).toHaveAttribute("lang", "pt");
+    await expect(page.locator("body")).toHaveClass(/is-alm1911-edition/);
+    await expect(page.locator("#verse-list")).toHaveCSS("font-family", /Cardo/);
+    await expect(page.locator(".chapter-heading h1")).toHaveCSS("font-family", /Cardo/);
+
+    const theme = await page.locator("body").evaluate((body) => {
+      const style = getComputedStyle(body);
+      return {
+        canvas: style.getPropertyValue("--canvas").trim(),
+        green: style.getPropertyValue("--green").trim(),
+        pink: style.getPropertyValue("--pink").trim(),
+        gold: style.getPropertyValue("--yellow").trim(),
+        pageWidth: document.documentElement.scrollWidth,
+        viewportWidth: document.documentElement.clientWidth,
+      };
+    });
+    expect(theme).toMatchObject({
+      canvas: "#f4f0e7",
+      green: "#dde9dc",
+      pink: "#e8cfca",
+      gold: "#e5d6a5",
+    });
+    expect(theme.pageWidth).toBeLessThanOrEqual(viewport.width);
+    expect(await page.locator('meta[name="theme-color"]').getAttribute("content")).toBe("#f4f0e7");
+
+    const trigger = page.locator("#edition-select");
+    const menu = page.locator("#edition-options");
+    if (viewport.width < 768) {
+      await page.locator("#menu-toggle").click();
+      await expect(page.locator("#sidebar")).toHaveClass(/is-open/);
+      await expect.poll(() => page.locator("#sidebar").evaluate((element) =>
+        getComputedStyle(element).transform,
+      )).toBe("matrix(1, 0, 0, 1, 0, 0)");
+    }
+    await trigger.focus();
+    await page.keyboard.press("ArrowDown");
+    await expect(menu).toBeVisible();
+    await expect(page.locator("#edition-option-alm1911")).toHaveAttribute("aria-selected", "true");
+    await page.keyboard.press("Home");
+    await expect(page.locator("#edition-option-kjv")).toBeFocused();
+    const options = await menu.locator(".edition-option").evaluateAll((elements) =>
+      elements.map((element) => {
+        const bounds = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        return {
+          left: bounds.left,
+          right: bounds.right,
+          focused: element.matches(":focus-visible"),
+          selected: element.getAttribute("aria-selected") === "true",
+          background: style.backgroundImage,
+        };
+      }),
+    );
+    expect(options).toHaveLength(8);
+    for (const option of options) {
+      expect(option.left).toBeGreaterThanOrEqual(0);
+      expect(option.right).toBeLessThanOrEqual(viewport.width);
+    }
+    expect(options.find(({ focused }) => focused)?.background).not.toBe("none");
+    expect(options.find(({ selected }) => selected)?.background).not.toBe("none");
+    const panel = await menu.evaluate((element) => {
+      const bounds = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      return {
+        left: bounds.left,
+        right: bounds.right,
+        background: style.backgroundImage !== "none" || style.backgroundColor !== "rgba(0, 0, 0, 0)",
+      };
+    });
+    expect(panel.left, `menu left edge at ${viewport.width}px`).toBeGreaterThanOrEqual(0);
+    expect(panel.right, `menu right edge at ${viewport.width}px`).toBeLessThanOrEqual(viewport.width);
+    expect(panel.background).toBe(true);
+    await page.keyboard.press("Escape");
+    await expect(menu).toBeHidden();
+  }
 });
 
 test("centers the chapter picker within a mobile viewport", async ({ page }) => {
@@ -381,7 +470,7 @@ test("brand link returns to the active edition root", async ({ page }) => {
   await expect(page.locator("#verse-1")).toBeVisible();
 });
 
-for (const segment of ["kjv", "krv", "diodati", "licht", "japbungo", "moh", "luz"]) {
+for (const segment of ["kjv", "krv", "diodati", "licht", "japbungo", "moh", "luz", "alm"]) {
   test(`brand link on ${segment} returns to its edition root`, async ({ page }) => {
     await page.goto(`/${segment}/b/1-samuel/c/1/v/1`);
     const brand = page.locator(".brand");
@@ -492,7 +581,7 @@ test("keeps shortcut keycaps inside the dialog on short mobile screens", async (
 });
 
 test("sets every shortcut keycap in the same font in every edition", async ({ page }) => {
-  for (const route of ["/kjv", "/krv", "/diodati", "/licht", "/japbungo", "/moh"]) {
+  for (const route of ["/kjv", "/krv", "/diodati", "/licht", "/japbungo", "/moh", "/alm"]) {
     await page.goto(`${route}/b/genesis/c/1/v/1`);
     await page.locator("#shortcuts-open").click();
     const fonts = await page.locator(".shortcut-row kbd").evaluateAll((keys) =>
@@ -530,6 +619,7 @@ test("cycles editions with Tab and Shift+Tab and wraps at both ends", async ({ p
     ["/japbungo", "ja"],
     ["/moh", "fr"],
     ["/luz", "es"],
+    ["/alm", "pt"],
     ["/kjv", "en"],
   ]) {
     await page.keyboard.press("Tab");
@@ -539,6 +629,7 @@ test("cycles editions with Tab and Shift+Tab and wraps at both ends", async ({ p
   }
 
   for (const [route, language] of [
+    ["/alm", "pt"],
     ["/luz", "es"],
     ["/moh", "fr"],
     ["/japbungo", "ja"],
@@ -1014,6 +1105,14 @@ test("switches editions at the same passage and canonicalizes legacy KJV links",
   await expect(page.locator("body")).toHaveClass(/is-luther1912-edition/);
   await expect(page.locator("#verse-list")).toHaveAttribute("lang", "de");
   await expect(page.locator("#verse-17 .verse-text")).toContainText("Denn Gott hat seinen Sohn nicht gesandt");
+
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-option-alm1911").click();
+  await expect(page).toHaveURL(/\/alm\/b\/john\/c\/3\/v\/17$/);
+  await expect(page.locator("body")).toHaveClass(/is-alm1911-edition/);
+  await expect(page.locator("#verse-list")).toHaveAttribute("lang", "pt");
+  await expect(page.locator("#verse-17 .verse-text")).toContainText("Porque Deus enviou o seu Filho");
+  await expect(page.locator("#edition-attribution")).toContainText("Project Gutenberg");
 });
 
 test("keeps highlighted verses selected when switching to another language for copying", async ({ page }) => {
@@ -1035,6 +1134,25 @@ test("keeps highlighted verses selected when switching to another language for c
   await page.locator("#share-language-menu [data-edition='krv']").click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
     .toContain("하나님이 세상을 이처럼 사랑하사");
+});
+
+test("switches a selected passage to Almeida 1911 and copies its Portuguese citation", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/kjv/b/john/c/3/v/16");
+  await page.locator("#verse-16").click();
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-option-alm1911").click();
+
+  await expect(page).toHaveURL(/\/alm\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("#verse-list")).toHaveAttribute("lang", "pt");
+  await expect(page.locator("#verse-16")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("#copy-selected-verses")).toHaveText("Copiar 1 versículo");
+
+  const verseText = (await page.locator("#verse-16 .verse-text").textContent()).trim();
+  await page.locator("#copy-selected-verses").click();
+  await page.locator("#share-language-menu [data-edition='alm1911']").click();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toBe(`"${verseText}"\n\n- João 3:16`);
 });
 
 for (const route of ["/kjv/b/john/c/3/v/16", "/krv/b/john/c/3/v/16"]) {
@@ -1178,7 +1296,7 @@ test("shares selected verse text natively and falls back to copying when sharing
   await expect(page.locator("#share-selected-verses")).toHaveAttribute("aria-label", "Share 1 verse");
 
   await page.locator("#share-selected-verses").click();
-  await expect(page.locator("#share-language-menu [data-edition]")).toHaveCount(7);
+  await expect(page.locator("#share-language-menu [data-edition]")).toHaveCount(8);
   await page.locator("#share-language-menu [data-edition='martin1744']").click();
   await expect.poll(() => page.evaluate(() => window.sharedPayload.text)).toContain("Car Dieu a tant aimé le monde");
   await expect.poll(() => page.evaluate(() => window.sharedPayload.text)).toContain("- Jean 3:16");
@@ -1203,7 +1321,7 @@ test("copies selected verses in another language without changing the reading ed
   await copyControl.click();
   await expect(copyControl).toHaveAttribute("aria-expanded", "true");
   await expect(page.locator("#share-language-menu")).toHaveAttribute("aria-label", "Choose a language to copy in");
-  await expect(page.locator("#share-language-menu [data-edition]")).toHaveCount(7);
+  await expect(page.locator("#share-language-menu [data-edition]")).toHaveCount(8);
   await page.locator("#share-language-menu [data-edition='krv']").click();
 
   const copiedText = await page.evaluate(() => navigator.clipboard.readText());
@@ -1234,7 +1352,7 @@ test("closes the share language menu with Escape, outside clicks, and cleared se
   await expect(menu).toBeVisible();
   await expect(shareButton).toHaveAttribute("aria-expanded", "true");
   await expect(menu.locator("[aria-current]")).toBeFocused();
-  await expect(menu.locator("[data-edition]")).toHaveCount(7);
+  await expect(menu.locator("[data-edition]")).toHaveCount(8);
 
   await page.keyboard.press("Escape");
   await expect(menu).toBeHidden();
@@ -1318,7 +1436,7 @@ test("leaves out selected verses that the chosen edition does not contain", asyn
 
 test("keeps selected-verse actions on one row inside the viewport in every edition", async ({ page }) => {
   test.setTimeout(120_000);
-  for (const edition of ["kjv", "krv", "moh", "licht", "diodati", "luz", "japbungo"]) {
+  for (const edition of ["kjv", "krv", "moh", "licht", "diodati", "luz", "japbungo", "alm"]) {
     await page.setViewportSize({ width: 320, height: 800 });
     await page.goto(`/${edition}/b/john/c/3/v/16`);
     await page.locator("#verse-16").click();
@@ -1343,7 +1461,7 @@ test("keeps selected-verse actions on one row inside the viewport in every editi
 });
 
 test("keeps selected-verse actions inside small mobile viewports across edition themes", async ({ page }) => {
-  const editions = ["kjv", "krv", "moh"];
+  const editions = ["kjv", "krv", "moh", "alm"];
   const viewports = [
     { width: 320, height: 568 },
     { width: 360, height: 780 },
@@ -1678,6 +1796,11 @@ test("routes an edition-only URL to Genesis 1:1 in that edition", async ({ page 
   await expect(page).toHaveURL(/\/licht\/?$/);
   await expect(page.locator("body")).toHaveClass(/is-luther1912-edition/);
   await expect(page.locator("#verse-1 .verse-text")).toContainText("Am Anfang schuf Gott Himmel und Erde.");
+
+  await page.goto("/alm");
+  await expect(page).toHaveURL(/\/alm\/?$/);
+  await expect(page.locator("body")).toHaveClass(/is-alm1911-edition/);
+  await expect(page.locator("#verse-1 .verse-text")).toContainText("No principio creou Deus os céus e a terra.");
 });
 
 test("omits 3 John 1:15 from the KJV edition", async ({ page }) => {
@@ -1943,7 +2066,7 @@ for (const viewport of [
   { width: 390, height: 844, label: "mobile" },
   { width: 1280, height: 900, label: "desktop" },
 ]) {
-  for (const [edition, routeSegment] of [["kjv", "kjv"], ["diodati", "diodati"], ["luther1912", "licht"]]) {
+  for (const [edition, routeSegment] of [["kjv", "kjv"], ["diodati", "diodati"], ["luther1912", "licht"], ["alm1911", "alm"]]) {
     test(`toggles independent verse selections on ${viewport.label} in ${edition}`, async ({ page }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
       await page.goto(`/${routeSegment}/b/john/c/3/v/16`);
@@ -1961,6 +2084,7 @@ for (const viewport of [
         kjv: { two: "Copy 2 verses", one: "Copy 1 verse" },
         diodati: { two: "Copia 2 versetti", one: "Copia 1 versetto" },
         luther1912: { two: "2 Verse kopieren", one: "1 Vers kopieren" },
+        alm1911: { two: "Copiar 2 versículos", one: "Copiar 1 versículo" },
       }[edition];
       await expect(copyControl).toHaveText(copyLabels.two);
       await expect(copyControl).toBeVisible();
@@ -2055,6 +2179,7 @@ test("copies consecutive verses on every edition as separate lines with a compre
     ["diodati", "diodati", "Giovanni"],
     ["luther1912", "licht", "Johannes"],
     ["japbungo", "japbungo", "ヨハネの福音書"],
+    ["alm1911", "alm", "João"],
   ];
 
   for (const [editionId, routeSegment, displayBook] of editions) {
