@@ -99,7 +99,13 @@ describe("development server", () => {
       const response = await fetch(`${origin}/assets/install-manifests/${edition.id}.webmanifest`);
       assert.equal(response.status, 200);
       assert.match(response.headers.get("content-type"), /application\/manifest\+json/);
-      assert.deepEqual(await response.json(), {
+      const manifest = await response.json();
+      assert.deepEqual(
+        manifest.icons.map(({ src }) => src.split("?")[0]),
+        ["/assets/pwa-icon-192.png", "/assets/pwa-icon-512.png"],
+        `${edition.id} keeps the sword app icon`,
+      );
+      assert.deepEqual(manifest, {
         ...shared,
         name: edition.appName,
         short_name: edition.appName,
