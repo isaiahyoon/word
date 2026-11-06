@@ -194,7 +194,7 @@ export const EDITIONS = {
     bookOrder: CANONICAL_BOOK_ORDER,
     displayBookNames: ALM_BOOK_NAMES,
     themeColor: "#f4f0e7",
-    attribution: "Project Gutenberg · reimpressão de 1911 da edição de 1900 · Dados de damarals/biblias† · MIT para a estrutura do banco · direitos do texto variam por jurisdição.",
+    attribution: "Project Gutenberg · dados: damarals/biblias† · estrutura MIT · direitos do texto variam por jurisdição.",
     attributionUrl: "https://github.com/damarals/biblias",
   },
 };

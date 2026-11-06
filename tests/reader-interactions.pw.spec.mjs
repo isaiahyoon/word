@@ -1112,7 +1112,9 @@ test("switches editions at the same passage and canonicalizes legacy KJV links",
   await expect(page.locator("body")).toHaveClass(/is-alm1911-edition/);
   await expect(page.locator("#verse-list")).toHaveAttribute("lang", "pt");
   await expect(page.locator("#verse-17 .verse-text")).toContainText("Porque Deus enviou o seu Filho");
-  await expect(page.locator("#edition-attribution")).toContainText("Project Gutenberg");
+  await expect(page.locator("#edition-attribution")).toHaveText(
+    "Project Gutenberg · dados: damarals/biblias† · estrutura MIT · direitos do texto variam por jurisdição.",
+  );
 });
 
 test("keeps highlighted verses selected when switching to another language for copying", async ({ page }) => {

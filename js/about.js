@@ -73,9 +73,14 @@ function applyLanguage(language) {
   const locale = ABOUT_LOCALES[language];
   activeLanguage = language;
   document.documentElement.lang = language;
-  document.title = validInstallEdition ? EDITIONS[validInstallEdition].appName : locale.pageTitle;
+  const pageTitle = validInstallEdition ? EDITIONS[validInstallEdition].appName : locale.pageTitle;
+  document.title = pageTitle;
   brandName.textContent = appNameByLanguage[language];
   document.querySelector('meta[name="description"]').content = locale.metaDescription;
+  document.querySelector('meta[property="og:title"]').content = pageTitle;
+  document.querySelector('meta[property="og:description"]').content = locale.metaDescription;
+  document.querySelector('meta[name="twitter:title"]').content = pageTitle;
+  document.querySelector('meta[name="twitter:description"]').content = locale.metaDescription;
 
   for (const element of document.querySelectorAll("[data-about]")) {
     const key = element.dataset.about;
