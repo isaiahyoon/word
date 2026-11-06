@@ -18,6 +18,7 @@ const uiText = (key, values) => formatUiText(uiLocale, key, values);
 const appBasePath = new URL(document.baseURI).pathname;
 const scriptureRoutes = createScriptureRoutes(BOOKS, appBasePath, EDITIONS);
 const readerStateStorageKey = `the-word.reader-state.v1:${appBasePath}`;
+const defaultEditionStorageKey = "the-word.default-edition.v1";
 const elements = {
   appShell: document.querySelector(".app-shell"),
   pullRefreshIndicator: document.querySelector("#pull-refresh-indicator"),
@@ -176,6 +177,28 @@ function readSavedReaderState() {
   } catch {
     return null;
   }
+}
+
+function readDefaultEdition() {
+  try {
+    const editionId = window.localStorage.getItem(defaultEditionStorageKey);
+    return Object.hasOwn(EDITIONS, editionId) ? editionId : null;
+  } catch {
+    return null;
+  }
+}
+
+function initialInstallEdition() {
+  const editionId = new URLSearchParams(window.location.search).get("install");
+  if (!Object.hasOwn(EDITIONS, editionId)) return null;
+  const savedEdition = readDefaultEdition();
+  if (savedEdition) return savedEdition;
+  try {
+    window.localStorage.setItem(defaultEditionStorageKey, editionId);
+  } catch (error) {
+    logger.warn("Could not save the installed app's default edition", { editionId, error });
+  }
+  return editionId;
 }
 
 function saveReaderState() {
@@ -544,6 +567,11 @@ async function changeEdition(editionId, { preserveFocus = false } = {}) {
     elements.editionNotice.hidden = false;
     return;
   }
+  try {
+    window.localStorage.setItem(defaultEditionStorageKey, editionId);
+  } catch {
+    // The active edition remains usable if browser storage is unavailable.
+  }
   const verses = await scripture.loadChapter(book, chapter);
   await openChapter(book, chapter, Math.min(verse, verses.length), {
     selectedVersesToRestore: selectedVerses,
@@ -619,10 +647,9 @@ async function restoreLocationFromPath() {
 
   const savedState = readSavedReaderState();
   const savedLocation = route.home ? savedState : null;
-  await activateEdition(savedLocation?.editionId ?? route.editionId);
+  await activateEdition((route.home ? readDefaultEdition() ?? initialInstallEdition() : null) ?? savedLocation?.editionId ?? route.editionId);
   const canRestoreSavedLocation = savedLocation &&
     savedLocation.chapter <= scripture.chapterCount(savedLocation.book);
-  if (savedLocation && !canRestoreSavedLocation) await activateEdition(route.editionId);
 
   const routeMatchesSavedState = savedState && !route.home &&
     savedState.editionId === route.editionId &&
@@ -693,7 +720,9 @@ async function initialize() {
   });
   void registerServiceWorker();
   const initialRoute = scriptureRoutes.parse(window.location.pathname);
-  const savedEditionId = initialRoute?.home ? readSavedReaderState()?.editionId : null;
+  const savedEditionId = initialRoute?.home
+    ? readDefaultEdition() ?? initialInstallEdition() ?? readSavedReaderState()?.editionId
+    : null;
   let editionLoadError = null;
   await activateEdition(savedEditionId ?? initialRoute?.editionId ?? DEFAULT_EDITION)
     .catch((error) => { editionLoadError = error; });
@@ -854,7 +883,8 @@ function renderChapter(focusRange = null) {
   chapterSourceHeading.textContent = scripture.getChapterFrontMatter(state.book, state.chapter);
   chapterSourceHeading.lang = EDITIONS[state.editionId].language;
   chapterSourceHeading.hidden = !chapterSourceHeading.textContent;
-  document.title = `${name} ${state.chapter} — ${state.editionId === "kjv" ? "The Word" : `${EDITIONS[state.editionId].name} · The Word`}`;
+  const { appName, name: editionName } = EDITIONS[state.editionId];
+  document.title = `${name} ${state.chapter} — ${state.editionId === "kjv" ? appName : `${editionName} · ${appName}`}`;
 
   const chapterCount = scripture.chapterCount(state.book);
   chapterPicker.render({ bookName: name, chapterCount, activeChapter: state.chapter, locale: uiLocale });

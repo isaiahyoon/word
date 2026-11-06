@@ -23,6 +23,18 @@ test("saves an edition for offline reading and removes it again", async ({ page,
   await expect(action).toHaveText("Save");
 });
 
+test("opens an iOS-style installation URL offline after saving an edition", async ({ page, context }) => {
+  await page.addInitScript(() => Object.defineProperty(navigator, "standalone", { value: true }));
+  await page.goto("/?install=kjv");
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await page.locator("#edition-offline-action").click();
+  await expect(page.locator("#edition-offline-status")).toHaveText("Available offline");
+  await context.setOffline(true);
+  await page.goto("/about?install=kjv");
+  await expect(page).toHaveURL(/\/\?install=kjv$/);
+  await expect(page.locator("#verse-1")).toContainText("In the beginning");
+});
+
 test("keeps each edition's offline status separate", async ({ page }) => {
   await page.goto("/kjv/b/john/c/3/v/16");
   await page.evaluate(() => navigator.serviceWorker.ready);

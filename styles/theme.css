@@ -31,3 +31,56 @@
   --focus-ring: rgba(141, 180, 196, 0.14);
   --grain: rgba(99, 95, 78, 0.075);
 }
+
+.brand-mark {
+  position: relative;
+  isolation: isolate;
+}
+
+.brand-mark::after {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 1px 4px at 22% 22%, #fff 35%, transparent 75%),
+    radial-gradient(ellipse 4px 1px at 22% 22%, #fff 35%, transparent 75%),
+    radial-gradient(ellipse 1px 3px at 77% 28%, #fff8dc 35%, transparent 75%),
+    radial-gradient(ellipse 3px 1px at 77% 28%, #fff8dc 35%, transparent 75%),
+    radial-gradient(ellipse 1px 4px at 34% 78%, #fff 35%, transparent 75%),
+    radial-gradient(ellipse 4px 1px at 34% 78%, #fff 35%, transparent 75%),
+    radial-gradient(circle at 82% 78%, #fff 0.75px, transparent 1.5px);
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.82);
+}
+
+.brand:hover .brand-mark::after,
+.brand:focus-visible .brand-mark::after {
+  animation: brand-mark-sparkle 0.9s ease-out both;
+}
+
+@keyframes brand-mark-sparkle {
+  0% {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+  28% {
+    opacity: 0.95;
+    transform: scale(1.08);
+  }
+  52% {
+    opacity: 0.48;
+    transform: scale(0.94);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand:hover .brand-mark::after,
+  .brand:focus-visible .brand-mark::after {
+    animation: none;
+  }
+}

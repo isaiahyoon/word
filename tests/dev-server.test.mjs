@@ -3,6 +3,7 @@ import { once } from "node:events";
 import { readdir, readFile } from "node:fs/promises";
 import { after, before, describe, it } from "node:test";
 import { createDevServer } from "../tools/dev-server.mjs";
+import { EDITIONS } from "../js/editions.mjs";
 
 describe("development server", () => {
   const server = createDevServer();
@@ -38,18 +39,18 @@ describe("development server", () => {
 
     assert.equal(response.status, 200);
     const html = await response.text();
-    assert.match(html, /<title>The Word<\/title>/);
-    assert.ok(html.includes('data-glimmer="The Word"'));
-    assert.match(html, />\s*The Word<\/strong\s*>/);
+    assert.match(html, /<title>The Amazing Word<\/title>/);
+    assert.ok(html.includes('data-glimmer="The Amazing Word"'));
+    assert.match(html, />\s*The Amazing Word<\/strong\s*>/);
     assert.match(html, /name="description"\s+content="A quiet, searchable reader for exploring Scripture at your own pace\./);
-    assert.match(html, /property="og:title" content="The Word"/);
+    assert.match(html, /property="og:title" content="The Amazing Word"/);
     assert.match(html, /property="og:image" content="https:\/\/theamazingword\.org\/assets\/social-preview\.png"/);
     assert.match(html, /name="twitter:card" content="summary_large_image"/);
     assert.match(html, /name="twitter:image" content="https:\/\/theamazingword\.org\/assets\/social-preview\.png"/);
     assert.match(html, /class="topbar-about" href="\/about"/);
     assert.match(html, /class="topbar-actions"[\s\S]*class="shortcuts-trigger"/);
     assert.match(html, /class="site-footer-instagram"\s+href="https:\/\/www\.instagram\.com\/theamazingwordapp\/"\s+target="_blank"\s+rel="noopener noreferrer"/);
-    assert.match(html, /aria-label="Visit The Word on Instagram, opens in a new tab"/);
+    assert.match(html, /aria-label="Visit The Amazing Word on Instagram, opens in a new tab"/);
   });
 
   it("gives every HTML page a shared-link preview image", async () => {
@@ -79,15 +80,33 @@ describe("development server", () => {
 
     assert.equal(aboutResponse.status, 200);
     assert.equal(slashResponse.status, 200);
-    assert.match(html, /<title>About — The Word<\/title>/);
+    assert.match(html, /<title>About — The Amazing Word<\/title>/);
     assert.match(html, /rel="apple-touch-icon" href="\/assets\/apple-touch-icon\.png"/);
+    assert.match(html, /name="apple-mobile-web-app-capable" content="yes"/);
     assert.match(html, /The King James Version is the canonical foundation/);
     assert.match(html, /Add to Dock/);
     assert.match(html, /Add to Home Screen/);
     assert.match(html, /Install app/);
     assert.match(html, /Install this site as an app/);
+    assert.match(html, /id="install-language-form"/);
     assert.match(html, /https:\/\/buymeacoffee\.com\/isaiahyoon/);
     assert.match(slashHtml, /id="install-title"/);
+  });
+
+  it("serves an up-to-date install manifest for each edition", async () => {
+    const shared = await (await fetch(`${origin}/manifest.webmanifest`)).json();
+    for (const edition of Object.values(EDITIONS)) {
+      const response = await fetch(`${origin}/assets/install-manifests/${edition.id}.webmanifest`);
+      assert.equal(response.status, 200);
+      assert.match(response.headers.get("content-type"), /application\/manifest\+json/);
+      assert.deepEqual(await response.json(), {
+        ...shared,
+        name: edition.appName,
+        short_name: edition.appName,
+        lang: edition.language,
+        start_url: `/?install=${edition.id}`,
+      });
+    }
   });
 
   it("reports server liveness at /health", async () => {
@@ -205,8 +224,8 @@ describe("development server", () => {
     const html = await response.text();
 
     assert.equal(response.status, 404);
-    assert.match(html, /Page Not Found — The Word/);
-    assert.match(html, /<strong>The Word<\/strong>/);
+    assert.match(html, /Page Not Found — The Amazing Word/);
+    assert.match(html, /<strong>The Amazing Word<\/strong>/);
     assert.match(html, /Come back to the reading room/);
     assert.doesNotMatch(html, /id="go-back"/);
   });

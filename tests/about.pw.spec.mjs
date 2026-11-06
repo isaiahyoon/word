@@ -19,7 +19,19 @@ test("localizes About page content, metadata, and accessible names", async ({ pa
     await expect(page.locator("html")).toHaveAttribute("lang", language);
     await expect(page).toHaveTitle(locale.pageTitle);
     await expect(page.locator("#page-title")).toHaveText(localizedHeadings[language]);
+    await expect(page.locator("[data-about-app-name]"))
+      .toHaveText(Object.values(EDITIONS).find((edition) => edition.language === language).appName);
     await expect(page.locator("#about-language")).toHaveAttribute("aria-label", locale.languageLabel);
+    await expect(page.locator(".install-language-options legend")).toHaveText(locale.installLanguageTitle);
+    await expect(page.locator(".install-language-intro")).toHaveText(locale.installLanguageIntro);
+    await expect(page.locator(".install-language-submit")).toHaveText(locale.installLanguageContinue);
+    await expect(page.locator(".install-language-option")).toHaveCount(Object.keys(EDITIONS).length);
+    for (const edition of Object.values(EDITIONS)) {
+      await expect(page.locator(`.install-language-option input[value="${edition.id}"] + span`))
+        .toHaveAttribute("lang", edition.language);
+      await expect(page.locator(`.install-language-option input[value="${edition.id}"] + span`))
+        .toHaveText(edition.languageName);
+    }
     await expect(page.locator('[data-about="ethosCopyOne"]')).toHaveText(locale.ethosCopyOne);
     await expect(page.locator(".brand")).toHaveAttribute("aria-label", locale.brandHome);
     await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", locale.metaDescription);
@@ -31,6 +43,133 @@ test("localizes About page content, metadata, and accessible names", async ({ pa
     );
     expect(missingTranslations).toEqual([]);
   }
+});
+
+test("prepares the selected manifest before offering the native install prompt", async ({ page }) => {
+  await page.goto("/about?lang=en");
+
+  await page.locator('input[name="install-language"][value="rv1865"]').check();
+  await page.getByRole("button", { name: ABOUT_LOCALES.en.installLanguageContinue }).click();
+  await expect(page).toHaveURL(/\/about\?lang=en&install=rv1865#install-title$/);
+  await expect(page.locator('link[rel="manifest"]'))
+    .toHaveAttribute("href", "/assets/install-manifests/rv1865.webmanifest");
+  const cdp = await page.context().newCDPSession(page);
+  try {
+    const manifest = await cdp.send("Page.getAppManifest");
+    expect(manifest.errors).toEqual([]);
+    expect(manifest.manifest.startUrl).toBe(new URL("/?install=rv1865", page.url()).href);
+    expect((await cdp.send("Page.getInstallabilityErrors")).installabilityErrors).toEqual([]);
+  } finally {
+    await cdp.detach();
+  }
+  await expect(page.locator("#install-language-status")).toHaveText(ABOUT_LOCALES.en.installLanguageSaved);
+  await page.evaluate(() => {
+    const event = new Event("beforeinstallprompt", { cancelable: true });
+    event.prompt = async () => {
+      window.installPromptRequested = true;
+    };
+    event.userChoice = Promise.resolve({ outcome: "accepted" });
+    window.dispatchEvent(event);
+  });
+  await page.getByRole("button", { name: ABOUT_LOCALES.en.installLanguageContinue }).click();
+
+  await expect.poll(() => page.evaluate(() => window.installPromptRequested)).toBe(true);
+  await expect.poll(() => page.evaluate(() => window.localStorage.getItem("the-word.default-edition.v1")))
+    .toBe("rv1865");
+
+  await page.goto("/");
+  await expect(page.locator("#verse-1")).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("lang", "es");
+  await expect(page.locator("#edition-select-label")).toContainText("Reina-Valera · Español");
+
+  await page.locator("#edition-select").click();
+  await page.locator('#edition-options [data-edition="krv"]').click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "ko");
+  await expect.poll(() => page.evaluate(() => window.localStorage.getItem("the-word.default-edition.v1")))
+    .toBe("krv");
+});
+
+test("saves the install language when the browser uses manual installation steps", async ({ page }) => {
+  await page.goto("/about?lang=fr");
+  await page.locator('input[name="install-language"][value="japbungo"]').check();
+  await page.getByRole("button", { name: ABOUT_LOCALES.fr.installLanguageContinue }).click();
+
+  await expect(page).toHaveURL(/install=japbungo/);
+  await expect(page.locator("#install-language-status"))
+    .toHaveText(ABOUT_LOCALES.fr.installLanguageSaved);
+  await page.locator("#about-language").click();
+  await page.getByRole("option", { name: "English" }).click();
+  await expect(page.locator("#install-language-status"))
+    .toHaveText(ABOUT_LOCALES.en.installLanguageSaved);
+  await expect.poll(() => page.evaluate(() => window.localStorage.getItem("the-word.default-edition.v1")))
+    .toBe("japbungo");
+});
+
+for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
+  test(`carries each selected edition to isolated installation storage at ${viewport.width}px`, async ({ page, browser }) => {
+    await page.setViewportSize(viewport);
+    for (const edition of Object.values(EDITIONS)) {
+      await page.goto("/about?lang=en");
+      await page.locator(`input[name="install-language"][value="${edition.id}"]`).check();
+      await page.getByRole("button", { name: ABOUT_LOCALES.en.installLanguageContinue }).click();
+      await expect(page).toHaveURL(new RegExp(`install=${edition.id}`));
+      const manifestUrl = await page.locator('link[rel="manifest"]').getAttribute("href");
+      const manifest = await page.evaluate(async (url) => (await fetch(url)).json(), manifestUrl);
+      expect(manifest.start_url).toBe(`/?install=${edition.id}`);
+
+      const installedContext = await browser.newContext({ viewport });
+      try {
+        await installedContext.route(/^https:\/\/(fonts\.(googleapis|gstatic)\.com|cloud\.umami\.is)\//, (route) => route.abort());
+        const installedPage = await installedContext.newPage();
+        await installedPage.goto(new URL(manifest.start_url, page.url()).href);
+        await expect(installedPage.locator("#verse-1")).toBeVisible();
+        await expect(installedPage.locator("html")).toHaveAttribute("lang", edition.language);
+        await expect.poll(() => installedPage.evaluate(() => localStorage.getItem("the-word.default-edition.v1")))
+          .toBe(edition.id);
+      } finally {
+        await installedContext.close();
+      }
+    }
+  });
+}
+
+test("uses a later reader edition on subsequent installed launches", async ({ page }) => {
+  await page.goto("/?install=rv1865");
+  await expect(page.locator("html")).toHaveAttribute("lang", "es");
+  await page.locator("#edition-select").click();
+  await page.locator('#edition-options [data-edition="krv"]').click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "ko");
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("the-word.default-edition.v1")))
+    .toBe("krv");
+  await page.goto("/?install=rv1865");
+  await expect(page.locator("html")).toHaveAttribute("lang", "ko");
+  await page.goto("/diodati");
+  await expect(page.locator("html")).toHaveAttribute("lang", "it");
+});
+
+test("redirects an iOS-style home-screen About URL to the selected reader", async ({ page }) => {
+  await page.addInitScript(() => Object.defineProperty(navigator, "standalone", { value: true }));
+  await page.goto("/about?lang=en&install=japbungo");
+  await expect(page).toHaveURL(/\/\?install=japbungo$/);
+  await expect(page.locator("html")).toHaveAttribute("lang", "ja");
+});
+
+test("ignores an unknown installation edition", async ({ page }) => {
+  await page.goto("/?install=constructor");
+  await expect(page.locator("#verse-1")).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("the-word.default-edition.v1"))).toBeNull();
+});
+
+test("supports keyboard selection of the default install language", async ({ page }) => {
+  await page.goto("/about");
+  const english = page.locator('.install-language-option input[value="kjv"]');
+  const korean = page.locator('.install-language-option input[value="krv"]');
+
+  await english.focus();
+  await english.press("ArrowRight");
+  await expect(korean).toBeFocused();
+  await expect(korean).toBeChecked();
 });
 
 test("keeps sans-serif body copy and localized display typefaces on mobile", async ({ page }) => {
@@ -86,6 +225,7 @@ test("keeps About controls clear of each other and the viewport across mobile an
     await page.goto("/about?lang=ko");
 
     await expect(page.locator(".feature-card")).toHaveCount(4);
+    await expect(page.locator("#install-language-form")).toBeVisible();
     expect(await page.locator("html").evaluate((element) => element.scrollWidth))
       .toBeLessThanOrEqual(viewport.width);
     const featureColumnCount = await page.locator(".feature-grid")
@@ -137,6 +277,22 @@ test("keeps About controls clear of each other and the viewport across mobile an
     await expect(languageMenu.locator('[data-language="ko"]')).toHaveCSS("background-image", /rgb\(190, 216, 234\)/);
     await page.locator("#about-language").click();
     await expect(languageMenu).toBeHidden();
+
+    const installBounds = await page.locator("#install-language-form").boundingBox();
+    expect(installBounds).not.toBeNull();
+    expect(installBounds.x).toBeGreaterThanOrEqual(0);
+    expect(installBounds.x + installBounds.width).toBeLessThanOrEqual(viewport.width);
+    const installButtonBounds = await page.locator(".install-language-submit").boundingBox();
+    expect(installButtonBounds).not.toBeNull();
+    expect(Math.abs(
+      installButtonBounds.x + installButtonBounds.width / 2 -
+      (installBounds.x + installBounds.width / 2),
+    )).toBeLessThanOrEqual(1);
+    await page.locator('input[name="install-language"][value="kjv"]').check();
+    await expect(page.locator('label.install-language-option:has(input[value="kjv"])'))
+      .toHaveCSS("background-image", /linear-gradient/);
+    await expect(page.locator('label.install-language-option:has(input[value="kjv"])'))
+      .toHaveCSS("border-color", "rgba(127, 157, 184, 0.75)");
   }
 
   const firstCard = page.locator(".feature-card").first();
