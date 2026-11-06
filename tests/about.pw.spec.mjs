@@ -45,6 +45,14 @@ test("localizes About page content, metadata, and accessible names", async ({ pa
   }
 });
 
+test("uses the selected edition name as the installed app title in every language", async ({ page }) => {
+  for (const edition of Object.values(EDITIONS)) {
+    await page.goto(`/about?lang=${edition.language}&install=${edition.id}`);
+
+    await expect(page).toHaveTitle(edition.appName);
+  }
+});
+
 test("prepares the selected manifest before offering the native install prompt", async ({ page }) => {
   await page.goto("/about?lang=en");
 

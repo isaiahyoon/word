@@ -73,7 +73,7 @@ function applyLanguage(language) {
   const locale = ABOUT_LOCALES[language];
   activeLanguage = language;
   document.documentElement.lang = language;
-  document.title = locale.pageTitle;
+  document.title = validInstallEdition ? EDITIONS[validInstallEdition].appName : locale.pageTitle;
   brandName.textContent = appNameByLanguage[language];
   document.querySelector('meta[name="description"]').content = locale.metaDescription;
 
