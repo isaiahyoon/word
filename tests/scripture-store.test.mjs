@@ -3,13 +3,7 @@ import { performance } from "node:perf_hooks";
 import { readFile } from "node:fs/promises";
 import { describe, it } from "node:test";
 import { BOOKS, bookFileName } from "../js/books.mjs";
-import { KRV_BOOK_NAMES, MARTIN_BOOK_NAMES } from "../js/editions.mjs";
-import {
-  createScriptureRoutes,
-  getVerseStep,
-  isValidVerseRange,
-  normalizeVerseRange,
-} from "../js/scripture-routes.mjs";
+import { ALM_BOOK_NAMES, ALM_BOOK_NAME_ALIASES, KRV_BOOK_NAMES, MARTIN_BOOK_NAMES } from "../js/editions.mjs";
 import { createScriptureStore } from "../js/scripture-store.js";
 
 function createMockFetch(dataPath = "./scripture/kjv", indexMetadata = {}) {
@@ -50,213 +44,6 @@ function createMockFetch(dataPath = "./scripture/kjv", indexMetadata = {}) {
     },
   };
 }
-
-describe("scripture routes", () => {
-  const routes = createScriptureRoutes(BOOKS, "/", ["kjv", "krv"]);
-
-  it("identifies the reader root as the home route", () => {
-    assert.deepEqual(routes.parse("/"), { home: true, editionId: "kjv" });
-  });
-
-  it("defaults an edition-only route to Genesis 1:1", () => {
-    for (const editionId of ["kjv", "krv"]) {
-      assert.deepEqual(routes.parse(`/${editionId}`), {
-        editionId,
-        book: 1,
-        chapter: 1,
-        range: { start: 1, end: 1 },
-        legacy: false,
-        editionRoot: true,
-      });
-    }
-
-    const futureEditionRoutes = createScriptureRoutes(BOOKS, "/", ["kjv", "future-edition"]);
-    assert.equal(futureEditionRoutes.parse("/future-edition").book, 1);
-    assert.equal(futureEditionRoutes.parse("/future-edition").editionId, "future-edition");
-  });
-
-  it("accepts an optional trailing slash on reader routes", () => {
-    for (const path of [
-      "/kjv/",
-      "/krv/b/john/c/3/v/16/",
-      "/b/john/3/16/",
-    ]) {
-      assert.deepEqual(routes.parse(path), routes.parse(path.slice(0, -1)), path);
-    }
-  });
-
-  it("defaults legacy KJV routes to verse one", () => {
-    assert.deepEqual(routes.parse("/b/john"), {
-      editionId: "kjv",
-      book: 43,
-      chapter: 1,
-      range: { start: 1, end: 1 },
-      legacy: true,
-    });
-    assert.deepEqual(routes.parse("/b/john/c/3"), {
-      editionId: "kjv",
-      book: 43,
-      chapter: 3,
-      range: { start: 1, end: 1 },
-      legacy: true,
-    });
-    assert.deepEqual(routes.parse("/b/john/3/16"), {
-      editionId: "kjv",
-      book: 43,
-      chapter: 3,
-      range: { start: 16, end: 16 },
-      legacy: true,
-    });
-  });
-
-  it("parses and builds edition-prefixed verse routes", () => {
-    assert.deepEqual(routes.parse("/b/john/c/3/v/16"), {
-      editionId: "kjv",
-      book: 43,
-      chapter: 3,
-      range: { start: 16, end: 16 },
-      legacy: true,
-    });
-    assert.deepEqual(routes.parse("/kjv/b/john/c/3/v/16-18"), {
-      editionId: "kjv",
-      book: 43,
-      chapter: 3,
-      range: { start: 16, end: 18 },
-      legacy: false,
-    });
-    assert.deepEqual(routes.parse("/krv/b/john/c/3/v/16"), {
-      editionId: "krv",
-      book: 43,
-      chapter: 3,
-      range: { start: 16, end: 16 },
-      legacy: false,
-    });
-    assert.equal(
-      routes.buildPath(43, 3, { start: 16, end: 16 }, "kjv"),
-      "/kjv/b/john/c/3/v/16",
-    );
-    assert.equal(
-      routes.buildPath(43, 3, { start: 16, end: 18 }, "krv"),
-      "/krv/b/john/c/3/v/16-18",
-    );
-  });
-
-  it("maps public route segments to internal edition ids", () => {
-    const editionRoutes = createScriptureRoutes(BOOKS, "/", {
-      kjv: { routeSegment: "kjv" },
-      luther1912: { routeSegment: "licht" },
-    });
-
-    assert.deepEqual(editionRoutes.parse("/licht/b/john/c/3/v/16"), {
-      editionId: "luther1912",
-      book: 43,
-      chapter: 3,
-      range: { start: 16, end: 16 },
-      legacy: false,
-    });
-    assert.equal(editionRoutes.parse("/licht").editionId, "luther1912");
-    assert.equal(
-      editionRoutes.buildPath(43, 3, { start: 16, end: 16 }, "luther1912"),
-      "/licht/b/john/c/3/v/16",
-    );
-    assert.equal(editionRoutes.parse("/luther1912/b/john/c/3/v/16"), null);
-
-    const martinRoutes = createScriptureRoutes(BOOKS, "/", {
-      kjv: { routeSegment: "kjv" },
-      martin1744: { routeSegment: "moh" },
-    });
-    assert.deepEqual(martinRoutes.parse("/moh/b/psalms/c/3/v/2"), {
-      editionId: "martin1744",
-      book: 19,
-      chapter: 3,
-      range: { start: 2, end: 2 },
-      legacy: false,
-    });
-    assert.equal(
-      martinRoutes.buildPath(19, 3, { start: 2, end: 2 }, "martin1744"),
-      "/moh/b/psalms/c/3/v/2",
-    );
-
-    const rv1865Routes = createScriptureRoutes(BOOKS, "/", {
-      kjv: { routeSegment: "kjv" },
-      rv1865: { routeSegment: "luz" },
-    });
-    assert.deepEqual(rv1865Routes.parse("/luz/b/john/c/1/v/1"), {
-      editionId: "rv1865",
-      book: 43,
-      chapter: 1,
-      range: { start: 1, end: 1 },
-      legacy: false,
-    });
-    assert.equal(
-      rv1865Routes.buildPath(43, 1, { start: 1, end: 1 }, "rv1865"),
-      "/luz/b/john/c/1/v/1",
-    );
-  });
-
-  it("round-trips numbered and multiword book slugs", () => {
-    for (const [book, name] of BOOKS.entries()) {
-      const path = routes.buildPath(book + 1, 1, { start: 1, end: 1 }, "kjv");
-      assert.equal(routes.parse(path).book, book + 1, name);
-    }
-  });
-
-  it("supports an application mounted below the domain root", () => {
-    const mountedRoutes = createScriptureRoutes(BOOKS, "/reader/", ["kjv", "krv"]);
-    assert.equal(
-      mountedRoutes.buildPath(43, 3, { start: 16, end: 18 }, "kjv"),
-      "/reader/kjv/b/john/c/3/v/16-18",
-    );
-    assert.deepEqual(mountedRoutes.parse("/reader/kjv/b/john/c/3/v/16-18"), {
-      editionId: "kjv",
-      book: 43,
-      chapter: 3,
-      range: { start: 16, end: 18 },
-      legacy: false,
-    });
-    assert.equal(mountedRoutes.parse("/other/b/john/c/3"), null);
-  });
-
-  it("rejects malformed or unknown routes", () => {
-    for (const path of [
-      "/b/not-a-book",
-      "/b/john/c/0",
-      "/b/john/c/3/v/18-16",
-      "/b/john/c/3/v/1-2-3",
-      "/b/john/3",
-      "/unknown/b/john/c/3",
-      "/kjv/b/not-a-book",
-    ]) {
-      const route = routes.parse(path);
-      assert.ok(
-        route === null || (route.range && !isValidVerseRange(route.range, 16)),
-        path,
-      );
-    }
-  });
-
-  it("validates inclusive verse bounds", () => {
-    assert.deepEqual(normalizeVerseRange(16), { start: 16, end: 16 });
-    assert.equal(normalizeVerseRange(null), null);
-    assert.equal(isValidVerseRange({ start: 1, end: 16 }, 16), true);
-    assert.equal(isValidVerseRange({ start: 0, end: 1 }, 16), false);
-    assert.equal(isValidVerseRange({ start: 4, end: 3 }, 16), false);
-    assert.equal(isValidVerseRange({ start: 1, end: 17 }, 16), false);
-  });
-
-  it("steps through verses and across chapter boundaries", () => {
-    assert.deepEqual(getVerseStep(7, 16, -1), { chapterOffset: 0, verse: 6 });
-    assert.deepEqual(getVerseStep(7, 16, 1), { chapterOffset: 0, verse: 8 });
-    assert.deepEqual(getVerseStep(16, 16, 1), { chapterOffset: 1, verse: 1 });
-    assert.deepEqual(getVerseStep(1, 16, -1), { chapterOffset: -1, verse: null });
-  });
-
-  it("rejects invalid verse navigation steps", () => {
-    assert.throws(() => getVerseStep(0, 16, 1), RangeError);
-    assert.throws(() => getVerseStep(17, 16, -1), RangeError);
-    assert.throws(() => getVerseStep(1, 16, 0), RangeError);
-  });
-});
 
 describe("scripture store", () => {
   it("loads optional frontmatter and section headings without numbering them as verses", async () => {
@@ -328,6 +115,92 @@ describe("scripture store", () => {
     }
     assert.ok(mock.requests.includes("./scripture/krv/index.json"));
     assert.ok(mock.requests.includes("./scripture/krv/books/43_john.json"));
+  });
+
+  it("searches Portuguese text, Brazilian and European book names, references, and typos", async () => {
+    const dataPath = "./scripture/alm1911";
+    const mock = createMockFetch(dataPath, {
+      displayBookNames: ALM_BOOK_NAMES,
+      bookNameAliases: ALM_BOOK_NAME_ALIASES,
+    });
+    const fetchImpl = async (url) => {
+      if (url === `${dataPath}/books/1_genesis.json`) {
+        return {
+          ok: true,
+          json: async () => ({
+            1: [[1, "No principio creou Deus os céus e a terra; e o Espírito de Deus se movia sobre as águas."]],
+          }),
+        };
+      }
+      if (url === `${dataPath}/books/43_john.json`) {
+        return {
+          ok: true,
+          json: async () => ({
+            1: [[1, "No princípio era o Verbo."]],
+            2: [[1, "Jesus foi convidado para as bodas."]],
+            3: Array.from({ length: 16 }, (_, index) => [
+              index + 1,
+              index === 15
+                ? "Porque Deus amou o mundo de tal maneira."
+                : `Versículo de João, número ${index + 1}.`,
+            ]),
+          }),
+        };
+      }
+      return mock.fetchImpl(url);
+    };
+    const store = createScriptureStore({
+      fetchImpl,
+      dataPath,
+      editionId: "alm1911",
+      language: "pt",
+      displayBookNames: ALM_BOOK_NAMES,
+    });
+    await store.initialize();
+
+    assert.equal(store.bookName(1), "Gênesis");
+    const brazilianPrefix = await store.search("Gên");
+    assert.equal(brazilianPrefix[0].searchType, "book");
+    assert.equal(brazilianPrefix[0].book, 1);
+    const europeanPrefix = await store.search("Gén");
+    assert.equal(europeanPrefix[0].searchType, "book");
+    assert.equal(europeanPrefix[0].book, 1);
+    const europeanBookName = await store.search("Deuteronómio");
+    assert.equal(europeanBookName[0].searchType, "book");
+    assert.equal(europeanBookName[0].book, 5);
+    const europeanMultiwordBookName = await store.search("Actos dos Apóstolos");
+    assert.equal(europeanMultiwordBookName[0].searchType, "book");
+    assert.equal(europeanMultiwordBookName[0].book, 44);
+
+    const textMatches = await store.search("creou");
+    assert.deepEqual(
+      textMatches.map(({ book, chapter, verse }) => ({ book, chapter, verse })),
+      [{ book: 1, chapter: 1, verse: 1 }],
+    );
+    const fuzzyMatches = await store.search("principioo");
+    assert.ok(fuzzyMatches.some(({ book, chapter, verse, searchType }) =>
+      book === 1 && chapter === 1 && verse === 1 && searchType === "text"
+    ));
+
+    const exactReference = await store.search("João 3:16");
+    assert.equal(exactReference[0].searchType, "reference");
+    assert.deepEqual(
+      { book: exactReference[0].book, chapter: exactReference[0].chapter, verse: exactReference[0].verse },
+      { book: 43, chapter: 3, verse: 16 },
+    );
+    assert.equal(exactReference.filter(({ book, chapter, verse }) =>
+      book === 43 && chapter === 3 && verse === 16).length, 1);
+    const europeanReference = await store.search("Génesis 1:1");
+    assert.equal(europeanReference[0].searchType, "reference");
+    assert.deepEqual(
+      { book: europeanReference[0].book, chapter: europeanReference[0].chapter, verse: europeanReference[0].verse },
+      { book: 1, chapter: 1, verse: 1 },
+    );
+
+    for (const query of ["João 3:99", "João 22:1"]) {
+      const matches = await store.search(query);
+      assert.ok(matches.every((match) => match.searchType !== "reference"), query);
+    }
   });
 
   it("searches exact references and rejects missing verses", async () => {

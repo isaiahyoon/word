@@ -196,30 +196,76 @@ body.is-rv1865-edition::before {
     linear-gradient(28deg, rgba(238, 216, 208, 0.32), transparent 40%);
 }
 
-body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition) .edition-switcher {
+body.is-alm1911-edition {
+  --canvas: #f4f0e7;
+  --paper: #fffdf6;
+  --line: #e3dccf;
+  --blue: #dde9dc;
+  --blue-strong: #a9c2a8;
+  --lavender: #e9e1e2;
+  --yellow: #e5d6a5;
+  --pink: #f2d5da;
+  --green: #dde9dc;
+  --coral: #a83f4b;
+  --deep-teal: #526553;
+  --navy-ink: #443a35;
+  --brass: #907345;
+  --brass-soft: #d7c58c;
+  --brass-shadow: #b49b65;
+  --chapter-blue: #abc7b1;
+  --chapter-lavender: #d8cbd8;
+  --chapter-pink: #e4a0aa;
+  --chapter-green: #d2dcae;
+  --focus: #6b6950;
+  --focus-border: #9c9b76;
+  --focus-ring: rgba(107, 105, 80, 0.18);
+  --grain: rgba(90, 75, 58, 0.055);
+  --serif: var(--serif-portuguese);
+  --switcher-border: rgba(82, 101, 83, 0.3);
+  --switcher-bg: linear-gradient(145deg, rgba(255, 253, 246, 0.94), rgba(221, 233, 220, 0.88));
+  --switcher-shadow: 0 2px 0 rgba(82, 101, 83, 0.18);
+  --switcher-ink: #526553;
+  --switcher-rule: #66785f;
+  --switcher-active-bg: linear-gradient(120deg, rgba(244, 240, 231, 0.98), rgba(255, 253, 246, 0.9));
+  --switcher-check: #526553;
+}
+body.is-alm1911-edition::before {
+  opacity: 1;
+  background-color: #f4f0e7;
+  background-image:
+    linear-gradient(
+      135deg,
+      rgba(168, 63, 75, 0.34) 0%,
+      rgba(229, 214, 165, 0.5) 50%,
+      rgba(221, 233, 220, 0.84) 100%
+    ),
+    repeating-linear-gradient(45deg, transparent 0 34px, rgba(90, 75, 58, 0.025) 34px 35px);
+}
+
+body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition, .is-alm1911-edition) .edition-switcher {
   border-color: var(--switcher-border);
   background: var(--switcher-bg);
   box-shadow: var(--switcher-shadow);
 }
-body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition) .edition-switcher label,
-body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition) .edition-select-caret,
-body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition) .edition-trigger-code,
-body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition) .edition-offline-action,
-body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition) .edition-option-mark {
+body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition, .is-alm1911-edition) .edition-switcher label,
+body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition, .is-alm1911-edition) .edition-select-caret,
+body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition, .is-alm1911-edition) .edition-trigger-code,
+body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition, .is-alm1911-edition) .edition-offline-action,
+body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition, .is-alm1911-edition) .edition-option-mark {
   color: var(--switcher-ink);
 }
-body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition) .edition-switcher label::before {
+body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition, .is-alm1911-edition) .edition-switcher label::before {
   background: linear-gradient(90deg, var(--switcher-rule), transparent);
 }
-body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition) .edition-trigger,
-body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition) .edition-options {
+body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition, .is-alm1911-edition) .edition-trigger,
+body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition, .is-alm1911-edition) .edition-options {
   border-color: var(--switcher-border);
 }
-body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition) .edition-trigger,
-body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition) .edition-option.is-selected {
+body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition, .is-alm1911-edition) .edition-trigger,
+body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition, .is-alm1911-edition) .edition-option.is-selected {
   background: var(--switcher-active-bg);
 }
-body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition) .edition-option.is-selected .edition-option-check {
+body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition, .is-alm1911-edition) .edition-option.is-selected .edition-option-check {
   color: var(--switcher-check);
 }
 body:is(.is-diodati-edition, .is-luther1912-edition) .book-row.is-current {

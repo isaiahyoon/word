@@ -401,6 +401,77 @@ describe("generated scripture data", () => {
     await assertEditionMatchesSource(manifest, expectedBooks, "rv1865");
   });
 
+  it("preserves Almeida 1911 text and its native 2 Corinthians numbering", async () => {
+    const source = JSON.parse(await readFile(new URL("../sources/alm1911.json", import.meta.url), "utf8"));
+    const manifest = JSON.parse(await readFile(new URL("../scripture/alm1911/index.json", import.meta.url), "utf8"));
+    const canonicalIndex = JSON.parse(await readFile(new URL("../scripture/kjv/index.json", import.meta.url), "utf8"));
+    const expectedBooks = Array.from({ length: BOOKS.length }, () => new Map());
+    const numberingDifferences = [];
+    let sourceVerseCount = 0;
+    let canonicalVerseCount = 0;
+
+    assert.equal(source.metadata.editionId, "alm1911");
+    assert.equal(source.metadata.language, "pt");
+    assert.equal(source.metadata.firstEditionYear, 1900);
+    assert.equal(source.metadata.reprintYear, 1911);
+    assert.equal(source.metadata.translator, "João Ferreira d’Almeida");
+    assert.equal(source.metadata.versification, "ALM1911-native");
+    assert.equal(source.metadata.sourceFileSha256, "a47705dc5637daaa2e65160c9fe9aadb70edbdda855179045dbaf288f6aff795");
+    assert.match(source.metadata.rightsNote, /No worldwide public-domain claim is made/);
+    assert.match(source.metadata.upstreamLicense, /not a separate license grant/);
+    assert.equal(source.books.length, BOOKS.length);
+    assert.equal(source.metadata.sourceVerseCount, 31101);
+
+    for (const [bookIndex, sourceBook] of source.books.entries()) {
+      assert.equal(sourceBook.number, bookIndex + 1);
+      assert.equal(sourceBook.name, BOOKS[bookIndex]);
+      assert.equal(sourceBook.displayName, manifest.displayBookNames[bookIndex]);
+      assert.deepEqual(sourceBook.nameAliases, manifest.bookNameAliases[bookIndex]);
+      assert.equal(sourceBook.chapters.length, canonicalIndex.chapterCounts[bookIndex]);
+      const canonical = JSON.parse(await readFile(
+        new URL(`../scripture/kjv/books/${canonicalIndex.bookFiles[bookIndex]}`, import.meta.url),
+        "utf8",
+      ));
+
+      for (const [chapterIndex, sourceChapter] of sourceBook.chapters.entries()) {
+        const chapter = chapterIndex + 1;
+        assert.equal(sourceChapter.number, chapter);
+        const verses = sourceChapter.verses.map((record, verseIndex) => {
+          assert.equal(record.length, 2);
+          assert.equal(record[0], verseIndex + 1);
+          assert.equal(typeof record[1], "string");
+          assert.notEqual(record[1].trim(), "");
+          return record;
+        });
+        sourceVerseCount += verses.length;
+        canonicalVerseCount += canonical[chapter].length;
+        expectedBooks[bookIndex].set(chapter, verses);
+        if (verses.length !== canonical[chapter].length) {
+          numberingDifferences.push({
+            book: bookIndex + 1,
+            chapter,
+            sourceVerseCount: verses.length,
+            kjvVerseCount: canonical[chapter].length,
+          });
+        }
+      }
+    }
+
+    assert.equal(sourceVerseCount, 31101);
+    assert.equal(canonicalVerseCount, 31102);
+    assert.deepEqual(numberingDifferences, [
+      { book: 47, chapter: 13, sourceVerseCount: 13, kjvVerseCount: 14 },
+    ]);
+    assert.deepEqual(manifest.numberingDifferences, numberingDifferences);
+    assert.equal(manifest.sourceVerseCount, sourceVerseCount);
+    assert.equal(manifest.canonicalVerseCount, canonicalVerseCount);
+    assert.equal(source.books[46].chapters[12].verses[11][0], 12);
+    assert.match(source.books[46].chapters[12].verses[11][1], /Saudae-vos.*Todos os sanctos vos saudam/u);
+    assert.equal(source.books[46].chapters[12].verses[12][0], 13);
+    assert.match(source.books[46].chapters[12].verses[12][1], /^A graça do Senhor Jesus Christo/u);
+    await assertEditionMatchesSource(manifest, expectedBooks, "alm1911");
+  });
+
   async function assertEditionMatchesSource(manifest, expectedBooks, edition) {
     assert.equal(manifest.edition, edition);
     assert.equal(manifest.bookFiles.length, BOOKS.length);

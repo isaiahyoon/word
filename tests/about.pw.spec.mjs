@@ -10,6 +10,7 @@ const localizedHeadings = {
   ja: "みことばと向き合う静かな場所。",
   fr: "Un lieu paisible pour rencontrer le texte.",
   es: "Un lugar tranquilo para encontrarse con el texto.",
+  pt: "Um lugar tranquilo para encontrar o texto.",
 };
 
 test("localizes About page content, metadata, and accessible names", async ({ page }) => {
@@ -19,9 +20,13 @@ test("localizes About page content, metadata, and accessible names", async ({ pa
     await expect(page.locator("html")).toHaveAttribute("lang", language);
     await expect(page).toHaveTitle(locale.pageTitle);
     await expect(page.locator("#page-title")).toHaveText(localizedHeadings[language]);
+    await expect(page.locator('[data-about="editionsTitle"]')).toHaveText(locale.editionsTitle);
+    await expect(page.locator('[data-about="editionsCopy"]')).toHaveText(locale.editionsCopy);
     await expect(page.locator("[data-about-app-name]"))
       .toHaveText(Object.values(EDITIONS).find((edition) => edition.language === language).appName);
     await expect(page.locator("#about-language")).toHaveAttribute("aria-label", locale.languageLabel);
+    await expect(page.locator(`#about-language-options [data-language="${language}"]`))
+      .toHaveAttribute("aria-selected", "true");
     await expect(page.locator(".install-language-options legend")).toHaveText(locale.installLanguageTitle);
     await expect(page.locator(".install-language-intro")).toHaveText(locale.installLanguageIntro);
     await expect(page.locator(".install-language-submit")).toHaveText(locale.installLanguageContinue);
@@ -35,6 +40,10 @@ test("localizes About page content, metadata, and accessible names", async ({ pa
     await expect(page.locator('[data-about="ethosCopyOne"]')).toHaveText(locale.ethosCopyOne);
     await expect(page.locator(".brand")).toHaveAttribute("aria-label", locale.brandHome);
     await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", locale.metaDescription);
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", locale.pageTitle);
+    await expect(page.locator('meta[property="og:description"]')).toHaveAttribute("content", locale.metaDescription);
+    await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute("content", locale.pageTitle);
+    await expect(page.locator('meta[name="twitter:description"]')).toHaveAttribute("content", locale.metaDescription);
     await expect(page.locator(".return-link")).toHaveText(`${locale.returnToReading} →`);
 
     const missingTranslations = await page.locator("[data-about]").evaluateAll((elements, strings) =>
@@ -46,10 +55,13 @@ test("localizes About page content, metadata, and accessible names", async ({ pa
 });
 
 test("uses the selected edition name as the installed app title in every language", async ({ page }) => {
-  for (const edition of Object.values(EDITIONS)) {
+  for (const edition of Object.values(EDITIONS)
+    .filter(({ language }) => Object.hasOwn(ABOUT_LOCALES, language))) {
     await page.goto(`/about?lang=${edition.language}&install=${edition.id}`);
 
     await expect(page).toHaveTitle(edition.appName);
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", edition.appName);
+    await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute("content", edition.appName);
   }
 });
 
@@ -182,8 +194,8 @@ test("supports keyboard selection of the default install language", async ({ pag
 
 test("keeps sans-serif body copy and localized display typefaces on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  const expectedFonts = { ko: "Noto Serif KR", it: "Cormorant Garamond", ja: "Noto Serif JP", fr: "EB Garamond", es: "Petrona", de: "Gelasio" };
-  const expectedInterfaceFonts = { ko: "Noto Sans KR", it: "DM Sans", ja: "Noto Sans JP", fr: "DM Sans", es: "DM Sans", de: "DM Sans" };
+  const expectedFonts = { ko: "Noto Serif KR", it: "Cormorant Garamond", ja: "Noto Serif JP", fr: "EB Garamond", es: "Petrona", de: "Gelasio", pt: "Cardo" };
+  const expectedInterfaceFonts = { ko: "Noto Sans KR", it: "DM Sans", ja: "Noto Sans JP", fr: "DM Sans", es: "DM Sans", de: "DM Sans", pt: "DM Sans" };
 
   for (const [language, font] of Object.entries(expectedFonts)) {
     await page.goto(`/about?lang=${language}`);
@@ -225,7 +237,8 @@ test("keeps the four-square brand mark square across About languages on mobile",
 test("uses the saved reader edition and keeps an explicit About language in the URL", async ({ page }) => {
   await page.goto("/about/");
 
-  for (const edition of Object.values(EDITIONS)) {
+  for (const edition of Object.values(EDITIONS)
+    .filter(({ language }) => Object.hasOwn(ABOUT_LOCALES, language))) {
     await page.evaluate((editionId) => {
       window.localStorage.setItem("the-word.reader-state.v1:/", JSON.stringify({
         version: 1,
@@ -308,6 +321,7 @@ test("keeps About controls clear of each other and the viewport across mobile an
     await expect(languageMenu).toHaveCSS("background-color", "rgb(255, 253, 249)");
     await expect(languageMenu).toHaveCSS("box-shadow", /rgba/);
     await expect(languageMenu.locator('[data-language="de"]')).toHaveCSS("min-height", "40px");
+    await expect(languageMenu.locator('[data-language="pt"]')).toHaveCSS("min-height", "40px");
     await expect(languageTrigger).toHaveCSS("border-color", "rgb(127, 157, 184)");
     await expect(languageTrigger).toHaveCSS("background-image", /rgb\(190, 216, 234\)/);
     await expect(languageMenu.locator('[data-language="ko"]')).toHaveCSS("background-image", /rgb\(190, 216, 234\)/);
@@ -383,7 +397,7 @@ test("supports keyboard navigation and selection in the styled language menu", a
   await page.keyboard.press("Home");
   await expect(page.getByRole("option", { name: "English" })).toBeFocused();
   await page.keyboard.press("End");
-  await expect(page.getByRole("option", { name: "Español" })).toBeFocused();
+  await expect(page.getByRole("option", { name: "Português" })).toBeFocused();
   await page.keyboard.press("Escape");
 
   await expect(menu).toBeHidden();
@@ -397,4 +411,12 @@ test("supports keyboard navigation and selection in the styled language menu", a
   await expect(trigger).toContainText("한국어");
   await expect(trigger).toHaveAttribute("aria-expanded", "false");
   await expect(page.locator('.language-option[data-language="ko"]')).toHaveAttribute("aria-selected", "true");
+
+  await trigger.click();
+  await page.getByRole("option", { name: "Português" }).click();
+
+  await expect(page).toHaveURL(/\/about\?lang=pt$/);
+  await expect(page.locator("html")).toHaveAttribute("lang", "pt");
+  await expect(page.locator("#page-title")).toHaveText(localizedHeadings.pt);
+  await expect(page.locator('.language-option[data-language="pt"]')).toHaveAttribute("aria-selected", "true");
 });

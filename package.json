@@ -5,15 +5,21 @@
     "build:luther": "node tools/build-luther-data.mjs",
     "build:martin": "node tools/build-martin-data.mjs",
     "build:rv1865": "node tools/build-rv1865-data.mjs",
+    "build:alm1911": "node tools/build-alm1911-data.mjs",
     "build:install-manifests": "node tools/build-install-manifests.mjs",
     "import:rv1865": "node tools/import-rv1865-source.mjs",
+    "import:alm1911": "node tools/import-alm1911-source.mjs",
     "lint:css": "stylelint \"**/*.css\"",
+    "lint:js": "eslint \"js/**/*.{js,mjs}\" \"tools/**/*.mjs\" \"tests/**/*.mjs\"",
     "test": "node --test tests/*.test.mjs",
     "test:ui": "playwright test",
     "test:all": "node tools/test-all.mjs"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.64.1",
+    "eslint": "^10.14.0",
+    "globals": "^17.14.0",
     "stylelint": "^17.16.0",
     "stylelint-config-recommended": "^18.0.0",
     "usfm-js": "^3.5.0"

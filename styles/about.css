@@ -24,6 +24,10 @@
   --serif: var(--serif-spanish);
 }
 
+:root:lang(pt) {
+  --serif: var(--serif-portuguese);
+}
+
 body {
   --about-blue-light: #e8f1f4;
   --about-blue-mid: #bed8ea;

@@ -4,7 +4,7 @@
 
 The Amazing Word is a quiet, free place to read Scripture on the web. It is built to make the text easy to find, move through, and carry with you, without asking you to create an account or pay to read.
 
-The [About page](./about.html) introduces the reader's features and installation steps in English, Korean, Italian, German, Japanese, French, and Spanish, with its guiding conviction given a prominent, localized feature. It follows the reader's saved edition by default; use its language menu to choose another language. The About link in the scripture reader header also follows the selected edition's language.
+The [About page](./about.html) introduces the reader's features and installation steps in English, Korean, Italian, German, Japanese, French, Spanish, and Portuguese, with its guiding conviction given a prominent, localized feature. It follows the reader's saved edition by default; use its language menu to choose another language. The About link in the scripture reader header also follows the selected edition's language.
 
 ```
 "All scripture is given by inspiration of God,
@@ -38,9 +38,10 @@ and without him was not any thing made that was made.
 
 ## Features
 
-- Read the King James Version (KJV), Korean Revised Version (KRV), Japanese Bungo-yaku (JapBungo), Italian Giovanni Diodati (1649), German Luther Bible (1912), French David Martin Bible (1744), and Spanish Reina-Valera 1865, with edition-aware book navigation and direct links to passages. JapBungo has a green reading theme; Diodati has a pink gradient reading theme; Luther uses a pastel yellow gradient with red accents; Martin uses a blue-white-pink gradient; Reina-Valera uses the Verde y oro palette.
-- Reader navigation, controls, status messages, accessible names, and alternate descriptions follow the selected edition language across the supported English, Korean, Italian, German, Japanese, French, and Spanish interfaces; scripture text remains unchanged.
-- Search scripture by phrase or separate terms, with relevance ranking, fuzzy typo matching, and direct suggestions for books, chapters, and verses. German, Korean, Japanese, French, and Spanish searches support localized book names and references; Korean searches also support common spelling variations.
+- Read the King James Version (KJV), Korean Revised Version (KRV), Japanese Bungo-yaku (JapBungo), Italian Giovanni Diodati (1649), German Luther Bible (1912), French David Martin Bible (1744), Spanish Reina-Valera 1865, and Portuguese Almeida 1911, with edition-aware book navigation and direct links to passages. JapBungo has a green reading theme; Diodati has a pink gradient reading theme; Luther uses a pastel yellow gradient with red accents; Martin uses a blue-white-pink gradient; Reina-Valera uses the Verde y oro palette; Almeida 1911 has a diagonal red, gold, and green reading theme with Cardo for Scripture and headings.
+- Reader navigation, controls, status messages, accessible names, and alternate descriptions follow the selected edition language across the supported English, Korean, Italian, German, Japanese, French, Spanish, and Portuguese interfaces; scripture text remains unchanged.
+- The About page can be read in English, Korean, Italian, German, Japanese, French, Spanish, or Portuguese.
+- Search scripture by phrase or separate terms, with relevance ranking, fuzzy typo matching, and direct suggestions for books, chapters, and verses. German, Korean, Japanese, French, Spanish, and Portuguese searches support localized book names and references; Korean searches also support common spelling variations, and Portuguese reference search accepts common Brazilian and European book-name forms.
 - Choose chapters with the whimsical chapter picker, or move through the text with navigation buttons and keyboard shortcuts. On mobile, swipe right from the left screen edge to open book navigation, or swipe left across the open drawer to close it. A discreet back-to-top button appears while scrolling.
 - Open the shortcut guide with `/` to see Mac and Windows keys for refresh, search, navigation, Quiet Mode, verse copying, jumping to the top with Space, and edition cycling with Tab/Shift+Tab.
 - Enter Quiet Mode for a calmer reading view, with subtle glimmer details throughout the interface.
@@ -61,11 +62,24 @@ To install it on Mac, open the site in Safari and choose **File → Add to Dock*
 
 ### Install size
 
-The app itself is small. As measured locally on 2026-11-05, the 37 unique files listed in `sw.js` total 771 KB raw (770,839 bytes), or about 413 KB when each file is gzipped and the results are summed. This excludes fonts and any editions saved for offline reading. A fresh local load of the About install page fetched two WOFF2 font files totaling about 71.8 KB; other languages may fetch different fonts, and Korean and Japanese editions need more font data. Saved editions are optional, stored separately, and removable. These figures will change as the app changes, so re-measure before quoting them.
+The app itself is small. As measured locally on 2026-11-06, the 38 unique files listed in `sw.js` total about 793 KB raw (792,672 bytes), or about 419 KB when each file is gzipped and the results are summed (418,634 bytes). This excludes fonts and any editions saved for offline reading. A fresh local load of the About install page fetched two WOFF2 files totaling 71,776 bytes (about 71.8 KB). Almeida's offline font preloader fetched 15 WOFF2 files totaling 279,504 bytes; nine Cardo files account for 97,904 bytes (about 97.9 KB). Other languages and browser/font subsets may fetch different files, and Korean and Japanese editions need more font data. Saved editions are optional, stored separately, and removable. These figures will change as the app changes, so re-measure before quoting them.
 
 ## Offline editions
 
-Choose **Save** under the Reading Edition picker to download every book of the selected edition into the browser's Cache Storage. A progress count is shown while it saves, and the reader's fonts for that edition are downloaded with it so text looks the same offline; Korean and Japanese editions download more font data than the others. the status changes to **Available offline** when it finishes, and **Remove** deletes that edition's saved copy. If a download fails, nothing is kept and the control offers to try again. Editions that have not been saved are only available online: choosing one while offline keeps the current edition and shows a notice, and opening one directly explains that it needs a connection while leaving the edition picker usable. Search for a saved edition works offline.
+Choose **Save** under the Reading Edition picker to download every book of the selected edition into the browser's Cache Storage. The table shows the measured size of each edition's index and 66 generated book files; saving all eight editions downloads about 35.47 MB (33.83 MiB) of scripture data.
+
+| Edition | Scripture data |
+| --- | ---: |
+| KJV · English | 4.35 MB |
+| KRV · Korean | 4.65 MB |
+| Diodati · Italian | 4.54 MB |
+| Luther Bible · German | 4.31 MB |
+| Bungo-yaku · Japanese | 4.49 MB |
+| David Martin · French | 4.82 MB |
+| Reina-Valera 1865 · Spanish | 4.15 MB |
+| Almeida 1911 · Portuguese | 4.16 MB |
+
+These are uncompressed file sizes measured locally on 2026-11-06. They exclude the app shell and fonts, which are accounted for separately above; actual browser storage may vary. A progress count is shown while an edition saves, and the reader's fonts for that edition are downloaded with it so text looks the same offline; Korean and Japanese editions download more font data than the others. The status changes to **Available offline** when it finishes, and **Remove** deletes that edition's saved copy. If a download fails, nothing is kept and the control offers to try again. Editions that have not been saved are only available online: choosing one while offline keeps the current edition and shows a notice, and opening one directly explains that it needs a connection while leaving the edition picker usable. Search for a saved edition works offline.
 
 A service worker (`sw.js`) keeps the reader's code available offline. It checks the network first for code and styles, so online readers receive new deploys on their next load; saved editions are served from the cache and refreshed in the background when online. Saved copies stay on the device and are not synced.
 
@@ -84,7 +98,7 @@ node tools/dev-server.mjs
 Then open [http://localhost:8000](http://localhost:8000).
 If port 8000 is occupied, choose another port with `PORT=8001 node tools/dev-server.mjs`.
 Check that the development server is running with `curl http://localhost:8000/health`.
-When deploying, configure the host to internally serve `index.html` for valid `/kjv/b/*`, `/krv/b/*`, `/diodati/b/*`, `/licht/b/*`, `/japbungo/b/*`, `/moh/b/*`, `/luz/b/*`, and legacy `/b/*` scripture routes while keeping the requested URL. These reader routes accept an optional trailing slash. Serve `/about` and `/about/` from `about.html`; unknown paths should serve `404.html` with a 404 status.
+When deploying, configure the host to internally serve `index.html` for valid `/kjv/b/*`, `/krv/b/*`, `/diodati/b/*`, `/licht/b/*`, `/japbungo/b/*`, `/moh/b/*`, `/luz/b/*`, `/alm/b/*`, and legacy `/b/*` scripture routes while keeping the requested URL. These reader routes accept an optional trailing slash. Serve `/about` and `/about/` from `about.html`; unknown paths should serve `404.html` with a 404 status.
 
 Scripture links identify their edition before the book route. Omitting the chapter opens chapter 1; omitting the verse opens and highlights verse 1:
 
@@ -99,6 +113,7 @@ Scripture links identify their edition before the book route. Omitting the chapt
 /japbungo/b/john/c/3/v/16
 /moh/b/psalms/c/3/v/1
 /luz/b/psalms/c/3/v/1
+/alm/b/john/c/3/v/16
 ```
 
 Existing unprefixed `/b/*` links continue to open KJV and are canonicalized to `/kjv/b/*`. Valid verse links scroll to the requested verses and highlight them briefly. Invalid books, chapters, or verse ranges open the 404 page, which links back to the reading room.
@@ -115,6 +130,8 @@ node tools/build-luther-data.mjs
 node tools/build-japbungo-data.mjs
 node tools/build-martin-data.mjs
 npm run build:rv1865
+node tools/import-alm1911-source.mjs /path/to/ALM1911.json
+npm run build:alm1911
 ```
 
 The KJV source is stored in `sources/kjv.json`; the 1961 KRV source is pinned in `sources/krv-1961.json`. KRV attribution is shown when selected. Its economic copyright term has expired according to the [Bible Society of Korea](https://www.bskorea.or.kr/bbs/board.php?bo_table=copyright_faq&wr_id=5); preserve the text and provide attribution.
@@ -128,6 +145,10 @@ The Luther Bible (1912) source is in `sources/luther_1912.json`; its verse text 
 The French [David Martin Bible (1744)](https://github.com/getbible/v2/tree/master/martin) is stored in `sources/martin_1744.json`. CrossWire JSword identifies its French Protestant versification as **Calvin**, the [Geneva/Olivetan system used by Martin](https://github.com/crosswire/jsword/blob/master/src/main/java/org/crosswire/jsword/versification/system/SystemCalvin.java). MOH preserves Martin's native references at `/moh/`; it does not relabel verses to KJV numbers. The generated index records 90 chapters whose Martin verse counts differ from KJV, and explicitly lists four empty source placeholders excluded from display (Psalms 69:37, 102:29, 108:14, and 140:14). The source contains 31,170 records, 31,166 non-empty verse texts, and KJV contains 31,102 verse slots. These count differences are not a complete passage-by-passage crosswalk; do not assume same-numbered verses always contain the same passage. MOH uses EB Garamond for French reading and display typography, selected from the [font study](studies/french-font-study.html). The edition uses a pastel blue upper-left, white center, and pink lower-right background. Rebuild it with `npm run build:martin`.
 
 The Spanish [Reina-Valera 1865](https://github.com/MC1171611/valera1865) source is pinned to commit `49887d89a88c30360234e56ef1d129ee3227a2ed` and its 2018 orthography update in `sources/rv1865.json`. The source project identifies its text as public domain and licenses its digital edition under CC0 1.0; attribution is shown in the reader. LUZ keeps the source's verse boundaries and alternate reference labels rather than applying an unverified KJV crosswalk. The reader data omits the source's print paragraph marks (¶); the pinned source file keeps them. The source has 31,099 verses versus 31,102 KJV slots, with chapter-count differences in 1 Samuel 20, 1 Chronicles 3, 2 Chronicles 33, Psalms 13, and Jeremiah 39. The generated data also preserves 115 unnumbered chapter headings and 21 verse-section headings. LUZ uses the Verde y oro theme and Petrona for Spanish Scripture and edition headings. Rebuild the normalized source with `npm run import:rv1865` (requires network access to the pinned source), then build its reader data with `npm run build:rv1865`.
+
+The Portuguese [Almeida 1911](https://www.gutenberg.org/ebooks/62383) source is normalized in `sources/alm1911.json` from the [damarals/biblias ALM1911 JSON](https://github.com/damarals/biblias/releases/latest/download/ALM1911.json), pinned by SHA-256 `a47705dc5637daaa2e65160c9fe9aadb70edbdda855179045dbaf288f6aff795`. Project Gutenberg's front matter identifies the copy as a 1911 reprint of an edition first printed in 1900, with 6,000 copies reprinted in 1911, translated by João Ferreira d’Almeida. The normalized source contains all 66 books, 1,189 chapters, and 31,101 nonempty verse strings; verse numbers are assigned in source order without changing their text. ALM keeps its native numbering: 2 Corinthians 13 has 13 verses, with Almeida 13:12 combining material KJV numbers 13:12–13 and the closing benediction numbered Almeida 13:13 (KJV 13:14). The reader does not claim that the editions are equivalent or apply a broader KJV crosswalk.
+
+For rights, Project Gutenberg says its copy is public domain in the United States and tells users elsewhere to check local law. The upstream `damarals/biblias` catalog marks ALM1911 with † as freely redistributable, but that is not a worldwide public-domain determination. Its MIT notice is retained in [`LICENSES.md`](./LICENSES.md) for the upstream toolkit and data organization; MIT is not treated as an independent license for the underlying Scripture text. The reader shows the source attribution and notes that text rights vary by jurisdiction. To rebuild, first provide the pinned release JSON to `npm run import:alm1911 -- /path/to/ALM1911.json`, then run `npm run build:alm1911`.
 
 ## Search
 
@@ -147,6 +168,8 @@ Luther search uses German text and localized book names and references, includin
 
 Reina-Valera search uses Spanish text and localized book names and references, including `Génesis`, `San Juan 1:1`, and source-native references such as `Salmos 3:1`. It supports accented terms, book-name prefixes, separate terms, and typo tolerance for longer words.
 
+Almeida 1911 search uses the Portuguese text and Brazilian Portuguese book labels, including `Gênesis` and `João 3:16`. Common European Portuguese spellings are accepted as reference aliases, including `Génesis`, `Deuteronómio`, and `Actos dos Apóstolos`. Search preserves the source's spelling and diacritics; it does not promise general accent folding.
+
 The first text search loads and indexes the selected edition's verses in the browser. The index is reused for later searches in that edition; no search query is sent to an external search service. Results are shown 12 at a time as the list is scrolled. The index is separate for each edition.
 
 ## Diagnostics
@@ -155,19 +178,22 @@ Failures such as a chapter that cannot load, a failed search, or a failed copy a
 
 ## Tests
 
-Run the CSS linter and the route, keyboard-shortcut, scripture-store,
+Run both linters and the route, keyboard-shortcut, scripture-store,
 source-data parity, and development-server tests with Node's built-in test
 runner, then install Chromium once and run the browser interaction tests:
 
 ```sh
 npm run lint:css
+npm run lint:js
 npm test
 npx playwright install chromium
 npm run test:ui
 ```
 
-Run the CSS lint and both test suites together with `npm run test:all`.
-GitHub Actions runs this full check on every push and pull request.
+Run both linters and both test suites together with `npm run test:all`.
+Playwright uses two workers in CI and 50% of available workers locally; pass
+`--workers=N` to `npm run test:ui` to override the local default. GitHub Actions
+runs the full check on every push and pull request.
 
 ## Customize the palette
 
