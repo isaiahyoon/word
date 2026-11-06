@@ -198,7 +198,10 @@ test("applies the Almeida palette and Cardo, and keeps its open edition menu usa
         canvas: style.getPropertyValue("--canvas").trim(),
         green: style.getPropertyValue("--green").trim(),
         pink: style.getPropertyValue("--pink").trim(),
+        red: style.getPropertyValue("--coral").trim(),
+        chapterPink: style.getPropertyValue("--chapter-pink").trim(),
         gold: style.getPropertyValue("--yellow").trim(),
+        background: getComputedStyle(body, "::before").backgroundImage,
         pageWidth: document.documentElement.scrollWidth,
         viewportWidth: document.documentElement.clientWidth,
       };
@@ -206,10 +209,15 @@ test("applies the Almeida palette and Cardo, and keeps its open edition menu usa
     expect(theme).toMatchObject({
       canvas: "#f4f0e7",
       green: "#dde9dc",
-      pink: "#e8cfca",
+      pink: "#f2d5da",
+      red: "#a83f4b",
+      chapterPink: "#e4a0aa",
       gold: "#e5d6a5",
     });
     expect(theme.pageWidth).toBeLessThanOrEqual(viewport.width);
+    expect(theme.background).toMatch(
+      /linear-gradient\(135deg, rgba\(168, 63, 75, .*rgba\(229, 214, 165, .*rgba\(221, 233, 220,/,
+    );
     expect(await page.locator('meta[name="theme-color"]').getAttribute("content")).toBe("#f4f0e7");
 
     const trigger = page.locator("#edition-select");
@@ -262,6 +270,18 @@ test("applies the Almeida palette and Cardo, and keeps its open edition menu usa
     await page.keyboard.press("Escape");
     await expect(menu).toBeHidden();
   }
+
+  await page.goto("/luz/b/john/c/3/v/16");
+  const spanishPalette = await page.locator("body").evaluate((body) => {
+    const style = getComputedStyle(body);
+    return {
+      pink: style.getPropertyValue("--pink").trim(),
+      red: style.getPropertyValue("--coral").trim(),
+    };
+  });
+  expect(spanishPalette).toEqual({ pink: "#eed8d0", red: "#a75f48" });
+  expect(spanishPalette.pink).not.toBe("#f2d5da");
+  expect(spanishPalette.red).not.toBe("#a83f4b");
 });
 
 test("centers the chapter picker within a mobile viewport", async ({ page }) => {

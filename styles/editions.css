@@ -204,9 +204,9 @@ body.is-alm1911-edition {
   --blue-strong: #a9c2a8;
   --lavender: #e9e1e2;
   --yellow: #e5d6a5;
-  --pink: #e8cfca;
+  --pink: #f2d5da;
   --green: #dde9dc;
-  --coral: #a85e55;
+  --coral: #a83f4b;
   --deep-teal: #526553;
   --navy-ink: #443a35;
   --brass: #907345;
@@ -214,7 +214,7 @@ body.is-alm1911-edition {
   --brass-shadow: #b49b65;
   --chapter-blue: #abc7b1;
   --chapter-lavender: #d8cbd8;
-  --chapter-pink: #e5bcb4;
+  --chapter-pink: #e4a0aa;
   --chapter-green: #d2dcae;
   --focus: #6b6950;
   --focus-border: #9c9b76;
@@ -233,9 +233,13 @@ body.is-alm1911-edition::before {
   opacity: 1;
   background-color: #f4f0e7;
   background-image:
-    linear-gradient(132deg, rgba(221, 233, 220, 0.84), transparent 54%),
-    linear-gradient(312deg, rgba(232, 207, 202, 0.52), transparent 50%),
-    linear-gradient(28deg, rgba(229, 214, 165, 0.34), transparent 42%);
+    linear-gradient(
+      135deg,
+      rgba(168, 63, 75, 0.34) 0%,
+      rgba(229, 214, 165, 0.5) 50%,
+      rgba(221, 233, 220, 0.84) 100%
+    ),
+    repeating-linear-gradient(45deg, transparent 0 34px, rgba(90, 75, 58, 0.025) 34px 35px);
 }
 
 body:is(.is-krv-edition, .is-diodati-edition, .is-luther1912-edition, .is-alm1911-edition) .edition-switcher {

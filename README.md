@@ -4,7 +4,7 @@
 
 The Amazing Word is a quiet, free place to read Scripture on the web. It is built to make the text easy to find, move through, and carry with you, without asking you to create an account or pay to read.
 
-The [About page](./about.html) introduces the reader's features and installation steps in English, Korean, Italian, German, Japanese, French, and Spanish, with its guiding conviction given a prominent, localized feature. It follows the reader's saved edition by default; use its language menu to choose another language. The About link in the scripture reader header also follows the selected edition's language.
+The [About page](./about.html) introduces the reader's features and installation steps in English, Korean, Italian, German, Japanese, French, Spanish, and Portuguese, with its guiding conviction given a prominent, localized feature. It follows the reader's saved edition by default; use its language menu to choose another language. The About link in the scripture reader header also follows the selected edition's language.
 
 ```
 "All scripture is given by inspiration of God,
@@ -38,7 +38,7 @@ and without him was not any thing made that was made.
 
 ## Features
 
-- Read the King James Version (KJV), Korean Revised Version (KRV), Japanese Bungo-yaku (JapBungo), Italian Giovanni Diodati (1649), German Luther Bible (1912), French David Martin Bible (1744), Spanish Reina-Valera 1865, and Portuguese Almeida 1911, with edition-aware book navigation and direct links to passages. JapBungo has a green reading theme; Diodati has a pink gradient reading theme; Luther uses a pastel yellow gradient with red accents; Martin uses a blue-white-pink gradient; Reina-Valera uses the Verde y oro palette; Almeida 1911 uses the reviewed pastel Portuguese-flag palette and Cardo for Scripture and headings.
+- Read the King James Version (KJV), Korean Revised Version (KRV), Japanese Bungo-yaku (JapBungo), Italian Giovanni Diodati (1649), German Luther Bible (1912), French David Martin Bible (1744), Spanish Reina-Valera 1865, and Portuguese Almeida 1911, with edition-aware book navigation and direct links to passages. JapBungo has a green reading theme; Diodati has a pink gradient reading theme; Luther uses a pastel yellow gradient with red accents; Martin uses a blue-white-pink gradient; Reina-Valera uses the Verde y oro palette; Almeida 1911 has a diagonal red, gold, and green reading theme with Cardo for Scripture and headings.
 - Reader navigation, controls, status messages, accessible names, and alternate descriptions follow the selected edition language across the supported English, Korean, Italian, German, Japanese, French, Spanish, and Portuguese interfaces; scripture text remains unchanged.
 - The About page can be read in English, Korean, Italian, German, Japanese, French, Spanish, or Portuguese.
 - Search scripture by phrase or separate terms, with relevance ranking, fuzzy typo matching, and direct suggestions for books, chapters, and verses. German, Korean, Japanese, French, Spanish, and Portuguese searches support localized book names and references; Korean searches also support common spelling variations, and Portuguese reference search accepts common Brazilian and European book-name forms.
