@@ -178,19 +178,22 @@ Failures such as a chapter that cannot load, a failed search, or a failed copy a
 
 ## Tests
 
-Run the CSS linter and the route, keyboard-shortcut, scripture-store,
+Run both linters and the route, keyboard-shortcut, scripture-store,
 source-data parity, and development-server tests with Node's built-in test
 runner, then install Chromium once and run the browser interaction tests:
 
 ```sh
 npm run lint:css
+npm run lint:js
 npm test
 npx playwright install chromium
 npm run test:ui
 ```
 
-Run the CSS lint and both test suites together with `npm run test:all`.
-GitHub Actions runs this full check on every push and pull request.
+Run both linters and both test suites together with `npm run test:all`.
+Playwright uses two workers in CI and 50% of available workers locally; pass
+`--workers=N` to `npm run test:ui` to override the local default. GitHub Actions
+runs the full check on every push and pull request.
 
 ## Customize the palette
 
