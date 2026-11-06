@@ -1,4 +1,5 @@
 import { expect, test } from "./support/browser-test.mjs";
+import { EDITIONS } from "../js/editions.mjs";
 
 test("presents the About page and installation options at desktop and mobile widths", async ({ page }) => {
   for (const viewport of [
@@ -311,6 +312,61 @@ test("renders the wordmark with a muted brass body and navy outline", async ({ p
   await expect.poll(() => wordmark.evaluate((element) =>
     getComputedStyle(element, "::after").animationName,
   )).toBe("text-glimmer");
+});
+
+test("keeps the mobile brand compact and clear across all editions and narrow viewports", async ({ page }) => {
+  for (const edition of Object.values(EDITIONS)) {
+    await page.goto(`/${edition.routeSegment}/b/genesis/c/1`);
+
+    for (const width of [320, 360, 375, 390, 430]) {
+      await page.setViewportSize({ width, height: 844 });
+      const layout = await page.evaluate(() => {
+        const bounds = (selector) => {
+          const { x, right, width, height } = document.querySelector(selector).getBoundingClientRect();
+          return { x, right, width, height };
+        };
+        const mark = document.querySelector(".brand-mark");
+        const wordmark = document.querySelector(".brand-copy strong");
+
+        return {
+          viewportWidth: document.documentElement.clientWidth,
+          pageWidth: document.documentElement.scrollWidth,
+          menu: bounds("#menu-toggle"),
+          brand: bounds(".brand"),
+          mark: {
+            ...bounds(".brand-mark"),
+            cssWidth: getComputedStyle(mark).width,
+            cssHeight: getComputedStyle(mark).height,
+          },
+          wordmark: {
+            ...bounds(".brand-copy strong"),
+            fontSize: getComputedStyle(wordmark).fontSize,
+            lineHeight: getComputedStyle(wordmark).lineHeight,
+          },
+          about: bounds(".topbar-about"),
+          shortcuts: bounds("#shortcuts-open"),
+        };
+      });
+
+      expect(layout.pageWidth, `${edition.id} at ${width}px`).toBeLessThanOrEqual(layout.viewportWidth);
+      expect(layout.mark.cssWidth, `${edition.id} logo width at ${width}px`)
+        .toBe(layout.mark.cssHeight);
+      expect(Number.parseFloat(layout.mark.cssWidth), `${edition.id} logo size at ${width}px`)
+        .toBeLessThanOrEqual(26);
+      expect(Number.parseFloat(layout.wordmark.fontSize), `${edition.id} wordmark size at ${width}px`)
+        .toBeLessThanOrEqual(16);
+      expect(layout.wordmark.height, `${edition.id} wordmark wrapping at ${width}px`)
+        .toBeLessThanOrEqual(
+          Number.parseFloat(layout.wordmark.lineHeight) * (width === 320 ? 3.2 : 2.2),
+        );
+      expect(layout.menu.right, `${edition.id} menu spacing at ${width}px`)
+        .toBeLessThanOrEqual(layout.brand.x);
+      expect(layout.brand.right, `${edition.id} brand spacing at ${width}px`)
+        .toBeLessThanOrEqual(layout.about.x);
+      expect(layout.about.right, `${edition.id} action spacing at ${width}px`)
+        .toBeLessThanOrEqual(layout.shortcuts.x);
+    }
+  }
 });
 
 test("brand link returns to the active edition root", async ({ page }) => {

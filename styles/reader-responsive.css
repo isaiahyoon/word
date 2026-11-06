@@ -214,7 +214,7 @@
     height: 132px;
     align-content: center;
     grid-template-columns: 32px 1fr auto;
-    gap: 10px;
+    column-gap: clamp(6px, 2.5vw, 10px);
   }
   .mobile-menu {
     width: 30px;
@@ -234,14 +234,15 @@
     background: #55574f;
   }
   .brand {
-    gap: 9px;
+    gap: clamp(4px, 1.8vw, 8px);
   }
   .brand-mark {
-    width: 29px;
-    height: 29px;
+    width: clamp(17px, 5.8vw, 26px);
+    height: clamp(17px, 5.8vw, 26px);
+    flex: none;
   }
   .brand-copy strong {
-    font-size: 20px;
+    font-size: clamp(11px, 3.5vw, 18px);
   }
   .brand-copy small {
     font-size: 7px;
