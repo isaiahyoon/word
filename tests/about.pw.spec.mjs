@@ -194,6 +194,34 @@ test("keeps sans-serif body copy and localized display typefaces on mobile", asy
   }
 });
 
+test("keeps the four-square brand mark square across About languages on mobile", async ({ page }) => {
+  for (const width of [320, 375, 402]) {
+    await page.setViewportSize({ width, height: 874 });
+
+    for (const language of Object.keys(ABOUT_LOCALES)) {
+      await page.goto(`/about?lang=${language}`);
+
+      const mark = page.locator(".brand-mark");
+      const dimensions = await mark.evaluate((element) => ({
+        width: element.offsetWidth,
+        height: element.offsetHeight,
+        cells: [...element.querySelectorAll("i")].map((cell) => {
+          const bounds = cell.getBoundingClientRect();
+          return { width: bounds.width, height: bounds.height };
+        }),
+      }));
+
+      expect(dimensions.width, `${language} logo width at ${width}px`).toBe(31);
+      expect(dimensions.height, `${language} logo height at ${width}px`).toBe(31);
+      expect(dimensions.cells).toHaveLength(4);
+      for (const [index, cell] of dimensions.cells.entries()) {
+        expect(Math.abs(cell.width - cell.height), `${language} square ${index + 1} at ${width}px`)
+          .toBeLessThanOrEqual(0.5);
+      }
+    }
+  }
+});
+
 test("uses the saved reader edition and keeps an explicit About language in the URL", async ({ page }) => {
   await page.goto("/about/");
 

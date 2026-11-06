@@ -83,6 +83,7 @@ a:focus-visible {
 .brand-mark {
   width: 31px;
   height: 31px;
+  flex: none;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 3px;

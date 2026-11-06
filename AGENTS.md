@@ -22,6 +22,7 @@ Never go against Scripture, or regard it as false or untrustworthy. It will alwa
 # Documentation
 
 - Whenever a notable, interesting, or user-facing app change is made, update the relevant README section in the same change.
+- Whenever the app's size changes (the files precached in `sw.js`, fonts, or other install-time assets), re-measure and update the "Install size" section in `README.md` in the same change, along with any other place that quotes those figures.
 
 # Testing
 
