@@ -6,6 +6,10 @@ import { registerServiceWorker } from "./offline.js";
 const languageTrigger = document.querySelector("#about-language");
 const languageMenu = document.querySelector("#about-language-options");
 const languageOptions = [...languageMenu.querySelectorAll("[data-language]")];
+const appNameByLanguage = Object.fromEntries(
+  Object.values(EDITIONS).map(({ language, appName }) => [language, appName]),
+);
+const brandName = document.querySelector("[data-about-app-name]");
 const readerStateKey = "the-word.reader-state.v1:/";
 const defaultEditionKey = "the-word.default-edition.v1";
 const installLanguageForm = document.querySelector("#install-language-form");
@@ -70,6 +74,7 @@ function applyLanguage(language) {
   activeLanguage = language;
   document.documentElement.lang = language;
   document.title = locale.pageTitle;
+  brandName.textContent = appNameByLanguage[language];
   document.querySelector('meta[name="description"]').content = locale.metaDescription;
 
   for (const element of document.querySelectorAll("[data-about]")) {

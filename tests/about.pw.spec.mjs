@@ -19,6 +19,8 @@ test("localizes About page content, metadata, and accessible names", async ({ pa
     await expect(page.locator("html")).toHaveAttribute("lang", language);
     await expect(page).toHaveTitle(locale.pageTitle);
     await expect(page.locator("#page-title")).toHaveText(localizedHeadings[language]);
+    await expect(page.locator("[data-about-app-name]"))
+      .toHaveText(Object.values(EDITIONS).find((edition) => edition.language === language).appName);
     await expect(page.locator("#about-language")).toHaveAttribute("aria-label", locale.languageLabel);
     await expect(page.locator(".install-language-options legend")).toHaveText(locale.installLanguageTitle);
     await expect(page.locator(".install-language-intro")).toHaveText(locale.installLanguageIntro);
