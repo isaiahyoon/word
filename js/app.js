@@ -91,6 +91,40 @@ let offlineControl;
 let verseNavigationQueue = Promise.resolve();
 let editionCycleQueue = Promise.resolve();
 let copyFeedbackTimer;
+const headingBook = document.querySelector("#heading-book");
+const chapterHeading = headingBook.closest("h1");
+
+function fitBookHeading() {
+  headingBook.style.removeProperty("font-size");
+  const availableWidth = chapterHeading.getBoundingClientRect().width;
+  const naturalWidth = headingBook.getBoundingClientRect().width;
+  if (availableWidth > 0 && naturalWidth > availableWidth) {
+    const defaultSize = parseFloat(getComputedStyle(headingBook).fontSize);
+    let minimumSize = 0;
+    let maximumSize = defaultSize;
+    while (maximumSize - minimumSize > 0.05) {
+      const size = (minimumSize + maximumSize) / 2;
+      headingBook.style.fontSize = `${size}px`;
+      if (headingBook.getBoundingClientRect().width <= availableWidth) {
+        minimumSize = size;
+      } else {
+        maximumSize = size;
+      }
+    }
+    headingBook.style.fontSize = `${minimumSize}px`;
+  }
+}
+
+let headingWidth = 0;
+new ResizeObserver(([entry]) => {
+  if (entry.contentRect.width !== headingWidth) {
+    headingWidth = entry.contentRect.width;
+    fitBookHeading();
+  }
+}).observe(chapterHeading);
+window.addEventListener("resize", fitBookHeading, { passive: true });
+document.fonts.addEventListener("loadingdone", fitBookHeading);
+
 const scriptureStores = new Map(EDITION_IDS.map((editionId) => {
   const edition = EDITIONS[editionId];
   return [editionId, createScriptureStore({
@@ -783,10 +817,10 @@ function renderChapter(focusRange = null) {
   ).toUpperCase();
   document.querySelector("#book-crumb").textContent = name.toUpperCase();
   document.querySelector("#book-crumb").lang = EDITIONS[state.editionId].language;
-  const headingBook = document.querySelector("#heading-book");
   headingBook.textContent = name;
   headingBook.dataset.glimmer = name;
   headingBook.lang = EDITIONS[state.editionId].language;
+  fitBookHeading();
   const chapterNumber = document.querySelector("#heading-chapter");
   chapterNumber.textContent = state.chapter;
   chapterNumber.dataset.glimmer = state.chapter;

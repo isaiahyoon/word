@@ -1,5 +1,112 @@
 import { expect, test } from "./support/browser-test.mjs";
 
+for (const edition of ["kjv", "krv", "diodati", "licht", "japbungo", "moh", "luz", "alm"]) {
+  test(`fits book titles only when needed in ${edition}`, async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await page.goto(`/${edition}/b/1-thessalonians/c/1`);
+    await expect(page.locator("#heading-book")).not.toHaveText("");
+    await page.evaluate(() => document.fonts.ready);
+
+    const heading = page.locator("#heading-book");
+    const metrics = () => heading.evaluate((book) => {
+      const container = book.closest("h1");
+      const copy = book.cloneNode(true);
+      copy.style.cssText = "position: fixed; visibility: hidden; white-space: nowrap; font-size: inherit; width: max-content";
+      container.append(copy);
+      const naturalWidth = copy.getBoundingClientRect().width;
+      const fontSize = parseFloat(getComputedStyle(book).fontSize);
+      copy.style.fontSize = `${fontSize + 0.1}px`;
+      const largerWidth = copy.getBoundingClientRect().width;
+      copy.remove();
+      const bounds = book.getBoundingClientRect();
+      const available = container.getBoundingClientRect();
+      return {
+        naturalWidth,
+        largerWidth,
+        width: bounds.width,
+        left: bounds.left,
+        right: bounds.right,
+        availableLeft: available.left,
+        availableRight: available.right,
+        availableWidth: available.width,
+        fontSize,
+        defaultSize: parseFloat(getComputedStyle(container).fontSize),
+      };
+    });
+
+    for (const width of [320, 390, 1280, 320]) {
+      await page.setViewportSize({ width, height: 800 });
+      await expect.poll(async () => {
+        const size = await metrics();
+        return size.left >= size.availableLeft - 0.1 &&
+          size.right <= size.availableRight + 0.1 &&
+          (size.naturalWidth <= size.availableWidth
+            ? Math.abs(size.fontSize - size.defaultSize) < 0.1
+            : size.fontSize < size.defaultSize && size.largerWidth > size.availableWidth);
+      }).toBe(true);
+    }
+
+    await page.goto(`/${edition}/b/genesis/c/1`);
+    await expect.poll(async () => {
+      const size = await metrics();
+      return size.naturalWidth <= size.availableWidth && size.fontSize === size.defaultSize;
+    }).toBe(true);
+  });
+}
+
+test("refits the book title when switching editions without reloading", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto("/japbungo/b/1-thessalonians/c/1");
+  const heading = page.locator("#heading-book");
+  const sizes = () => heading.evaluate((book) => ({
+    book: parseFloat(getComputedStyle(book).fontSize),
+    default: parseFloat(getComputedStyle(book.parentElement).fontSize),
+    width: book.getBoundingClientRect().width,
+    available: book.parentElement.getBoundingClientRect().width,
+  }));
+  await expect.poll(async () => {
+    const size = await sizes();
+    return size.book < size.default && size.width <= size.available;
+  }).toBe(true);
+  const japaneseSize = (await sizes()).book;
+
+  await page.locator("#menu-toggle").click();
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-option-krv").click();
+  await expect(page).toHaveURL(/\/krv\/b\/1-thessalonians\/c\/1/);
+  await expect.poll(async () => {
+    const size = await sizes();
+    return size.book > japaneseSize && size.width <= size.available;
+  }).toBe(true);
+
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-option-japbungo").click();
+  await expect(page).toHaveURL(/\/japbungo\/b\/1-thessalonians\/c\/1/);
+  await expect.poll(async () => {
+    const size = await sizes();
+    return size.book < size.default && size.width <= size.available;
+  }).toBe(true);
+});
+
+test("fits book titles when text width is not proportional to font size", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto("/japbungo/b/1-thessalonians/c/1");
+  await page.addStyleTag({
+    content: "#heading-book { letter-spacing: 2px !important; }",
+  });
+  await page.setViewportSize({ width: 321, height: 800 });
+  await expect.poll(() => page.locator("#heading-book").evaluate((book) => {
+    const width = book.getBoundingClientRect().width;
+    const available = book.parentElement.getBoundingClientRect().width;
+    const copy = book.cloneNode(true);
+    copy.style.cssText = `position: fixed; visibility: hidden; width: max-content; font-size: ${parseFloat(getComputedStyle(book).fontSize) + 0.1}px`;
+    book.parentElement.append(copy);
+    const largerWidth = copy.getBoundingClientRect().width;
+    copy.remove();
+    return { width, available, largerWidth, fits: width <= available && largerWidth > available };
+  })).toMatchObject({ fits: true });
+});
+
 test("switches editions at the same passage and canonicalizes legacy KJV links", async ({ page }) => {
   await page.goto("/b/john/c/3/v/16");
   await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/16$/);

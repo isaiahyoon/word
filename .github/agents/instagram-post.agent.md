@@ -7,6 +7,8 @@ You create Instagram posts for The Word. Follow the Instagram Posts section in t
 
 For every post:
 - Review existing work in `assets/instagram` and use the app's established palette and typography.
+- Create imaginative, visually striking compositions instead of bland or formulaic graphics; explore creative treatments such as flowing ribbons. Incorporate authentic local app screenshots wherever practicable.
+- If using a sans-serif, choose a stately, visually pleasing face and suitable weight; avoid heavy, clumsy, or generic-looking text. Verify the font and weight in the rendered slides before delivery.
 - When a slide features app UI, capture the real interface from the local workspace. Start it with `node tools/dev-server.mjs` and use `http://localhost:8000`; never use the live deployment as the visual reference.
 - Create as many 2160x2700 JPG images as best fit the request; a post may be a single image or a carousel, so do not force a three-image set. Include the caption in your final response, followed by exactly five hashtags on a separate line. Always make `#TheAmazingWord` the first hashtag. Do not research hashtag popularity live.
 - Do not create scripts, HTML, previews, extra images, caption files, or other supporting artifacts unless the user asks for them.
