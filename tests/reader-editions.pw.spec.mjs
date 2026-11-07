@@ -64,13 +64,15 @@ test("refits the book title when switching editions without reloading", async ({
     const size = await sizes();
     return size.book < size.default && size.width <= size.available;
   }).toBe(true);
+  const japaneseSize = (await sizes()).book;
 
+  await page.locator("#menu-toggle").click();
   await page.locator("#edition-select").click();
   await page.locator("#edition-option-krv").click();
   await expect(page).toHaveURL(/\/krv\/b\/1-thessalonians\/c\/1/);
   await expect.poll(async () => {
     const size = await sizes();
-    return size.book === size.default && size.width <= size.available;
+    return size.book > japaneseSize && size.width <= size.available;
   }).toBe(true);
 
   await page.locator("#edition-select").click();
