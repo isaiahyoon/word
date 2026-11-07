@@ -372,6 +372,9 @@
   line-height: var(--line-display);
   letter-spacing: 0;
 }
+#heading-book {
+  white-space: nowrap;
+}
 .heading-number {
   background-image: var(
     --chapter-gradient,
