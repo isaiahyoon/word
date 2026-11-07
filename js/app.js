@@ -100,7 +100,18 @@ function fitBookHeading() {
   const naturalWidth = headingBook.getBoundingClientRect().width;
   if (availableWidth > 0 && naturalWidth > availableWidth) {
     const defaultSize = parseFloat(getComputedStyle(headingBook).fontSize);
-    headingBook.style.fontSize = `${defaultSize * (availableWidth - 0.5) / naturalWidth}px`;
+    let minimumSize = 0;
+    let maximumSize = defaultSize;
+    while (maximumSize - minimumSize > 0.05) {
+      const size = (minimumSize + maximumSize) / 2;
+      headingBook.style.fontSize = `${size}px`;
+      if (headingBook.getBoundingClientRect().width <= availableWidth) {
+        minimumSize = size;
+      } else {
+        maximumSize = size;
+      }
+    }
+    headingBook.style.fontSize = `${minimumSize}px`;
   }
 }
 

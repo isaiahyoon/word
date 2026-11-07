@@ -14,18 +14,22 @@ for (const edition of ["kjv", "krv", "diodati", "licht", "japbungo", "moh", "luz
       copy.style.cssText = "position: fixed; visibility: hidden; white-space: nowrap; font-size: inherit; width: max-content";
       container.append(copy);
       const naturalWidth = copy.getBoundingClientRect().width;
+      const fontSize = parseFloat(getComputedStyle(book).fontSize);
+      copy.style.fontSize = `${fontSize + 0.1}px`;
+      const largerWidth = copy.getBoundingClientRect().width;
       copy.remove();
       const bounds = book.getBoundingClientRect();
       const available = container.getBoundingClientRect();
       return {
         naturalWidth,
+        largerWidth,
         width: bounds.width,
         left: bounds.left,
         right: bounds.right,
         availableLeft: available.left,
         availableRight: available.right,
         availableWidth: available.width,
-        fontSize: parseFloat(getComputedStyle(book).fontSize),
+        fontSize,
         defaultSize: parseFloat(getComputedStyle(container).fontSize),
       };
     });
@@ -38,7 +42,7 @@ for (const edition of ["kjv", "krv", "diodati", "licht", "japbungo", "moh", "luz
           size.right <= size.availableRight + 0.1 &&
           (size.naturalWidth <= size.availableWidth
             ? Math.abs(size.fontSize - size.defaultSize) < 0.1
-            : size.fontSize < size.defaultSize && size.width >= size.availableWidth - 2);
+            : size.fontSize < size.defaultSize && size.largerWidth > size.availableWidth);
       }).toBe(true);
     }
 
@@ -82,6 +86,25 @@ test("refits the book title when switching editions without reloading", async ({
     const size = await sizes();
     return size.book < size.default && size.width <= size.available;
   }).toBe(true);
+});
+
+test("fits book titles when text width is not proportional to font size", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto("/japbungo/b/1-thessalonians/c/1");
+  await page.addStyleTag({
+    content: "#heading-book { letter-spacing: 2px !important; }",
+  });
+  await page.setViewportSize({ width: 321, height: 800 });
+  await expect.poll(() => page.locator("#heading-book").evaluate((book) => {
+    const width = book.getBoundingClientRect().width;
+    const available = book.parentElement.getBoundingClientRect().width;
+    const copy = book.cloneNode(true);
+    copy.style.cssText = `position: fixed; visibility: hidden; width: max-content; font-size: ${parseFloat(getComputedStyle(book).fontSize) + 0.1}px`;
+    book.parentElement.append(copy);
+    const largerWidth = copy.getBoundingClientRect().width;
+    copy.remove();
+    return { width, available, largerWidth, fits: width <= available && largerWidth > available };
+  })).toMatchObject({ fits: true });
 });
 
 test("switches editions at the same passage and canonicalizes legacy KJV links", async ({ page }) => {

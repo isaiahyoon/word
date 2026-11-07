@@ -63,7 +63,7 @@ To install it on Mac, open the site in Safari and choose **File → Add to Dock*
 
 ### Install size
 
-The app itself is small. As measured locally on 2026-11-06, the 38 unique files listed in `sw.js` total about 794 KB raw (793,527 bytes), or about 419 KB when each file is gzipped and the results are summed (418,944 bytes). This excludes fonts and any editions saved for offline reading. A fresh local load of the About install page fetched two WOFF2 files totaling 71,776 bytes (about 71.8 KB). Almeida's offline font preloader fetched 15 WOFF2 files totaling 279,504 bytes; nine Cardo files account for 97,904 bytes (about 97.9 KB). Other languages and browser/font subsets may fetch different files, and Korean and Japanese editions need more font data. Saved editions are optional, stored separately, and removable. These figures will change as the app changes, so re-measure before quoting them.
+The app itself is small. As measured locally on 2026-11-07, the 38 unique files listed in `sw.js` total about 794 KB raw (793,852 bytes), or about 419 KB when each file is gzipped and the results are summed (419,019 bytes). This excludes fonts and any editions saved for offline reading. A fresh local load of the About install page fetched two WOFF2 files totaling 71,776 bytes (about 71.8 KB). Almeida's offline font preloader fetched 15 WOFF2 files totaling 279,504 bytes; nine Cardo files account for 97,904 bytes (about 97.9 KB). Other languages and browser/font subsets may fetch different files, and Korean and Japanese editions need more font data. Saved editions are optional, stored separately, and removable. These figures will change as the app changes, so re-measure before quoting them.
 
 ## Offline editions
 
