@@ -97,9 +97,10 @@ function renderEditionPage(edition) {
     <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
     <link rel="stylesheet" href="/styles/theme.css" />
     <link rel="stylesheet" href="/styles/typography.css" />
+    <link rel="stylesheet" href="/styles/editions.css" />
     <link rel="stylesheet" href="/styles/about.css" />
   </head>
-  <body>
+  <body class="is-${escapeHtml(edition.id)}-edition edition-landing" style="--edition-theme-color: ${themeColor}">
     <div class="about-shell">
       <header class="about-header">
         <a class="brand" href="/" aria-label="${escapeHtml(locale.brandHome)}">
@@ -147,6 +148,11 @@ function renderEditionPage(edition) {
               <span class="card-mark card-mark--gold" aria-hidden="true">03</span>
               <h3>${escapeHtml(locale.paceTitle)}</h3>
               <p>${escapeHtml(locale.paceCopy)}</p>
+            </article>
+            <article class="feature-card">
+              <span class="card-mark card-mark--blue" aria-hidden="true">04</span>
+              <h3>${escapeHtml(locale.placeTitle)}</h3>
+              <p>${escapeHtml(locale.placeCopy)}</p>
             </article>
           </div>
         </section>

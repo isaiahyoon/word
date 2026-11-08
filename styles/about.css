@@ -458,6 +458,30 @@ h1 {
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+.edition-landing .feature-grid .feature-card {
+  transition:
+    transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 0.24s ease,
+    background 0.24s ease,
+    box-shadow 0.24s ease;
+}
+
+.edition-landing .feature-grid .feature-card:hover,
+.edition-landing .feature-grid .feature-card:focus-within {
+  transform: translateY(-5px) scale(1.015);
+  border-color: color-mix(in srgb, var(--edition-theme-color) 52%, var(--deep-teal));
+  background:
+    linear-gradient(
+      125deg,
+      color-mix(in srgb, var(--edition-theme-color) 78%, var(--paper)),
+      color-mix(in srgb, var(--edition-theme-color) 50%, var(--blue))
+    ),
+    var(--paper);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--edition-theme-color) 42%, transparent),
+    0 16px 30px color-mix(in srgb, var(--deep-teal) 18%, transparent);
+}
+
 .feature-card:hover,
 .feature-card:focus-within {
   transform: translateY(-3px);

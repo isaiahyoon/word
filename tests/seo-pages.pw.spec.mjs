@@ -14,10 +14,28 @@ test("edition landing pages render localized, responsive content and links", asy
     await expect(page.locator("main")).toContainText(edition.label);
     await expect(page.locator(".feature-card").nth(1).locator("p"))
       .toHaveText(ABOUT_LOCALES[edition.language].carryCopy);
+    await expect(page.locator(".feature-card")).toHaveCount(4);
+    await expect(page.locator(".feature-card").nth(3).locator("h3"))
+      .toHaveText(ABOUT_LOCALES[edition.language].placeTitle);
+    await expect(page.locator(".feature-card").nth(3).locator("p"))
+      .toHaveText(ABOUT_LOCALES[edition.language].placeCopy);
     await expect(page.locator('a[href^="/' + edition.routeSegment + '/b/genesis/c/1/v/1"]'))
       .toHaveCount(2);
     await expect(page.locator(".edition-directory li")).toHaveCount(Object.keys(EDITIONS).length);
     await expect(page.locator(".edition-directory a")).toHaveCount(Object.keys(EDITIONS).length);
+
+    const featureCard = page.locator(".feature-grid > .feature-card").first();
+    await featureCard.hover();
+    const hoverStyles = await featureCard.evaluate((card) => ({
+      transform: getComputedStyle(card).transform,
+      backgroundImage: getComputedStyle(card).backgroundImage,
+      borderColor: getComputedStyle(card).borderTopColor,
+      themeColor: getComputedStyle(document.body).getPropertyValue("--edition-theme-color").trim(),
+    }));
+    expect(hoverStyles.transform).not.toBe("none");
+    expect(hoverStyles.backgroundImage).toContain("linear-gradient");
+    expect(hoverStyles.themeColor).toBe(edition.themeColor ?? "#f6f4f9");
+    expect(hoverStyles.borderColor).not.toBe("rgba(71, 72, 67, 0.12)");
 
     const dimensions = await page.evaluate(() => ({
       documentWidth: document.documentElement.scrollWidth,
