@@ -1,4 +1,4 @@
-import { ABOUT_LOCALES } from "../js/about-locales.mjs";
+import { ABOUT_LOCALES, getEditionSummary } from "../js/about-locales.mjs";
 import { EDITIONS } from "../js/editions.mjs";
 import { expect, test } from "./support/browser-test.mjs";
 
@@ -20,8 +20,9 @@ test("localizes About page content, metadata, and accessible names", async ({ pa
     await expect(page.locator("html")).toHaveAttribute("lang", language);
     await expect(page).toHaveTitle(locale.pageTitle);
     await expect(page.locator("#page-title")).toHaveText(localizedHeadings[language]);
-    await expect(page.locator('[data-about="editionsTitle"]')).toHaveText(locale.editionsTitle);
-    await expect(page.locator('[data-about="editionsCopy"]')).toHaveText(locale.editionsCopy);
+    const summary = getEditionSummary(locale, language, EDITIONS);
+    await expect(page.locator('[data-about="editionsTitle"]')).toHaveText(summary.editionsTitle);
+    await expect(page.locator('[data-about="editionsCopy"]')).toHaveText(summary.editionsCopy);
     await expect(page.locator("[data-about-app-name]"))
       .toHaveText(Object.values(EDITIONS).find((edition) => edition.language === language).appName);
     await expect(page.locator("#about-language")).toHaveAttribute("aria-label", locale.languageLabel);

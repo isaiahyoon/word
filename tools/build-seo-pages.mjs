@@ -1,52 +1,12 @@
-import { mkdir, readdir, writeFile } from "node:fs/promises";
-import { ABOUT_LOCALES } from "../js/about-locales.mjs";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
+import { ABOUT_LOCALES, getEditionSummary } from "../js/about-locales.mjs";
 import { EDITIONS } from "../js/editions.mjs";
 
 const root = new URL("../", import.meta.url);
 const siteUrl = "https://theamazingword.org";
 const previewImage = `${siteUrl}/assets/social-preview.png`;
-const editionSearchDetails = {
-  kjv: {
-    heading: "King James Version",
-    title: "King James Version Bible Online | The Amazing Word",
-    description: "Read the King James Version online in a free Bible reader. Search by phrase or reference, open direct passage links, and read at your own pace.",
-  },
-  krv: {
-    heading: "개역한글 1961 성경",
-    title: "개역한글 1961 온라인 성경 읽기 | 놀라운 말씀",
-    description: "무료 성경 읽기 서비스에서 개역한글 1961을 읽어 보세요. 구절과 장절을 검색하고 직접 링크로 이동하며 편안한 속도로 읽을 수 있습니다.",
-  },
-  diodati: {
-    heading: "Bibbia Giovanni Diodati (1649)",
-    title: "Bibbia Giovanni Diodati 1649 online | La Parola Meravigliosa",
-    description: "Leggi online la Bibbia di Giovanni Diodati del 1649. Cerca parole o riferimenti, apri link diretti ai passi e leggi al tuo ritmo.",
-  },
-  luther1912: {
-    heading: "Lutherbibel (1912)",
-    title: "Lutherbibel 1912 online lesen | Das Wunderbare Wort",
-    description: "Lies die Lutherbibel von 1912 kostenlos online. Suche nach Wörtern oder Bibelstellen, öffne direkte Verslinks und lies in deinem Tempo.",
-  },
-  japbungo: {
-    heading: "文語訳聖書",
-    title: "文語訳聖書をオンラインで読む | 驚くべき御言葉",
-    description: "文語訳聖書を無料でオンラインで読めます。語句や聖書箇所を検索し、聖句への直接リンクから自分のペースで読み進められます。",
-  },
-  martin1744: {
-    heading: "Bible de David Martin (1744)",
-    title: "Bible de David Martin 1744 en ligne | La Parole Merveilleuse",
-    description: "Lisez gratuitement la Bible de David Martin de 1744 en ligne. Recherchez des mots ou des références, ouvrez des liens directs et lisez à votre rythme.",
-  },
-  rv1865: {
-    heading: "Reina-Valera 1865",
-    title: "Biblia Reina-Valera 1865 en línea | La Palabra Asombrosa",
-    description: "Lee gratis la Biblia Reina-Valera 1865 en línea. Busca palabras o referencias, abre enlaces directos a los pasajes y lee a tu ritmo.",
-  },
-  alm1911: {
-    heading: "Bíblia Almeida 1911",
-    title: "Bíblia Almeida 1911 online | A Palavra Maravilhosa",
-    description: "Leia a Bíblia Almeida 1911 gratuitamente online. Pesquise palavras ou referências, abra links diretos para passagens e leia no seu ritmo.",
-  },
-};
 
 function escapeHtml(value) {
   return value
@@ -103,13 +63,13 @@ function renderPageHead({ title, description, canonicalUrl, themeColor = "#f6f4f
   </head>`;
 }
 
-function renderEditionDirectory({ detailed = false, label = "Scripture editions" } = {}) {
-  const entries = Object.values(EDITIONS).map((edition, index) => {
+function renderEditionDirectory(editions, locales, { detailed = false, label = "Scripture editions" } = {}) {
+  const entries = Object.values(editions).map((edition, index) => {
     const style = escapeHtml(editionLinkStyle(edition));
-    const heading = editionSearchDetails[edition.id].heading;
+    const heading = edition.seo.heading;
     const nameAttributes = detailed ? ` lang="${edition.language}" dir="${edition.direction}"` : "";
     const languageName = detailed ? `<small>${escapeHtml(edition.languageName)}</small>` : "";
-    const readerLabel = ABOUT_LOCALES[edition.language].openReader;
+    const readerLabel = locales[edition.language].openReader;
     const readerLink = detailed ? `
                 <a class="edition-read-link" href="/${edition.routeSegment}/b/genesis/c/1/v/1" lang="${edition.language}" aria-label="${escapeHtml(`${readerLabel} · ${heading}`)}">${escapeHtml(readerLabel)} <span aria-hidden="true">→</span></a>` : "";
     return `              <li${detailed ? ` style="${style}"` : ""}>
@@ -123,9 +83,9 @@ ${entries.join("\n")}
           </nav>`;
 }
 
-function renderEditionPage(edition) {
-  const { heading, title, description } = editionSearchDetails[edition.id];
-  const locale = ABOUT_LOCALES[edition.language];
+function renderEditionPage(edition, editions, locales) {
+  const { heading, title, description } = edition.seo;
+  const locale = getEditionSummary(locales[edition.language], edition.language, editions);
   const canonicalUrl = `${siteUrl}/editions/${edition.routeSegment}/`;
   const readerUrl = `/${edition.routeSegment}/b/genesis/c/1/v/1`;
   const language = escapeHtml(edition.language);
@@ -197,7 +157,7 @@ ${renderPageHead({ title, description, canonicalUrl, themeColor })}
           <div class="section-heading">
             <h2 id="editions-title">${escapeHtml(locale.editionsTitle)}</h2>
           </div>
-${renderEditionDirectory({ label: locale.editionsTitle })}
+${renderEditionDirectory(editions, locales, { label: locale.editionsTitle })}
         </section>
       </main>
 
@@ -212,8 +172,8 @@ ${renderEditionDirectory({ label: locale.editionsTitle })}
 `;
 }
 
-function renderCollectionPage() {
-  const count = Object.keys(EDITIONS).length;
+function renderCollectionPage(editions, locales) {
+  const count = Object.keys(editions).length;
   const title = "Bible editions and languages | The Amazing Word";
   const description = `Explore ${count} Scripture editions in their own languages. Choose an edition, read freely, and share the same passage across languages with The Amazing Word.`;
   return `<!doctype html>
@@ -231,7 +191,7 @@ ${renderPageHead({ title, description, canonicalUrl: `${siteUrl}/editions/` })}
       <main>
         <section class="about-hero" aria-labelledby="page-title">
           <p class="eyebrow"><span aria-hidden="true">✦</span> SCRIPTURE, ACROSS LANGUAGES</p>
-          <h1 id="page-title">One Word.<br />${count === 8 ? "Eight" : count} editions.</h1>
+          <h1 id="page-title">One Word.<br />${count} editions.</h1>
           <p class="hero-copy">A familiar passage. Another language. Explore the editions below, or step straight into reading.</p>
           <div class="hero-rule" aria-hidden="true"><i></i><i></i><i></i></div>
         </section>
@@ -240,7 +200,7 @@ ${renderPageHead({ title, description, canonicalUrl: `${siteUrl}/editions/` })}
             <p class="eyebrow">FIND YOUR READING LANGUAGE</p>
             <h2 id="editions-title">A place for your words.</h2>
           </div>
-${renderEditionDirectory({ detailed: true })}
+${renderEditionDirectory(editions, locales, { detailed: true })}
         </section>
         <section class="content-section" aria-labelledby="languages-title">
           <div class="section-heading"><h2 id="languages-title">The same passage. A wider conversation.</h2></div>
@@ -255,37 +215,116 @@ ${renderEditionDirectory({ detailed: true })}
 `;
 }
 
-const editionPages = Object.values(EDITIONS).map((edition) => ({
-  path: `/editions/${edition.routeSegment}/`,
-  output: new URL(`editions/${edition.routeSegment}/index.html`, root),
-  html: renderEditionPage(edition),
-}));
-editionPages.unshift({
-  path: "/editions/",
-  output: new URL("editions/index.html", root),
-  html: renderCollectionPage(),
-});
+export async function buildSeoPages({ projectRoot = root, editions = EDITIONS, locales = ABOUT_LOCALES } = {}) {
+  const routes = new Set();
+  for (const [id, edition] of Object.entries(editions)) {
+    if (edition.id !== id || typeof edition.routeSegment !== "string"
+      || !/^[a-z0-9-]+$/.test(edition.routeSegment) || routes.has(edition.routeSegment)) {
+      throw new Error(`Invalid or duplicate SEO edition route: ${id}`);
+    }
+    routes.add(edition.routeSegment);
+    for (const field of ["heading", "title", "description"]) {
+      if (typeof edition.seo?.[field] !== "string" || !edition.seo[field].trim()) {
+        throw new Error(`Missing SEO ${field} for edition: ${id}`);
+      }
+    }
+    if (!Object.hasOwn(locales, edition.language)) {
+      throw new Error(`Missing About locale for edition: ${id} (${edition.language})`);
+    }
+    for (const key of Object.keys(ABOUT_LOCALES.en)) {
+      if (typeof locales[edition.language][key] !== "string" || !locales[edition.language][key].trim()) {
+        throw new Error(`Missing About locale ${key} for edition: ${id} (${edition.language})`);
+      }
+    }
+    if (!locales[edition.language].editionsTitle.includes("{count}")
+      || !locales[edition.language].editionsCopy.includes("{editions}")) {
+      throw new Error(`About edition summary needs count and edition placeholders: ${edition.language}`);
+    }
+    for (const field of ["label", "languageName", "appName"]) {
+      if (typeof edition[field] !== "string" || !edition[field].trim()) {
+        throw new Error(`Missing SEO edition ${field}: ${id}`);
+      }
+    }
+    if (!["ltr", "rtl"].includes(edition.direction)) {
+      throw new Error(`Invalid SEO edition text direction: ${id}`);
+    }
+    if (!Array.isArray(edition.accentColors) || edition.accentColors.length < 2
+      || ![edition.accentColor, ...edition.accentColors].every((color) => /^#[\da-f]{6}$/i.test(color))) {
+      throw new Error(`SEO edition palette needs valid colors and at least two stops: ${id}`);
+    }
+  }
+  const editionPages = Object.values(editions).map((edition) => ({
+    path: `/editions/${edition.routeSegment}/`,
+    output: new URL(`editions/${edition.routeSegment}/index.html`, projectRoot),
+    html: renderEditionPage(edition, editions, locales),
+  }));
+  editionPages.unshift({
+    path: "/editions/",
+    output: new URL("editions/index.html", projectRoot),
+    html: renderCollectionPage(editions, locales),
+  });
 
-await Promise.all(editionPages.map(async ({ output, html }) => {
-  await mkdir(new URL("./", output), { recursive: true });
-  await writeFile(output, html);
-}));
-
-const studiesDirectory = new URL("studies/", root);
-const studies = (await readdir(studiesDirectory))
-  .filter((name) => name.endsWith(".html"))
-  .sort()
-  .map((name) => `/studies/${name}`);
-const sitemapPaths = [
-  "/",
-  "/about",
-  ...editionPages.map(({ path }) => path),
-  ...studies,
-];
-const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+  const studiesDirectory = new URL("studies/", projectRoot);
+  const studies = (await readdir(studiesDirectory))
+    .filter((name) => name.endsWith(".html"))
+    .sort()
+    .map((name) => `/studies/${name}`);
+  const sitemapPaths = ["/", "/about", ...editionPages.map(({ path }) => path), ...studies];
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${sitemapPaths.map((path) => `  <url><loc>${siteUrl}${path}</loc></url>`).join("\n")}
 </urlset>
 `;
 
-await writeFile(new URL("sitemap.xml", root), sitemap);
+  const redirectsUrl = new URL("_redirects", projectRoot);
+  const redirects = await readFile(redirectsUrl, "utf8");
+  const generatedRoutes = [
+    "# BEGIN GENERATED EDITION ROUTES",
+    "/editions /editions/index.html 200!",
+    "/editions/ /editions/index.html 200!",
+    ...Object.values(editions).flatMap(({ routeSegment }) => [
+      `/editions/${routeSegment} /editions/${routeSegment}/index.html 200`,
+      `/editions/${routeSegment}/ /editions/${routeSegment}/index.html 200`,
+    ]),
+    "# END GENERATED EDITION ROUTES",
+  ].join("\n");
+  const routeBlock = /# BEGIN GENERATED EDITION ROUTES[\s\S]*?# END GENERATED EDITION ROUTES/;
+  if (!routeBlock.test(redirects)) throw new Error("Missing generated edition route markers in _redirects");
+  const readerRouteBlock = /# BEGIN GENERATED READER ROUTES[\s\S]*?# END GENERATED READER ROUTES/;
+  if (!readerRouteBlock.test(redirects)) throw new Error("Missing generated reader route markers in _redirects");
+  const readerRoutes = [
+    "# BEGIN GENERATED READER ROUTES",
+    ...Object.values(editions).map(({ routeSegment }) => `/${routeSegment}/b/*  /index.html  200`),
+    "# END GENERATED READER ROUTES",
+  ].join("\n");
+
+  const aboutUrl = new URL("about.html", projectRoot);
+  let about = await readFile(aboutUrl, "utf8");
+  const summary = getEditionSummary(locales.en, "en", editions);
+  for (const key of ["editionsTitle", "editionsCopy"]) {
+    const pattern = new RegExp(`(<(?:h3|p) data-about="${key}">)[\\s\\S]*?(</(?:h3|p)>)`);
+    if (!pattern.test(about)) throw new Error(`Missing About edition summary: ${key}`);
+    about = about.replace(pattern, (_, open, close) => `${open}${escapeHtml(summary[key])}${close}`);
+  }
+  const languageMenuPattern = /(<div\s+id="about-language-options"[\s\S]*?>)[\s\S]*?(<\/div>)/;
+  if (!languageMenuPattern.test(about)) throw new Error("Missing About language menu");
+  const languages = new Map(Object.values(editions).map((edition) => [edition.language, edition]));
+  const options = [...languages.values()].map(({ language, languageName, direction }) =>
+    `            <button type="button" class="language-option" role="option" data-language="${language}" lang="${language}" dir="${direction}" aria-selected="${language === "en"}">${escapeHtml(languageName)}</button>`,
+  ).join("\n");
+  about = about.replace(languageMenuPattern, (_, open, close) => `${open}\n${options}\n          ${close}`);
+
+  await Promise.all([
+    ...editionPages.map(async ({ output, html }) => {
+      await mkdir(new URL("./", output), { recursive: true });
+      await writeFile(output, html);
+    }),
+    writeFile(new URL("sitemap.xml", projectRoot), sitemap),
+    writeFile(redirectsUrl, redirects.replace(routeBlock, generatedRoutes).replace(readerRouteBlock, readerRoutes)),
+    writeFile(aboutUrl, about),
+  ]);
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  await buildSeoPages();
+}

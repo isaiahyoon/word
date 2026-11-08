@@ -24,5 +24,10 @@ jobs:
         run: npm ci
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
+      - name: Check generated SEO pages and routes
+        run: |
+          npm run build:seo
+          git diff --exit-code -- editions sitemap.xml _redirects about.html
+          test -z "$(git ls-files --others --exclude-standard editions/)"
       - name: Run lint and tests
         run: npm run test:all
