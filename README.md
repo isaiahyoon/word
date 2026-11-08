@@ -63,7 +63,7 @@ To install it on Mac, open the site in Safari and choose **File → Add to Dock*
 
 ### Install size
 
-The app itself is small. As measured locally on 2026-11-07, the 38 unique files listed in `sw.js` total about 794 KB raw (793,852 bytes), or about 419 KB when each file is gzipped and the results are summed (419,019 bytes). This excludes fonts and any editions saved for offline reading. A fresh local load of the About install page fetched two WOFF2 files totaling 71,776 bytes (about 71.8 KB). Almeida's offline font preloader fetched 15 WOFF2 files totaling 279,504 bytes; nine Cardo files account for 97,904 bytes (about 97.9 KB). Other languages and browser/font subsets may fetch different files, and Korean and Japanese editions need more font data. Saved editions are optional, stored separately, and removable. These figures will change as the app changes, so re-measure before quoting them.
+The app itself is small. As measured locally on 2026-11-07, the 38 unique files listed in `sw.js` total about 802 KB raw (802,474 bytes), or about 421 KB when each file is gzipped and the results are summed (421,336 bytes). This excludes fonts and any editions saved for offline reading. A fresh local load of the About install page fetched two WOFF2 files totaling 71,776 bytes (about 71.8 KB). Almeida's offline font preloader fetched 15 WOFF2 files totaling 279,504 bytes; nine Cardo files account for 97,904 bytes (about 97.9 KB). Other languages and browser/font subsets may fetch different files, and Korean and Japanese editions need more font data. Saved editions are optional, stored separately, and removable. These figures will change as the app changes, so re-measure before quoting them.
 
 ## Offline editions
 
@@ -100,6 +100,21 @@ Then open [http://localhost:8000](http://localhost:8000).
 If port 8000 is occupied, choose another port with `PORT=8001 node tools/dev-server.mjs`.
 Check that the development server is running with `curl http://localhost:8000/health`.
 When deploying, configure the host to internally serve `index.html` for valid `/kjv/b/*`, `/krv/b/*`, `/diodati/b/*`, `/licht/b/*`, `/japbungo/b/*`, `/moh/b/*`, `/luz/b/*`, `/alm/b/*`, and legacy `/b/*` scripture routes while keeping the requested URL. These reader routes accept an optional trailing slash. Serve `/about` and `/about/` from `about.html`; unknown paths should serve `404.html` with a 404 status.
+
+## SEO pages and sitemap
+
+The edition landing pages under `/editions/` contain localized, pre-rendered descriptions and links into the reader, so their content and metadata are available without running JavaScript. Edition links echo their full palette with a soft gradient and glow on hover and keyboard focus. Register each edition's localized `seo.heading`, `seo.title`, and `seo.description`, route, language, and palette in `js/editions.mjs`, and supply its About locale in `js/about-locales.mjs` if the language is new. Missing SEO metadata, locales, or valid palettes cause an explicit build error rather than an incomplete page.
+
+Regenerate the pages, sitemap, marked deployment edition/reader rewrites, About language choices, and static About edition summary after changing editions or study pages:
+
+```sh
+npm run build:seo
+```
+
+The collection page at `/editions/` introduces every edition in its own language, with links to edition introductions and direct reading shortcuts. Both `/editions` and `/editions/` work, as do edition landing URLs with or without a trailing slash; canonical URLs consistently include the slash.
+The localized “Explore editions” link on the About page connects readers and crawlers to the collection, without adding a link to the reader footer.
+
+The sitemap lists the homepage, About page, edition collection, every registered edition landing page, and the HTML studies. Counts and edition lists are registry-driven in the collection, landing pages, and every About locale. CI checks that generated pages and routes are current. `robots.txt` points crawlers to the sitemap. The landing pages are separate from reader routes, which continue to open the interactive app directly.
 
 Scripture links identify their edition before the book route. Omitting the chapter opens chapter 1; omitting the verse opens and highlights verse 1:
 

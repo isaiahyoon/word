@@ -1,14 +1,36 @@
 /about        /about.html 200
 /about/       /about.html 200
+# BEGIN GENERATED EDITION ROUTES
+/editions /editions/index.html 200!
+/editions/ /editions/index.html 200!
+/editions/kjv /editions/kjv/index.html 200
+/editions/kjv/ /editions/kjv/index.html 200
+/editions/krv /editions/krv/index.html 200
+/editions/krv/ /editions/krv/index.html 200
+/editions/diodati /editions/diodati/index.html 200
+/editions/diodati/ /editions/diodati/index.html 200
+/editions/licht /editions/licht/index.html 200
+/editions/licht/ /editions/licht/index.html 200
+/editions/japbungo /editions/japbungo/index.html 200
+/editions/japbungo/ /editions/japbungo/index.html 200
+/editions/moh /editions/moh/index.html 200
+/editions/moh/ /editions/moh/index.html 200
+/editions/luz /editions/luz/index.html 200
+/editions/luz/ /editions/luz/index.html 200
+/editions/alm /editions/alm/index.html 200
+/editions/alm/ /editions/alm/index.html 200
+# END GENERATED EDITION ROUTES
 /:edition /index.html 200
 /:edition/ /index.html 200
+# BEGIN GENERATED READER ROUTES
 /kjv/b/*  /index.html  200
 /krv/b/*  /index.html  200
 /diodati/b/*  /index.html  200
 /licht/b/*  /index.html  200
 /japbungo/b/*  /index.html  200
-/moh/b/*      /index.html  200
-/luz/b/*      /index.html  200
-/alm/b/*      /index.html  200
+/moh/b/*  /index.html  200
+/luz/b/*  /index.html  200
+/alm/b/*  /index.html  200
+# END GENERATED READER ROUTES
 /b/*      /index.html  200
 /*        /404.html    404

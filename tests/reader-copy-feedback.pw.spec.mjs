@@ -102,7 +102,7 @@ for (const viewport of [
     await expect(supportLink).toHaveAttribute("target", "_blank");
     await expect(supportLink).toHaveAttribute("rel", "noopener noreferrer");
     await expect(page.locator('script[data-name="BMC-Widget"]')).toHaveCount(0);
-    const footerLinks = page.locator(".site-footer a");
+    const footerLinks = page.locator('.site-footer a[target="_blank"]');
     await expect(footerLinks.locator(".external-link-icon svg")).toHaveCount(3);
     expect((await footerLinks.allTextContents()).join(" ")).not.toContain("↗");
     const iconGaps = await footerLinks.evaluateAll((links) => links.map((link) => {

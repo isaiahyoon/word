@@ -1,4 +1,4 @@
-import { ABOUT_LOCALES } from "./about-locales.mjs";
+import { ABOUT_LOCALES, getEditionSummary } from "./about-locales.mjs";
 import { EDITIONS } from "./editions.mjs";
 import { logger } from "./logger.js";
 import { registerServiceWorker } from "./offline.js";
@@ -70,7 +70,7 @@ function getInitialLanguage() {
 }
 
 function applyLanguage(language) {
-  const locale = ABOUT_LOCALES[language];
+  const locale = getEditionSummary(ABOUT_LOCALES[language], language, EDITIONS);
   activeLanguage = language;
   document.documentElement.lang = language;
   const pageTitle = validInstallEdition ? EDITIONS[validInstallEdition].appName : locale.pageTitle;

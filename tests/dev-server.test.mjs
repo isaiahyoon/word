@@ -48,6 +48,7 @@ describe("development server", () => {
     assert.match(html, /name="twitter:card" content="summary_large_image"/);
     assert.match(html, /name="twitter:image" content="https:\/\/theamazingword\.org\/assets\/social-preview\.png"/);
     assert.match(html, /class="topbar-about" href="\/about"/);
+    assert.doesNotMatch(html, /class="site-footer-editions"/);
     assert.match(html, /class="topbar-actions"[\s\S]*class="shortcuts-trigger"/);
     assert.match(html, /class="site-footer-instagram"\s+href="https:\/\/www\.instagram\.com\/theamazingwordapp\/"\s+target="_blank"\s+rel="noopener noreferrer"/);
     assert.match(html, /aria-label="Visit The Amazing Word on Instagram, opens in a new tab"/);
@@ -56,7 +57,8 @@ describe("development server", () => {
   it("gives every HTML page a shared-link preview image", async () => {
     const root = new URL("../", import.meta.url);
     const studies = (await readdir(new URL("studies/", root))).filter((name) => name.endsWith(".html"));
-    const pages = ["index.html", "about.html", "404.html", ...studies.map((name) => `studies/${name}`)];
+    const editionPages = Object.values(EDITIONS).map((edition) => `editions/${edition.routeSegment}/index.html`);
+    const pages = ["index.html", "about.html", "404.html", "editions/index.html", ...editionPages, ...studies.map((name) => `studies/${name}`)];
 
     for (const page of pages) {
       const html = await readFile(new URL(page, root), "utf8");
@@ -65,6 +67,105 @@ describe("development server", () => {
       assert.match(html, /property="og:image" content="https:\/\/theamazingword\.org\/assets\/social-preview\.png"/, `${page} has og:image`);
       assert.match(html, /name="twitter:card" content="summary_large_image"/, `${page} has twitter:card`);
       assert.match(html, /name="twitter:image" content="https:\/\/theamazingword\.org\/assets\/social-preview\.png"/, `${page} has twitter:image`);
+    }
+  });
+
+  it("serves identical edition collection and landing pages regardless of trailing slash", async () => {
+    const paths = ["/editions", ...Object.values(EDITIONS).map((edition) => `/editions/${edition.routeSegment}`)];
+    for (const path of paths) {
+      const [plain, slash, head] = await Promise.all([
+        fetch(`${origin}${path}`, { redirect: "manual" }),
+        fetch(`${origin}${path}/`, { redirect: "manual" }),
+        fetch(`${origin}${path}`, { method: "HEAD", redirect: "manual" }),
+      ]);
+      assert.equal(plain.status, 200, path);
+      assert.equal(slash.status, 200, `${path}/`);
+      assert.equal(head.status, 200, `HEAD ${path}`);
+      assert.match(plain.headers.get("content-type"), /text\/html/);
+      const html = await plain.text();
+      assert.equal(html, await slash.text(), path);
+      assert.ok(html.includes(`<link rel="canonical" href="https://theamazingword.org${path}/" />`));
+      assert.equal(await head.text(), "");
+    }
+    for (const path of ["/editions/unknown", "/editions/unknown/"]) {
+      assert.equal((await fetch(`${origin}${path}`)).status, 404, path);
+    }
+  });
+
+  it("keeps both edition URL forms ahead of deployment reader rewrites", async () => {
+    const redirects = await readFile(new URL("../_redirects", import.meta.url), "utf8");
+    const rules = redirects.split("\n").filter((line) => line.trim()).map((line) => line.trim().split(/\s+/));
+    for (const route of ["", ...Object.values(EDITIONS).map((edition) => `/${edition.routeSegment}`)]) {
+      for (const slash of ["", "/"]) {
+        const path = `/editions${route}${slash}`;
+        const ruleIndex = rules.findIndex(([from]) => from === path);
+        assert.ok(ruleIndex >= 0 && ruleIndex < rules.findIndex(([from]) => from === "/:edition"), path);
+        assert.deepEqual(rules[ruleIndex], [path, `/editions${route}/index.html`, route ? "200" : "200!"]);
+      }
+    }
+  });
+
+  it("serves pre-rendered edition landing pages with canonical URLs and reader links", async () => {
+    for (const edition of Object.values(EDITIONS)) {
+      const path = `/editions/${edition.routeSegment}/`;
+      const response = await fetch(`${origin}${path}`);
+      const html = await response.text();
+
+      assert.equal(response.status, 200, path);
+      assert.match(html, new RegExp(`<html lang="${edition.language}"`), path);
+      assert.match(html, /<h1 id="page-title">[^<]+<\/h1>/, path);
+      assert.match(html, new RegExp(`<link rel="canonical" href="https://theamazingword\\.org${path.replaceAll("/", "\\/")}"`), path);
+      assert.match(html, new RegExp(`href="/${edition.routeSegment}/b/genesis/c/1/v/1"`), path);
+      assert.match(html, /<main>[\s\S]*<h1[\s\S]*<\/main>/, `${path} has static page content`);
+      assert.match(html, /rel="apple-touch-icon" href="\/assets\/apple-touch-icon\.png"/, path);
+    }
+
+    const readerResponse = await fetch(`${origin}/kjv/b/genesis/c/1/v/1`);
+    assert.match(await readerResponse.text(), /<title>The Amazing Word<\/title>/);
+  });
+
+  it("publishes a sitemap for canonical pages and advertises it to crawlers", async () => {
+    const [robotsResponse, sitemapResponse] = await Promise.all([
+      fetch(`${origin}/robots.txt`),
+      fetch(`${origin}/sitemap.xml`),
+    ]);
+    const [robots, sitemap] = await Promise.all([robotsResponse.text(), sitemapResponse.text()]);
+    const locations = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(([, location]) => location);
+    const studies = (await readdir(new URL("../studies/", import.meta.url)))
+      .filter((name) => name.endsWith(".html"))
+      .map((name) => `https://theamazingword.org/studies/${name}`)
+      .sort();
+    const root = new URL("../", import.meta.url);
+    const canonicalPages = [
+      ["index.html", "https://theamazingword.org/"],
+      ["about.html", "https://theamazingword.org/about"],
+      ["editions/index.html", "https://theamazingword.org/editions/"],
+      ...Object.values(EDITIONS).map((edition) => [
+        `editions/${edition.routeSegment}/index.html`,
+        `https://theamazingword.org/editions/${edition.routeSegment}/`,
+      ]),
+      ...(await readdir(new URL("studies/", root)))
+        .filter((name) => name.endsWith(".html"))
+        .map((name) => [`studies/${name}`, `https://theamazingword.org/studies/${name}`]),
+    ];
+    const expectedUrls = [
+      "https://theamazingword.org/",
+      "https://theamazingword.org/about",
+      "https://theamazingword.org/editions/",
+      ...Object.values(EDITIONS).map((edition) => `https://theamazingword.org/editions/${edition.routeSegment}/`),
+      ...studies,
+    ];
+
+    assert.equal(robotsResponse.status, 200);
+    assert.match(robotsResponse.headers.get("content-type"), /text\/plain/);
+    assert.match(robots, /Sitemap: https:\/\/theamazingword\.org\/sitemap\.xml/);
+    assert.equal(sitemapResponse.status, 200);
+    assert.match(sitemapResponse.headers.get("content-type"), /application\/xml/);
+    assert.match(sitemap, /<urlset xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9">/);
+    assert.deepEqual(locations, expectedUrls);
+    for (const [file, canonicalUrl] of canonicalPages) {
+      const html = await readFile(new URL(file, root), "utf8");
+      assert.ok(html.includes(`<link rel="canonical" href="${canonicalUrl}" />`), `${file} has canonical URL`);
     }
   });
 
@@ -250,6 +351,7 @@ describe("development server", () => {
 
     assert.equal(response.status, 404);
     assert.match(html, /Page Not Found — The Amazing Word/);
+    assert.match(html, /<meta name="robots" content="noindex,follow" \/>/);
     assert.match(html, /<strong>The Amazing Word<\/strong>/);
     assert.match(html, /Come back to the reading room/);
     assert.doesNotMatch(html, /id="go-back"/);
