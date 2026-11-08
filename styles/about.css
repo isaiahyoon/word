@@ -531,6 +531,12 @@ h1 {
   color: #526c4f;
 }
 
+.card-mark--lavender {
+  --mark-fill: var(--lavender);
+
+  color: #62537b;
+}
+
 .card-mark--gold {
   --mark-fill: var(--yellow);
 
@@ -572,13 +578,24 @@ h1 {
   gap: 14px;
   padding: 10px 4px;
   color: var(--ink);
+  background-color: transparent;
+  border-radius: 5px;
   text-decoration: none;
-  transition: color 0.18s ease;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    text-shadow 0.2s ease;
 }
 
 .edition-directory a:hover,
 .edition-directory a:focus-visible {
-  color: var(--deep-teal);
+  color: var(--edition-link-accent);
+  background-image: var(--edition-link-gradient);
+  box-shadow:
+    0 0 18px -8px var(--edition-link-glow),
+    0 0 26px -14px var(--edition-link-glow-secondary);
+  text-shadow: 0 0 14px var(--edition-link-glow);
 }
 
 .edition-directory a:focus-visible {
@@ -610,6 +627,7 @@ h1 {
 
 .edition-directory a:hover .edition-arrow,
 .edition-directory a:focus-visible .edition-arrow {
+  color: var(--edition-link-accent);
   transform: translate(2px, -2px);
 }
 

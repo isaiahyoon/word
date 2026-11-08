@@ -103,7 +103,7 @@ When deploying, configure the host to internally serve `index.html` for valid `/
 
 ## SEO pages and sitemap
 
-The edition landing pages under `/editions/` contain localized, pre-rendered descriptions and links into the reader, so their content and metadata are available without running JavaScript. Regenerate them and `sitemap.xml` after changing editions or study pages:
+The edition landing pages under `/editions/` contain localized, pre-rendered descriptions and links into the reader, so their content and metadata are available without running JavaScript. Edition links echo their full palette with a soft gradient and glow on hover and keyboard focus. Regenerate the pages and `sitemap.xml` after changing editions or study pages:
 
 ```sh
 npm run build:seo

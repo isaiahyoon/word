@@ -57,6 +57,18 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
+function editionLinkStyle(edition) {
+  const stops = edition.accentColors
+    .map((color, index, colors) => {
+      const position = Math.round(index / (colors.length - 1) * 100);
+      return `color-mix(in srgb, ${color} 22%, transparent) ${position}%`;
+    })
+    .join(", ");
+  const glow = `color-mix(in srgb, ${edition.accentColor} 68%, transparent)`;
+  const secondaryGlow = `color-mix(in srgb, ${edition.accentColors.at(-1)} 48%, transparent)`;
+  return `--edition-link-accent: ${edition.accentColor}; --edition-link-gradient: linear-gradient(115deg, ${stops}); --edition-link-glow: ${glow}; --edition-link-glow-secondary: ${secondaryGlow}`;
+}
+
 function renderEditionPage(edition) {
   const { heading, title, description } = editionSearchDetails[edition.id];
   const locale = ABOUT_LOCALES[edition.language];
@@ -140,7 +152,7 @@ function renderEditionPage(edition) {
               <p>${escapeHtml(locale.findCopy)}</p>
             </article>
             <article class="feature-card">
-              <span class="card-mark card-mark--green" aria-hidden="true">02</span>
+              <span class="card-mark card-mark--lavender" aria-hidden="true">02</span>
               <h3>${escapeHtml(locale.carryTitle)}</h3>
               <p>${escapeHtml(locale.carryCopy)}</p>
             </article>
@@ -163,7 +175,7 @@ function renderEditionPage(edition) {
           </div>
           <nav class="edition-directory" aria-label="${escapeHtml(locale.editionsTitle)}">
             <ol>
-${Object.values(EDITIONS).map((otherEdition, index) => `              <li><a href="/editions/${escapeHtml(otherEdition.routeSegment)}/"><span class="edition-number" aria-hidden="true">${String(index + 1).padStart(2, "0")}</span><span class="edition-name">${escapeHtml(otherEdition.label)}</span><span class="edition-arrow" aria-hidden="true">↗</span></a></li>`).join("\n")}
+${Object.values(EDITIONS).map((otherEdition, index) => `              <li><a href="/editions/${escapeHtml(otherEdition.routeSegment)}/" style="${escapeHtml(editionLinkStyle(otherEdition))}"><span class="edition-number" aria-hidden="true">${String(index + 1).padStart(2, "0")}</span><span class="edition-name">${escapeHtml(otherEdition.label)}</span><span class="edition-arrow" aria-hidden="true">↗</span></a></li>`).join("\n")}
             </ol>
           </nav>
         </section>

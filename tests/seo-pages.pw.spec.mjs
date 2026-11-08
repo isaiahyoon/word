@@ -2,6 +2,17 @@ import { ABOUT_LOCALES } from "../js/about-locales.mjs";
 import { EDITIONS } from "../js/editions.mjs";
 import { expect, test } from "./support/browser-test.mjs";
 
+const expectedEditionPalettes = {
+  kjv: ["#7654a4", "#dcd7f7", "#7654a4"],
+  krv: ["#4b7395", "#bed8ea", "#4b7395"],
+  diodati: ["#a94f66", "#f3cada", "#a94f66"],
+  luther1912: ["#8a6c22", "#fff1bd", "#b9534b"],
+  japbungo: ["#5c7655", "#d6f2b9", "#5c7655"],
+  martin1744: ["#405d75", "#dce8f8", "#f5d6e2"],
+  rv1865: ["#4f6448", "#d5e5ce", "#9d7839", "#f2e7c7", "#4f6448"],
+  alm1911: ["#a83f4b", "#e5d6a5", "#526553"],
+};
+
 test("edition landing pages render localized, responsive content and links", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
 
@@ -14,6 +25,8 @@ test("edition landing pages render localized, responsive content and links", asy
     await expect(page.locator("main")).toContainText(edition.label);
     await expect(page.locator(".feature-card").nth(1).locator("p"))
       .toHaveText(ABOUT_LOCALES[edition.language].carryCopy);
+    await expect(page.locator(".feature-card").nth(1).locator(".card-mark"))
+      .toHaveClass(/card-mark--lavender/);
     await expect(page.locator(".feature-card")).toHaveCount(4);
     await expect(page.locator(".feature-card").nth(3).locator("h3"))
       .toHaveText(ABOUT_LOCALES[edition.language].placeTitle);
@@ -48,6 +61,34 @@ test("edition landing pages render localized, responsive content and links", asy
     expect(dimensions.gridColumns.split(" ")).toHaveLength(1);
     expect(dimensions.firstLinkHeight).toBeGreaterThanOrEqual(56);
     expect(dimensions.firstLinkBackground).toBe("rgba(0, 0, 0, 0)");
+
+    const directoryLinks = page.locator(".edition-directory a");
+    for (const [index, targetEdition] of Object.values(EDITIONS).entries()) {
+      const link = directoryLinks.nth(index);
+      expect(targetEdition.accentColors).toEqual(expectedEditionPalettes[targetEdition.id]);
+      await expect(link).toHaveAttribute("style", new RegExp(
+        `--edition-link-accent: ${targetEdition.accentColor.replace("#", "\\#")};`,
+      ));
+      for (const color of targetEdition.accentColors) {
+        await expect(link).toHaveAttribute("style", new RegExp(
+          color.replace("#", "\\#"),
+        ));
+      }
+      await link.hover();
+      const expectedColor = `rgb(${targetEdition.accentColor.match(/[a-f\d]{2}/giu)
+        .map((channel) => Number.parseInt(channel, 16))
+        .join(", ")})`;
+      await expect(link).toHaveCSS("color", expectedColor);
+      await expect.poll(() => link.evaluate((element) => getComputedStyle(element).backgroundColor))
+        .toBe("rgba(0, 0, 0, 0)");
+      await expect.poll(() => link.evaluate((element) => getComputedStyle(element).backgroundImage))
+        .toContain("linear-gradient");
+      await expect.poll(() => link.evaluate((element) => getComputedStyle(element).boxShadow))
+        .toContain("18px");
+      await expect.poll(() => link.evaluate((element) => getComputedStyle(element).boxShadow))
+        .toContain("26px");
+      await expect(link.locator(".edition-arrow")).toHaveCSS("color", expectedColor);
+    }
   }
 });
 
