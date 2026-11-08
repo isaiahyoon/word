@@ -101,6 +101,16 @@ If port 8000 is occupied, choose another port with `PORT=8001 node tools/dev-ser
 Check that the development server is running with `curl http://localhost:8000/health`.
 When deploying, configure the host to internally serve `index.html` for valid `/kjv/b/*`, `/krv/b/*`, `/diodati/b/*`, `/licht/b/*`, `/japbungo/b/*`, `/moh/b/*`, `/luz/b/*`, `/alm/b/*`, and legacy `/b/*` scripture routes while keeping the requested URL. These reader routes accept an optional trailing slash. Serve `/about` and `/about/` from `about.html`; unknown paths should serve `404.html` with a 404 status.
 
+## SEO pages and sitemap
+
+The edition landing pages under `/editions/` contain localized, pre-rendered descriptions and links into the reader, so their content and metadata are available without running JavaScript. Regenerate them and `sitemap.xml` after changing editions or study pages:
+
+```sh
+npm run build:seo
+```
+
+The sitemap lists the homepage, About page, all eight edition landing pages, and the HTML studies. `robots.txt` points crawlers to the sitemap. The landing pages are separate from reader routes, which continue to open the interactive app directly.
+
 Scripture links identify their edition before the book route. Omitting the chapter opens chapter 1; omitting the verse opens and highlights verse 1:
 
 ```text

@@ -6,6 +6,7 @@
     "build:martin": "node tools/build-martin-data.mjs",
     "build:rv1865": "node tools/build-rv1865-data.mjs",
     "build:alm1911": "node tools/build-alm1911-data.mjs",
+    "build:seo": "node tools/build-seo-pages.mjs",
     "build:install-manifests": "node tools/build-install-manifests.mjs",
     "import:rv1865": "node tools/import-rv1865-source.mjs",
     "import:alm1911": "node tools/import-alm1911-source.mjs",
