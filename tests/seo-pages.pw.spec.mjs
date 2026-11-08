@@ -13,6 +13,70 @@ const expectedEditionPalettes = {
   alm1911: ["#a83f4b", "#e5d6a5", "#526553"],
 };
 
+for (const width of [320, 360, 390, 1280]) {
+  test(`reader footer stays uncluttered and About edition links work at ${width}px in every language`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    for (const edition of Object.values(EDITIONS)) {
+      await page.goto(`/${edition.routeSegment}/b/genesis/c/1/v/1`);
+      await expect(page.locator("#verse-1")).toBeVisible();
+      await expect(page.locator('.site-footer a[href="/editions/"]')).toHaveCount(0);
+
+      await page.goto(`/about?lang=${edition.language}`);
+      const aboutLink = page.locator('[data-about="exploreEditions"]');
+      await expect(aboutLink).toHaveText(ABOUT_LOCALES[edition.language].exploreEditions);
+      await expect(aboutLink).toHaveAttribute("href", "/editions/");
+      await aboutLink.focus();
+      await expect(aboutLink).toBeFocused();
+      const aboutBounds = await aboutLink.boundingBox();
+      expect(aboutBounds.x).toBeGreaterThanOrEqual(0);
+      expect(aboutBounds.x + aboutBounds.width).toBeLessThanOrEqual(width);
+      expect(await aboutLink.evaluate((link) => {
+        const bounds = link.getBoundingClientRect();
+        const card = link.closest(".feature-card").getBoundingClientRect();
+        return bounds.left >= card.left && bounds.right <= card.right;
+      })).toBe(true);
+      await aboutLink.click();
+      await expect(page).toHaveURL(/\/editions\/$/);
+    }
+  });
+}
+
+test("edition collection works with either URL form and offers native-language introductions and reading", async ({ page }) => {
+  for (const path of ["/editions", "/editions/"]) {
+    await page.goto(path);
+    await expect(page.locator("h1")).toHaveText("One Word.Eight editions.");
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://theamazingword.org/editions/");
+    await expect(page.locator(".edition-directory li")).toHaveCount(Object.keys(EDITIONS).length);
+  }
+
+  for (const width of [390, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const edition of Object.values(EDITIONS)) {
+      const intro = page.locator(`.edition-directory a[href="/editions/${edition.routeSegment}/"]`);
+      const read = page.locator(`.edition-read-link[href="/${edition.routeSegment}/b/genesis/c/1/v/1"]`);
+      await expect(intro.locator(".edition-name")).toHaveAttribute("lang", edition.language);
+      await expect(intro).toContainText(edition.languageName);
+      await expect(read).toHaveText(`${ABOUT_LOCALES[edition.language].openReader} →`);
+      await intro.hover();
+      await expect.poll(() => intro.evaluate((link) => getComputedStyle(link).boxShadow)).toContain("26px");
+      await read.focus();
+      await expect(read).toBeFocused();
+      await expect(read).toHaveCSS("outline-style", "solid");
+      const bounds = await read.boundingBox();
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+      expect(bounds.height).toBeGreaterThanOrEqual(44);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+
+  await page.locator('.edition-directory a[href="/editions/kjv/"]').click();
+  await expect(page.locator("h1")).toHaveText("King James Version");
+  await page.locator('.about-footer a[href="/editions/"]').click();
+  await page.locator('.edition-read-link[href="/kjv/b/genesis/c/1/v/1"]').click();
+  await expect(page.locator("#verse-list")).toBeVisible();
+});
+
 test("edition landing pages render localized, responsive content and links", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
 

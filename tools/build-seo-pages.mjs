@@ -69,21 +69,10 @@ function editionLinkStyle(edition) {
   return `--edition-link-accent: ${edition.accentColor}; --edition-link-gradient: linear-gradient(115deg, ${stops}); --edition-link-glow: ${glow}; --edition-link-glow-secondary: ${secondaryGlow}`;
 }
 
-function renderEditionPage(edition) {
-  const { heading, title, description } = editionSearchDetails[edition.id];
-  const locale = ABOUT_LOCALES[edition.language];
-  const canonicalUrl = `${siteUrl}/editions/${edition.routeSegment}/`;
-  const readerUrl = `/${edition.routeSegment}/b/genesis/c/1/v/1`;
-  const language = escapeHtml(edition.language);
-  const themeColor = escapeHtml(edition.themeColor ?? "#f6f4f9");
+function renderPageHead({ title, description, canonicalUrl, themeColor = "#f6f4f9" }) {
   const escapedTitle = escapeHtml(title);
-  const escapedHeading = escapeHtml(heading);
   const escapedDescription = escapeHtml(description);
-  const escapedAppName = escapeHtml(edition.appName);
-
-  return `<!doctype html>
-<html lang="${language}" dir="${edition.direction}">
-  <head>
+  return `  <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="${themeColor}" />
@@ -111,7 +100,42 @@ function renderEditionPage(edition) {
     <link rel="stylesheet" href="/styles/typography.css" />
     <link rel="stylesheet" href="/styles/editions.css" />
     <link rel="stylesheet" href="/styles/about.css" />
-  </head>
+  </head>`;
+}
+
+function renderEditionDirectory({ detailed = false, label = "Scripture editions" } = {}) {
+  const entries = Object.values(EDITIONS).map((edition, index) => {
+    const style = escapeHtml(editionLinkStyle(edition));
+    const heading = editionSearchDetails[edition.id].heading;
+    const nameAttributes = detailed ? ` lang="${edition.language}" dir="${edition.direction}"` : "";
+    const languageName = detailed ? `<small>${escapeHtml(edition.languageName)}</small>` : "";
+    const readerLabel = ABOUT_LOCALES[edition.language].openReader;
+    const readerLink = detailed ? `
+                <a class="edition-read-link" href="/${edition.routeSegment}/b/genesis/c/1/v/1" lang="${edition.language}" aria-label="${escapeHtml(`${readerLabel} · ${heading}`)}">${escapeHtml(readerLabel)} <span aria-hidden="true">→</span></a>` : "";
+    return `              <li${detailed ? ` style="${style}"` : ""}>
+                <a href="/editions/${escapeHtml(edition.routeSegment)}/" style="${style}"><span class="edition-number" aria-hidden="true">${String(index + 1).padStart(2, "0")}</span><span class="edition-name"${nameAttributes}>${escapeHtml(detailed ? heading : edition.label)}${languageName}</span><span class="edition-arrow" aria-hidden="true">↗</span></a>${readerLink}
+              </li>`;
+  });
+  return `          <nav class="edition-directory${detailed ? " edition-collection-directory" : ""}" aria-label="${escapeHtml(label)}">
+            <ol>
+${entries.join("\n")}
+            </ol>
+          </nav>`;
+}
+
+function renderEditionPage(edition) {
+  const { heading, title, description } = editionSearchDetails[edition.id];
+  const locale = ABOUT_LOCALES[edition.language];
+  const canonicalUrl = `${siteUrl}/editions/${edition.routeSegment}/`;
+  const readerUrl = `/${edition.routeSegment}/b/genesis/c/1/v/1`;
+  const language = escapeHtml(edition.language);
+  const themeColor = escapeHtml(edition.themeColor ?? "#f6f4f9");
+  const escapedHeading = escapeHtml(heading);
+  const escapedAppName = escapeHtml(edition.appName);
+
+  return `<!doctype html>
+<html lang="${language}" dir="${edition.direction}">
+${renderPageHead({ title, description, canonicalUrl, themeColor })}
   <body class="is-${escapeHtml(edition.id)}-edition edition-landing" style="--edition-theme-color: ${themeColor}">
     <div class="about-shell">
       <header class="about-header">
@@ -173,18 +197,58 @@ function renderEditionPage(edition) {
           <div class="section-heading">
             <h2 id="editions-title">${escapeHtml(locale.editionsTitle)}</h2>
           </div>
-          <nav class="edition-directory" aria-label="${escapeHtml(locale.editionsTitle)}">
-            <ol>
-${Object.values(EDITIONS).map((otherEdition, index) => `              <li><a href="/editions/${escapeHtml(otherEdition.routeSegment)}/" style="${escapeHtml(editionLinkStyle(otherEdition))}"><span class="edition-number" aria-hidden="true">${String(index + 1).padStart(2, "0")}</span><span class="edition-name">${escapeHtml(otherEdition.label)}</span><span class="edition-arrow" aria-hidden="true">↗</span></a></li>`).join("\n")}
-            </ol>
-          </nav>
+${renderEditionDirectory({ label: locale.editionsTitle })}
         </section>
       </main>
 
       <footer class="about-footer">
         <span>${escapeHtml(locale.footerBrand)}</span>
+        <a href="/editions/">${escapeHtml(locale.editionsTitle)}</a>
         <a href="/about">${escapeHtml(locale.pageTitle)}</a>
       </footer>
+    </div>
+  </body>
+</html>
+`;
+}
+
+function renderCollectionPage() {
+  const count = Object.keys(EDITIONS).length;
+  const title = "Bible editions and languages | The Amazing Word";
+  const description = `Explore ${count} Scripture editions in their own languages. Choose an edition, read freely, and share the same passage across languages with The Amazing Word.`;
+  return `<!doctype html>
+<html lang="en" dir="ltr">
+${renderPageHead({ title, description, canonicalUrl: `${siteUrl}/editions/` })}
+  <body class="edition-collection">
+    <div class="about-shell">
+      <header class="about-header">
+        <a class="brand" href="/" aria-label="The Amazing Word home">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          <span class="brand-name"><strong>The Amazing Word</strong><small>BIBLE READER</small></span>
+        </a>
+        <a class="return-link" href="/">Open the reader <span aria-hidden="true">→</span></a>
+      </header>
+      <main>
+        <section class="about-hero" aria-labelledby="page-title">
+          <p class="eyebrow"><span aria-hidden="true">✦</span> SCRIPTURE, ACROSS LANGUAGES</p>
+          <h1 id="page-title">One Word.<br />${count === 8 ? "Eight" : count} editions.</h1>
+          <p class="hero-copy">A familiar passage. Another language. Explore the editions below, or step straight into reading.</p>
+          <div class="hero-rule" aria-hidden="true"><i></i><i></i><i></i></div>
+        </section>
+        <section class="content-section" aria-labelledby="editions-title">
+          <div class="section-heading">
+            <p class="eyebrow">FIND YOUR READING LANGUAGE</p>
+            <h2 id="editions-title">A place for your words.</h2>
+          </div>
+${renderEditionDirectory({ detailed: true })}
+        </section>
+        <section class="content-section" aria-labelledby="languages-title">
+          <div class="section-heading"><h2 id="languages-title">The same passage. A wider conversation.</h2></div>
+          <p class="section-intro">Switch editions in the reader without losing your passage or selected verses. Copy or share that selection with a citation in another supported language.</p>
+          <p class="section-intro">The King James Version is this project's canonical foundation. Other editions are translations for reading and comparison, not replacements for that foundation.</p>
+        </section>
+      </main>
+      <footer class="about-footer"><span>THE AMAZING WORD / SCRIPTURE READER</span><a href="/about">About The Amazing Word</a></footer>
     </div>
   </body>
 </html>
@@ -196,6 +260,11 @@ const editionPages = Object.values(EDITIONS).map((edition) => ({
   output: new URL(`editions/${edition.routeSegment}/index.html`, root),
   html: renderEditionPage(edition),
 }));
+editionPages.unshift({
+  path: "/editions/",
+  output: new URL("editions/index.html", root),
+  html: renderCollectionPage(),
+});
 
 await Promise.all(editionPages.map(async ({ output, html }) => {
   await mkdir(new URL("./", output), { recursive: true });

@@ -625,6 +625,27 @@ h1 {
   transition: transform 0.18s ease;
 }
 
+.edition-collection-directory .edition-name small {
+  display: block;
+  margin-top: 7px;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: var(--type-control);
+  font-weight: var(--weight-medium);
+}
+
+.edition-collection-directory li {
+  padding: 12px 0;
+}
+
+.edition-collection-directory .edition-read-link {
+  width: fit-content;
+  min-height: 44px;
+  margin-left: 32px;
+  padding: 8px 12px;
+  font-size: var(--type-control);
+}
+
 .edition-directory a:hover .edition-arrow,
 .edition-directory a:focus-visible .edition-arrow {
   color: var(--edition-link-accent);
