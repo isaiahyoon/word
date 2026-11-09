@@ -1,5 +1,5 @@
 ---
-description: "Use when adding or changing reader features, supported editions, offline behavior, project convictions, installation guidance, or About page copy. Keep The Word's About page accurate and in step with meaningful user-facing changes."
+description: "Use when adding or changing reader features, supported editions, offline behavior, project convictions, installation guidance, or About page copy. Keep The Amazing Word's About page accurate and in step with meaningful user-facing changes."
 ---
 # About Page
 

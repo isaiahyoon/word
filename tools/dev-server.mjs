@@ -92,6 +92,6 @@ export function createDevServer(projectRoot = root) {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const server = createDevServer();
   server.listen(port, "0.0.0.0", () => {
-    console.log(`The Word is available at http://localhost:${port}`);
+    console.log(`The Amazing Word is available at http://localhost:${port}`);
   });
 }
