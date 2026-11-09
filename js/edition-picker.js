@@ -158,6 +158,7 @@ export function createShareLanguageMenu({
   editionIds,
   editions,
   getActiveEditionId,
+  getAlignmentNotice,
   onOpen,
   onSelect,
 }) {
@@ -174,7 +175,7 @@ export function createShareLanguageMenu({
 
   function createOption(editionId) {
     const edition = editions[editionId];
-    const [labelCode, language = edition.name] = edition.label.split(" · ");
+    const [labelCode] = edition.label.split(" · ");
     const option = document.createElement("button");
     option.type = "button";
     option.className = "share-language-option";
@@ -188,7 +189,7 @@ export function createShareLanguageMenu({
     code.textContent = edition.shortCode ?? labelCode;
     const name = document.createElement("span");
     name.className = "share-language-name";
-    name.textContent = language;
+    name.textContent = edition.languageName;
     option.append(code, name);
     return option;
   }
@@ -197,7 +198,16 @@ export function createShareLanguageMenu({
     activeTrigger?.setAttribute("aria-expanded", "false");
     activeTrigger = actionTrigger;
     activeAction = action;
-    menu.replaceChildren(...editionIds.map(createOption));
+    const notice = document.createElement("p");
+    notice.id = "share-alignment-notice";
+    notice.className = "share-alignment-notice";
+    notice.setAttribute("role", "presentation");
+    notice.textContent = getAlignmentNotice();
+    const options = document.createElement("div");
+    options.className = "share-language-options";
+    options.setAttribute("role", "presentation");
+    options.append(...editionIds.map(createOption));
+    menu.replaceChildren(notice, options);
     menu.hidden = false;
     activeTrigger.setAttribute("aria-expanded", "true");
     menu.querySelector("[aria-current]")?.focus();

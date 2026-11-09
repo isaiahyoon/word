@@ -494,7 +494,7 @@ test("blocks sharing a selected verse without a verified KJV reference", async (
   await page.locator("#share-language-menu [data-edition='kjv']").click();
 
   await expect(page.locator("#copy-status"))
-    .toHaveText("選択した節を指定の版の節と確実に対応できないため、コピーしませんでした。");
+    .toHaveText("選択した節を指定の版の節と確実に対応できません。コピーや共有は行われませんでした。");
   expect(await page.evaluate(() => window.sharedPayloads.length)).toBe(0);
 });
 
@@ -525,7 +525,9 @@ test("keeps selected-verse actions on one row inside the viewport in every editi
     await expect(page.locator("#verse-actions")).toHaveClass(/is-visible/);
     for (const width of [320, 390, 540, 700]) {
       await page.setViewportSize({ width, height: 800 });
-      await expect(page.locator("#share-selected-verses")).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
+      for (const button of await page.locator("#verse-actions > button").all()) {
+        await expect(button).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
+      }
       const buttons = await page.locator("#verse-actions > button").evaluateAll((elements) =>
         elements.map((element) => {
           const { left, right, top } = element.getBoundingClientRect();

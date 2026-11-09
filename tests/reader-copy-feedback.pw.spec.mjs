@@ -77,7 +77,7 @@ test("blocks cross-edition copying where verse alignment is not verified", async
   await page.locator("#share-language-menu [data-edition='martin1744']").click();
 
   await expect(page.locator("#copy-status"))
-    .toHaveText("These verses cannot be matched confidently to the chosen edition, so nothing was copied.");
+    .toHaveText("These verses cannot be matched confidently to the chosen edition. Nothing was copied or shared.");
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe("unchanged");
 });
 

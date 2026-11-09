@@ -152,7 +152,10 @@ const shareLanguageMenu = createShareLanguageMenu({
   editionIds: EDITION_IDS,
   editions: EDITIONS,
   getActiveEditionId: () => state.editionId,
+  getAlignmentNotice: () => uiText("alignmentNotice"),
   onOpen: (action) => {
+    clearTimeout(copyFeedbackTimer);
+    elements.copyStatus.textContent = "";
     elements.shareLanguageMenu.setAttribute(
       "aria-label",
       uiText(action === "copy" ? "copyInLanguage" : "shareInLanguage"),

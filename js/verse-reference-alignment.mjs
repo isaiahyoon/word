@@ -77,6 +77,13 @@ export function createVerseReferenceAlignment(editionId, metadata = {}, chapterC
   function toKjvReferences(book, chapter, verse) {
     if (!isChapterAligned(book, chapter)) return null;
 
+    // These editions divide the Revelation 12–13 boundary differently from KJV.
+    if (book === 66 && (
+      (["krv", "japbungo"].includes(editionId) && (
+        (chapter === 12 && verse === 17) || (chapter === 13 && verse === 1)
+      )) || (editionId === "martin1744" && chapter === 13 && verse === 1)
+    )) return null;
+
     if (editionId === "krv") {
       const counts = KRV_CHAPTER_COUNTS.get(chapterKey(book, chapter));
       if (counts && (!Number.isInteger(verse) || verse < 1 || verse > counts[0])) return null;

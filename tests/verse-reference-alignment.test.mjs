@@ -193,6 +193,25 @@ test("maps reviewed Martin epistle chapters in both directions", async () => {
   );
 });
 
+test("blocks unsafe Revelation chapter-boundary references without blocking adjacent verses", async () => {
+  for (const [editionId, chapter, blockedVerse, safeVerse] of [
+    ["krv", 12, 17, 16], ["krv", 13, 1, 2],
+    ["japbungo", 12, 17, 16], ["japbungo", 13, 1, 2],
+    ["martin1744", 13, 1, 2],
+  ]) {
+    const index = await readJson(`../scripture/${editionId}/index.json`);
+    const native = await chapterVerses(editionId, 66, chapter);
+    const kjv = await chapterVerses("kjv", 66, chapter);
+    const alignment = createVerseReferenceAlignment(editionId, index, {
+      book: 66, chapter, verseCount: native.length, kjvVerseCount: kjv.length,
+    });
+    const verses = native.map(([verse]) => ({ book: 66, chapter, verse }));
+    assert.equal(alignment.toKjvReferences(66, chapter, blockedVerse), null, editionId);
+    assert.deepEqual(alignment.findNativeVerses(66, chapter, [[66, chapter, blockedVerse]], verses), [], editionId);
+    assert.deepEqual(alignment.toKjvReferences(66, chapter, safeVerse), [[66, chapter, safeVerse]], editionId);
+  }
+});
+
 test("classifies every verse reference in every edition against existing KJV slots", async () => {
   const kjvIndex = await readJson("../scripture/kjv/index.json");
   const kjvBooks = await Promise.all(kjvIndex.bookFiles.map((file) =>
@@ -237,7 +256,12 @@ test("classifies every verse reference in every edition against existing KJV slo
           if (references === null) {
             assert.ok(
               !alignment.isChapterAligned(bookIndex + 1, chapter) ||
-              (editionId === "martin1744" && bookIndex + 1 === 47 && chapter === 13 && verse === 13),
+              (editionId === "martin1744" && bookIndex + 1 === 47 && chapter === 13 && verse === 13) ||
+              (bookIndex + 1 === 66 && (
+                (["krv", "japbungo"].includes(editionId) && (
+                  (chapter === 12 && verse === 17) || (chapter === 13 && verse === 1)
+                )) || (editionId === "martin1744" && chapter === 13 && verse === 1)
+              )),
             );
             continue;
           }
