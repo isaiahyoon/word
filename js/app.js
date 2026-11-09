@@ -152,7 +152,6 @@ const shareLanguageMenu = createShareLanguageMenu({
   editionIds: EDITION_IDS,
   editions: EDITIONS,
   getActiveEditionId: () => state.editionId,
-  getAlignmentNotice: () => uiText("alignmentNotice"),
   onOpen: (action) => {
     clearTimeout(copyFeedbackTimer);
     elements.copyStatus.textContent = "";
@@ -178,7 +177,7 @@ const testamentFor = (book) => book <= 39 ? "old" : "new";
 const bookName = (book) => scripture.bookName(book);
 const referenceBookName = (book) => scripture.referenceBookName(book);
 
-function updateCopyControl() {
+function updateCopyControl({ clearStatus = true } = {}) {
   const count = state.selectedVerses.size;
   const visible = count > 0;
   elements.verseActions.classList.toggle("is-visible", visible);
@@ -196,7 +195,7 @@ function updateCopyControl() {
   elements.shareControl.title = visible
     ? uiText(count === 1 ? "shareOneVerse" : "shareManyVerses", { count })
     : uiText("shareSelected");
-  elements.copyStatus.textContent = "";
+  if (clearStatus) elements.copyStatus.textContent = "";
   clearTimeout(copyFeedbackTimer);
 }
 
@@ -445,7 +444,13 @@ function resolveVerseReferences({
   if (uniqueCanonicalReferences.some((reference) => !coveredReferences.has(reference.join(":")))) {
     throw new VerseReferenceAlignmentError();
   }
-  return { targetVerses, targetReferences };
+  const selectedNumbers = new Set(verseNumbers);
+  const additionalSourceVerses = sourceChapterVerses.filter((verse) => {
+    if (selectedNumbers.has(verse.verse)) return false;
+    const references = sourceAlignment.toKjvReferences(book, chapter, verse.verse);
+    return references?.some((reference) => coveredReferences.has(reference.join(":")));
+  });
+  return { targetVerses, targetReferences, additionalSourceVerses };
 }
 
 function selectedVerseContent(editionId, store, canonicalStore = null) {
@@ -472,7 +477,7 @@ function selectedVerseContent(editionId, store, canonicalStore = null) {
   }
 
   if (!canonicalStore) throw new VerseReferenceAlignmentError();
-  const { targetVerses: selectedVerses, targetReferences } = resolveVerseReferences({
+  const { targetVerses: selectedVerses, targetReferences, additionalSourceVerses } = resolveVerseReferences({
     sourceEditionId: state.editionId,
     sourceStore: scripture,
     targetEditionId: editionId,
@@ -490,6 +495,19 @@ function selectedVerseContent(editionId, store, canonicalStore = null) {
     store,
   );
   const nativeReferences = selectedVerses.map((verse) => [verse.book, verse.chapter, verse.verse]);
+  const sourceReferences = activeVerses.map((verse) => [verse.book, verse.chapter, verse.verse]);
+  const alignmentDetails = [];
+  if (!sameVerseReferences(sourceReferences, nativeReferences) || additionalSourceVerses.length) {
+    alignmentDetails.push(uiText("alignmentSelection", {
+      reference: formatVerseReference(state.book, state.chapter, activeVerses.map((verse) => verse.verse), scripture),
+      edition: EDITIONS[state.editionId].shortCode ?? state.editionId.toUpperCase(),
+    }));
+  }
+  if (additionalSourceVerses.length) {
+    alignmentDetails.push(uiText("alignmentExtraText", {
+      reference: formatVerseReference(state.book, state.chapter, additionalSourceVerses.map((verse) => verse.verse), scripture),
+    }));
+  }
   const copiedVerses = selectedVerses.map((verse) => {
     const sourceLabel = verse.sourceEdition === "krv" ? ` [${uiText("sourceFallback")}]` : "";
     const verseText = `${verse.text.trim()}${sourceLabel}`;
@@ -500,7 +518,11 @@ function selectedVerseContent(editionId, store, canonicalStore = null) {
   const citation = sameVerseReferences(targetReferences, nativeReferences)
     ? `- ${reference}`
     : `- ${reference}\n- ${uiText("kjvReference")}: ${kjvReference}`;
-  return { reference, text: `"${copiedVerses}"\n\n${citation}` };
+  return { reference, text: `"${copiedVerses}"\n\n${citation}`, alignmentDetails: alignmentDetails.join(" ") };
+}
+
+function copyShareStatus(key, content) {
+  return [uiText(key, { reference: content.reference }), content.alignmentDetails].filter(Boolean).join(" ");
 }
 
 async function selectedVerseStore(editionId, action) {
@@ -543,8 +565,8 @@ async function copySelectedVerses({ clearAfter = false, editionId = state.editio
       return;
     }
     elements.copyControlLabel.textContent = uiText("copied");
-    elements.copyStatus.textContent = uiText("copiedReference", { reference: content.reference });
-    copyFeedbackTimer = setTimeout(updateCopyControl, 1600);
+    elements.copyStatus.textContent = copyShareStatus("copiedReference", content);
+    copyFeedbackTimer = setTimeout(() => updateCopyControl({ clearStatus: !content.alignmentDetails }), 1600);
   } catch (error) {
     logger.error("Copy failed", { editionId: state.editionId, error });
     elements.copyStatus.textContent = uiText("copyFailed");
@@ -579,7 +601,7 @@ async function shareSelectedVerses(editionId = state.editionId) {
   if (typeof navigator.share !== "function") {
     try {
       await writeClipboardText(content.text);
-      elements.copyStatus.textContent = uiText("shareUnavailableCopied", { reference: content.reference });
+      elements.copyStatus.textContent = copyShareStatus("shareUnavailableCopied", content);
     } catch (error) {
       logger.error("Share fallback copy failed", { editionId: state.editionId, error });
       elements.copyStatus.textContent = uiText("shareCopyFailed");
@@ -588,10 +610,14 @@ async function shareSelectedVerses(editionId = state.editionId) {
   }
 
   try {
+    if (content.alignmentDetails) elements.copyStatus.textContent = content.alignmentDetails;
     await navigator.share({ text: content.text });
-    elements.copyStatus.textContent = uiText("sharedReference", { reference: content.reference });
+    elements.copyStatus.textContent = copyShareStatus("sharedReference", content);
   } catch (error) {
-    if (error?.name === "AbortError") return;
+    if (error?.name === "AbortError") {
+      elements.copyStatus.textContent = "";
+      return;
+    }
     logger.error("Share failed", { editionId: state.editionId, error });
     elements.copyStatus.textContent = uiText("shareFailed");
   }

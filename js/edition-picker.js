@@ -158,7 +158,6 @@ export function createShareLanguageMenu({
   editionIds,
   editions,
   getActiveEditionId,
-  getAlignmentNotice,
   onOpen,
   onSelect,
 }) {
@@ -198,16 +197,11 @@ export function createShareLanguageMenu({
     activeTrigger?.setAttribute("aria-expanded", "false");
     activeTrigger = actionTrigger;
     activeAction = action;
-    const notice = document.createElement("p");
-    notice.id = "share-alignment-notice";
-    notice.className = "share-alignment-notice";
-    notice.setAttribute("role", "presentation");
-    notice.textContent = getAlignmentNotice();
     const options = document.createElement("div");
     options.className = "share-language-options";
     options.setAttribute("role", "presentation");
     options.append(...editionIds.map(createOption));
-    menu.replaceChildren(notice, options);
+    menu.replaceChildren(options);
     menu.hidden = false;
     activeTrigger.setAttribute("aria-expanded", "true");
     menu.querySelector("[aria-current]")?.focus();

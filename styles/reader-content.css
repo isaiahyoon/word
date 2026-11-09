@@ -757,16 +757,6 @@ body.is-krv-edition .verse.is-copy-selected {
 .share-language-menu[hidden] {
   display: none;
 }
-.share-alignment-notice {
-  margin: 0 2px 4px;
-  padding: 8px 10px 10px;
-  border-bottom: 1px solid rgba(49, 88, 99, 0.18);
-  background: #f7fcf9;
-  color: #35565d;
-  font-family: var(--sans);
-  font-size: 12px;
-  line-height: 1.4;
-}
 .share-language-options {
   min-height: 0;
   display: grid;
