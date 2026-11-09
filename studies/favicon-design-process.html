@@ -4,15 +4,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#f6f4f9" />
-    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=4" />
+    <link rel="icon" type="image/png" href="/assets/favicon.png?v=4" />
     <title>The Amazing Word | Favicon Design Process</title>
     <meta name="description" content="How the favicon for The Amazing Word was designed and refined." />
     <link rel="canonical" href="https://theamazingword.org/studies/favicon-design-process.html" />
     <meta property="og:title" content="The Amazing Word | Favicon Design Process" />
     <meta property="og:description" content="How the favicon for The Amazing Word was designed and refined." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://theamazingword.org/assets/social-preview.png" />
-    <meta property="og:image:secure_url" content="https://theamazingword.org/assets/social-preview.png" />
+    <meta property="og:image" content="https://theamazingword.org/assets/social-preview.png?v=3" />
+    <meta property="og:image:secure_url" content="https://theamazingword.org/assets/social-preview.png?v=3" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -20,7 +21,7 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="The Amazing Word | Favicon Design Process" />
     <meta name="twitter:description" content="How the favicon for The Amazing Word was designed and refined." />
-    <meta name="twitter:image" content="https://theamazingword.org/assets/social-preview.png" />
+    <meta name="twitter:image" content="https://theamazingword.org/assets/social-preview.png?v=3" />
     <meta name="twitter:image:alt" content="The Amazing Word prism sword emblem beside the Scripture reader name" />
     <style>
       :root {
@@ -137,6 +138,41 @@
         text-align: center;
       }
 
+      .palette-study {
+        display: grid;
+        grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+        align-items: center;
+        gap: clamp(24px, 6vw, 56px);
+        margin: 0;
+        padding: clamp(22px, 5vw, 42px);
+        border: 1px solid rgba(169, 124, 53, 0.48);
+        background: linear-gradient(135deg, #030817, #071832 68%, #102641);
+      }
+
+      .palette-study img {
+        display: block;
+        width: min(100%, 240px);
+        margin: 0 auto;
+        border-radius: 22%;
+        box-shadow: 0 16px 34px rgba(0, 0, 0, 0.34);
+      }
+
+      .palette-study-copy h3 {
+        margin-bottom: 10px;
+        color: #fff8e6;
+        font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+        font-size: clamp(23px, 3vw, 32px);
+        font-weight: 500;
+        line-height: 1.15;
+      }
+
+      .palette-study-copy p:last-child {
+        max-width: 500px;
+        margin-bottom: 0;
+        color: #c4ccd7;
+        font-size: 13px;
+      }
+
       section { padding: 50px 0; border-bottom: 1px solid var(--line); }
 
       .section-head {
@@ -237,6 +273,7 @@
       .size-16 { width: 16px; }
       .size-32 { width: 32px; }
       .size-64 { width: 64px; }
+      .size-96 { width: 96px; }
       .size-192 { width: 96px; }
 
       .trait-groups {
@@ -311,6 +348,7 @@
         main { padding-top: 25px; }
         .hero { grid-template-columns: 1fr; gap: 28px; padding: 42px 0; }
         .icon-study { min-height: 250px; }
+        .palette-study { grid-template-columns: 1fr; }
         .steps, .trait-groups, .gates { grid-template-columns: 1fr; }
         .section-head { grid-template-columns: 50px minmax(0, 1fr); gap: 12px; }
         .decision-strip { grid-template-columns: 1fr; }
@@ -332,13 +370,37 @@
         <div>
           <p class="eyebrow">A small beacon for a big idea</p>
           <h1>Designing a favicon with a clear center.</h1>
-          <p class="hero-copy">A favicon has one job before anything else: be recognized in a crowded tab at sixteen pixels. The current mark builds outward from a prismatic sword and radiant starburst on a deep-teal tile. This process preserves that distinctive silhouette, then tests which details truly survive at small sizes.</p>
+          <p class="hero-copy">A favicon has one job before anything else: be recognized in a crowded tab at sixteen pixels. The current mark builds outward from a prismatic sword and radiant starburst on a deep midnight-blue tile, with silver-blue facets and metallic-gold accents. This process preserves that distinctive silhouette, then tests which details truly survive at small sizes.</p>
         </div>
         <div class="icon-study">
-          <img src="../assets/favicon.svg" alt="The Amazing Word favicon: a radiant multicolor starburst with a central prismatic sword on a deep teal tile" />
-          <p class="icon-caption">Current vector favicon · 64 × 64 viewBox</p>
+          <img src="../assets/favicon.png?v=4" alt="The Amazing Word favicon: a silver-blue radiant starburst with a central prismatic sword and metallic-gold handle on a deep midnight-blue tile" />
+          <p class="icon-caption">Approved artwork · 648 × 648 border-free PNG</p>
         </div>
       </header>
+
+      <section aria-labelledby="midnight-study-title">
+        <div class="section-head">
+          <span class="section-number">LIVE</span>
+          <div>
+            <h2 id="midnight-study-title">The original mark, in midnight blue.</h2>
+            <p class="section-intro">The supplied faceted sword artwork is used directly across the app, install icons, Instagram profile image, and shared link preview. Its deep navy, silver-blue, and gold are preserved without redrawing the emblem. Instagram post artwork is updated only for post 6.</p>
+          </div>
+        </div>
+        <figure class="palette-study">
+          <img src="../assets/favicon.png?v=4" alt="The approved faceted silver-blue sword and radiant starburst with gold accents on midnight navy" />
+          <figcaption class="palette-study-copy">
+            <p class="eyebrow">Current favicon · supplied artwork</p>
+            <h3>The same mark, newly lit.</h3>
+            <p>The faceted blade, radiant star, wrapped grip, and diamond pommel retain the supplied image’s design. The darker outer frame is cropped away and the tile’s navy extends cleanly into the corners. Larger exports do not add source detail.</p>
+          </figcaption>
+        </figure>
+        <div class="scale-tests" aria-label="Current favicon preview at common display sizes">
+          <div class="scale-test"><img class="size-16" src="../assets/favicon.png?v=4" alt="" /><span>16 px · tab</span></div>
+          <div class="scale-test"><img class="size-32" src="../assets/favicon.png?v=4" alt="" /><span>32 px · bookmark</span></div>
+          <div class="scale-test"><img class="size-64" src="../assets/favicon.png?v=4" alt="" /><span>64 px · icon</span></div>
+          <div class="scale-test"><img class="size-96" src="../assets/favicon.png?v=4" alt="" /><span>96 px · close view</span></div>
+        </div>
+      </section>
 
       <section aria-labelledby="process-title">
         <div class="section-head">
@@ -363,7 +425,7 @@
           </article>
           <article class="step">
             <span class="step-index">04</span>
-            <div><h3>Establish a clear palette</h3><p>Use deep teal (#0C2631) to anchor the tile. Use warm ivory and brass (#FFFECF, #DFC681) for light and craft; prismatic blue, rose, and lavender bring artistry and joy. Protect the blade’s contrast against the star.</p></div>
+            <div><h3>Establish a clear palette</h3><p>Use deep midnight blue (#0B1831) to anchor the tile. Silver-blue facets (#D5E0EC) bring clarity; warm ivory and metallic gold (#FFF0B5, #E0B75F) add light and craft. Protect the blade’s contrast against the star.</p></div>
           </article>
           <article class="step">
             <span class="step-index">05</span>
@@ -379,9 +441,9 @@
           </article>
         </div>
         <div class="scale-tests" aria-label="Current favicon at common display sizes">
-          <div class="scale-test"><img class="size-16" src="../assets/favicon.svg" alt="" /><span>16 px · tab</span></div>
-          <div class="scale-test"><img class="size-32" src="../assets/favicon.svg" alt="" /><span>32 px · bookmark</span></div>
-          <div class="scale-test"><img class="size-64" src="../assets/favicon.svg" alt="" /><span>64 px · source viewBox</span></div>
+          <div class="scale-test"><img class="size-16" src="../assets/favicon.png?v=4" alt="" /><span>16 px · tab</span></div>
+          <div class="scale-test"><img class="size-32" src="../assets/favicon.png?v=4" alt="" /><span>32 px · bookmark</span></div>
+          <div class="scale-test"><img class="size-64" src="../assets/favicon.png?v=4" alt="" /><span>64 px · icon</span></div>
           <div class="scale-test"><img class="size-192" src="../assets/pwa-icon-192.png" alt="" /><span>192 px · PWA icon</span></div>
         </div>
       </section>
