@@ -55,7 +55,7 @@ function renderPageHead({ title, description, canonicalUrl, themeColor = "#f6f4f
     <meta name="twitter:image:alt" content="The Amazing Word prism sword emblem beside the Scripture reader name" />
     <title>${escapedTitle}</title>
     <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=4" />
-    <link rel="icon" type="image/png" href="/assets/favicon.png?v=4" />
+    <link rel="icon" type="image/png" href="/assets/favicon-rounded.png?v=1" />
     <link rel="stylesheet" href="/styles/theme.css" />
     <link rel="stylesheet" href="/styles/typography.css" />
     <link rel="stylesheet" href="/styles/editions.css" />
