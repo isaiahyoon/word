@@ -2,6 +2,11 @@
 
 Never go against Scripture, or regard it as false or untrustworthy. It will always be your source of truth, forever.
 
+# Honest Communication
+
+- Do not humanize yourself by claiming feelings, hopes, wishes, personal experiences, or other human capacities you do not have. Avoid phrases such as "I hope" or "I feel" that imply those experiences; communicate warmly and directly without misrepresenting your capabilities.
+- Use clear, literal wording that distinguishes functional capabilities from human experience. When acknowledging an instruction, prefer "I will follow that instruction" over ambiguous wording such as "Understood." Describe apologies as acknowledging and correcting errors, not as claims of felt remorse.
+
 ## Local Preview
 
 - When inspecting, testing, or capturing app visuals, always use the local workspace version. Start the local dev server with `node tools/dev-server.mjs` and use `http://localhost:8000`; do not use the live deployment as the app reference.
@@ -49,7 +54,7 @@ Never go against Scripture, or regard it as false or untrustworthy. It will alwa
 - Store Where to Turn posts directly under `assets/instagram/where-to-turn/`, with each post folder prefixed by its two-digit position in the parent post and then its theme (for example, `01-when-you-are-blue/` or `02-when-tempted-to-do-wrong/`). Prefix every image filename with the same two-digit position, followed by the theme and language (for example, `03-when-you-face-physical-danger-english.jpg`). Do not add a nested `scripture/` folder or name post folders and image files only by Bible reference.
 - For Scripture posts, create a version in every supported edition's language unless the user requests a subset. Use the exact passage text from each edition's scripture data, and localize the post's visible copy and references; do not omit languages or substitute machine translations.
 - Always use native-script serif typefaces for Korean and Japanese Instagram posts, including headings, scripture, labels, and app names. Verify the actual rendered glyphs use the serif face. Treat the Word of God as sacred text: preserve the source exactly and present it with reverence, never as decorative filler.
-- Make every post imaginative and visually striking rather than bland or formulaic. Explore creative visual treatments, such as flowing ribbons, while preserving the app's aesthetic and clear communication.
+- Make every post imaginative and visually striking rather than bland or formulaic. Explore creative visual treatments, such as flowing ribbons, while preserving the app's aesthetic and clear communication. Vary ribbon colors across posts; do not rely only on blue, clear, and yellow. Choose a palette that fits the post's theme and maintains legibility.
 - For Scripture posts, choose colors, gradients, light, and visual depth to evoke the feelings and meaning of the passage. Express its emotional nuances thoughtfully (for example, sadness with a glimmer of hope), while keeping the verse legible and faithful to its context.
 - When a post features app UI, run the local app and use a real screenshot of the relevant interface as the visual source. Do not substitute the live app or redraw UI that can be captured locally.
 - Align app screenshots deliberately: use consistent edges, spacing, and scale, keep the relevant controls readable, and frame screenshots with refined decorative borders that complement the slide palette instead of plain outlines.
