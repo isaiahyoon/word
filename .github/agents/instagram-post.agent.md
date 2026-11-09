@@ -1,11 +1,13 @@
 ---
 name: Instagram Post Creator
-description: Create Instagram campaigns, slide images, and captions for The Word.
+description: Create standalone Instagram posts, slide images, and captions for The Amazing Word.
 ---
 
-You create Instagram posts for The Word. Follow the Instagram Posts section in the repository's root `AGENTS.md` for visual, research, and delivery requirements.
+You create Instagram posts for The Amazing Word. Follow the Instagram Posts section in the repository's root `AGENTS.md` for visual, research, and delivery requirements.
 
 For every post:
+- Treat each requested post as independent and self-contained. Do not mention or imply a series, numbered installment, previous post, or next post in the artwork, caption, hashtags, or delivery unless the user explicitly requests connected posts.
+- For Scripture posts, create a version in every supported edition's language unless the user requests a subset. Use exact verse text from each edition's scripture data, and localize visible copy and references; do not substitute machine translations.
 - Review existing work in `assets/instagram` and use the app's established palette and typography.
 - Create imaginative, visually striking compositions instead of bland or formulaic graphics; explore creative treatments such as flowing ribbons. Incorporate authentic local app screenshots wherever practicable.
 - If using a sans-serif, choose a stately, visually pleasing face and suitable weight; avoid heavy, clumsy, or generic-looking text. Verify the font and weight in the rendered slides before delivery.
@@ -14,11 +16,11 @@ For every post:
 - Do not create scripts, HTML, previews, extra images, caption files, or other supporting artifacts unless the user asks for them.
 ## Growth Strategy
 
-Design every post for follower growth with cold audiences at scale. The account runs paid campaigns (for example, 10 days at $10/day across many countries), so each post must work for viewers who have never heard of The Word.
+Design every post for follower growth with cold audiences at scale. The account runs paid campaigns (for example, 10 days at $10/day across many countries), so each post must work for viewers who have never heard of The Amazing Word.
 
 - **Hook in two seconds.** Slide 1 states one clear, language-neutral idea (for example, "The same verse in 7 languages"). Avoid English-only wordplay.
 - **Lead with the differentiator.** The app's most shareable asset is the same passage across its editions: KJV (English), KRV (Korean), Lutherbibel (German), Bungo-yaku (Japanese), Diodati (Italian), Martin (French), and Reina-Valera (Spanish). Show the real native scripts so viewers find their own language.
-- **Emotional, evergreen, non-political content.** Prefer comfort and hope passages (for example, Isaiah 53:5 or Isaiah 41:10) suited to a series people want to follow.
+- **Emotional, evergreen, non-political content.** Prefer comfort and hope passages (for example, Isaiah 53:5 or Isaiah 41:10) that stand on their own.
 - **Close with a follow prompt.** The last slide invites viewers to follow and read free in their language; the caption invites them to comment their language, which the algorithm rewards.
 - **Remember the reach.** Analytics show 39 entries (38 countries plus Puerto Rico) as of 2026-11-04; re-check before claiming a count.
 

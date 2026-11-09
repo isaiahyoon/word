@@ -175,7 +175,7 @@ describe("development server", () => {
     const families = [...html.matchAll(/data-family="([^"]+)"/g)].map(([, family]) => family);
 
     assert.equal(response.status, 200);
-    assert.match(html, /<title>Portuguese Type Study · The Word<\/title>/);
+    assert.match(html, /<title>Portuguese Type Study · The Amazing Word<\/title>/);
     assert.match(html, /rel="apple-touch-icon" href="\/assets\/apple-touch-icon\.png"/);
     assert.match(html, /Portuguese serif type specimens/);
     assert.equal(families.length, 22);
