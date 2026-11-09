@@ -6,7 +6,7 @@ import { EDITIONS } from "../js/editions.mjs";
 
 const root = new URL("../", import.meta.url);
 const siteUrl = "https://theamazingword.org";
-const previewImage = `${siteUrl}/assets/social-preview.png`;
+const previewImage = `${siteUrl}/assets/social-preview.png?v=3`;
 
 function escapeHtml(value) {
   return value
@@ -54,8 +54,8 @@ function renderPageHead({ title, description, canonicalUrl, themeColor = "#f6f4f
     <meta name="twitter:image" content="${previewImage}" />
     <meta name="twitter:image:alt" content="The Amazing Word prism sword emblem beside the Scripture reader name" />
     <title>${escapedTitle}</title>
-    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
-    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=4" />
+    <link rel="icon" type="image/png" href="/assets/favicon.png?v=4" />
     <link rel="stylesheet" href="/styles/theme.css" />
     <link rel="stylesheet" href="/styles/typography.css" />
     <link rel="stylesheet" href="/styles/editions.css" />

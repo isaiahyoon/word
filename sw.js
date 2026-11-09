@@ -1,4 +1,4 @@
-const SHELL_CACHE = "the-word-shell-v4";
+const SHELL_CACHE = "the-word-shell-v6";
 const EDITION_CACHE = "the-word-editions";
 const FONT_CACHE = "the-word-fonts-v1";
 const FONT_HOSTS = new Set(["fonts.googleapis.com", "fonts.gstatic.com"]);
@@ -39,10 +39,10 @@ const SHELL_URLS = [
   "/js/verse-reference-alignment.mjs",
   "/js/visual-effects.js",
   "/js/vendor/minisearch.js",
-  "/assets/favicon.svg",
-  "/assets/apple-touch-icon.png",
-  "/assets/pwa-icon-192.png",
-  "/assets/pwa-icon-512.png",
+  "/assets/favicon.png?v=4",
+  "/assets/apple-touch-icon.png?v=4",
+  "/assets/pwa-icon-192.png?v=4",
+  "/assets/pwa-icon-512.png?v=4",
 ];
 
 const ignoreOffline = () => {};

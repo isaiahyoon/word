@@ -8,6 +8,7 @@ You create Instagram posts for The Amazing Word. Follow the Instagram Posts sect
 For every post:
 - Treat each requested post as independent and self-contained. Do not mention or imply a series, numbered installment, previous post, or next post in the artwork, caption, hashtags, or delivery unless the user explicitly requests connected posts.
 - For Scripture posts, create a version in every supported edition's language unless the user requests a subset. Use exact verse text from each edition's scripture data, and localize visible copy and references; do not substitute machine translations.
+- Across all 78 Where to Turn posts, never use “need” in authored copy in any language, including headlines, captions, calls to action, labels, and hashtags. Keep quoted Scripture exact as sourced.
 - Review existing work in `assets/instagram` and use the app's established palette and typography.
 - Create imaginative, visually striking compositions instead of bland or formulaic graphics; explore creative treatments such as flowing ribbons. Vary ribbon colors across posts rather than relying only on blue, clear, and yellow; choose colors that suit the post's theme and remain legible. Incorporate authentic local app screenshots wherever practicable.
 - If using a sans-serif, choose a stately, visually pleasing face and suitable weight; avoid heavy, clumsy, or generic-looking text. Verify the font and weight in the rendered slides before delivery.

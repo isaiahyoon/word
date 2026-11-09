@@ -44,9 +44,9 @@ describe("development server", () => {
     assert.match(html, />\s*The Amazing Word<\/strong\s*>/);
     assert.match(html, /name="description"\s+content="A quiet, searchable reader for exploring Scripture at your own pace\./);
     assert.match(html, /property="og:title" content="The Amazing Word"/);
-    assert.match(html, /property="og:image" content="https:\/\/theamazingword\.org\/assets\/social-preview\.png"/);
+    assert.match(html, /property="og:image" content="https:\/\/theamazingword\.org\/assets\/social-preview\.png\?v=3"/);
     assert.match(html, /name="twitter:card" content="summary_large_image"/);
-    assert.match(html, /name="twitter:image" content="https:\/\/theamazingword\.org\/assets\/social-preview\.png"/);
+    assert.match(html, /name="twitter:image" content="https:\/\/theamazingword\.org\/assets\/social-preview\.png\?v=3"/);
     assert.match(html, /class="topbar-about" href="\/about"/);
     assert.doesNotMatch(html, /class="site-footer-editions"/);
     assert.match(html, /class="topbar-actions"[\s\S]*class="shortcuts-trigger"/);
@@ -64,9 +64,11 @@ describe("development server", () => {
       const html = await readFile(new URL(page, root), "utf8");
       assert.match(html, /property="og:title"/, `${page} has og:title`);
       assert.match(html, /property="og:description"/, `${page} has og:description`);
-      assert.match(html, /property="og:image" content="https:\/\/theamazingword\.org\/assets\/social-preview\.png"/, `${page} has og:image`);
+      assert.match(html, /property="og:image" content="https:\/\/theamazingword\.org\/assets\/social-preview\.png\?v=3"/, `${page} has og:image`);
       assert.match(html, /name="twitter:card" content="summary_large_image"/, `${page} has twitter:card`);
-      assert.match(html, /name="twitter:image" content="https:\/\/theamazingword\.org\/assets\/social-preview\.png"/, `${page} has twitter:image`);
+      assert.match(html, /name="twitter:image" content="https:\/\/theamazingword\.org\/assets\/social-preview\.png\?v=3"/, `${page} has twitter:image`);
+      assert.match(html, /rel="icon" type="image\/png" href="\/assets\/favicon\.png\?v=4"/, `${page} has the refreshed favicon`);
+      assert.match(html, /rel="apple-touch-icon" href="\/assets\/apple-touch-icon\.png\?v=4"/, `${page} has the refreshed Apple icon`);
     }
   });
 
@@ -117,7 +119,7 @@ describe("development server", () => {
       assert.match(html, new RegExp(`<link rel="canonical" href="https://theamazingword\\.org${path.replaceAll("/", "\\/")}"`), path);
       assert.match(html, new RegExp(`href="/${edition.routeSegment}/b/genesis/c/1/v/1"`), path);
       assert.match(html, /<main>[\s\S]*<h1[\s\S]*<\/main>/, `${path} has static page content`);
-      assert.match(html, /rel="apple-touch-icon" href="\/assets\/apple-touch-icon\.png"/, path);
+      assert.match(html, /rel="apple-touch-icon" href="\/assets\/apple-touch-icon\.png\?v=4"/, path);
     }
 
     const readerResponse = await fetch(`${origin}/kjv/b/genesis/c/1/v/1`);
@@ -176,7 +178,7 @@ describe("development server", () => {
 
     assert.equal(response.status, 200);
     assert.match(html, /<title>Portuguese Type Study · The Amazing Word<\/title>/);
-    assert.match(html, /rel="apple-touch-icon" href="\/assets\/apple-touch-icon\.png"/);
+    assert.match(html, /rel="apple-touch-icon" href="\/assets\/apple-touch-icon\.png\?v=4"/);
     assert.match(html, /Portuguese serif type specimens/);
     assert.equal(families.length, 22);
     assert.equal(new Set(families).size, 22);
@@ -198,7 +200,7 @@ describe("development server", () => {
     assert.equal(aboutResponse.status, 200);
     assert.equal(slashResponse.status, 200);
     assert.match(html, /<title>About — The Amazing Word<\/title>/);
-    assert.match(html, /rel="apple-touch-icon" href="\/assets\/apple-touch-icon\.png"/);
+    assert.match(html, /rel="apple-touch-icon" href="\/assets\/apple-touch-icon\.png\?v=4"/);
     assert.match(html, /name="apple-mobile-web-app-capable" content="yes"/);
     assert.match(html, /The King James Version is the canonical foundation/);
     assert.match(html, /Add to Dock/);
@@ -263,18 +265,25 @@ describe("development server", () => {
     assert.match(html, /name="passage"/);
   });
 
-  it("serves the Prismbrand sword favicon", async () => {
-    const faviconResponse = await fetch(`${origin}/assets/favicon.svg`);
-    const favicon = await faviconResponse.text();
-
-    assert.equal(faviconResponse.status, 200);
-    assert.match(favicon, /viewBox="0 0 64 64"/);
-    assert.match(favicon, /id="prism-steel"/);
-    assert.match(favicon, /id="seraphic-fire"/);
-    assert.match(favicon, /id="radiant-dawn"/);
-    assert.match(favicon, /M32 2 36 10 44 5/);
-    assert.match(favicon, /M32 5 39 28 35 35/);
-    assert.match(favicon, /<circle cx="20" cy="12"/);
+  it("serves the midnight-blue sword favicon", async () => {
+    for (const [file, size] of [
+      ["favicon.png", 648],
+      ["apple-touch-icon.png", 180],
+      ["pwa-icon-192.png", 192],
+      ["pwa-icon-512.png", 512],
+      ["app-icon-1024.png", 1024],
+      ["iphone-app-icon-1024.png", 1024],
+      ["instagram-profile-1080.png", 1080],
+    ]) {
+      const response = await fetch(`${origin}/assets/${file}`);
+      const image = new Uint8Array(await response.arrayBuffer());
+      assert.equal(response.status, 200, file);
+      assert.match(response.headers.get("content-type"), /image\/png/, file);
+      assert.deepEqual([...image.slice(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10], file);
+      const dimensions = new DataView(image.buffer, image.byteOffset, image.byteLength);
+      assert.equal(dimensions.getUint32(16), size, file);
+      assert.equal(dimensions.getUint32(20), size, file);
+    }
   });
 
   it("serves the high-resolution social preview image", async () => {
