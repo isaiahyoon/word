@@ -6,6 +6,17 @@ const KRV_CHAPTER_COUNTS = new Map([
   ["47:13", [13, 14]],
   ["64:1", [15, 14]],
 ]);
+// Martin's numbered superscriptions precede the corresponding KJV verses.
+// The counts and offsets are specific to the reviewed reader texts.
+const MARTIN_PSALM_HEADINGS = new Map([
+  [3, [8, 1]], [4, [8, 1]], [5, [12, 1]], [6, [10, 1]], [7, [17, 1]],
+  [8, [9, 1]], [9, [20, 1]], [12, [8, 1]], [42, [11, 1]], [51, [19, 2]],
+  [52, [9, 2]], [54, [7, 2]], [60, [12, 2]],
+]);
+const MARTIN_CHAPTER_COUNTS = new Map([
+  ["47:13", [13, 14]],
+  ["64:1", [15, 14]],
+]);
 
 export class VerseReferenceAlignmentError extends Error {
   constructor() {
@@ -23,10 +34,22 @@ export function createVerseReferenceAlignment(editionId, metadata = {}, chapterC
     unavailableChapters.add(chapterKey(alternate.book, alternate.chapter));
   }
 
-  if (editionId === "martin1744") unavailableChapters.delete(chapterKey(19, 42));
   if (editionId === "alm1911") unavailableChapters.delete(chapterKey(47, 13));
   if (editionId === "japbungo") unavailableChapters.delete(chapterKey(64, 1));
   const { book, chapter, verseCount, kjvVerseCount } = chapterCounts;
+  const martinPsalm = editionId === "martin1744" && book === 19
+    ? MARTIN_PSALM_HEADINGS.get(chapter)
+    : null;
+  const martinPsalmCountsMatch = martinPsalm &&
+    verseCount === martinPsalm[0] + martinPsalm[1] && kjvVerseCount === martinPsalm[0];
+  if (editionId === "martin1744") {
+    for (const psalm of MARTIN_PSALM_HEADINGS.keys()) unavailableChapters.add(chapterKey(19, psalm));
+    for (const key of MARTIN_CHAPTER_COUNTS.keys()) unavailableChapters.add(key);
+  }
+  if (martinPsalmCountsMatch) unavailableChapters.delete(chapterKey(book, chapter));
+  const martinCounts = editionId === "martin1744" ? MARTIN_CHAPTER_COUNTS.get(chapterKey(book, chapter)) : null;
+  const martinCountsMatch = martinCounts && verseCount === martinCounts[0] && kjvVerseCount === martinCounts[1];
+  if (martinCountsMatch) unavailableChapters.delete(chapterKey(book, chapter));
   const measuredMismatch = Number.isInteger(book) &&
     Number.isInteger(chapter) &&
     Number.isInteger(verseCount) &&
@@ -37,7 +60,7 @@ export function createVerseReferenceAlignment(editionId, metadata = {}, chapterC
     unavailableChapters.add(chapterKey(book, chapter));
   }
   const knownMismatch = (
-    editionId === "martin1744" && book === 19 && chapter === 42
+    martinPsalmCountsMatch || martinCountsMatch
   ) || (
     editionId === "alm1911" && book === 47 && chapter === 13
   ) || (
@@ -67,8 +90,18 @@ export function createVerseReferenceAlignment(editionId, metadata = {}, chapterC
     }
 
     if (editionId === "japbungo" && book === 64 && chapter === 1 && verse === 15) return [];
-    if (editionId === "martin1744" && book === 19 && chapter === 42) {
-      return verse === 1 ? [] : [[book, chapter, verse - 1]];
+    if (editionId === "martin1744" && book === 19 && MARTIN_PSALM_HEADINGS.has(chapter)) {
+      const [kjvCount, headingCount] = MARTIN_PSALM_HEADINGS.get(chapter);
+      if (!Number.isInteger(verse) || verse < 1 || verse > kjvCount + headingCount) return null;
+      return verse <= headingCount ? [] : [[book, chapter, verse - headingCount]];
+    }
+    if (editionId === "martin1744" && MARTIN_CHAPTER_COUNTS.has(chapterKey(book, chapter))) {
+      const [count] = MARTIN_CHAPTER_COUNTS.get(chapterKey(book, chapter));
+      if (!Number.isInteger(verse) || verse < 1 || verse > count) return null;
+      if (book === 47 && verse === 12) return [[book, chapter, 12], [book, chapter, 13]];
+      // The bundled Martin 13:13 includes a source separator after the verse text.
+      if (book === 47 && verse === 13) return null;
+      if (book === 64 && verse === 15) return [[book, chapter, 14]];
     }
 
     if (editionId === "alm1911" && book === 47 && chapter === 13) {

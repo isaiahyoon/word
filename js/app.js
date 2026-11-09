@@ -173,6 +173,7 @@ const readerFeedback = createReaderFeedback({
 
 const testamentFor = (book) => book <= 39 ? "old" : "new";
 const bookName = (book) => scripture.bookName(book);
+const referenceBookName = (book) => scripture.referenceBookName(book);
 
 function updateCopyControl() {
   const count = state.selectedVerses.size;
@@ -329,7 +330,7 @@ function compressVerseNumbers(verseNumbers) {
 }
 
 function formatVerseReference(book, chapter, verseNumbers, store) {
-  return `${store.bookName(book)} ${chapter}:${compressVerseNumbers(verseNumbers)}`;
+  return `${store.referenceBookName(book)} ${chapter}:${compressVerseNumbers(verseNumbers)}`;
 }
 
 function formatReferenceList(references, store) {
@@ -608,7 +609,7 @@ function currentFeedbackPassage() {
     ? range.start
     : `${range.start}-${range.end}`;
   const passageScripture = scriptureStores.get(passage.editionId) ?? scripture;
-  return `${passageScripture.bookName(passage.book)} ${passage.chapter}:${verseReference}`;
+  return `${passageScripture.referenceBookName(passage.book)} ${passage.chapter}:${verseReference}`;
 }
 
 async function activateEdition(editionId) {
@@ -1012,7 +1013,7 @@ function renderBookList() {
 }
 
 function renderChapter(focusRange = null) {
-  const name = bookName(state.book);
+  const name = referenceBookName(state.book);
   const testament = testamentFor(state.book);
   const verses = scripture.getChapter(state.book, state.chapter);
   document.querySelector("#testament-name").textContent = uiText(
@@ -1152,8 +1153,8 @@ function adjacentChapter(offset) {
 function updateChapterLinks() {
   const previous = adjacentChapter(-1);
   const next = adjacentChapter(1);
-  const previousTitle = `${bookName(previous.book)} ${previous.chapter}`;
-  const nextTitle = `${bookName(next.book)} ${next.chapter}`;
+  const previousTitle = `${referenceBookName(previous.book)} ${previous.chapter}`;
+  const nextTitle = `${referenceBookName(next.book)} ${next.chapter}`;
   document.querySelector("#previous-title").textContent = previousTitle;
   document.querySelector("#next-title").textContent = nextTitle;
   document.querySelector("#previous-title").lang = EDITIONS[state.editionId].language;
@@ -1333,13 +1334,13 @@ function appendSearchResults() {
     if (verse.searchType === "book") {
       reference.textContent = uiText("resultBook", { book: bookName(verse.book) });
     } else if (verse.searchType === "chapter") {
-      reference.textContent = uiText("resultChapter", { book: bookName(verse.book), chapter: verse.chapter });
+      reference.textContent = uiText("resultChapter", { book: referenceBookName(verse.book), chapter: verse.chapter });
     } else if (verse.searchType === "reference") {
       reference.textContent = uiText("resultExactPassage", {
-        reference: `${bookName(verse.book)} ${verse.chapter}:${verse.verse}`,
+        reference: `${referenceBookName(verse.book)} ${verse.chapter}:${verse.verse}`,
       });
     } else {
-      reference.textContent = `${bookName(verse.book)} ${verse.chapter}:${verse.verse}`;
+      reference.textContent = `${referenceBookName(verse.book)} ${verse.chapter}:${verse.verse}`;
     }
     if (verse.sourceEdition === "krv") reference.textContent += uiText("fallbackResult");
     const text = document.createElement("span");
@@ -1347,7 +1348,7 @@ function appendSearchResults() {
     if (verse.searchType === "book") {
       text.textContent = uiText("openBookFromStart", { book: bookName(verse.book) });
     } else if (verse.searchType === "chapter") {
-      text.textContent = uiText("openChapterResult", { book: bookName(verse.book), chapter: verse.chapter });
+      text.textContent = uiText("openChapterResult", { book: referenceBookName(verse.book), chapter: verse.chapter });
     } else {
       appendHighlighted(text, verse.text, verse.matchedTerms, verse.textLanguage ?? EDITIONS[state.editionId].language);
     }

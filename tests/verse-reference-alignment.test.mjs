@@ -1,9 +1,14 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 import { createVerseReferenceAlignment } from "../js/verse-reference-alignment.mjs";
 
 const readJson = async (path) => JSON.parse(await readFile(new URL(path, import.meta.url), "utf8"));
+const martinPsalmHeadings = new Map([
+  [3, 1], [4, 1], [5, 1], [6, 1], [7, 1], [8, 1], [9, 1], [12, 1],
+  [42, 1], [51, 2], [52, 2], [54, 2], [60, 2],
+]);
 
 async function chapterVerses(editionId, book, chapter) {
   const index = await readJson(`../scripture/${editionId}/index.json`);
@@ -105,6 +110,89 @@ test("maps each KRV verse in the four differing chapters and reverses the mappin
   }
 });
 
+test("maps reviewed Martin Psalms in both directions and guards their source texts", async () => {
+  const index = await readJson("../scripture/martin1744/index.json");
+  const native = await readJson("../scripture/martin1744/books/19_psalms.json");
+  const kjv = await readJson("../scripture/kjv/books/19_psalms.json");
+  const reviewedTexts = [...martinPsalmHeadings.keys()].map((chapter) => [chapter, native[chapter], kjv[chapter]]);
+  assert.equal(
+    createHash("sha256").update(JSON.stringify(reviewedTexts)).digest("hex"),
+    "3eee6f4543ad67ca519670353ae1021802089f6d0d91e667a8dfcf7acedf3089",
+    "Reviewed Psalm texts changed; recheck verse boundaries before updating the fingerprint",
+  );
+  for (const [chapter, headings] of martinPsalmHeadings) {
+    const nativeVerses = native[chapter].map(([verse]) => ({ book: 19, chapter, verse }));
+    const counts = { book: 19, chapter, verseCount: native[chapter].length, kjvVerseCount: kjv[chapter].length };
+    const alignment = createVerseReferenceAlignment("martin1744", index, counts);
+    assert.equal(native[chapter].length, kjv[chapter].length + headings);
+    for (let verse = 1; verse <= headings; verse++) {
+      assert.deepEqual(alignment.toKjvReferences(19, chapter, verse), []);
+    }
+    for (const [verse] of kjv[chapter]) {
+      const reference = [[19, chapter, verse]];
+      assert.deepEqual(alignment.toKjvReferences(19, chapter, verse + headings), reference);
+      assert.deepEqual(
+        alignment.findNativeVerses(19, chapter, reference, nativeVerses).map((item) => item.verse),
+        [verse + headings],
+      );
+    }
+    for (const verse of [0, native[chapter].length + 1, 1.5]) {
+      assert.equal(alignment.toKjvReferences(19, chapter, verse), null);
+    }
+    for (const altered of [
+      { ...counts, verseCount: counts.verseCount + 1 },
+      { ...counts, kjvVerseCount: counts.kjvVerseCount + 1 },
+      { book: 19, chapter },
+    ]) {
+      assert.equal(createVerseReferenceAlignment("martin1744", index, altered).toKjvReferences(19, chapter, 1), null);
+    }
+  }
+});
+
+test("maps reviewed Martin epistle chapters in both directions", async () => {
+  const index = await readJson("../scripture/martin1744/index.json");
+  const cases = [
+    { book: 47, file: "47_2_corinthians.json", chapter: 13, expected: [
+      ...Array.from({ length: 11 }, (_, i) => [i + 1]), [12, 13], null,
+    ] },
+    { book: 64, file: "64_3_john.json", chapter: 1, expected: [
+      ...Array.from({ length: 13 }, (_, i) => [i + 1]), [14], [14],
+    ] },
+  ];
+  const reviewedTexts = [];
+  for (const { book, file, chapter, expected } of cases) {
+    const native = await chapterVerses("martin1744", book, chapter);
+    const kjv = await chapterVerses("kjv", book, chapter);
+    reviewedTexts.push([file, chapter, native, kjv]);
+    const counts = { book, chapter, verseCount: native.length, kjvVerseCount: kjv.length };
+    const alignment = createVerseReferenceAlignment("martin1744", index, counts);
+    const verses = native.map(([verse]) => ({ book, chapter, verse }));
+    assert.equal(native.length, expected.length);
+    for (const [i, references] of expected.entries()) {
+      assert.deepEqual(alignment.toKjvReferences(book, chapter, i + 1), references?.map((v) => [book, chapter, v]) ?? null);
+    }
+    for (const [verse] of kjv) {
+      assert.deepEqual(
+        alignment.findNativeVerses(book, chapter, [[book, chapter, verse]], verses).map((item) => item.verse),
+        expected.flatMap((references, i) => references?.includes(verse) ? [i + 1] : []),
+      );
+    }
+    assert.equal(alignment.toKjvReferences(book, chapter, native.length + 1), null);
+    for (const altered of [
+      { ...counts, verseCount: counts.verseCount + 1 },
+      { ...counts, kjvVerseCount: counts.kjvVerseCount + 1 },
+      { book, chapter },
+    ]) {
+      assert.equal(createVerseReferenceAlignment("martin1744", index, altered).toKjvReferences(book, chapter, 1), null);
+    }
+  }
+  assert.equal(
+    createHash("sha256").update(JSON.stringify(reviewedTexts)).digest("hex"),
+    "edd364c625197ce5f845dd6779ffae7858d9448e0a8e960e4840828e44046779",
+    "Reviewed epistle texts changed; recheck verse boundaries before updating the fingerprint",
+  );
+});
+
 test("classifies every verse reference in every edition against existing KJV slots", async () => {
   const kjvIndex = await readJson("../scripture/kjv/index.json");
   const kjvBooks = await Promise.all(kjvIndex.bookFiles.map((file) =>
@@ -128,7 +216,9 @@ test("classifies every verse reference in every edition against existing KJV slo
           kjvVerseCount: kjvChapter.length,
         });
         const knownCountMismatch = (
-          editionId === "martin1744" && bookIndex + 1 === 19 && chapter === 42
+          editionId === "martin1744" && bookIndex + 1 === 19 && martinPsalmHeadings.has(chapter)
+        ) || (
+          editionId === "martin1744" && ["47:13", "64:1"].includes(`${bookIndex + 1}:${chapter}`)
         ) || (
           editionId === "alm1911" && bookIndex + 1 === 47 && chapter === 13
         ) || (
@@ -145,12 +235,15 @@ test("classifies every verse reference in every edition against existing KJV slo
         for (const [verse] of verses) {
           const references = alignment.toKjvReferences(bookIndex + 1, chapter, verse);
           if (references === null) {
-            assert.equal(alignment.isChapterAligned(bookIndex + 1, chapter), false);
+            assert.ok(
+              !alignment.isChapterAligned(bookIndex + 1, chapter) ||
+              (editionId === "martin1744" && bookIndex + 1 === 47 && chapter === 13 && verse === 13),
+            );
             continue;
           }
           if (references.length === 0) {
             assert.ok(
-              (editionId === "martin1744" && bookIndex + 1 === 19 && chapter === 42 && verse === 1) ||
+              (editionId === "martin1744" && bookIndex + 1 === 19 && verse <= (martinPsalmHeadings.get(chapter) ?? 0)) ||
               (editionId === "japbungo" && bookIndex + 1 === 64 && chapter === 1 && verse === 15),
               `${editionId} ${bookIndex + 1}:${chapter}:${verse} has an unexpected missing KJV reference`,
             );

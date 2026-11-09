@@ -198,6 +198,10 @@ export function createScriptureStore({
     return activeDisplayBookNames[book - 1] ?? canonicalBookNames[book - 1];
   }
 
+  function referenceBookName(book) {
+    return editionId === "kjv" && book === 19 ? "Psalm" : bookName(book);
+  }
+
   function validateBook(book) {
     if (!Number.isInteger(book) || book < 1 || book > canonicalBookNames.length || chapterCounts.length === 0) {
       throw new RangeError(`Invalid scripture book: ${book}`);
@@ -445,6 +449,7 @@ export function createScriptureStore({
     initialize,
     chapterCount,
     bookName,
+    referenceBookName,
     bookOrder,
     loadChapter,
     getChapter,

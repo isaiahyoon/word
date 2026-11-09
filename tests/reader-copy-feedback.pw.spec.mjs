@@ -27,6 +27,17 @@ test("copies consecutive verses on every edition as separate lines with a compre
   }
 });
 
+test("copies a KJV psalm with a singular citation", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/kjv/b/psalms/c/3/v/1");
+  const text = (await page.locator("#verse-1 .verse-text").textContent()).trim();
+  await page.locator("#verse-1").click();
+  await page.locator("#copy-selected-verses").click();
+  await page.locator("#share-language-menu [data-edition='kjv']").click();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toBe(`"${text}"\n\n- Psalm 3:1`);
+});
+
 test("copies the French Martin verse aligned to KJV Psalm 42:5 with both references", async ({ page }) => {
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto("/kjv/b/psalms/c/42/v/5");
@@ -39,7 +50,7 @@ test("copies the French Martin verse aligned to KJV Psalm 42:5 with both referen
     return data["42"][5][1].trim();
   });
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
-    .toBe(`"${frenchVerse}"\n\n- Psaumes 42:6\n- KJV reference: Psalms 42:5`);
+    .toBe(`"${frenchVerse}"\n\n- Psaumes 42:6\n- KJV reference: Psalm 42:5`);
 });
 
 test("copies Almeida's combined 2 Corinthians verse with its full KJV reference", async ({ page }) => {
@@ -59,7 +70,7 @@ test("copies Almeida's combined 2 Corinthians verse with its full KJV reference"
 
 test("blocks cross-edition copying where verse alignment is not verified", async ({ page }) => {
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
-  await page.goto("/kjv/b/psalms/c/3/v/1");
+  await page.goto("/kjv/b/numbers/c/12/v/1");
   await page.evaluate(() => navigator.clipboard.writeText("unchanged"));
   await page.locator("#verse-1").click();
   await page.locator("#copy-selected-verses").click();
@@ -71,6 +82,14 @@ test("blocks cross-edition copying where verse alignment is not verified", async
 });
 
 for (const example of [
+  { route: "kjv/b/psalms/c/3/v/1", source: [1], target: "martin1744", file: "19_psalms.json", chapter: 3, verses: [2], citation: "Psaumes 3:2\n- KJV reference: Psalm 3:1" },
+  { route: "moh/b/psalms/c/3/v/2", source: [2], target: "kjv", file: "19_psalms.json", chapter: 3, verses: [1], citation: "Psalm 3:1" },
+  { route: "kjv/b/psalms/c/51/v/10", source: [10], target: "martin1744", file: "19_psalms.json", chapter: 51, verses: [12], citation: "Psaumes 51:12\n- KJV reference: Psalm 51:10" },
+  { route: "moh/b/psalms/c/51/v/12", source: [12], target: "kjv", file: "19_psalms.json", chapter: 51, verses: [10], citation: "Psalm 51:10" },
+  { route: "kjv/b/2-corinthians/c/13/v/13", source: [13], target: "martin1744", file: "47_2_corinthians.json", chapter: 13, verses: [12], citation: "2 Corinthiens 13:12\n- KJV reference: 2 Corinthians 13:12-13" },
+  { route: "moh/b/2-corinthians/c/13/v/12", source: [12], target: "kjv", file: "47_2_corinthians.json", chapter: 13, verses: [12, 13], citation: "2 Corinthians 13:12-13" },
+  { route: "kjv/b/3-john/c/1/v/14", source: [14], target: "martin1744", file: "64_3_john.json", chapter: 1, verses: [14, 15], citation: "3 Jean 1:14-15\n- KJV reference: 3 John 1:14" },
+  { route: "moh/b/3-john/c/1/v/15", source: [15], target: "kjv", file: "64_3_john.json", chapter: 1, verses: [14], citation: "3 John 1:14" },
   { route: "kjv/b/1-samuel/c/30/v/1", source: [1], target: "krv", file: "9_1_samuel.json", chapter: 30, verses: [1], citation: "사무엘상 30:1" },
   { route: "kjv/b/1-samuel/c/30/v/31", source: [31], target: "krv", file: "9_1_samuel.json", chapter: 30, verses: [30], citation: "사무엘상 30:30\n- KJV reference: 1 Samuel 30:30-31" },
   { route: "krv/b/1-samuel/c/30/v/30", source: [30], target: "kjv", file: "9_1_samuel.json", chapter: 30, verses: [30, 31], citation: "1 Samuel 30:30-31" },
@@ -100,6 +119,41 @@ for (const example of [
   });
 }
 
+test("does not copy a Martin numbered heading into the KJV", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/moh/b/psalms/c/51/v/2");
+  await page.evaluate(() => navigator.clipboard.writeText("unchanged"));
+  await page.locator("#verse-2").click();
+  await page.locator("#copy-selected-verses").click();
+  await page.locator("#share-language-menu [data-edition='kjv']").click();
+  await expect(page.locator("#copy-status")).not.toBeEmpty();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe("unchanged");
+});
+
+test("does not copy the Martin epistle verse containing a source separator", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/kjv/b/2-corinthians/c/13/v/14");
+  await page.evaluate(() => navigator.clipboard.writeText("unchanged"));
+  await page.locator("#verse-14").click();
+  await page.locator("#copy-selected-verses").click();
+  await page.locator("#share-language-menu [data-edition='martin1744']").click();
+  await expect(page.locator("#copy-status")).not.toBeEmpty();
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe("unchanged");
+});
+
+test("preserves a two-heading Psalm passage when switching editions", async ({ page }) => {
+  await page.goto("/kjv/b/psalms/c/51/v/10");
+  await page.locator("#verse-10").click();
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-option-martin1744").click();
+  await expect(page).toHaveURL(/\/moh\/b\/psalms\/c\/51\/v\/12$/);
+  await expect(page.locator("#verse-12")).toHaveAttribute("aria-pressed", "true");
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-option-kjv").click();
+  await expect(page).toHaveURL(/\/kjv\/b\/psalms\/c\/51\/v\/10$/);
+  await expect(page.locator("#verse-10")).toHaveAttribute("aria-pressed", "true");
+});
+
 test("keeps the same canonical passage selected when switching between KJV and Martin", async ({ page }) => {
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto("/kjv/b/psalms/c/42/v/5");
@@ -117,7 +171,7 @@ test("keeps the same canonical passage selected when switching between KJV and M
     return data["42"][4][1].trim();
   });
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
-    .toBe(`"${kjvVerse}"\n\n- Psalms 42:5`);
+    .toBe(`"${kjvVerse}"\n\n- Psalm 42:5`);
 });
 
 test("preserves a split KRV passage when switching editions", async ({ page }) => {
