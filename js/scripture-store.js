@@ -82,6 +82,7 @@ export function createScriptureStore({
   let bookFiles = [];
   let chapterFrontMatter = new Map();
   let verseHeadings = new Map();
+  let referenceMetadata = { numberingDifferences: [], alternateReferences: [] };
   let initialization;
   let textSearchIndex;
   let textSearchIndexPromise;
@@ -135,6 +136,21 @@ export function createScriptureStore({
             Number.isInteger(beforeVerse) && beforeVerse >= 1 &&
             typeof text === "string"
           );
+        const numberingDifferences = index.numberingDifferences ?? [];
+        const alternateReferences = index.alternateReferences ?? [];
+        const validReferenceMetadata =
+          Array.isArray(numberingDifferences) &&
+          numberingDifferences.every(({ book, chapter }) =>
+            Number.isInteger(book) && book >= 1 && book <= canonicalBookNames.length &&
+            Number.isInteger(chapter) && chapter >= 1
+          ) &&
+          Array.isArray(alternateReferences) &&
+          alternateReferences.every(({ book, chapter, verse, references }) =>
+            Number.isInteger(book) && book >= 1 && book <= canonicalBookNames.length &&
+            Number.isInteger(chapter) && chapter >= 1 &&
+            Number.isInteger(verse) && verse >= 1 &&
+            Array.isArray(references) && references.every((reference) => typeof reference === "string")
+          );
 
         if (
           !validChapterCounts ||
@@ -142,13 +158,15 @@ export function createScriptureStore({
           !validDisplayBookNames ||
           !validBookNameAliases ||
           !validChapterFrontMatter ||
-          !validVerseHeadings
+          !validVerseHeadings ||
+          !validReferenceMetadata
         ) {
           throw new Error("The scripture index is invalid");
         }
         chapterCounts = index.chapterCounts;
         bookFiles = index.bookFiles;
         chapterFrontMatter = new Map(Object.entries(indexChapterFrontMatter));
+        referenceMetadata = { numberingDifferences, alternateReferences };
         verseHeadings = new Map();
         for (const heading of indexVerseHeadings) {
           const key = `${heading.book}:${heading.chapter}:${heading.beforeVerse}`;
@@ -178,6 +196,10 @@ export function createScriptureStore({
 
   function bookName(book) {
     return activeDisplayBookNames[book - 1] ?? canonicalBookNames[book - 1];
+  }
+
+  function referenceBookName(book) {
+    return editionId === "kjv" && book === 19 ? "Psalm" : bookName(book);
   }
 
   function validateBook(book) {
@@ -427,11 +449,13 @@ export function createScriptureStore({
     initialize,
     chapterCount,
     bookName,
+    referenceBookName,
     bookOrder,
     loadChapter,
     getChapter,
     getChapterFrontMatter,
     getVerseHeadings,
+    getReferenceMetadata: () => referenceMetadata,
     search,
   };
 }

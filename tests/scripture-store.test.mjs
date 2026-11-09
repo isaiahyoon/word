@@ -46,6 +46,28 @@ function createMockFetch(dataPath = "./scripture/kjv", indexMetadata = {}) {
 }
 
 describe("scripture store", () => {
+  it("uses a singular KJV Psalm reference without changing the book name or search", async () => {
+    const mock = createMockFetch();
+    const store = createScriptureStore({ fetchImpl: mock.fetchImpl, editionId: "kjv" });
+    await store.initialize();
+    assert.equal(store.bookName(19), "Psalms");
+    assert.equal(store.referenceBookName(19), "Psalm");
+    assert.equal(store.referenceBookName(1), "Genesis");
+    for (const query of ["Psalm", "Psalms", "Psalm 1", "Psalms 1", "Psalm 1:1", "Psalms 1:1"]) {
+      const results = await store.search(query);
+      assert.equal(results[0].book, 19, query);
+      assert.equal(results[0].searchType, query.includes(":") ? "reference" : /\d/.test(query) ? "chapter" : "book", query);
+    }
+    const french = createScriptureStore({
+      fetchImpl: createMockFetch("./scripture/martin1744").fetchImpl,
+      dataPath: "./scripture/martin1744",
+      editionId: "martin1744",
+      displayBookNames: MARTIN_BOOK_NAMES,
+    });
+    await french.initialize();
+    assert.equal(french.referenceBookName(19), "Psaumes");
+  });
+
   it("loads optional frontmatter and section headings without numbering them as verses", async () => {
     const mock = createMockFetch("./scripture/rv1865", {
       chapterFrontMatter: { "19:3": "Salmo de David, cuando huía de delante de Absalom su hijo." },

@@ -11,6 +11,11 @@ import { BOOKS, BOOK_TITLES } from "./books.mjs";
 import { logger } from "./logger.js";
 import { DEFAULT_EDITION, EDITIONS, EDITION_IDS } from "./editions.mjs";
 import { applyUiLocale, formatUiText, getUiLocale } from "./ui-locales.mjs";
+import {
+  createVerseReferenceAlignment,
+  sameVerseReferences,
+  VerseReferenceAlignmentError,
+} from "./verse-reference-alignment.mjs";
 
 const CHAPTER_GRADIENT_COLORS = ["var(--chapter-blue)", "var(--chapter-lavender)", "var(--chapter-pink)", "var(--chapter-green)"];
 const state = { editionId: DEFAULT_EDITION, book: 1, chapter: 1, verse: 1, selectedVerses: new Set(), testament: "old", lastBookByTestament: { old: 1, new: 40 }, chapterRequestId: 0, searchTimer: null, searchRequestId: 0, searchMatches: [], searchQuery: "", searchShown: 0, searchActiveIndex: -1 };
@@ -148,6 +153,8 @@ const shareLanguageMenu = createShareLanguageMenu({
   editions: EDITIONS,
   getActiveEditionId: () => state.editionId,
   onOpen: (action) => {
+    clearTimeout(copyFeedbackTimer);
+    elements.copyStatus.textContent = "";
     elements.shareLanguageMenu.setAttribute(
       "aria-label",
       uiText(action === "copy" ? "copyInLanguage" : "shareInLanguage"),
@@ -168,8 +175,9 @@ const readerFeedback = createReaderFeedback({
 
 const testamentFor = (book) => book <= 39 ? "old" : "new";
 const bookName = (book) => scripture.bookName(book);
+const referenceBookName = (book) => scripture.referenceBookName(book);
 
-function updateCopyControl() {
+function updateCopyControl({ clearStatus = true } = {}) {
   const count = state.selectedVerses.size;
   const visible = count > 0;
   elements.verseActions.classList.toggle("is-visible", visible);
@@ -187,7 +195,7 @@ function updateCopyControl() {
   elements.shareControl.title = visible
     ? uiText(count === 1 ? "shareOneVerse" : "shareManyVerses", { count })
     : uiText("shareSelected");
-  elements.copyStatus.textContent = "";
+  if (clearStatus) elements.copyStatus.textContent = "";
   clearTimeout(copyFeedbackTimer);
 }
 
@@ -306,7 +314,7 @@ function updateVerseLocation(verseNumber) {
   if (window.location.pathname !== path) window.history.replaceState(null, "", path);
 }
 
-function formatSelectedVerseReference(verseNumbers, store = scripture) {
+function compressVerseNumbers(verseNumbers) {
   const ranges = [];
   let start = verseNumbers[0];
   let end = start;
@@ -320,7 +328,26 @@ function formatSelectedVerseReference(verseNumbers, store = scripture) {
     start = end = verseNumber;
   }
   ranges.push(start === end ? String(start) : `${start}-${end}`);
-  return `${store.bookName(state.book)} ${state.chapter}:${ranges.join(", ")}`;
+  return ranges.join(", ");
+}
+
+function formatVerseReference(book, chapter, verseNumbers, store) {
+  return `${store.referenceBookName(book)} ${chapter}:${compressVerseNumbers(verseNumbers)}`;
+}
+
+function formatReferenceList(references, store) {
+  const groups = new Map();
+  for (const [book, chapter, verse] of references) {
+    const key = `${book}:${chapter}`;
+    groups.set(key, [...(groups.get(key) ?? []), verse]);
+  }
+  return [...groups.entries()]
+    .sort(([left], [right]) => left.localeCompare(right, undefined, { numeric: true }))
+    .map(([key, verseNumbers]) => {
+      const [book, chapter] = key.split(":").map(Number);
+      return formatVerseReference(book, chapter, [...new Set(verseNumbers)].sort((a, b) => a - b), store);
+    })
+    .join("; ");
 }
 
 async function writeClipboardText(text) {
@@ -345,20 +372,157 @@ async function writeClipboardText(text) {
   if (!copied) throw new Error("Clipboard copy failed");
 }
 
-function selectedVerseContent(store = scripture) {
-  const selectedVerses = store.getChapter(state.book, state.chapter)
-    .filter((verse) => state.selectedVerses.has(verse.verse));
-  if (selectedVerses.length === 0) return null;
+function resolveVerseReferences({
+  sourceEditionId,
+  sourceStore,
+  targetEditionId,
+  targetStore,
+  canonicalStore,
+  book,
+  chapter,
+  verseNumbers,
+}) {
+  const sourceChapterVerses = sourceStore.getChapter(book, chapter);
+  const targetChapterVerses = targetStore.getChapter(book, chapter);
+  const canonicalChapterVerses = canonicalStore.getChapter(book, chapter);
+  if (!canonicalChapterVerses.length) throw new VerseReferenceAlignmentError();
 
-  const reference = formatSelectedVerseReference(selectedVerses.map((verse) => verse.verse), store);
+  const sourceAlignment = createVerseReferenceAlignment(
+    sourceEditionId,
+    sourceStore.getReferenceMetadata(),
+    {
+      book,
+      chapter,
+      verseCount: sourceChapterVerses.length,
+      kjvVerseCount: canonicalChapterVerses.length,
+    },
+  );
+  const targetAlignment = createVerseReferenceAlignment(
+    targetEditionId,
+    targetStore.getReferenceMetadata(),
+    {
+      book,
+      chapter,
+      verseCount: targetChapterVerses.length,
+      kjvVerseCount: canonicalChapterVerses.length,
+    },
+  );
+  const sourceVerses = sourceChapterVerses.filter((verse) => verseNumbers.includes(verse.verse));
+  if (sourceVerses.length !== verseNumbers.length) throw new VerseReferenceAlignmentError();
+
+  const canonicalReferences = [];
+  for (const verse of sourceVerses) {
+    const references = sourceAlignment.toKjvReferences(book, chapter, verse.verse);
+    if (!references?.length) throw new VerseReferenceAlignmentError();
+    canonicalReferences.push(...references);
+  }
+  const uniqueCanonicalReferences = [...new Map(canonicalReferences.map((reference) => [
+    reference.join(":"),
+    reference,
+  ])).values()];
+  for (const [refBook, refChapter, refVerse] of uniqueCanonicalReferences) {
+    if (!canonicalStore.getChapter(refBook, refChapter).some((verse) => verse.verse === refVerse)) {
+      throw new VerseReferenceAlignmentError();
+    }
+  }
+
+  const targetVerses = targetAlignment.findNativeVerses(
+    book,
+    chapter,
+    uniqueCanonicalReferences,
+    targetChapterVerses,
+  );
+  if (!targetVerses?.length) throw new VerseReferenceAlignmentError();
+
+  const targetReferences = [];
+  for (const verse of targetVerses) {
+    const references = targetAlignment.toKjvReferences(verse.book, verse.chapter, verse.verse);
+    if (!references?.length) throw new VerseReferenceAlignmentError();
+    targetReferences.push(...references);
+  }
+  const coveredReferences = new Set(targetReferences.map((reference) => reference.join(":")));
+  if (uniqueCanonicalReferences.some((reference) => !coveredReferences.has(reference.join(":")))) {
+    throw new VerseReferenceAlignmentError();
+  }
+  const selectedNumbers = new Set(verseNumbers);
+  const additionalSourceVerses = sourceChapterVerses.filter((verse) => {
+    if (selectedNumbers.has(verse.verse)) return false;
+    const references = sourceAlignment.toKjvReferences(book, chapter, verse.verse);
+    return references?.some((reference) => coveredReferences.has(reference.join(":")));
+  });
+  return { targetVerses, targetReferences, additionalSourceVerses };
+}
+
+function selectedVerseContent(editionId, store, canonicalStore = null) {
+  const activeVerses = scripture.getChapter(state.book, state.chapter)
+    .filter((verse) => state.selectedVerses.has(verse.verse));
+  if (activeVerses.length === 0) return null;
+
+  if (editionId === state.editionId) {
+    const selectedVerses = store.getChapter(state.book, state.chapter)
+      .filter((verse) => state.selectedVerses.has(verse.verse));
+    const reference = formatVerseReference(
+      state.book,
+      state.chapter,
+      selectedVerses.map((verse) => verse.verse),
+      store,
+    );
+    const copiedVerses = selectedVerses.map((verse) => {
+      const sourceLabel = verse.sourceEdition === "krv" ? ` [${uiText("sourceFallback")}]` : "";
+      const verseText = `${verse.text.trim()}${sourceLabel}`;
+      if (!verse.referenceText) return verseText;
+      return `${verseText}\n\n${verse.referenceText.trim()} [${uiText("kjvReference")}]`;
+    }).join("\n\n");
+    return { reference, text: `"${copiedVerses}"\n\n- ${reference}` };
+  }
+
+  if (!canonicalStore) throw new VerseReferenceAlignmentError();
+  const { targetVerses: selectedVerses, targetReferences, additionalSourceVerses } = resolveVerseReferences({
+    sourceEditionId: state.editionId,
+    sourceStore: scripture,
+    targetEditionId: editionId,
+    targetStore: store,
+    canonicalStore,
+    book: state.book,
+    chapter: state.chapter,
+    verseNumbers: activeVerses.map((verse) => verse.verse),
+  });
+
+  const reference = formatVerseReference(
+    state.book,
+    state.chapter,
+    selectedVerses.map((verse) => verse.verse),
+    store,
+  );
+  const nativeReferences = selectedVerses.map((verse) => [verse.book, verse.chapter, verse.verse]);
+  const sourceReferences = activeVerses.map((verse) => [verse.book, verse.chapter, verse.verse]);
+  const alignmentDetails = [];
+  if (!sameVerseReferences(sourceReferences, nativeReferences) || additionalSourceVerses.length) {
+    alignmentDetails.push(uiText("alignmentSelection", {
+      reference: formatVerseReference(state.book, state.chapter, activeVerses.map((verse) => verse.verse), scripture),
+      edition: EDITIONS[state.editionId].shortCode ?? state.editionId.toUpperCase(),
+    }));
+  }
+  if (additionalSourceVerses.length) {
+    alignmentDetails.push(uiText("alignmentExtraText", {
+      reference: formatVerseReference(state.book, state.chapter, additionalSourceVerses.map((verse) => verse.verse), scripture),
+    }));
+  }
   const copiedVerses = selectedVerses.map((verse) => {
     const sourceLabel = verse.sourceEdition === "krv" ? ` [${uiText("sourceFallback")}]` : "";
     const verseText = `${verse.text.trim()}${sourceLabel}`;
     if (!verse.referenceText) return verseText;
     return `${verseText}\n\n${verse.referenceText.trim()} [${uiText("kjvReference")}]`;
   }).join("\n\n");
-  const text = `"${copiedVerses}"\n\n- ${reference}`;
-  return { reference, text };
+  const kjvReference = formatReferenceList(targetReferences, canonicalStore);
+  const citation = sameVerseReferences(targetReferences, nativeReferences)
+    ? `- ${reference}`
+    : `- ${reference}\n- ${uiText("kjvReference")}: ${kjvReference}`;
+  return { reference, text: `"${copiedVerses}"\n\n${citation}`, alignmentDetails: alignmentDetails.join(" ") };
+}
+
+function copyShareStatus(key, content) {
+  return [uiText(key, { reference: content.reference }), content.alignmentDetails].filter(Boolean).join(" ");
 }
 
 async function selectedVerseStore(editionId, action) {
@@ -379,7 +543,18 @@ async function selectedVerseStore(editionId, action) {
 async function copySelectedVerses({ clearAfter = false, editionId = state.editionId } = {}) {
   const store = await selectedVerseStore(editionId, "copying");
   if (!store) return;
-  const content = selectedVerseContent(store);
+  const canonicalStore = editionId === state.editionId
+    ? null
+    : await selectedVerseStore("kjv", "aligning");
+  if (editionId !== state.editionId && !canonicalStore) return;
+  let content;
+  try {
+    content = selectedVerseContent(editionId, store, canonicalStore);
+  } catch (error) {
+    if (!(error instanceof VerseReferenceAlignmentError)) throw error;
+    elements.copyStatus.textContent = uiText("referenceAlignmentUnavailable");
+    return;
+  }
   if (!content) return;
 
   try {
@@ -390,8 +565,8 @@ async function copySelectedVerses({ clearAfter = false, editionId = state.editio
       return;
     }
     elements.copyControlLabel.textContent = uiText("copied");
-    elements.copyStatus.textContent = uiText("copiedReference", { reference: content.reference });
-    copyFeedbackTimer = setTimeout(updateCopyControl, 1600);
+    elements.copyStatus.textContent = copyShareStatus("copiedReference", content);
+    copyFeedbackTimer = setTimeout(() => updateCopyControl({ clearStatus: !content.alignmentDetails }), 1600);
   } catch (error) {
     logger.error("Copy failed", { editionId: state.editionId, error });
     elements.copyStatus.textContent = uiText("copyFailed");
@@ -409,13 +584,24 @@ function warmShareChapters() {
 async function shareSelectedVerses(editionId = state.editionId) {
   const store = await selectedVerseStore(editionId, "sharing");
   if (!store) return;
-  const content = selectedVerseContent(store);
+  const canonicalStore = editionId === state.editionId
+    ? null
+    : await selectedVerseStore("kjv", "aligning");
+  if (editionId !== state.editionId && !canonicalStore) return;
+  let content;
+  try {
+    content = selectedVerseContent(editionId, store, canonicalStore);
+  } catch (error) {
+    if (!(error instanceof VerseReferenceAlignmentError)) throw error;
+    elements.copyStatus.textContent = uiText("referenceAlignmentUnavailable");
+    return;
+  }
   if (!content) return;
 
   if (typeof navigator.share !== "function") {
     try {
       await writeClipboardText(content.text);
-      elements.copyStatus.textContent = uiText("shareUnavailableCopied", { reference: content.reference });
+      elements.copyStatus.textContent = copyShareStatus("shareUnavailableCopied", content);
     } catch (error) {
       logger.error("Share fallback copy failed", { editionId: state.editionId, error });
       elements.copyStatus.textContent = uiText("shareCopyFailed");
@@ -424,10 +610,14 @@ async function shareSelectedVerses(editionId = state.editionId) {
   }
 
   try {
+    if (content.alignmentDetails) elements.copyStatus.textContent = content.alignmentDetails;
     await navigator.share({ text: content.text });
-    elements.copyStatus.textContent = uiText("sharedReference", { reference: content.reference });
+    elements.copyStatus.textContent = copyShareStatus("sharedReference", content);
   } catch (error) {
-    if (error?.name === "AbortError") return;
+    if (error?.name === "AbortError") {
+      elements.copyStatus.textContent = "";
+      return;
+    }
     logger.error("Share failed", { editionId: state.editionId, error });
     elements.copyStatus.textContent = uiText("shareFailed");
   }
@@ -448,7 +638,7 @@ function currentFeedbackPassage() {
     ? range.start
     : `${range.start}-${range.end}`;
   const passageScripture = scriptureStores.get(passage.editionId) ?? scripture;
-  return `${passageScripture.bookName(passage.book)} ${passage.chapter}:${verseReference}`;
+  return `${passageScripture.referenceBookName(passage.book)} ${passage.chapter}:${verseReference}`;
 }
 
 async function activateEdition(editionId) {
@@ -515,6 +705,7 @@ async function changeEdition(editionId, { preserveFocus = false } = {}) {
   const keepSidebarOpen = elements.sidebar.classList.contains("is-open");
   const { book, chapter, verse } = state;
   const selectedVerses = [...state.selectedVerses];
+  const previousStore = scripture;
   const searchQuery = state.searchQuery;
   const previousEditionId = state.editionId;
   state.searchRequestId += 1;
@@ -531,10 +722,52 @@ async function changeEdition(editionId, { preserveFocus = false } = {}) {
   } catch {
     // The active edition remains usable if browser storage is unavailable.
   }
-  const verses = await scripture.loadChapter(book, chapter);
-  await openChapter(book, chapter, Math.min(verse, verses.length), {
-    selectedVersesToRestore: selectedVerses,
-  });
+  await scripture.loadChapter(book, chapter);
+  const canonicalStore = await selectedVerseStore("kjv", "aligning");
+  let targetVerse = 1;
+  let selectedVersesToRestore = [];
+  let alignmentUnavailable = !canonicalStore;
+
+  if (canonicalStore) {
+    try {
+      const focusedVerse = resolveVerseReferences({
+        sourceEditionId: previousEditionId,
+        sourceStore: previousStore,
+        targetEditionId: editionId,
+        targetStore: scripture,
+        canonicalStore,
+        book,
+        chapter,
+        verseNumbers: [verse],
+      });
+      targetVerse = focusedVerse.targetVerses[0].verse;
+    } catch (error) {
+      if (!(error instanceof VerseReferenceAlignmentError)) throw error;
+      alignmentUnavailable = true;
+    }
+
+    if (selectedVerses.length > 0) {
+      try {
+        const selected = resolveVerseReferences({
+          sourceEditionId: previousEditionId,
+          sourceStore: previousStore,
+          targetEditionId: editionId,
+          targetStore: scripture,
+          canonicalStore,
+          book,
+          chapter,
+          verseNumbers: selectedVerses,
+        });
+        selectedVersesToRestore = selected.targetVerses.map((selectedVerse) => selectedVerse.verse);
+      } catch (error) {
+        if (!(error instanceof VerseReferenceAlignmentError)) throw error;
+        alignmentUnavailable = true;
+      }
+    }
+  }
+
+  await openChapter(book, chapter, targetVerse, { selectedVersesToRestore });
+  if (alignmentUnavailable) elements.copyStatus.textContent = uiText("editionAlignmentUnavailable");
   animateEditionSwitch();
   requestAnimationFrame(() => {
     if (keepSidebarOpen) {
@@ -809,7 +1042,7 @@ function renderBookList() {
 }
 
 function renderChapter(focusRange = null) {
-  const name = bookName(state.book);
+  const name = referenceBookName(state.book);
   const testament = testamentFor(state.book);
   const verses = scripture.getChapter(state.book, state.chapter);
   document.querySelector("#testament-name").textContent = uiText(
@@ -949,8 +1182,8 @@ function adjacentChapter(offset) {
 function updateChapterLinks() {
   const previous = adjacentChapter(-1);
   const next = adjacentChapter(1);
-  const previousTitle = `${bookName(previous.book)} ${previous.chapter}`;
-  const nextTitle = `${bookName(next.book)} ${next.chapter}`;
+  const previousTitle = `${referenceBookName(previous.book)} ${previous.chapter}`;
+  const nextTitle = `${referenceBookName(next.book)} ${next.chapter}`;
   document.querySelector("#previous-title").textContent = previousTitle;
   document.querySelector("#next-title").textContent = nextTitle;
   document.querySelector("#previous-title").lang = EDITIONS[state.editionId].language;
@@ -1130,13 +1363,13 @@ function appendSearchResults() {
     if (verse.searchType === "book") {
       reference.textContent = uiText("resultBook", { book: bookName(verse.book) });
     } else if (verse.searchType === "chapter") {
-      reference.textContent = uiText("resultChapter", { book: bookName(verse.book), chapter: verse.chapter });
+      reference.textContent = uiText("resultChapter", { book: referenceBookName(verse.book), chapter: verse.chapter });
     } else if (verse.searchType === "reference") {
       reference.textContent = uiText("resultExactPassage", {
-        reference: `${bookName(verse.book)} ${verse.chapter}:${verse.verse}`,
+        reference: `${referenceBookName(verse.book)} ${verse.chapter}:${verse.verse}`,
       });
     } else {
-      reference.textContent = `${bookName(verse.book)} ${verse.chapter}:${verse.verse}`;
+      reference.textContent = `${referenceBookName(verse.book)} ${verse.chapter}:${verse.verse}`;
     }
     if (verse.sourceEdition === "krv") reference.textContent += uiText("fallbackResult");
     const text = document.createElement("span");
@@ -1144,7 +1377,7 @@ function appendSearchResults() {
     if (verse.searchType === "book") {
       text.textContent = uiText("openBookFromStart", { book: bookName(verse.book) });
     } else if (verse.searchType === "chapter") {
-      text.textContent = uiText("openChapterResult", { book: bookName(verse.book), chapter: verse.chapter });
+      text.textContent = uiText("openChapterResult", { book: referenceBookName(verse.book), chapter: verse.chapter });
     } else {
       appendHighlighted(text, verse.text, verse.matchedTerms, verse.textLanguage ?? EDITIONS[state.editionId].language);
     }

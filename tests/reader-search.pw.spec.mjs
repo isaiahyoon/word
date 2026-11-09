@@ -1,5 +1,32 @@
 import { expect, test } from "./support/browser-test.mjs";
 
+test("uses Psalm for KJV passages while retaining Psalms for the book", async ({ page }) => {
+  await page.goto("/kjv/b/psalms/c/3/v/1");
+  await expect(page.locator("#heading-book")).toHaveText("Psalm");
+  await expect(page.locator("#heading-chapter")).toHaveText("3");
+  await expect(page.locator("#chapter-kicker")).toHaveText("THE BOOK OF PSALMS");
+  await expect(page.locator("#book-list .book-name").filter({ hasText: /^Psalms$/ })).toHaveCount(1);
+  await expect(page).toHaveTitle("Psalm 3 — The Amazing Word");
+
+  const search = page.locator("#search-input");
+  const firstResult = page.locator(".search-result").first();
+  for (const name of ["Psalm", "Psalms"]) {
+    await search.fill(name);
+    await expect(firstResult).toHaveAttribute("data-search-type", "book");
+    await expect(firstResult).toContainText("Psalms");
+    await search.fill(`${name} 3`);
+    await expect(firstResult).toHaveAttribute("data-search-type", "chapter");
+    await expect(firstResult).toContainText("Psalm 3");
+    await search.fill(`${name} 3:1`);
+    await expect(firstResult).toHaveAttribute("data-search-type", "reference");
+    await expect(firstResult).toContainText("Psalm 3:1");
+  }
+  await firstResult.click();
+  await expect(page).toHaveURL(/\/kjv\/b\/psalms\/c\/3\/v\/1$/);
+  await page.goto("/moh/b/psalms/c/3/v/1");
+  await expect(page.locator("#heading-book")).toHaveText("Psaumes");
+});
+
 test("uses the picker root to distinguish inside and outside clicks", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/kjv/b/john/c/3/v/16");
