@@ -27,6 +27,94 @@ test("copies consecutive verses on every edition as separate lines with a compre
   }
 });
 
+test("copies the French Martin verse aligned to KJV Psalm 42:5 with both references", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/kjv/b/psalms/c/42/v/5");
+  await page.locator("#verse-5").click();
+  await page.locator("#copy-selected-verses").click();
+  await page.locator("#share-language-menu [data-edition='martin1744']").click();
+
+  const frenchVerse = await page.evaluate(async () => {
+    const data = await (await fetch("/scripture/martin1744/books/19_psalms.json")).json();
+    return data["42"][5][1].trim();
+  });
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toBe(`"${frenchVerse}"\n\n- Psaumes 42:6\n- KJV reference: Psalms 42:5`);
+});
+
+test("copies Almeida's combined 2 Corinthians verse with its full KJV reference", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/kjv/b/2-corinthians/c/13/v/12");
+  await page.locator("#verse-12").click();
+  await page.locator("#copy-selected-verses").click();
+  await page.locator("#share-language-menu [data-edition='alm1911']").click();
+
+  const portugueseVerse = await page.evaluate(async () => {
+    const data = await (await fetch("/scripture/alm1911/books/47_2_corinthians.json")).json();
+    return data["13"][11][1].trim();
+  });
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toBe(`"${portugueseVerse}"\n\n- 2 Coríntios 13:12\n- KJV reference: 2 Corinthians 13:12-13`);
+});
+
+test("blocks cross-edition copying where verse alignment is not verified", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/kjv/b/psalms/c/3/v/1");
+  await page.evaluate(() => navigator.clipboard.writeText("unchanged"));
+  await page.locator("#verse-1").click();
+  await page.locator("#copy-selected-verses").click();
+  await page.locator("#share-language-menu [data-edition='martin1744']").click();
+
+  await expect(page.locator("#copy-status"))
+    .toHaveText("These verses cannot be matched confidently to the chosen edition, so nothing was copied.");
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe("unchanged");
+});
+
+test("blocks KRV copying in a chapter with a different verse count", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/kjv/b/song-of-solomon/c/6/v/13");
+  await page.evaluate(() => navigator.clipboard.writeText("unchanged"));
+  await page.locator("#verse-13").click();
+  await page.locator("#copy-selected-verses").click();
+  await page.locator("#share-language-menu [data-edition='krv']").click();
+
+  await expect(page.locator("#copy-status"))
+    .toHaveText("These verses cannot be matched confidently to the chosen edition, so nothing was copied.");
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe("unchanged");
+});
+
+test("keeps the same canonical passage selected when switching between KJV and Martin", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/kjv/b/psalms/c/42/v/5");
+  await page.locator("#verse-5").click();
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-option-martin1744").click();
+
+  await expect(page).toHaveURL(/\/moh\/b\/psalms\/c\/42\/v\/6$/);
+  await expect(page.locator("#verse-6")).toHaveAttribute("aria-pressed", "true");
+  await page.locator("#copy-selected-verses").click();
+  await page.locator("#share-language-menu [data-edition='kjv']").click();
+
+  const kjvVerse = await page.evaluate(async () => {
+    const data = await (await fetch("/scripture/kjv/books/19_psalms.json")).json();
+    return data["42"][4][1].trim();
+  });
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toBe(`"${kjvVerse}"\n\n- Psalms 42:5`);
+});
+
+test("clears selection with an explanation when switching to an unverified verse numbering", async ({ page }) => {
+  await page.goto("/kjv/b/song-of-solomon/c/6/v/13");
+  await page.locator("#verse-13").click();
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-option-krv").click();
+
+  await expect(page).toHaveURL(/\/krv\/b\/song-of-solomon\/c\/6\/v\/1$/);
+  await expect(page.locator("#verse-13")).toHaveAttribute("aria-pressed", "false");
+  await expect(page.locator("#copy-status"))
+    .toHaveText("선택한 번역본에서 해당 구절을 확실히 확인할 수 없어 선택을 해제했습니다.");
+});
+
 test("copies selected verses with Command+C", async ({ page }) => {
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto("/kjv/b/isaiah/c/3/v/10");
