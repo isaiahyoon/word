@@ -44,19 +44,65 @@ test("maps verified numbering differences and leaves uncertain chapters unavaila
   assert.deepEqual(jap.toKjvReferences(64, 1, 14), [[64, 1, 14]]);
   assert.deepEqual(jap.toKjvReferences(64, 1, 15), []);
 
-  const krv = createVerseReferenceAlignment("krv", {}, {
-    book: 22,
-    chapter: 6,
-    verseCount: (await chapterVerses("krv", 22, 6)).length,
-    kjvVerseCount: (await chapterVerses("kjv", 22, 6)).length,
-  });
-  assert.equal(krv.toKjvReferences(22, 6, 14), null);
-
   const rvIndex = await readJson("../scripture/rv1865/index.json");
   const rv = createVerseReferenceAlignment("rv1865", rvIndex);
   assert.equal(rv.toKjvReferences(9, 20, 1), null);
   assert.equal(rv.toKjvReferences(7, 14, 18), null);
   assert.deepEqual(rv.toKjvReferences(43, 3, 16), [[43, 3, 16]]);
+});
+
+test("maps each KRV verse in the four differing chapters and reverses the mappings", async () => {
+  const cases = [
+    { book: 9, chapter: 30, expected: [
+      ...Array.from({ length: 29 }, (_, index) => [index + 1]),
+      [30, 31],
+    ] },
+    { book: 22, chapter: 6, expected: [
+      ...Array.from({ length: 12 }, (_, index) => [index + 1]),
+      [13], [13],
+    ] },
+    { book: 47, chapter: 13, expected: [
+      ...Array.from({ length: 10 }, (_, index) => [index + 1]),
+      [11, 12], [13], [14],
+    ] },
+    { book: 64, chapter: 1, expected: [
+      ...Array.from({ length: 13 }, (_, index) => [index + 1]),
+      [14], [14],
+    ] },
+  ];
+
+  for (const { book, chapter, expected } of cases) {
+    const nativeVerses = await chapterVerses("krv", book, chapter);
+    const canonicalVerses = await chapterVerses("kjv", book, chapter);
+    const alignment = createVerseReferenceAlignment("krv", {}, {
+      book, chapter, verseCount: nativeVerses.length, kjvVerseCount: canonicalVerses.length,
+    });
+    assert.equal(nativeVerses.length, expected.length);
+    const verses = nativeVerses.map(([verse]) => ({ book, chapter, verse }));
+    for (const [index, mappedVerses] of expected.entries()) {
+      assert.deepEqual(
+        alignment.toKjvReferences(book, chapter, index + 1),
+        mappedVerses.map((verse) => [book, chapter, verse]),
+        `KRV ${book}:${chapter}:${index + 1}`,
+      );
+    }
+    for (const [verse] of canonicalVerses) {
+      const expectedNative = expected.flatMap((references, index) =>
+        references.includes(verse) ? [index + 1] : []
+      );
+      assert.deepEqual(
+        alignment.findNativeVerses(book, chapter, [[book, chapter, verse]], verses).map((item) => item.verse),
+        expectedNative,
+        `KJV ${book}:${chapter}:${verse}`,
+      );
+      assert.ok(expectedNative.length > 0);
+    }
+    assert.equal(alignment.toKjvReferences(book, chapter, nativeVerses.length + 1), null);
+    const changedCounts = createVerseReferenceAlignment("krv", {}, {
+      book, chapter, verseCount: nativeVerses.length + 1, kjvVerseCount: canonicalVerses.length,
+    });
+    assert.equal(changedCounts.toKjvReferences(book, chapter, 1), null);
+  }
 });
 
 test("classifies every verse reference in every edition against existing KJV slots", async () => {
@@ -65,6 +111,7 @@ test("classifies every verse reference in every edition against existing KJV slo
     readJson(`../scripture/kjv/books/${file}`)
   ));
   const editionIds = ["kjv", "krv", "diodati", "luther1912", "japbungo", "martin1744", "rv1865", "alm1911"];
+  const krvCountMismatches = [];
 
   for (const editionId of editionIds) {
     const index = await readJson(`../scripture/${editionId}/index.json`);
@@ -86,7 +133,12 @@ test("classifies every verse reference in every edition against existing KJV slo
           editionId === "alm1911" && bookIndex + 1 === 47 && chapter === 13
         ) || (
           editionId === "japbungo" && bookIndex + 1 === 64 && chapter === 1
+        ) || (
+          editionId === "krv" && ["9:30", "22:6", "47:13", "64:1"].includes(`${bookIndex + 1}:${chapter}`)
         );
+        if (editionId === "krv" && countMismatch) {
+          krvCountMismatches.push(`${bookIndex + 1}:${chapter}`);
+        }
         if (countMismatch && !knownCountMismatch) {
           assert.equal(alignment.isChapterAligned(bookIndex + 1, chapter), false);
         }
@@ -114,4 +166,5 @@ test("classifies every verse reference in every edition against existing KJV slo
       }
     }
   }
+  assert.deepEqual(krvCountMismatches, ["9:30", "22:6", "47:13", "64:1"]);
 });

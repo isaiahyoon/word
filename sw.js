@@ -1,4 +1,4 @@
-const SHELL_CACHE = "the-word-shell-v3";
+const SHELL_CACHE = "the-word-shell-v4";
 const EDITION_CACHE = "the-word-editions";
 const FONT_CACHE = "the-word-fonts-v1";
 const FONT_HOSTS = new Set(["fonts.googleapis.com", "fonts.gstatic.com"]);
@@ -36,6 +36,7 @@ const SHELL_URLS = [
   "/js/scripture-routes.mjs",
   "/js/scripture-store.js",
   "/js/ui-locales.mjs",
+  "/js/verse-reference-alignment.mjs",
   "/js/visual-effects.js",
   "/js/vendor/minisearch.js",
   "/assets/favicon.svg",

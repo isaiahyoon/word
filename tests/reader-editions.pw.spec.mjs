@@ -485,17 +485,35 @@ test.describe("share load failures", () => {
   });
 });
 
-test("leaves out selected verses that the chosen edition does not contain", async ({ page }) => {
-  await page.goto("/moh/b/3-john/c/1/v/14");
+test("blocks sharing a selected verse without a verified KJV reference", async ({ page }) => {
+  await page.goto("/japbungo/b/3-john/c/1/v/14");
   await mockNativeShare(page);
   await page.locator("#verse-14").click();
   await page.locator("#verse-15").click();
   await page.locator("#share-selected-verses").click();
   await page.locator("#share-language-menu [data-edition='kjv']").click();
 
+  await expect(page.locator("#copy-status"))
+    .toHaveText("選択した節を指定の版の節と確実に対応できないため、コピーしませんでした。");
+  expect(await page.evaluate(() => window.sharedPayloads.length)).toBe(0);
+});
+
+test("shares the full KRV passage for a split KJV verse", async ({ page }) => {
+  await page.goto("/kjv/b/3-john/c/1/v/14");
+  await mockNativeShare(page);
+  await page.locator("#verse-14").click();
+  await page.locator("#share-selected-verses").click();
+  await page.locator("#share-language-menu [data-edition='krv']").click();
+
   await expect.poll(() => page.evaluate(() => window.sharedPayloads.length)).toBe(1);
   const [payload] = await page.evaluate(() => window.sharedPayloads);
-  expect(payload.text).toMatch(/- 3 John 1:14$/);
+  const texts = await page.evaluate(async () => {
+    const response = await fetch("/scripture/krv/books/64_3_john.json");
+    if (!response.ok) throw new Error("Could not load KRV test verses");
+    const data = await response.json();
+    return [data["1"][13][1].trim(), data["1"][14][1].trim()];
+  });
+  expect(payload.text).toBe(`"${texts.join("\n\n")}"\n\n- 요한3서 1:14-15\n- KJV reference: 3 John 1:14`);
 });
 
 test("keeps selected-verse actions on one row inside the viewport in every edition", async ({ page }) => {

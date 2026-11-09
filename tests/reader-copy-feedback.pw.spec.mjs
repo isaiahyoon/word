@@ -70,18 +70,35 @@ test("blocks cross-edition copying where verse alignment is not verified", async
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe("unchanged");
 });
 
-test("blocks KRV copying in a chapter with a different verse count", async ({ page }) => {
-  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
-  await page.goto("/kjv/b/song-of-solomon/c/6/v/13");
-  await page.evaluate(() => navigator.clipboard.writeText("unchanged"));
-  await page.locator("#verse-13").click();
-  await page.locator("#copy-selected-verses").click();
-  await page.locator("#share-language-menu [data-edition='krv']").click();
+for (const example of [
+  { route: "kjv/b/1-samuel/c/30/v/1", source: [1], target: "krv", file: "9_1_samuel.json", chapter: 30, verses: [1], citation: "사무엘상 30:1" },
+  { route: "kjv/b/1-samuel/c/30/v/31", source: [31], target: "krv", file: "9_1_samuel.json", chapter: 30, verses: [30], citation: "사무엘상 30:30\n- KJV reference: 1 Samuel 30:30-31" },
+  { route: "krv/b/1-samuel/c/30/v/30", source: [30], target: "kjv", file: "9_1_samuel.json", chapter: 30, verses: [30, 31], citation: "1 Samuel 30:30-31" },
+  { route: "kjv/b/song-of-solomon/c/6/v/13", source: [13], target: "krv", file: "22_song_of_solomon.json", chapter: 6, verses: [13, 14], citation: "아가 6:13-14\n- KJV reference: Song of Solomon 6:13" },
+  { route: "krv/b/song-of-solomon/c/6/v/14", source: [14], target: "kjv", file: "22_song_of_solomon.json", chapter: 6, verses: [13], citation: "Song of Solomon 6:13" },
+  { route: "kjv/b/2-corinthians/c/13/v/12", source: [12], target: "krv", file: "47_2_corinthians.json", chapter: 13, verses: [11], citation: "고린도후서 13:11\n- KJV reference: 2 Corinthians 13:11-12" },
+  { route: "krv/b/2-corinthians/c/13/v/12", source: [12], target: "kjv", file: "47_2_corinthians.json", chapter: 13, verses: [13], citation: "2 Corinthians 13:13" },
+  { route: "kjv/b/3-john/c/1/v/14", source: [14], target: "krv", file: "64_3_john.json", chapter: 1, verses: [14, 15], citation: "요한3서 1:14-15\n- KJV reference: 3 John 1:14" },
+  { route: "krv/b/3-john/c/1/v/15", source: [15], target: "kjv", file: "64_3_john.json", chapter: 1, verses: [14], citation: "3 John 1:14" },
+  { route: "krv/b/3-john/c/1/v/15", source: [15], target: "japbungo", file: "64_3_john.json", chapter: 1, verses: [14], citation: "ヨハネの手紙Ⅲ 1:14" },
+]) {
+  test(`copies aligned verses from ${example.route} to ${example.target}`, async ({ page }) => {
+    await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.goto(`/${example.route}`);
+    for (const verse of example.source) await page.locator(`#verse-${verse}`).click();
+    await page.locator("#copy-selected-verses").click();
+    await page.locator(`#share-language-menu [data-edition='${example.target}']`).click();
 
-  await expect(page.locator("#copy-status"))
-    .toHaveText("These verses cannot be matched confidently to the chosen edition, so nothing was copied.");
-  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe("unchanged");
-});
+    const text = await page.evaluate(async ({ target, file, chapter, verses }) => {
+      const response = await fetch(`/scripture/${target}/books/${file}`);
+      if (!response.ok) throw new Error(`Could not load ${target} test verses`);
+      const data = await response.json();
+      return verses.map((verse) => data[chapter][verse - 1][1].trim()).join("\n\n");
+    }, example);
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
+      .toBe(`"${text}"\n\n- ${example.citation}`);
+  });
+}
 
 test("keeps the same canonical passage selected when switching between KJV and Martin", async ({ page }) => {
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
@@ -103,16 +120,19 @@ test("keeps the same canonical passage selected when switching between KJV and M
     .toBe(`"${kjvVerse}"\n\n- Psalms 42:5`);
 });
 
-test("clears selection with an explanation when switching to an unverified verse numbering", async ({ page }) => {
+test("preserves a split KRV passage when switching editions", async ({ page }) => {
   await page.goto("/kjv/b/song-of-solomon/c/6/v/13");
   await page.locator("#verse-13").click();
   await page.locator("#edition-select").click();
   await page.locator("#edition-option-krv").click();
 
-  await expect(page).toHaveURL(/\/krv\/b\/song-of-solomon\/c\/6\/v\/1$/);
-  await expect(page.locator("#verse-13")).toHaveAttribute("aria-pressed", "false");
-  await expect(page.locator("#copy-status"))
-    .toHaveText("선택한 번역본에서 해당 구절을 확실히 확인할 수 없어 선택을 해제했습니다.");
+  await expect(page).toHaveURL(/\/krv\/b\/song-of-solomon\/c\/6\/v\/13$/);
+  await expect(page.locator("#verse-13")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("#verse-14")).toHaveAttribute("aria-pressed", "true");
+  await page.locator("#edition-select").click();
+  await page.locator("#edition-option-kjv").click();
+  await expect(page).toHaveURL(/\/kjv\/b\/song-of-solomon\/c\/6\/v\/13$/);
+  await expect(page.locator("#verse-13")).toHaveAttribute("aria-pressed", "true");
 });
 
 test("copies selected verses with Command+C", async ({ page }) => {

@@ -1,5 +1,11 @@
 const chapterKey = (book, chapter) => `${book}:${chapter}`;
 const verseKey = (book, chapter, verse) => `${book}:${chapter}:${verse}`;
+const KRV_CHAPTER_COUNTS = new Map([
+  ["9:30", [30, 31]],
+  ["22:6", [14, 13]],
+  ["47:13", [13, 14]],
+  ["64:1", [15, 14]],
+]);
 
 export class VerseReferenceAlignmentError extends Error {
   constructor() {
@@ -26,12 +32,18 @@ export function createVerseReferenceAlignment(editionId, metadata = {}, chapterC
     Number.isInteger(verseCount) &&
     Number.isInteger(kjvVerseCount) &&
     verseCount !== kjvVerseCount;
+  const krvCounts = editionId === "krv" ? KRV_CHAPTER_COUNTS.get(chapterKey(book, chapter)) : null;
+  if (krvCounts && (verseCount !== krvCounts[0] || kjvVerseCount !== krvCounts[1])) {
+    unavailableChapters.add(chapterKey(book, chapter));
+  }
   const knownMismatch = (
     editionId === "martin1744" && book === 19 && chapter === 42
   ) || (
     editionId === "alm1911" && book === 47 && chapter === 13
   ) || (
     editionId === "japbungo" && book === 64 && chapter === 1
+  ) || (
+    krvCounts && verseCount === krvCounts[0] && kjvVerseCount === krvCounts[1]
   );
   if (measuredMismatch && !knownMismatch) unavailableChapters.add(chapterKey(book, chapter));
 
@@ -41,6 +53,18 @@ export function createVerseReferenceAlignment(editionId, metadata = {}, chapterC
 
   function toKjvReferences(book, chapter, verse) {
     if (!isChapterAligned(book, chapter)) return null;
+
+    if (editionId === "krv") {
+      const counts = KRV_CHAPTER_COUNTS.get(chapterKey(book, chapter));
+      if (counts && (!Number.isInteger(verse) || verse < 1 || verse > counts[0])) return null;
+      if (book === 9 && chapter === 30 && verse === 30) return [[book, chapter, 30], [book, chapter, 31]];
+      if (book === 22 && chapter === 6 && verse === 14) return [[book, chapter, 13]];
+      if (book === 47 && chapter === 13) {
+        if (verse === 11) return [[book, chapter, 11], [book, chapter, 12]];
+        if (verse >= 12) return [[book, chapter, verse + 1]];
+      }
+      if (book === 64 && chapter === 1 && verse === 15) return [[book, chapter, 14]];
+    }
 
     if (editionId === "japbungo" && book === 64 && chapter === 1 && verse === 15) return [];
     if (editionId === "martin1744" && book === 19 && chapter === 42) {
