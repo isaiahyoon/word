@@ -2,10 +2,6 @@
 
 ## About
 
-The Amazing Word is a quiet, free place to read Scripture on the web. It is built to make the text easy to find, move through, and carry with you, without asking you to create an account or pay to read.
-
-The [About page](./about.html) introduces the reader's features and installation steps in English, Korean, Italian, German, Japanese, French, Spanish, and Portuguese, with its guiding conviction given a prominent, localized feature. It follows the reader's saved edition by default; use its language menu to choose another language. The About link in the scripture reader header follows the selected edition's language and carries it explicitly in `?lang=`, so navigation does not depend on saved browser storage. The reader and About page opt out of automatic browser translation to preserve the original Scripture text and the app's own localized copy; their edition and language menus remain available.
-
 ```
 "All scripture is given by inspiration of God,
 and is profitable for doctrine, for reproof,
@@ -35,6 +31,10 @@ The same was in the beginning with God.
 All things were made by him;
 and without him was not any thing made that was made."
 ```
+
+The Amazing Word is a quiet, free place to read Scripture on the web. It is built to make the text easy to find, move through, and carry with you, without asking you to create an account or pay to read.
+
+The [About page](./about.html) introduces the reader's features and installation steps in English, Korean, Italian, German, Japanese, French, Spanish, and Portuguese, with its guiding conviction given a prominent, localized feature. It follows the reader's saved edition by default; use its language menu to choose another language. The About link in the scripture reader header follows the selected edition's language and carries it explicitly in `?lang=`, so navigation does not depend on saved browser storage. The reader and About page opt out of automatic browser translation to preserve the original Scripture text and the app's own localized copy; their edition and language menus remain available.
 
 ## Features
 
