@@ -1,0 +1,23 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "enabledManagers": ["npm", "github-actions"],
+  "packageRules": [
+    {
+      "matchPackageNames": ["*"],
+      "enabled": false
+    },
+    {
+      "matchPackageNames": [
+        "@playwright/test",
+        "mcr.microsoft.com/playwright"
+      ],
+      "enabled": true,
+      "groupName": "Playwright",
+      "groupSlug": "playwright",
+      "rangeStrategy": "pin",
+      "separateMajorMinor": false,
+      "automerge": false
+    }
+  ]
+}
