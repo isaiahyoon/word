@@ -6,19 +6,17 @@ import { createEditionPicker, createShareLanguageMenu } from "./edition-picker.j
 import { createOfflineEditions, registerServiceWorker } from "./offline.js";
 import { createOfflineControl } from "./offline-control.js";
 import { createReaderFeedback } from "./reader-feedback.js";
+import { createReaderSearch } from "./reader-search.js";
+import { createVerseCopyShare, resolveVerseReferences } from "./verse-copy-share.js";
 import { createScriptureRoutes, getVerseStep, isValidVerseRange, normalizeVerseRange } from "./scripture-routes.mjs";
 import { BOOKS, BOOK_TITLES } from "./books.mjs";
 import { logger } from "./logger.js";
 import { DEFAULT_EDITION, EDITIONS, EDITION_IDS } from "./editions.mjs";
 import { applyUiLocale, formatUiText, getUiLocale } from "./ui-locales.mjs";
-import {
-  createVerseReferenceAlignment,
-  sameVerseReferences,
-  VerseReferenceAlignmentError,
-} from "./verse-reference-alignment.mjs";
+import { VerseReferenceAlignmentError } from "./verse-reference-alignment.mjs";
 
 const CHAPTER_GRADIENT_COLORS = ["var(--chapter-blue)", "var(--chapter-lavender)", "var(--chapter-pink)", "var(--chapter-green)"];
-const state = { editionId: DEFAULT_EDITION, book: 1, chapter: 1, verse: 1, selectedVerses: new Set(), testament: "old", lastBookByTestament: { old: 1, new: 40 }, chapterRequestId: 0, searchTimer: null, searchRequestId: 0, searchMatches: [], searchQuery: "", searchShown: 0, searchActiveIndex: -1 };
+const state = { editionId: DEFAULT_EDITION, book: 1, chapter: 1, verse: 1, selectedVerses: new Set(), testament: "old", lastBookByTestament: { old: 1, new: 40 }, chapterRequestId: 0 };
 let uiLocale = getUiLocale("en");
 const uiText = (key, values) => formatUiText(uiLocale, key, values);
 const appBasePath = new URL(document.baseURI).pathname;
@@ -95,7 +93,7 @@ let editionPicker;
 let offlineControl;
 let verseNavigationQueue = Promise.resolve();
 let editionCycleQueue = Promise.resolve();
-let copyFeedbackTimer;
+let verseActions;
 const headingBook = document.querySelector("#heading-book");
 const chapterHeading = headingBook.closest("h1");
 
@@ -141,6 +139,9 @@ const scriptureStores = new Map(EDITION_IDS.map((editionId) => {
   })];
 }));
 let scripture = scriptureStores.get(DEFAULT_EDITION);
+const testamentFor = (book) => book <= 39 ? "old" : "new";
+const bookName = (book) => scripture.bookName(book);
+const referenceBookName = (book) => scripture.referenceBookName(book);
 const visualEffects = createVisualEffects({
   shell: document.querySelector(".app-shell"),
   verseList: elements.verseList
@@ -153,17 +154,17 @@ const shareLanguageMenu = createShareLanguageMenu({
   editions: EDITIONS,
   getActiveEditionId: () => state.editionId,
   onOpen: (action) => {
-    clearTimeout(copyFeedbackTimer);
+    verseActions.clearFeedbackTimer();
     elements.copyStatus.textContent = "";
     elements.shareLanguageMenu.setAttribute(
       "aria-label",
       uiText(action === "copy" ? "copyInLanguage" : "shareInLanguage"),
     );
-    warmShareChapters();
+    verseActions.warmShareChapters();
   },
   onSelect: (editionId, action) => {
-    if (action === "copy") void copySelectedVerses({ editionId });
-    else void shareSelectedVerses(editionId);
+    if (action === "copy") void verseActions.copySelectedVerses({ editionId });
+    else void verseActions.shareSelectedVerses(editionId);
   },
 });
 const readerFeedback = createReaderFeedback({
@@ -173,9 +174,28 @@ const readerFeedback = createReaderFeedback({
   logger,
 });
 
-const testamentFor = (book) => book <= 39 ? "old" : "new";
-const bookName = (book) => scripture.bookName(book);
-const referenceBookName = (book) => scripture.referenceBookName(book);
+verseActions = createVerseCopyShare({
+  state,
+  elements,
+  scriptureStores,
+  getScripture: () => scripture,
+  uiText,
+  editions: EDITIONS,
+  logger,
+  clearVerseSelection,
+  updateCopyControl,
+});
+const readerSearch = createReaderSearch({
+  elements,
+  getEditionId: () => state.editionId,
+  getScripture: () => scripture,
+  editions: EDITIONS,
+  uiText,
+  bookName,
+  referenceBookName,
+  logger,
+  openChapter,
+});
 
 function updateCopyControl({ clearStatus = true } = {}) {
   const count = state.selectedVerses.size;
@@ -196,7 +216,7 @@ function updateCopyControl({ clearStatus = true } = {}) {
     ? uiText(count === 1 ? "shareOneVerse" : "shareManyVerses", { count })
     : uiText("shareSelected");
   if (clearStatus) elements.copyStatus.textContent = "";
-  clearTimeout(copyFeedbackTimer);
+  verseActions?.clearFeedbackTimer();
 }
 
 function readSavedReaderState() {
@@ -314,315 +334,6 @@ function updateVerseLocation(verseNumber) {
   if (window.location.pathname !== path) window.history.replaceState(null, "", path);
 }
 
-function compressVerseNumbers(verseNumbers) {
-  const ranges = [];
-  let start = verseNumbers[0];
-  let end = start;
-
-  for (const verseNumber of verseNumbers.slice(1)) {
-    if (verseNumber === end + 1) {
-      end = verseNumber;
-      continue;
-    }
-    ranges.push(start === end ? String(start) : `${start}-${end}`);
-    start = end = verseNumber;
-  }
-  ranges.push(start === end ? String(start) : `${start}-${end}`);
-  return ranges.join(", ");
-}
-
-function formatVerseReference(book, chapter, verseNumbers, store) {
-  return `${store.referenceBookName(book)} ${chapter}:${compressVerseNumbers(verseNumbers)}`;
-}
-
-function formatReferenceList(references, store) {
-  const groups = new Map();
-  for (const [book, chapter, verse] of references) {
-    const key = `${book}:${chapter}`;
-    groups.set(key, [...(groups.get(key) ?? []), verse]);
-  }
-  return [...groups.entries()]
-    .sort(([left], [right]) => left.localeCompare(right, undefined, { numeric: true }))
-    .map(([key, verseNumbers]) => {
-      const [book, chapter] = key.split(":").map(Number);
-      return formatVerseReference(book, chapter, [...new Set(verseNumbers)].sort((a, b) => a - b), store);
-    })
-    .join("; ");
-}
-
-async function writeClipboardText(text) {
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text);
-      return;
-    }
-  } catch {
-    // Fall through to the compatibility path for browsers that deny clipboard access.
-  }
-
-  const input = document.createElement("textarea");
-  input.value = text;
-  input.setAttribute("readonly", "");
-  input.style.position = "fixed";
-  input.style.opacity = "0";
-  document.body.append(input);
-  input.select();
-  const copied = document.execCommand("copy");
-  input.remove();
-  if (!copied) throw new Error("Clipboard copy failed");
-}
-
-function resolveVerseReferences({
-  sourceEditionId,
-  sourceStore,
-  targetEditionId,
-  targetStore,
-  canonicalStore,
-  book,
-  chapter,
-  verseNumbers,
-}) {
-  const sourceChapterVerses = sourceStore.getChapter(book, chapter);
-  const targetChapterVerses = targetStore.getChapter(book, chapter);
-  const canonicalChapterVerses = canonicalStore.getChapter(book, chapter);
-  if (!canonicalChapterVerses.length) throw new VerseReferenceAlignmentError();
-
-  const sourceAlignment = createVerseReferenceAlignment(
-    sourceEditionId,
-    sourceStore.getReferenceMetadata(),
-    {
-      book,
-      chapter,
-      verseCount: sourceChapterVerses.length,
-      kjvVerseCount: canonicalChapterVerses.length,
-    },
-  );
-  const targetAlignment = createVerseReferenceAlignment(
-    targetEditionId,
-    targetStore.getReferenceMetadata(),
-    {
-      book,
-      chapter,
-      verseCount: targetChapterVerses.length,
-      kjvVerseCount: canonicalChapterVerses.length,
-    },
-  );
-  const sourceVerses = sourceChapterVerses.filter((verse) => verseNumbers.includes(verse.verse));
-  if (sourceVerses.length !== verseNumbers.length) throw new VerseReferenceAlignmentError();
-
-  const canonicalReferences = [];
-  for (const verse of sourceVerses) {
-    const references = sourceAlignment.toKjvReferences(book, chapter, verse.verse);
-    if (!references?.length) throw new VerseReferenceAlignmentError();
-    canonicalReferences.push(...references);
-  }
-  const uniqueCanonicalReferences = [...new Map(canonicalReferences.map((reference) => [
-    reference.join(":"),
-    reference,
-  ])).values()];
-  for (const [refBook, refChapter, refVerse] of uniqueCanonicalReferences) {
-    if (!canonicalStore.getChapter(refBook, refChapter).some((verse) => verse.verse === refVerse)) {
-      throw new VerseReferenceAlignmentError();
-    }
-  }
-
-  const targetVerses = targetAlignment.findNativeVerses(
-    book,
-    chapter,
-    uniqueCanonicalReferences,
-    targetChapterVerses,
-  );
-  if (!targetVerses?.length) throw new VerseReferenceAlignmentError();
-
-  const targetReferences = [];
-  for (const verse of targetVerses) {
-    const references = targetAlignment.toKjvReferences(verse.book, verse.chapter, verse.verse);
-    if (!references?.length) throw new VerseReferenceAlignmentError();
-    targetReferences.push(...references);
-  }
-  const coveredReferences = new Set(targetReferences.map((reference) => reference.join(":")));
-  if (uniqueCanonicalReferences.some((reference) => !coveredReferences.has(reference.join(":")))) {
-    throw new VerseReferenceAlignmentError();
-  }
-  const selectedNumbers = new Set(verseNumbers);
-  const additionalSourceVerses = sourceChapterVerses.filter((verse) => {
-    if (selectedNumbers.has(verse.verse)) return false;
-    const references = sourceAlignment.toKjvReferences(book, chapter, verse.verse);
-    return references?.some((reference) => coveredReferences.has(reference.join(":")));
-  });
-  return { targetVerses, targetReferences, additionalSourceVerses };
-}
-
-function selectedVerseContent(editionId, store, canonicalStore = null) {
-  const activeVerses = scripture.getChapter(state.book, state.chapter)
-    .filter((verse) => state.selectedVerses.has(verse.verse));
-  if (activeVerses.length === 0) return null;
-
-  if (editionId === state.editionId) {
-    const selectedVerses = store.getChapter(state.book, state.chapter)
-      .filter((verse) => state.selectedVerses.has(verse.verse));
-    const reference = formatVerseReference(
-      state.book,
-      state.chapter,
-      selectedVerses.map((verse) => verse.verse),
-      store,
-    );
-    const copiedVerses = selectedVerses.map((verse) => {
-      const sourceLabel = verse.sourceEdition === "krv" ? ` [${uiText("sourceFallback")}]` : "";
-      const verseText = `${verse.text.trim()}${sourceLabel}`;
-      if (!verse.referenceText) return verseText;
-      return `${verseText}\n\n${verse.referenceText.trim()} [${uiText("kjvReference")}]`;
-    }).join("\n\n");
-    return { reference, text: `"${copiedVerses}"\n\n- ${reference}` };
-  }
-
-  if (!canonicalStore) throw new VerseReferenceAlignmentError();
-  const { targetVerses: selectedVerses, targetReferences, additionalSourceVerses } = resolveVerseReferences({
-    sourceEditionId: state.editionId,
-    sourceStore: scripture,
-    targetEditionId: editionId,
-    targetStore: store,
-    canonicalStore,
-    book: state.book,
-    chapter: state.chapter,
-    verseNumbers: activeVerses.map((verse) => verse.verse),
-  });
-
-  const reference = formatVerseReference(
-    state.book,
-    state.chapter,
-    selectedVerses.map((verse) => verse.verse),
-    store,
-  );
-  const nativeReferences = selectedVerses.map((verse) => [verse.book, verse.chapter, verse.verse]);
-  const sourceReferences = activeVerses.map((verse) => [verse.book, verse.chapter, verse.verse]);
-  const alignmentDetails = [];
-  if (!sameVerseReferences(sourceReferences, nativeReferences) || additionalSourceVerses.length) {
-    alignmentDetails.push(uiText("alignmentSelection", {
-      reference: formatVerseReference(state.book, state.chapter, activeVerses.map((verse) => verse.verse), scripture),
-      edition: EDITIONS[state.editionId].shortCode ?? state.editionId.toUpperCase(),
-    }));
-  }
-  if (additionalSourceVerses.length) {
-    alignmentDetails.push(uiText("alignmentExtraText", {
-      reference: formatVerseReference(state.book, state.chapter, additionalSourceVerses.map((verse) => verse.verse), scripture),
-    }));
-  }
-  const copiedVerses = selectedVerses.map((verse) => {
-    const sourceLabel = verse.sourceEdition === "krv" ? ` [${uiText("sourceFallback")}]` : "";
-    const verseText = `${verse.text.trim()}${sourceLabel}`;
-    if (!verse.referenceText) return verseText;
-    return `${verseText}\n\n${verse.referenceText.trim()} [${uiText("kjvReference")}]`;
-  }).join("\n\n");
-  const kjvReference = formatReferenceList(targetReferences, canonicalStore);
-  const citation = sameVerseReferences(targetReferences, nativeReferences)
-    ? `- ${reference}`
-    : `- ${reference}\n- ${uiText("kjvReference")}: ${kjvReference}`;
-  return { reference, text: `"${copiedVerses}"\n\n${citation}`, alignmentDetails: alignmentDetails.join(" ") };
-}
-
-function copyShareStatus(key, content) {
-  return [uiText(key, { reference: content.reference }), content.alignmentDetails].filter(Boolean).join(" ");
-}
-
-async function selectedVerseStore(editionId, action) {
-  const store = scriptureStores.get(editionId);
-  if (store.getChapter(state.book, state.chapter).length === 0) {
-    try {
-      await store.initialize();
-      await store.loadChapter(state.book, state.chapter);
-    } catch (error) {
-      logger.error("Chapter load failed", { action, editionId, book: state.book, chapter: state.chapter, error });
-      elements.copyStatus.textContent = uiText("chapterLoadFailed");
-      return null;
-    }
-  }
-  return store;
-}
-
-async function copySelectedVerses({ clearAfter = false, editionId = state.editionId } = {}) {
-  const store = await selectedVerseStore(editionId, "copying");
-  if (!store) return;
-  const canonicalStore = editionId === state.editionId
-    ? null
-    : await selectedVerseStore("kjv", "aligning");
-  if (editionId !== state.editionId && !canonicalStore) return;
-  let content;
-  try {
-    content = selectedVerseContent(editionId, store, canonicalStore);
-  } catch (error) {
-    if (!(error instanceof VerseReferenceAlignmentError)) throw error;
-    elements.copyStatus.textContent = uiText("referenceAlignmentUnavailable");
-    return;
-  }
-  if (!content) return;
-
-  try {
-    await writeClipboardText(content.text);
-    if (clearAfter) {
-      clearVerseSelection();
-      elements.copyStatus.textContent = uiText("copiedAndCleared", { reference: content.reference });
-      return;
-    }
-    elements.copyControlLabel.textContent = uiText("copied");
-    elements.copyStatus.textContent = copyShareStatus("copiedReference", content);
-    copyFeedbackTimer = setTimeout(() => updateCopyControl({ clearStatus: !content.alignmentDetails }), 1600);
-  } catch (error) {
-    logger.error("Copy failed", { editionId: state.editionId, error });
-    elements.copyStatus.textContent = uiText("copyFailed");
-  }
-}
-
-// Preload chapters while the menu is open to preserve user activation for native sharing.
-function warmShareChapters() {
-  const { book, chapter } = state;
-  for (const store of scriptureStores.values()) {
-    store.initialize().then(() => store.loadChapter(book, chapter)).catch(() => {});
-  }
-}
-
-async function shareSelectedVerses(editionId = state.editionId) {
-  const store = await selectedVerseStore(editionId, "sharing");
-  if (!store) return;
-  const canonicalStore = editionId === state.editionId
-    ? null
-    : await selectedVerseStore("kjv", "aligning");
-  if (editionId !== state.editionId && !canonicalStore) return;
-  let content;
-  try {
-    content = selectedVerseContent(editionId, store, canonicalStore);
-  } catch (error) {
-    if (!(error instanceof VerseReferenceAlignmentError)) throw error;
-    elements.copyStatus.textContent = uiText("referenceAlignmentUnavailable");
-    return;
-  }
-  if (!content) return;
-
-  if (typeof navigator.share !== "function") {
-    try {
-      await writeClipboardText(content.text);
-      elements.copyStatus.textContent = copyShareStatus("shareUnavailableCopied", content);
-    } catch (error) {
-      logger.error("Share fallback copy failed", { editionId: state.editionId, error });
-      elements.copyStatus.textContent = uiText("shareCopyFailed");
-    }
-    return;
-  }
-
-  try {
-    if (content.alignmentDetails) elements.copyStatus.textContent = content.alignmentDetails;
-    await navigator.share({ text: content.text });
-    elements.copyStatus.textContent = copyShareStatus("sharedReference", content);
-  } catch (error) {
-    if (error?.name === "AbortError") {
-      elements.copyStatus.textContent = "";
-      return;
-    }
-    logger.error("Share failed", { editionId: state.editionId, error });
-    elements.copyStatus.textContent = uiText("shareFailed");
-  }
-}
-
 function currentFeedbackPassage() {
   const route = scriptureRoutes.parse(window.location.pathname);
   const passage = route && !route.home
@@ -707,9 +418,9 @@ async function changeEdition(editionId, { preserveFocus = false } = {}) {
   const { book, chapter, verse } = state;
   const selectedVerses = [...state.selectedVerses];
   const previousStore = scripture;
-  const searchQuery = state.searchQuery;
+  const searchQuery = readerSearch.getQuery();
   const previousEditionId = state.editionId;
-  state.searchRequestId += 1;
+  readerSearch.invalidate();
   try {
     await activateEdition(editionId);
   } catch {
@@ -724,7 +435,7 @@ async function changeEdition(editionId, { preserveFocus = false } = {}) {
     // The active edition remains usable if browser storage is unavailable.
   }
   await scripture.loadChapter(book, chapter);
-  const canonicalStore = await selectedVerseStore("kjv", "aligning");
+  const canonicalStore = await verseActions.ensureChapterLoaded("kjv", "aligning");
   let targetVerse = 1;
   let selectedVersesToRestore = [];
   let alignmentUnavailable = !canonicalStore;
@@ -778,7 +489,7 @@ async function changeEdition(editionId, { preserveFocus = false } = {}) {
     }
   });
   if (searchQuery.length >= 2) {
-    void search(searchQuery, ++state.searchRequestId);
+    readerSearch.refresh(searchQuery);
   }
 }
 
@@ -1254,199 +965,6 @@ function animateChapterTurn(direction, requestId) {
   });
 }
 
-function appendHighlighted(container, text, matchedTerms = [], language = EDITIONS[state.editionId].language) {
-  const terms = new Set(matchedTerms.map((term) => term.toLocaleLowerCase()));
-  if (language === "ja" && typeof Intl.Segmenter === "function") {
-    const segmenter = new Intl.Segmenter("ja", { granularity: "word" });
-    let cursor = 0;
-    for (const part of segmenter.segment(text)) {
-      const word = part.segment;
-      if (!part.isWordLike || !terms.has(word.toLocaleLowerCase())) continue;
-
-      container.append(document.createTextNode(text.slice(cursor, part.index)));
-      const mark = document.createElement("mark");
-      mark.textContent = word;
-      container.append(mark);
-      cursor = part.index + word.length;
-    }
-    container.append(document.createTextNode(text.slice(cursor)));
-    return;
-  }
-
-  const hangulTerm = /\p{Script=Hangul}/u;
-  const wordPattern = /[\p{L}\p{N}]+/gu;
-  let cursor = 0;
-
-  for (const match of text.matchAll(wordPattern)) {
-    const word = match[0];
-    const normalizedWord = word.toLocaleLowerCase();
-    const isMatched = terms.has(normalizedWord) || [...terms].some((term) =>
-      hangulTerm.test(term) && normalizedWord.startsWith(term)
-    );
-    if (!isMatched) continue;
-
-    container.append(document.createTextNode(text.slice(cursor, match.index)));
-    const mark = document.createElement("mark");
-    mark.textContent = word;
-    container.append(mark);
-    cursor = match.index + word.length;
-  }
-
-  container.append(document.createTextNode(text.slice(cursor)));
-}
-
-function openSearchResult(verse) {
-  clearTimeout(state.searchTimer);
-  state.searchRequestId += 1;
-  state.searchActiveIndex = -1;
-  state.searchMatches = [];
-  state.searchShown = 0;
-  state.searchQuery = "";
-  elements.searchResults.hidden = true;
-  elements.searchResults.replaceChildren();
-  elements.searchInput.value = "";
-  elements.searchInput.setAttribute("aria-expanded", "false");
-  elements.searchInput.removeAttribute("aria-activedescendant");
-  void openChapter(verse.book, verse.chapter, verse.verse)
-    .then(() => document.querySelector(`#verse-${state.verse}`)?.focus({ preventScroll: true }));
-}
-
-function setActiveSearchResult(index) {
-  const results = [...elements.searchResults.querySelectorAll(".search-result")];
-  if (results.length === 0) return;
-
-  state.searchActiveIndex = Math.max(0, Math.min(index, results.length - 1));
-  results.forEach((result, resultIndex) => {
-    result.setAttribute("aria-selected", String(resultIndex === state.searchActiveIndex));
-  });
-  const activeResult = results[state.searchActiveIndex];
-  elements.searchInput.setAttribute("aria-activedescendant", activeResult.id);
-  activeResult.scrollIntoView({ block: "nearest" });
-}
-
-function formatSearchSummary(matches, shown) {
-  const language = EDITIONS[state.editionId].language;
-  const number = (value) => value.toLocaleString(language);
-  const navigationCount = matches.filter((match) => match.searchType !== "text").length;
-  const verseCount = matches.length - navigationCount;
-  const summaryParts = [];
-  if (navigationCount > 0) {
-    summaryParts.push(uiText(navigationCount === 1 ? "navigationSuggestionOne" : "navigationSuggestionMany", {
-      count: number(navigationCount),
-    }));
-  }
-  if (verseCount > 0) {
-    summaryParts.push(uiText(verseCount === 1 ? "foundVerseOne" : "foundVerseMany", {
-      count: number(verseCount),
-    }));
-  }
-  summaryParts.push(uiText("searchShowing", { count: number(shown) }));
-  return summaryParts.join(" · ");
-}
-
-function appendSearchResults() {
-  const batch = state.searchMatches.slice(state.searchShown, state.searchShown + 12);
-  for (const [batchIndex, verse] of batch.entries()) {
-    const resultIndex = state.searchShown + batchIndex;
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "search-result";
-    button.id = `search-result-${resultIndex}`;
-    button.tabIndex = -1;
-    button.setAttribute("role", "option");
-    button.setAttribute("aria-selected", String(resultIndex === state.searchActiveIndex));
-    button.dataset.searchType = verse.searchType ?? "text";
-    if (verse.searchType && verse.searchType !== "text") {
-      button.classList.add("search-result--navigation");
-    }
-    const reference = document.createElement("span");
-    reference.className = "result-reference";
-    if (verse.searchType === "book") {
-      reference.textContent = uiText("resultBook", { book: bookName(verse.book) });
-    } else if (verse.searchType === "chapter") {
-      reference.textContent = uiText("resultChapter", { book: referenceBookName(verse.book), chapter: verse.chapter });
-    } else if (verse.searchType === "reference") {
-      reference.textContent = uiText("resultExactPassage", {
-        reference: `${referenceBookName(verse.book)} ${verse.chapter}:${verse.verse}`,
-      });
-    } else {
-      reference.textContent = `${referenceBookName(verse.book)} ${verse.chapter}:${verse.verse}`;
-    }
-    if (verse.sourceEdition === "krv") reference.textContent += uiText("fallbackResult");
-    const text = document.createElement("span");
-    text.className = "result-text";
-    if (verse.searchType === "book") {
-      text.textContent = uiText("openBookFromStart", { book: bookName(verse.book) });
-    } else if (verse.searchType === "chapter") {
-      text.textContent = uiText("openChapterResult", { book: referenceBookName(verse.book), chapter: verse.chapter });
-    } else {
-      appendHighlighted(text, verse.text, verse.matchedTerms, verse.textLanguage ?? EDITIONS[state.editionId].language);
-    }
-    button.append(reference, text);
-    button.addEventListener("click", () => openSearchResult(verse));
-    elements.searchResults.append(button);
-  }
-  state.searchShown += batch.length;
-  const summary = elements.searchResults.querySelector(".search-summary");
-  summary.textContent = formatSearchSummary(state.searchMatches, state.searchShown);
-}
-
-async function search(query, requestId) {
-  const trimmed = query.trim();
-  elements.searchResults.replaceChildren();
-  state.searchActiveIndex = -1;
-  elements.searchInput.removeAttribute("aria-activedescendant");
-  if (trimmed.length < 2) {
-    state.searchMatches = [];
-    state.searchQuery = "";
-    state.searchShown = 0;
-    elements.searchResults.hidden = true;
-    elements.searchInput.setAttribute("aria-expanded", "false");
-    return;
-  }
-  elements.searchResults.hidden = false;
-  elements.searchInput.setAttribute("aria-expanded", "true");
-  state.searchQuery = trimmed;
-  state.searchShown = 0;
-
-  const loading = document.createElement("div");
-  loading.className = "search-summary";
-  loading.textContent = uiText("searchLoading");
-  elements.searchResults.append(loading);
-
-  let matches;
-  try {
-    matches = await logger.measure("Search", { editionId: state.editionId }, () => scripture.search(trimmed));
-    if (requestId !== state.searchRequestId || trimmed !== elements.searchInput.value.trim()) return;
-
-    elements.searchResults.replaceChildren();
-    state.searchMatches = matches;
-  } catch (error) {
-    if (requestId !== state.searchRequestId) return;
-    logger.error("Search failed", { editionId: state.editionId, error });
-    elements.searchResults.replaceChildren();
-    const message = document.createElement("div");
-    message.className = "search-empty";
-    message.textContent = uiText("searchUnavailable");
-    elements.searchResults.append(message);
-    return;
-  }
-
-  if (matches.length === 0) {
-    const empty = document.createElement("div");
-    empty.className = "search-empty";
-    empty.textContent = uiText("searchNoMatches");
-    elements.searchResults.append(empty);
-    return;
-  }
-  const summary = document.createElement("div");
-  summary.className = "search-summary";
-  summary.textContent = formatSearchSummary(matches, Math.min(matches.length, 12));
-  elements.searchResults.append(summary);
-  appendSearchResults();
-  setActiveSearchResult(0);
-}
-
 function openSidebar() {
   elements.sidebar.classList.add("is-open");
   elements.sidebarScrim.classList.add("is-open");
@@ -1660,6 +1178,7 @@ function bindScrollToTop() {
 }
 
 function bindEvents() {
+  readerSearch.bindEvents();
   document.addEventListener("keydown", (event) => {
     const key = event.key.toLowerCase();
     if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey || (key !== "c" && key !== "x")) return;
@@ -1670,14 +1189,7 @@ function bindEvents() {
     if (selection && !selection.isCollapsed) return;
 
     event.preventDefault();
-    void copySelectedVerses({ clearAfter: key === "x" });
-  });
-  elements.searchResults.addEventListener("scroll", () => {
-    if (state.searchShown >= state.searchMatches.length) return;
-    const distanceToBottom = elements.searchResults.scrollHeight -
-      elements.searchResults.scrollTop -
-      elements.searchResults.clientHeight;
-    if (distanceToBottom <= 48) appendSearchResults();
+    void verseActions.copySelectedVerses({ clearAfter: key === "x" });
   });
   elements.verseList.addEventListener("click", (event) => {
     const verseButton = event.target.closest("button.verse");
@@ -1686,7 +1198,7 @@ function bindEvents() {
     updateVerseLocation(Number(verseButton.dataset.verse));
     toggleVerseSelection(verseButton);
   });
-  elements.cutControl.addEventListener("click", () => void copySelectedVerses({ clearAfter: true }));
+  elements.cutControl.addEventListener("click", () => void verseActions.copySelectedVerses({ clearAfter: true }));
   elements.clearControl.addEventListener("click", clearVerseSelection);
   elements.brand.addEventListener("click", () => {
     clearVerseSelection();
@@ -1704,71 +1216,6 @@ function bindEvents() {
   document.querySelector("#bottom-previous").addEventListener("click", () => navigate(-1));
   document.querySelector("#bottom-next").addEventListener("click", () => navigate(1));
   window.addEventListener("popstate", () => void restoreLocationFromPath());
-  elements.searchInput.addEventListener("input", () => {
-    clearTimeout(state.searchTimer);
-    const requestId = ++state.searchRequestId;
-    state.searchActiveIndex = -1;
-    elements.searchInput.removeAttribute("aria-activedescendant");
-    state.searchMatches = [];
-    state.searchShown = 0;
-    state.searchQuery = elements.searchInput.value.trim();
-    elements.searchResults.replaceChildren();
-    if (state.searchQuery.length < 2) {
-      elements.searchResults.hidden = true;
-      elements.searchInput.setAttribute("aria-expanded", "false");
-      return;
-    }
-
-    elements.searchResults.hidden = false;
-    elements.searchInput.setAttribute("aria-expanded", "true");
-    const loading = document.createElement("div");
-    loading.className = "search-summary";
-    loading.textContent = uiText("searchLoading");
-    elements.searchResults.append(loading);
-    state.searchTimer = setTimeout(() => void search(elements.searchInput.value, requestId), 120);
-  });
-  elements.searchInput.addEventListener("keydown", (event) => {
-    if (elements.searchResults.hidden) return;
-
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      const results = elements.searchResults.querySelectorAll(".search-result");
-      if (results.length === 0) return;
-
-      event.preventDefault();
-      const direction = event.key === "ArrowDown" ? 1 : -1;
-      let nextIndex = state.searchActiveIndex < 0
-        ? (direction > 0 ? 0 : results.length - 1)
-        : state.searchActiveIndex + direction;
-
-      if (direction > 0 && nextIndex >= results.length && state.searchShown < state.searchMatches.length) {
-        elements.searchResults.querySelector(".search-more")?.remove();
-        appendSearchResults();
-      }
-
-      if (nextIndex < elements.searchResults.querySelectorAll(".search-result").length) {
-        setActiveSearchResult(nextIndex);
-      }
-      return;
-    }
-
-    if (event.key === "Enter" && state.searchActiveIndex >= 0) {
-      event.preventDefault();
-      elements.searchResults.querySelectorAll(".search-result")[state.searchActiveIndex]?.click();
-    }
-  });
-  elements.searchInput.addEventListener("focus", () => {
-    if (elements.searchInput.value.trim().length >= 2) {
-      void search(elements.searchInput.value, ++state.searchRequestId);
-    }
-  });
-  document.addEventListener("click", (event) => {
-    if (!event.composedPath().includes(elements.searchWrap)) {
-      state.searchRequestId += 1;
-      elements.searchResults.hidden = true;
-      elements.searchInput.setAttribute("aria-expanded", "false");
-      elements.searchInput.removeAttribute("aria-activedescendant");
-    }
-  });
   bindKeyboardShortcuts({
     dialog: document.querySelector("#shortcuts-dialog"),
     openButton: document.querySelector("#shortcuts-open"),
@@ -1793,10 +1240,7 @@ function bindEvents() {
       const returnFocusToChapterPicker = chapterPicker.isOpen();
       setQuietReadingMode(false);
       chapterPicker.close(returnFocusToChapterPicker);
-      state.searchRequestId += 1;
-      elements.searchResults.hidden = true;
-      elements.searchInput.setAttribute("aria-expanded", "false");
-      elements.searchInput.removeAttribute("aria-activedescendant");
+      readerSearch.close();
       closeSidebar();
     }
   });

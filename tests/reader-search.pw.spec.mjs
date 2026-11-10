@@ -1,5 +1,13 @@
 import { expect, test } from "./support/browser-test.mjs";
 
+test("supports Japanese JapBungo search", async ({ page }) => {
+  await page.goto("/japbungo");
+  await expect(page.locator("html")).toHaveAttribute("lang", "ja");
+  await expect(page.locator("body")).toHaveClass(/is-japbungo-edition/);
+  await page.locator("#search-input").fill("ニコデモ");
+  await expect(page.locator("#search-results .search-result").first()).toContainText("ニコデモ");
+});
+
 test("uses Psalm for KJV passages while retaining Psalms for the book", async ({ page }) => {
   await page.goto("/kjv/b/psalms/c/3/v/1");
   await expect(page.locator("#heading-book")).toHaveText("Psalm");
