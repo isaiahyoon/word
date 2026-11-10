@@ -34,6 +34,17 @@ test("registered SEO output stays reproducible and current", async (t) => {
   for (const path of paths) {
     assert.equal(await readFile(new URL(path, root), "utf8"), await readFile(new URL(path, repository), "utf8"), path);
   }
+  const collection = await readFile(new URL("editions/index.html", root), "utf8");
+  assert.ok(collection.includes("Bíblia Almeida (1911)<small>Português</small>"));
+  const portuguesePage = await readFile(new URL("editions/alm/index.html", root), "utf8");
+  assert.ok(portuguesePage.includes("<h1 id=\"page-title\">Bíblia Almeida (1911)</h1>"));
+  assert.ok(portuguesePage.includes("Bíblia Almeida 1911 em Português online"));
+  for (const { routeSegment } of Object.values(EDITIONS)) {
+    const page = await readFile(new URL(`editions/${routeSegment}/index.html`, root), "utf8");
+    assert.ok(page.includes(">Almeida · Português</span>"), `${routeSegment} links to the Portuguese edition`);
+  }
+  const about = await readFile(new URL("about.html", root), "utf8");
+  assert.ok(about.includes("and Almeida · Português, with"));
   await buildSeoPages({ projectRoot: root });
   for (const path of paths) {
     assert.equal(await readFile(new URL(path, root), "utf8"), await readFile(new URL(path, repository), "utf8"), `${path} is idempotent`);
