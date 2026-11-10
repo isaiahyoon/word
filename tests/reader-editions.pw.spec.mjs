@@ -205,9 +205,12 @@ test("switches a selected passage to Almeida 1911 and copies its Portuguese cita
   await page.goto("/kjv/b/john/c/3/v/16");
   await page.locator("#verse-16").click();
   await page.locator("#edition-select").click();
+  await expect(page.locator("#edition-option-alm1911 .edition-option-description strong"))
+    .toHaveText("Almeida");
   await page.locator("#edition-option-alm1911").click();
 
   await expect(page).toHaveURL(/\/alm\/b\/john\/c\/3\/v\/16$/);
+  await expect(page.locator("#edition-select-label")).toHaveText("Almeida");
   await expect(page.locator("#verse-list")).toHaveAttribute("lang", "pt");
   await expect(page.locator("#verse-16")).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator("#copy-selected-verses")).toHaveText("Copiar 1 versículo");
