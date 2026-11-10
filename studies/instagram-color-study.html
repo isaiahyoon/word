@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f3f0e9" />
+    <meta name="description" content="Five distinct color directions for The Amazing Word Instagram posts: Korean, Japanese, Italian, German, and French." />
+    <link rel="canonical" href="https://theamazingword.org/studies/instagram-color-study.html" />
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=4" />
+    <link rel="icon" type="image/png" href="/assets/favicon-rounded.png?v=1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Gelasio:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Noto+Serif+JP:wght@400;500;600&family=Noto+Serif+KR:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <title>Five Nations, Five Palettes · The Amazing Word</title>
+    <meta property="og:title" content="Five Nations, Five Palettes · The Amazing Word" />
+    <meta property="og:description" content="Five distinct color directions for The Amazing Word Instagram posts: Korean, Japanese, Italian, German, and French." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://theamazingword.org/assets/social-preview.png?v=3" />
+    <meta property="og:image:secure_url" content="https://theamazingword.org/assets/social-preview.png?v=3" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="The Amazing Word prism sword emblem beside the Scripture reader name" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Five Nations, Five Palettes · The Amazing Word" />
+    <meta name="twitter:description" content="Five distinct color directions for The Amazing Word Instagram posts: Korean, Japanese, Italian, German, and French." />
+    <meta name="twitter:image" content="https://theamazingword.org/assets/social-preview.png?v=3" />
+    <meta name="twitter:image:alt" content="The Amazing Word prism sword emblem beside the Scripture reader name" />
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #26323a;
+        --muted: #6b716f;
+        --paper: #f3f0e9;
+        --line: rgba(38, 50, 58, 0.15);
+        --serif: "Gelasio", "Iowan Old Style", Georgia, serif;
+        --sans: "DM Sans", "Avenir Next", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        min-width: 320px;
+        margin: 0;
+        background:
+          radial-gradient(rgba(60, 67, 63, 0.055) 0.65px, transparent 0.65px) 0 0 / 8px 8px,
+          linear-gradient(135deg, #f8f6f0, #eeece4);
+        color: var(--ink);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      main {
+        width: min(1320px, 100%);
+        margin: 0 auto;
+        padding: 46px clamp(18px, 4vw, 54px) 72px;
+      }
+
+      .masthead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 48px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid var(--line);
+        color: #64716e;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .brand { color: #293c49; }
+
+      .intro {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(240px, 370px);
+        align-items: end;
+        gap: 28px;
+        margin-bottom: 34px;
+      }
+
+      .eyebrow,
+      .card-kicker {
+        margin: 0 0 10px;
+        color: #8a7147;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      p { margin-top: 0; }
+
+      h1 {
+        max-width: 720px;
+        margin-bottom: 0;
+        font-family: var(--serif);
+        font-size: clamp(36px, 5vw, 62px);
+        font-weight: 400;
+        letter-spacing: -0.045em;
+        line-height: 0.99;
+      }
+
+      .intro-note {
+        margin: 0 0 3px;
+        color: #68706e;
+        font-family: var(--serif);
+        font-size: 16px;
+        line-height: 1.65;
+      }
+
+      .studies {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .study {
+        min-width: 0;
+        padding: 13px;
+        border: 1px solid rgba(38, 50, 58, 0.12);
+        border-radius: 5px;
+        background: rgba(255, 254, 250, 0.72);
+        box-shadow: 0 8px 24px rgba(48, 47, 39, 0.035);
+      }
+
+      .poster {
+        position: relative;
+        display: flex;
+        min-height: 340px;
+        aspect-ratio: 4 / 5;
+        flex-direction: column;
+        justify-content: space-between;
+        overflow: hidden;
+        padding: 21px;
+        isolation: isolate;
+      }
+
+      .poster::before,
+      .poster::after {
+        position: absolute;
+        z-index: -1;
+        content: "";
+        pointer-events: none;
+      }
+
+      .poster-brand,
+      .poster-edition,
+      .poster-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 8px;
+        font-weight: 700;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+      }
+
+      .poster-center {
+        position: relative;
+        text-align: center;
+      }
+
+      .poster-center h2 {
+        margin: 0 auto;
+        font-family: var(--serif);
+        font-size: clamp(28px, 3.2vw, 43px);
+        font-weight: 400;
+        letter-spacing: -0.045em;
+        line-height: 1.03;
+      }
+
+      .poster-center p {
+        max-width: 245px;
+        margin: 15px auto 0;
+        font-family: var(--serif);
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .poster-rule {
+        display: block;
+        width: 52px;
+        height: 1px;
+        margin: 17px auto 0;
+      }
+
+      .study-copy {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 15px 3px 11px;
+      }
+
+      .study-copy h2 {
+        margin: 0;
+        font-family: var(--serif);
+        font-size: 21px;
+        font-weight: 500;
+      }
+
+      .study-copy p {
+        margin: 0;
+        color: #727772;
+        font-size: 10px;
+        text-align: right;
+      }
+
+      .swatches {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 6px;
+        padding-top: 7px;
+        border-top: 1px solid var(--line);
+      }
+
+      .swatch {
+        min-width: 0;
+      }
+
+      .swatch-color {
+        display: block;
+        height: 23px;
+        margin-bottom: 5px;
+        border: 1px solid rgba(38, 50, 58, 0.08);
+        border-radius: 2px;
+        background: var(--swatch);
+      }
+
+      .swatch code {
+        color: #59615e;
+        font-family: var(--sans);
+        font-size: 8px;
+        letter-spacing: -0.025em;
+      }
+
+      .korea .poster {
+        border: 1px solid #f4d895;
+        outline: 1px solid #c4c3c8;
+        outline-offset: -6px;
+        background: linear-gradient(150deg, #000f2b, #0c244e 60%, #000b20);
+        color: #f4e3d6;
+        box-shadow: inset 0 0 0 4px rgba(212, 177, 105, 0.2), inset 0 0 0 8px rgba(244, 241, 238, 0.08);
+      }
+
+      .korea .poster::before {
+        top: 18%;
+        left: 50%;
+        width: 76px;
+        height: 76px;
+        border: 2px solid #f2d38c;
+        box-shadow: 0 0 2px #fff3cb, inset 0 0 2px rgba(255, 243, 203, 0.75);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      .korea .poster::after {
+        top: 19%;
+        left: 50%;
+        width: 48px;
+        height: 48px;
+        border: 2px solid #dfe3e8;
+        box-shadow: 0 0 2px #fff, inset 0 0 3px rgba(255, 255, 255, 0.8);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      .korea .poster-center h2 {
+        font-family: "Noto Serif KR", var(--serif);
+        color: #f4e3d6;
+      }
+      .korea .poster-center p { color: #b6c8d3; }
+      .korea .poster-rule {
+        height: 2px;
+        background: linear-gradient(90deg, #795225, #c89a4f 22%, #fff0bd 48%, #b8863e 72%, #fff6d8 84%, #795225);
+        box-shadow: 0 0 4px rgba(255, 236, 184, 0.72);
+      }
+      .korea .swatches { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+      .korea .swatch:nth-child(5) .swatch-color,
+      .italy .swatch:last-child .swatch-color {
+        background: linear-gradient(115deg, #795225 0%, #c89a4f 22%, #fff0bd 44%, #b8863e 64%, #fff6d8 79%, #795225 100%);
+        box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.85), 0 0 4px rgba(206, 164, 83, 0.5);
+      }
+      .korea .swatch:nth-child(3) .swatch-color {
+        background: linear-gradient(115deg, #697586 0%, #b8c0cc 27%, #fff 47%, #aeb8c7 68%, #f5f2eb 84%, #778396 100%);
+        box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.95), 0 0 4px rgba(191, 199, 210, 0.65);
+      }
+
+      .japan .poster {
+        background: linear-gradient(155deg, #10251d 0%, #1b392d 70%, #294b39 100%);
+        color: #dcebdd;
+      }
+
+      .japan .poster::before {
+        top: 0;
+        right: 24px;
+        width: 1px;
+        height: 100%;
+        background: linear-gradient(transparent, rgba(183, 207, 74, 0.7), transparent);
+      }
+
+      .japan .poster::after {
+        right: -54px;
+        bottom: 30px;
+        width: 180px;
+        height: 180px;
+        border: 1px solid rgba(183, 207, 74, 0.34);
+        border-radius: 50%;
+      }
+
+      .japan .poster-center h2 {
+        font-family: "Noto Serif JP", var(--serif);
+        font-size: clamp(29px, 3.3vw, 42px);
+        letter-spacing: 0.04em;
+      }
+
+      .japan .poster-center p { color: #b6d7b5; }
+      .japan .poster-rule { background: #b7cf4a; }
+      .japan .poster-foot { color: #b7cf4a; }
+
+      .italy .poster {
+        background:
+          radial-gradient(ellipse at 85% 20%, rgba(221, 186, 207, 0.75), transparent 42%),
+          linear-gradient(145deg, #c8d2de, #a3c7d4 52%, #fbe6d6);
+        color: #293c5a;
+      }
+
+      .italy .poster::before {
+        right: 12%;
+        bottom: 13%;
+        left: 12%;
+        height: 43%;
+        border: 1px solid rgba(214, 182, 110, 0.8);
+        border-bottom: 0;
+        border-radius: 100px 100px 0 0;
+      }
+
+      .italy .poster::after {
+        right: 19%;
+        bottom: 13%;
+        left: 19%;
+        height: 35%;
+        border: 1px solid rgba(164, 177, 212, 0.72);
+        border-bottom: 0;
+        border-radius: 100px 100px 0 0;
+      }
+
+      .italy .poster-center h2 { max-width: 300px; }
+      .italy .poster-center p { color: #51637d; }
+      .italy .poster-rule {
+        height: 2px;
+        background: linear-gradient(90deg, #795225, #c89a4f 22%, #fff0bd 44%, #b8863e 64%, #fff6d8 79%, #795225);
+        box-shadow: 0 0 5px rgba(255, 236, 184, 0.82);
+      }
+      .italy .poster::before,
+      .italy .poster::after {
+        filter: drop-shadow(0 0 3px rgba(255, 230, 177, 0.86));
+      }
+
+      .germany .poster {
+        background:
+          linear-gradient(rgba(238, 219, 185, 0.07) 1px, transparent 1px) 0 0 / 24px 24px,
+          linear-gradient(90deg, rgba(238, 219, 185, 0.07) 1px, transparent 1px) 0 0 / 24px 24px,
+          linear-gradient(145deg, #2d3638, #1d292f);
+        color: #efe9dd;
+      }
+
+      .germany .poster::before {
+        top: 14px;
+        right: 14px;
+        bottom: 14px;
+        left: 14px;
+        border: 2px solid #e8ba6e;
+        outline: 1px solid #8a4c25;
+        outline-offset: 4px;
+        box-shadow: inset 0 0 0 3px rgba(243, 207, 134, 0.22), inset 0 0 8px rgba(243, 207, 134, 0.18), 0 0 5px rgba(243, 207, 134, 0.52);
+      }
+
+      .germany .poster::after {
+        top: 20px;
+        left: 50%;
+        width: 58px;
+        height: 38px;
+        background: linear-gradient(90deg, #70421f, #a96531 22%, #fff0bd 45%, #b77737 67%, #ffe1a0 82%, #70421f);
+        filter: drop-shadow(0 0 4px rgba(243, 207, 134, 0.8));
+        clip-path: polygon(0 100%, 0 35%, 22% 58%, 40% 0, 59% 58%, 80% 30%, 100% 100%);
+        transform: translateX(-50%);
+      }
+
+      .germany .poster-brand { color: #e5b665; }
+      .germany .poster-center h2 { max-width: 300px; font-weight: 500; }
+      .germany .poster-center p { color: #d7d1c4; }
+      .germany .poster-rule {
+        height: 3px;
+        background: linear-gradient(90deg, #70421f, #a96531 22%, #fff0bd 44%, #b77737 64%, #ffe1a0 80%, #70421f);
+        box-shadow: 0 0 5px rgba(243, 207, 134, 0.72);
+      }
+      .germany .poster-foot { color: #e5b665; }
+      .germany .swatch:nth-child(3) .swatch-color,
+      .germany .swatch:nth-child(4) .swatch-color {
+        background: linear-gradient(115deg, #70421f 0%, #a96531 20%, #f3cf86 42%, #b77737 63%, #ffe1a0 78%, #8a4c25 100%);
+        box-shadow: inset 0 1px 2px rgba(255, 240, 189, 0.85), 0 0 4px rgba(211, 154, 78, 0.55);
+      }
+
+      .france .poster {
+        background:
+          radial-gradient(ellipse at 50% 110%, rgba(240, 216, 214, 0.92), transparent 58%),
+          linear-gradient(150deg, #f8f3ec, #e8e1ee 77%, #d7d2e4);
+        color: #24314f;
+      }
+
+      .france .poster::before {
+        top: 50%;
+        left: 50%;
+        width: 190px;
+        height: 190px;
+        border: 1px solid rgba(174, 113, 128, 0.65);
+        border-radius: 50%;
+        transform: translate(-50%, -50%) rotate(-24deg) scaleX(0.55);
+      }
+
+      .france .poster::after {
+        top: 50%;
+        left: 50%;
+        width: 150px;
+        height: 150px;
+        border: 1px solid rgba(182, 166, 200, 0.8);
+        border-radius: 50%;
+        transform: translate(-50%, -50%) rotate(28deg) scaleX(0.55);
+      }
+
+      .france .poster-center h2 { max-width: 290px; }
+      .france .poster-center p { color: #625e78; }
+      .france .poster-rule { background: #ae7180; }
+
+      .closing {
+        margin: 26px 0 0;
+        color: #707570;
+        font-family: var(--serif);
+        font-size: 14px;
+        line-height: 1.6;
+        text-align: center;
+      }
+
+      @media (max-width: 920px) {
+        .studies { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .poster { min-height: 320px; }
+        .poster-center h2 { font-size: clamp(30px, 5vw, 42px); }
+      }
+
+      @media (max-width: 620px) {
+        main { padding-top: 28px; }
+        .masthead { margin-bottom: 34px; }
+        .intro { grid-template-columns: 1fr; gap: 14px; margin-bottom: 25px; }
+        .intro-note { max-width: 410px; font-size: 15px; }
+        .studies { grid-template-columns: 1fr; gap: 14px; }
+        .study { padding: 11px; }
+        .poster { min-height: 0; }
+        .poster-center h2 { font-size: clamp(35px, 10vw, 48px); }
+        .study-copy h2 { font-size: 20px; }
+        .swatch code { font-size: 10px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="masthead">
+        <span class="brand">The Amazing Word</span>
+        <span>Color study · 05 editions</span>
+      </div>
+
+      <section class="intro" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">One reader · five distinct voices</p>
+          <h1 id="page-title">A color for each place.</h1>
+        </div>
+        <p class="intro-note">
+          Five palette directions for five separate posts: regal Joseon restraint,
+          sharp Japanese green, Italian warmth, German clarity, and French romance.
+        </p>
+      </section>
+
+      <section class="studies" aria-label="Instagram palette studies">
+        <article class="study korea">
+          <div class="poster" aria-label="Korean palette mockup in midnight navy, silver, blue, and regal gold">
+            <div class="poster-brand"><span>The Amazing Word</span><span>말씀 · 한국어</span></div>
+            <div class="poster-center">
+              <h2>말씀의 빛,<br />오래도록</h2>
+              <span class="poster-rule"></span>
+              <p>고요한 빛과 단정한 품격</p>
+            </div>
+            <div class="poster-foot"><span>개역한글</span><span>01 / 05</span></div>
+          </div>
+          <div class="study-copy"><h2>Korea</h2><p>Joseon · regal</p></div>
+          <div class="swatches" aria-label="Korea palette colors">
+            <span class="swatch"><i class="swatch-color" style="--swatch:#000F2B"></i><code>#000F2B</code></span>
+            <span class="swatch"><i class="swatch-color" style="--swatch:#0C244E"></i><code>#0C244E</code></span>
+            <span class="swatch"><i class="swatch-color" style="--swatch:#C4C3C8"></i><code>#C4C3C8</code></span>
+            <span class="swatch"><i class="swatch-color" style="--swatch:#90B3CB"></i><code>#90B3CB</code></span>
+            <span class="swatch"><i class="swatch-color" style="--swatch:#D6AD68"></i><code>#D6AD68</code></span>
+            <span class="swatch"><i class="swatch-color" style="--swatch:#F4E3D6"></i><code>#F4E3D6</code></span>
+          </div>
+        </article>
+
+        <article class="study japan">
+          <div class="poster" aria-label="Japanese palette mockup in deep forest green and cool jade">
+            <div class="poster-brand"><span>The Amazing Word</span><span>日本語 · 文語訳</span></div>
+            <div class="poster-center">
+              <h2>静けさの中に、<br />確かな光。</h2>
+              <span class="poster-rule"></span>
+              <p>すっきりと、まっすぐに。</p>
+            </div>
+            <div class="poster-foot"><span>文語訳</span><span>02 / 05</span></div>
+          </div>
+          <div class="study-copy"><h2>Japan</h2><p>Sharp · cool · green</p></div>
+          <div class="swatches" aria-label="Japan palette colors">
+            <span class="swatch"><i class="swatch-color" style="--swatch:#10251D"></i><code>#10251D</code></span>
+            <span class="swatch"><i class="swatch-color" style="--swatch:#50745A"></i><code>#50745A</code></span>
+            <span class="swatch"><i class="swatch-color" style="--swatch:#B6D7B5"></i><code>#B6D7B5</code></span>
+            <span class="swatch"><i class="swatch-color" style="--swatch:#DCEBDD"></i><code>#DCEBDD</code></span>
+            <span class="swatch"><i class="swatch-color" style="--swatch:#B7CF4A"></i><code>#B7CF4A</code></span>
+          </div>
+        </article>
+
+        <article class="study italy">
+          <div class="poster" aria-label="Italian palette mockup in airy blue, aqua, blush, pearl, and warm gold">
+            <div class="poster-brand"><span>La Parola Meravigliosa</span><span>Italiano</span></div>
+            <div class="poster-center">
+              <h2>Una parola,<br />un luogo gentile.</h2>
+              <span class="poster-rule"></span>
+              <p>La Scrittura, vicina alla vita di ogni giorno.</p>
+            </div>
+            <div class="poster-foot"><span>Diodati</span><span>03 / 05</span></div>
+          </div>
+          <div class="study-copy"><h2>Italy</h2><p>Warm · kind</p></div>
+          <div class="swatches" aria-label="Italy palette colors">
+            <span class="swatch"><i class="swatch-color" style="--swatch:#C8D2DE"></i><code>#C8D2DE</code></span>
+            <span class="swatch"><i class="swatch-color" style="--swatch:#A3C7D4"></i><code>#A3C7D4</code></span>
+            <span class="swatch"><i class="swatch-color" style="--swatch:#DDBACF"></i><code>#DDBACF</code></span>
+            <span class="swatch"><i class="swatch-color" style="--swatch:#FBE6D6"></i><code>#FBE6D6</code></span>
+            <span class="swatch" aria-label="Shiny gold #D6B66E"><i class="swatch-color" style="--swatch:#D6B66E"></i><code>#D6B66E</code></span>
+          </div>
+        </article>
+
+        <article class="study germany">
+          <div class="poster" aria-label="German palette mockup in graphite, industrial sage, and shining bronze">
+            <div class="poster-brand"><span>Das Wunderbare Wort</span><span>Deutsch</span></div>
+            <div class="poster-center">
+              <h2>Klar im Wort.<br />Nah im Alltag.</h2>
+              <span class="poster-rule"></span>
+              <p>Ein verlässlicher Ort zum Lesen. Ohne Umwege.</p>
+            </div>
+            <div class="poster-foot"><span>Luther 1912</span><span>04 / 05</span></div>
+          </div>
+          <div class="study-copy"><h2>Germany</h2><p>Regal · industrial · kind</p></div>
+          <div class="swatches" aria-label="Germany palette colors">
+            <span class="swatch"><i class="swatch-color" style="--swatch:#24333D"></i><code>#24333D</code></span>
+            <span class="swatch"><i class="swatch-color" style="--swatch:#7D9288"></i><code>#7D9288</code></span>
+            <span class="swatch" aria-label="Shiny bronze #A96531"><i class="swatch-color" style="--swatch:#A96531"></i><code>#A96531</code></span>
+            <span class="swatch" aria-label="Shiny bronze highlight #E5B665"><i class="swatch-color" style="--swatch:#E5B665"></i><code>#E5B665</code></span>
+            <span class="swatch"><i class="swatch-color" style="--swatch:#EFE9DD"></i><code>#EFE9DD</code></span>
+          </div>
+        </article>
+
+        <article class="study france">
+          <div class="poster" aria-label="French palette mockup in midnight blue, lilac, blush, and pearl">
+            <div class="poster-brand"><span>La Parole Merveilleuse</span><span>Français</span></div>
+            <div class="poster-center">
+              <h2>Une parole,<br />un doux refuge.</h2>
+              <span class="poster-rule"></span>
+              <p>La beauté d’un texte, tout près du cœur.</p>
+            </div>
+            <div class="poster-foot"><span>Martin 1744</span><span>05 / 05</span></div>
+          </div>
+          <div class="study-copy"><h2>France</h2><p>Romantic · intimate</p></div>
+          <div class="swatches" aria-label="France palette colors">
+            <span class="swatch"><i class="swatch-color" style="--swatch:#24314F"></i><code>#24314F</code></span>
+            <span class="swatch"><i class="swatch-color" style="--swatch:#B6A6C8"></i><code>#B6A6C8</code></span>
+            <span class="swatch"><i class="swatch-color" style="--swatch:#F0D8D6"></i><code>#F0D8D6</code></span>
+            <span class="swatch"><i class="swatch-color" style="--swatch:#F8F3EC"></i><code>#F8F3EC</code></span>
+            <span class="swatch"><i class="swatch-color" style="--swatch:#AE7180"></i><code>#AE7180</code></span>
+          </div>
+        </article>
+      </section>
+
+      <p class="closing">Five different moods, with room for the same Word to feel at home in each.</p>
+    </main>
+  </body>
+</html>
