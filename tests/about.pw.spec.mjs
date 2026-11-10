@@ -1,5 +1,6 @@
 import { ABOUT_LOCALES, getEditionSummary } from "../js/about-locales.mjs";
 import { EDITIONS } from "../js/editions.mjs";
+import { getUiLocale } from "../js/ui-locales.mjs";
 import { expect, test } from "./support/browser-test.mjs";
 
 const localizedHeadings = {
@@ -12,6 +13,50 @@ const localizedHeadings = {
   es: "Un lugar tranquilo para encontrarse con el texto.",
   pt: "Um lugar tranquilo para encontrar o texto.",
 };
+
+for (const width of [390, 1280]) {
+  for (const edition of Object.values(EDITIONS)) {
+    test(`preserves ${edition.id} About language without saved storage at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/kjv/b/genesis/c/1");
+      await expect(page.locator("#verse-1")).toBeVisible();
+      if (edition.id !== "kjv") {
+        if (width <= 640) await page.locator("#menu-toggle").click();
+        await page.locator("#edition-select").click();
+        await page.locator(`#edition-options [data-edition="${edition.id}"]`).click();
+        if (width <= 640) await page.keyboard.press("Escape");
+      }
+
+      const aboutLink = page.locator(".topbar-about");
+      await expect(aboutLink).toHaveText(getUiLocale(edition.language).about);
+      await expect(aboutLink).toHaveAttribute("href", `/about?lang=${edition.language}`);
+      await expect(page.locator("html")).toHaveAttribute("translate", "no");
+      await expect(page.locator('meta[name="google"]')).toHaveAttribute("content", "notranslate");
+
+      // Navigation must not depend on reading preferences surviving in storage.
+      await page.evaluate(() => window.localStorage.clear());
+      await aboutLink.click();
+      await expect(page.locator("html")).toHaveAttribute("lang", edition.language);
+      await expect(page.locator("#page-title")).toHaveText(localizedHeadings[edition.language]);
+      await expect(page.locator("html")).toHaveAttribute("translate", "no");
+      await expect(page.locator('meta[name="google"]')).toHaveAttribute("content", "notranslate");
+
+      for (const language of new Set(["en", edition.language])) {
+        await page.locator("#about-language").click();
+        const option = page.locator(`#about-language-options [data-language="${language}"]`);
+        await expect(option).toBeVisible();
+        await option.click();
+        await expect(page.locator("#about-language-options")).toBeHidden();
+        await expect(page.locator("#page-title")).toHaveText(localizedHeadings[language]);
+        await expect(page.locator("html")).toHaveAttribute("lang", language);
+        await expect(page).toHaveURL(new RegExp(`/about\\?lang=${language}$`));
+      }
+
+      await page.reload();
+      await expect(page.locator("#page-title")).toHaveText(localizedHeadings[edition.language]);
+    });
+  }
+}
 
 test("localizes About page content, metadata, and accessible names", async ({ page }) => {
   for (const [language, locale] of Object.entries(ABOUT_LOCALES)) {

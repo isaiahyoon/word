@@ -4,7 +4,7 @@
 
 The Amazing Word is a quiet, free place to read Scripture on the web. It is built to make the text easy to find, move through, and carry with you, without asking you to create an account or pay to read.
 
-The [About page](./about.html) introduces the reader's features and installation steps in English, Korean, Italian, German, Japanese, French, Spanish, and Portuguese, with its guiding conviction given a prominent, localized feature. It follows the reader's saved edition by default; use its language menu to choose another language. The About link in the scripture reader header also follows the selected edition's language.
+The [About page](./about.html) introduces the reader's features and installation steps in English, Korean, Italian, German, Japanese, French, Spanish, and Portuguese, with its guiding conviction given a prominent, localized feature. It follows the reader's saved edition by default; use its language menu to choose another language. The About link in the scripture reader header follows the selected edition's language and carries it explicitly in `?lang=`, so navigation does not depend on saved browser storage. The reader and About page opt out of automatic browser translation to preserve the original Scripture text and the app's own localized copy; their edition and language menus remain available.
 
 ```
 "All scripture is given by inspiration of God,
@@ -63,7 +63,7 @@ To install it on Mac, open the site in Safari and choose **File → Add to Dock*
 
 ### Install size
 
-The app itself is small. The 40 unique files listed in `sw.js` total about 1.40 MB raw (1,403,389 bytes), or about 1.01 MB when each file is gzipped and the results are summed (1,008,520 bytes). This includes the rounded browser favicon, Apple touch icon, and PWA icons, but excludes fonts and any editions saved for offline reading. A fresh local load of the About install page fetched two WOFF2 files totaling 71,776 bytes (about 71.8 KB). Almeida's offline font preloader fetched 15 WOFF2 files totaling 279,504 bytes; nine Cardo files account for 97,904 bytes (about 97.9 KB). Other languages and browser/font subsets may fetch different files, and Korean and Japanese editions need more font data. Saved editions are optional, stored separately, and removable. These figures will change as the app changes, so re-measure before quoting them.
+The app itself is small. The 40 unique files listed in `sw.js` total about 1.40 MB raw (1,403,616 bytes), or about 1.01 MB when each file is gzipped and the results are summed (1,008,590 bytes). This includes the rounded browser favicon, Apple touch icon, and PWA icons, but excludes fonts and any editions saved for offline reading. A fresh local load of the About install page fetched two WOFF2 files totaling 71,776 bytes (about 71.8 KB). Almeida's offline font preloader fetched 15 WOFF2 files totaling 279,504 bytes; nine Cardo files account for 97,904 bytes (about 97.9 KB). Other languages and browser/font subsets may fetch different files, and Korean and Japanese editions need more font data. Saved editions are optional, stored separately, and removable. These figures will change as the app changes, so re-measure before quoting them.
 
 ## Offline editions
 

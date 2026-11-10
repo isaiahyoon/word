@@ -657,6 +657,7 @@ function showEdition(editionId) {
   document.documentElement.lang = edition.language;
   uiLocale = getUiLocale(edition.language);
   applyUiLocale(uiLocale);
+  document.querySelector(".topbar-about").setAttribute("href", `/about?lang=${edition.language}`);
   setQuietReadingMode(document.body.classList.contains("is-quiet-reading"));
   elements.editionNotice.hidden = true;
   document.body.classList.toggle("is-kjv-edition", editionId === "kjv");
