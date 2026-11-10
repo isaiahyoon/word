@@ -229,6 +229,21 @@ Playwright uses two workers in CI and 50% of available workers locally; pass
 `--workers=N` to `npm run test:ui` to override the local default. GitHub Actions
 runs the full check on every push and pull request.
 
+CI jobs use the official Playwright container with browsers and Linux dependencies
+preinstalled, rather than installing Chromium in every job. The exact
+`@playwright/test` version in `package.json`, its lockfile entries, and both
+container image tags in `.github/workflows/ci.yml` must match; a Node test enforces
+this. Container startup still requires downloading the image, so compare actual
+CI timings rather than assuming a speedup.
+
+`.github/renovate.json` limits automated updates to Playwright and groups its npm
+package and CI images in one pull request, with no automatic merging. Enable the
+[Renovate GitHub App](https://github.com/apps/renovate) for this repository to
+activate updates; the configuration alone does not install the app. Review and
+merge upgrades only after the full CI check passes. For manual upgrades, update
+the exact package version, regenerate `package-lock.json` with `npm install`,
+update both image tags to the same published version, and run `npm run test:all`.
+
 ## Customize the palette
 
 Edit the shared typography tokens in `styles/typography.css`, the base color tokens in `styles/theme.css`, each edition's palette, switcher and current-book tokens in `styles/editions.css`, and reader component styles in `styles/reader-*.css`. The reader stylesheets are linked in cascade order in `index.html`: `styles.css` provides shared foundations, followed by interactions, dialogs, search results, navigation, reading content, footer, effects, and responsive rules. The reader interface uses DM Sans, with Japanese sans-serif UI text in Noto Sans JP; Scripture and selected display text retain their edition-specific serif faces. The About link uses the edition-specific serif through `--about-link-serif`. Diodati uses Cormorant Garamond for its Italian reading face, Martin uses EB Garamond for French, and Reina-Valera uses Petrona for Spanish Scripture and edition headings. The French font comparison is available in the [font study](studies/french-font-study.html). The base pastels are `--blue`, `--lavender`, `--yellow`, `--pink`, and `--green`; the chapter number's higher-contrast gradient stops are `--chapter-blue`, `--chapter-lavender`, `--chapter-pink`, and `--chapter-green`.
