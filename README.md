@@ -235,6 +235,9 @@ preinstalled, rather than installing Chromium in every job. The exact
 container image tags in `.github/workflows/ci.yml` must match; a Node test enforces
 this. Container startup still requires downloading the image, so compare actual
 CI timings rather than assuming a speedup.
+The checks job explicitly trusts only `$GITHUB_WORKSPACE` in Git's global
+configuration before checking generated files, accommodating container ownership
+without disabling Git's ownership protection for other directories.
 
 `.github/renovate.json` limits automated updates to Playwright and groups its npm
 package and CI images in one pull request, with no automatic merging. Enable the

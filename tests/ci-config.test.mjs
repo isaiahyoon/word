@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
+import { mkdtemp, readFile, realpath, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { test } from "node:test";
 
 const root = new URL("../", import.meta.url);
@@ -32,6 +35,35 @@ test("CI uses preinstalled browsers matching the pinned Playwright package and l
     assert.doesNotMatch(body, /playwright install\b/, `${name} must not reinstall browsers`);
     assert.match(body, /run: npm ci\b/, `${name} must install locked npm dependencies`);
   }
+});
+
+test("CI trusts only its workspace before checking generated files", async (t) => {
+  const workflow = await readFile(new URL(".github/workflows/ci.yml", root), "utf8");
+  const command = 'git config --global --add safe.directory "$GITHUB_WORKSPACE"';
+  const trustIndex = workflow.indexOf(`run: ${command}`);
+  assert.ok(trustIndex > workflow.indexOf("uses: actions/checkout@"));
+  assert.ok(trustIndex < workflow.indexOf("git diff --exit-code"));
+
+  const directory = await realpath(await mkdtemp(join(tmpdir(), "word-ci-git-")));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const env = {
+    ...process.env,
+    GIT_CONFIG_GLOBAL: join(directory, "gitconfig"),
+    GIT_CONFIG_NOSYSTEM: "1",
+    GIT_TEST_ASSUME_DIFFERENT_OWNER: "1",
+    GITHUB_WORKSPACE: directory,
+  };
+  const options = { cwd: directory, env, encoding: "utf8", stdio: "pipe" };
+  execFileSync("git", ["init", "--quiet"], options);
+  assert.throws(
+    () => execFileSync("git", ["status", "--porcelain"], options),
+    (error) => /dubious ownership/.test(error.stderr),
+    "Fixture must reproduce Git's container ownership rejection",
+  );
+  execFileSync("sh", ["-e", "-c", command], options);
+  assert.equal(execFileSync("git", ["config", "--global", "--get-all", "safe.directory"], options).trim(), directory);
+  execFileSync("git", ["diff", "--exit-code"], options);
+  execFileSync("git", ["ls-files", "--others", "--exclude-standard", "editions/"], options);
 });
 
 test("Renovate groups Playwright package and container updates without automerging", async () => {
