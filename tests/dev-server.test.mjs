@@ -67,7 +67,7 @@ describe("development server", () => {
       assert.match(html, /property="og:image" content="https:\/\/theamazingword\.org\/assets\/social-preview\.png\?v=3"/, `${page} has og:image`);
       assert.match(html, /name="twitter:card" content="summary_large_image"/, `${page} has twitter:card`);
       assert.match(html, /name="twitter:image" content="https:\/\/theamazingword\.org\/assets\/social-preview\.png\?v=3"/, `${page} has twitter:image`);
-      assert.match(html, /rel="icon" type="image\/png" href="\/assets\/favicon\.png\?v=4"/, `${page} has the refreshed favicon`);
+      assert.match(html, /rel="icon" type="image\/png" href="\/assets\/favicon-rounded\.png\?v=1"/, `${page} has the rounded tab favicon`);
       assert.match(html, /rel="apple-touch-icon" href="\/assets\/apple-touch-icon\.png\?v=4"/, `${page} has the refreshed Apple icon`);
     }
   });
@@ -265,9 +265,10 @@ describe("development server", () => {
     assert.match(html, /name="passage"/);
   });
 
-  it("serves the midnight-blue sword favicon", async () => {
+  it("serves the midnight-blue sword icons", async () => {
     for (const [file, size] of [
       ["favicon.png", 648],
+      ["favicon-rounded.png", 192],
       ["apple-touch-icon.png", 180],
       ["pwa-icon-192.png", 192],
       ["pwa-icon-512.png", 512],

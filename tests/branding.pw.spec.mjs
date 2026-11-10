@@ -34,3 +34,32 @@ test("sword icon exports have clean navy edges without the darker outer frame", 
     }
   }
 });
+
+test("tab favicon has rounded transparent corners", async ({ page }) => {
+  await page.goto("/");
+  const alpha = await page.evaluate(async () => {
+    const image = new Image();
+    image.src = "/assets/favicon-rounded.png";
+    await image.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext("2d");
+    context.drawImage(image, 0, 0);
+    const pixelAlpha = (x, y) => context.getImageData(x, y, 1, 1).data[3];
+    return {
+      corners: [
+        pixelAlpha(0, 0),
+        pixelAlpha(canvas.width - 1, 0),
+        pixelAlpha(0, canvas.height - 1),
+        pixelAlpha(canvas.width - 1, canvas.height - 1),
+      ],
+      topCenter: pixelAlpha(Math.floor(canvas.width / 2), 0),
+      center: pixelAlpha(Math.floor(canvas.width / 2), Math.floor(canvas.height / 2)),
+    };
+  });
+
+  expect(alpha.corners).toEqual([0, 0, 0, 0]);
+  expect(alpha.topCenter).toBe(255);
+  expect(alpha.center).toBe(255);
+});
