@@ -68,7 +68,7 @@ test("localizes About page content, metadata, and accessible names", async ({ pa
     const summary = getEditionSummary(locale, language, EDITIONS);
     await expect(page.locator('[data-about="editionsTitle"]')).toHaveText(summary.editionsTitle);
     await expect(page.locator('[data-about="editionsCopy"]')).toHaveText(summary.editionsCopy);
-    await expect(page.locator('[data-about="editionsCopy"]')).toContainText("Almeida");
+    await expect(page.locator('[data-about="editionsCopy"]')).toContainText("Almeida · Português");
     await expect(page.locator("[data-about-app-name]"))
       .toHaveText(Object.values(EDITIONS).find((edition) => edition.language === language).appName);
     await expect(page.locator("#about-language")).toHaveAttribute("aria-label", locale.languageLabel);

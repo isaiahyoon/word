@@ -68,7 +68,9 @@ function renderEditionDirectory(editions, locales, { detailed = false, label = "
     const style = escapeHtml(editionLinkStyle(edition));
     const heading = edition.seo.heading;
     const nameAttributes = detailed ? ` lang="${edition.language}" dir="${edition.direction}"` : "";
-    const languageName = detailed ? `<small>${escapeHtml(edition.languageName)}</small>` : "";
+    const languageName = detailed && !heading.includes(edition.languageName)
+      ? `<small>${escapeHtml(edition.languageName)}</small>`
+      : "";
     const readerLabel = locales[edition.language].openReader;
     const readerLink = detailed ? `
                 <a class="edition-read-link" href="/${edition.routeSegment}/b/genesis/c/1/v/1" lang="${edition.language}" aria-label="${escapeHtml(`${readerLabel} · ${heading}`)}">${escapeHtml(readerLabel)} <span aria-hidden="true">→</span></a>` : "";

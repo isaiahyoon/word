@@ -38,7 +38,7 @@ The [About page](./about.html) introduces the reader's features and installation
 
 ## Features
 
-- Read the King James Version (KJV), Korean Revised Version (KRV), Japanese Bungo-yaku (JapBungo), Italian Giovanni Diodati (1649), German Luther Bible (1912), French David Martin Bible (1744), Spanish Reina-Valera 1865, and Almeida, with edition-aware book navigation and direct links to passages. JapBungo has a green reading theme; Diodati has a pink gradient reading theme; Luther uses a pastel yellow gradient with red accents; Martin uses a blue-white-pink gradient; Reina-Valera uses the Verde y oro palette; Almeida 1911 has a diagonal red, gold, and green reading theme with Cardo for Scripture and headings.
+- Read the King James Version (KJV), Korean Revised Version (KRV), Japanese Bungo-yaku (JapBungo), Italian Giovanni Diodati (1649), German Luther Bible (1912), French David Martin Bible (1744), Spanish Reina-Valera 1865, and Almeida · Português, with edition-aware book navigation and direct links to passages. JapBungo has a green reading theme; Diodati has a pink gradient reading theme; Luther uses a pastel yellow gradient with red accents; Martin uses a blue-white-pink gradient; Reina-Valera uses the Verde y oro palette; Almeida 1911 has a diagonal red, gold, and green reading theme with Cardo for Scripture and headings.
 - Reader navigation, controls, status messages, accessible names, and alternate descriptions follow the selected edition language across the supported English, Korean, Italian, German, Japanese, French, Spanish, and Portuguese interfaces; scripture text remains unchanged.
 - The About page can be read in English, Korean, Italian, German, Japanese, French, Spanish, or Portuguese.
 - Search scripture by phrase or separate terms, with relevance ranking, fuzzy typo matching, and direct suggestions for books, chapters, and verses. German, Korean, Japanese, French, Spanish, and Portuguese searches support localized book names and references; Korean searches also support common spelling variations, and Portuguese reference search accepts common Brazilian and European book-name forms.
@@ -78,7 +78,7 @@ Choose **Save** under the Reading Edition picker to download every book of the s
 | Bungo-yaku · Japanese | 4.49 MB |
 | David Martin · French | 4.82 MB |
 | Reina-Valera 1865 · Spanish | 4.15 MB |
-| Almeida | 4.16 MB |
+| Almeida · Português | 4.16 MB |
 
 These are uncompressed file sizes measured locally on 2026-11-06. They exclude the app shell and fonts, which are accounted for separately above; actual browser storage may vary. A progress count is shown while an edition saves, and the reader's fonts for that edition are downloaded with it so text looks the same offline; Korean and Japanese editions download more font data than the others. The status changes to **Available offline** when it finishes, and **Remove** deletes that edition's saved copy. If a download fails, nothing is kept and the control offers to try again. Editions that have not been saved are only available online: choosing one while offline keeps the current edition and shows a notice, and opening one directly explains that it needs a connection while leaving the edition picker usable. Search for a saved edition works offline.
 
