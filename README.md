@@ -111,7 +111,7 @@ Regenerate the pages, sitemap, marked deployment edition/reader rewrites, About 
 npm run build:seo
 ```
 
-The collection page at `/editions/` introduces every edition in its own language, with links to edition introductions and direct reading shortcuts. Both `/editions` and `/editions/` work, as do edition landing URLs with or without a trailing slash; canonical URLs consistently include the slash.
+The collection page at `/editions/` introduces every edition in its own language, with links to edition introductions and direct reading shortcuts. Each entry shows its edition heading above a smaller native-language label; Portuguese appears as “Bíblia Almeida (1911)” with “Português” below, while the reader picker uses “Almeida · Português”. Both `/editions` and `/editions/` work, as do edition landing URLs with or without a trailing slash; canonical URLs consistently include the slash.
 The localized “Explore editions” link on the About page connects readers and crawlers to the collection, without adding a link to the reader footer.
 
 The sitemap lists the homepage, About page, edition collection, every registered edition landing page, and the HTML studies. Counts and edition lists are registry-driven in the collection, landing pages, and every About locale. CI checks that generated pages and routes are current. `robots.txt` points crawlers to the sitemap. The landing pages are separate from reader routes, which continue to open the interactive app directly.

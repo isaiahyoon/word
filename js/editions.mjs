@@ -234,7 +234,7 @@ export const EDITIONS = {
     label: "Almeida · Português",
     name: "Reimpressão de 1911 da edição de 1900",
     seo: {
-      heading: "Almeida · Português",
+      heading: "Bíblia Almeida (1911)",
       title: "Bíblia Almeida 1911 em Português online | A Palavra Maravilhosa",
       description: "Leia a Bíblia Almeida 1911 em português gratuitamente online. Pesquise palavras ou referências, abra links diretos para passagens e leia no seu ritmo.",
     },

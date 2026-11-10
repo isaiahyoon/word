@@ -55,7 +55,24 @@ test("edition collection works with either URL form and offers native-language i
       const intro = page.locator(`.edition-directory a[href="/editions/${edition.routeSegment}/"]`);
       const read = page.locator(`.edition-read-link[href="/${edition.routeSegment}/b/genesis/c/1/v/1"]`);
       await expect(intro.locator(".edition-name")).toHaveAttribute("lang", edition.language);
-      await expect(intro).toContainText(edition.languageName);
+      await expect(intro.locator(".edition-name small")).toHaveText(edition.languageName);
+      const nameLayout = await intro.locator(".edition-name").evaluate((name) => {
+        const heading = document.createRange();
+        heading.selectNodeContents(name.firstChild);
+        const titleBounds = heading.getBoundingClientRect();
+        const languageBounds = name.querySelector("small").getBoundingClientRect();
+        return {
+          titleBottom: titleBounds.bottom,
+          languageTop: languageBounds.top,
+          titleLeft: titleBounds.left,
+          languageLeft: languageBounds.left,
+        };
+      });
+      expect(nameLayout.languageTop).toBeGreaterThanOrEqual(nameLayout.titleBottom);
+      expect(Math.abs(nameLayout.languageLeft - nameLayout.titleLeft)).toBeLessThan(1);
+      if (edition.id === "alm1911") {
+        await expect(intro.locator(".edition-name")).toHaveText("Bíblia Almeida (1911)Português");
+      }
       await expect(read).toHaveText(`${ABOUT_LOCALES[edition.language].openReader} →`);
       await intro.hover();
       await expect.poll(() => intro.evaluate((link) => getComputedStyle(link).boxShadow)).toContain("26px");
