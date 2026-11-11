@@ -218,8 +218,10 @@ function updateCopyControl({ clearStatus = true } = {}) {
   elements.shareControl.title = visible
     ? uiText(count === 1 ? "shareOneVerse" : "shareManyVerses", { count })
     : uiText("shareSelected");
-  if (clearStatus) elements.copyStatus.textContent = "";
-  verseActions?.clearFeedbackTimer();
+  if (clearStatus) {
+    elements.copyStatus.textContent = "";
+    verseActions?.clearFeedbackTimer();
+  }
 }
 
 function readSavedReaderState() {

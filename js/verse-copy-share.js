@@ -158,6 +158,22 @@ export function createVerseCopyShare({
 
   function clearFeedbackTimer() {
     clearTimeout(feedbackTimer);
+    feedbackTimer = undefined;
+    elements.copyStatus.classList.remove("is-fading");
+  }
+
+  function showTransientFeedback(message) {
+    clearFeedbackTimer();
+    elements.copyStatus.textContent = message;
+    feedbackTimer = setTimeout(() => {
+      updateCopyControl({ clearStatus: false });
+      elements.copyStatus.classList.add("is-fading");
+      feedbackTimer = setTimeout(() => {
+        elements.copyStatus.textContent = "";
+        elements.copyStatus.classList.remove("is-fading");
+        feedbackTimer = undefined;
+      }, 600);
+    }, 1800);
   }
 
   function selectedVerseContent(editionId, store, canonicalStore = null) {
@@ -260,6 +276,8 @@ export function createVerseCopyShare({
   }
 
   async function copySelectedVerses({ clearAfter = false, editionId = state.editionId } = {}) {
+    clearFeedbackTimer();
+    elements.copyStatus.textContent = "";
     const store = await ensureChapterLoaded(editionId, "copying");
     if (!store) return;
     const canonicalStore = editionId === state.editionId
@@ -280,12 +298,11 @@ export function createVerseCopyShare({
       await writeClipboardText(content.text);
       if (clearAfter) {
         clearVerseSelection();
-        elements.copyStatus.textContent = uiText("copiedAndCleared", { reference: content.reference });
+        showTransientFeedback(uiText("copiedAndCleared", { reference: content.reference }));
         return;
       }
       elements.copyControlLabel.textContent = uiText("copied");
-      elements.copyStatus.textContent = copyShareStatus("copiedReference", content);
-      feedbackTimer = setTimeout(() => updateCopyControl({ clearStatus: !content.alignmentDetails }), 1600);
+      showTransientFeedback(copyShareStatus("copiedReference", content));
     } catch (error) {
       logger.error("Copy failed", { editionId: state.editionId, error });
       elements.copyStatus.textContent = uiText("copyFailed");
@@ -303,6 +320,8 @@ export function createVerseCopyShare({
   }
 
   async function shareSelectedVerses(editionId = state.editionId) {
+    clearFeedbackTimer();
+    elements.copyStatus.textContent = "";
     const store = await ensureChapterLoaded(editionId, "sharing");
     if (!store) return;
     const canonicalStore = editionId === state.editionId
@@ -322,7 +341,7 @@ export function createVerseCopyShare({
     if (typeof navigator.share !== "function") {
       try {
         await writeClipboardText(content.text);
-        elements.copyStatus.textContent = copyShareStatus("shareUnavailableCopied", content);
+        showTransientFeedback(copyShareStatus("shareUnavailableCopied", content));
       } catch (error) {
         logger.error("Share fallback copy failed", { editionId: state.editionId, error });
         elements.copyStatus.textContent = uiText("shareCopyFailed");
@@ -333,7 +352,7 @@ export function createVerseCopyShare({
     try {
       if (content.alignmentDetails) elements.copyStatus.textContent = content.alignmentDetails;
       await navigator.share({ text: content.text });
-      elements.copyStatus.textContent = copyShareStatus("sharedReference", content);
+      showTransientFeedback(copyShareStatus("sharedReference", content));
     } catch (error) {
       if (error?.name === "AbortError") {
         elements.copyStatus.textContent = "";

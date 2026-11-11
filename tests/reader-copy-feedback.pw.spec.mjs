@@ -1,5 +1,41 @@
 import { expect, test } from "./support/browser-test.mjs";
 
+async function expectCopyStatusToFade(status) {
+  await expect(status).toContainClass("is-fading");
+  await expect(status).toBeHidden();
+  await expect(status).toBeEmpty();
+}
+
+test("fades mapped-copy feedback, including its verse-alignment details", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true, value: { writeText: async () => {} },
+    });
+  });
+  await page.goto("/kjv/b/psalms/c/42/v/5");
+  await page.locator("#verse-5").click();
+  await page.locator("#copy-selected-verses").click();
+  await page.locator("#share-language-menu [data-edition='martin1744']").click();
+
+  const status = page.locator("#copy-status");
+  await expect(status).toContainText("Copied Psaumes 42:6 to clipboard.");
+  await expect(status).toContainText("KJV");
+  await expect(status).toHaveCSS("transition-duration", "0.6s, 0.6s, 0.6s");
+  await expectCopyStatusToFade(status);
+});
+
+test("fades cut feedback after the selected verses are cleared", async ({ page }) => {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/kjv/b/john/c/3/v/16");
+  await page.locator("#verse-16").click();
+  await page.keyboard.press("Meta+X");
+
+  const status = page.locator("#copy-status");
+  await expect(status).toContainText("Copied John 3:16 and cleared selected verses.");
+  await expect(page.locator("#verse-actions")).toBeHidden();
+  await expectCopyStatusToFade(status);
+});
+
 test("copies consecutive verses on every edition as separate lines with a compressed citation", async ({ page }) => {
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   const editions = [
