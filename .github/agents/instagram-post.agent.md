@@ -20,8 +20,8 @@ For every post:
 
 Design every post for follower growth with cold audiences at scale. The account runs paid campaigns (for example, 10 days at $10/day across many countries), so each post must work for viewers who have never heard of The Amazing Word.
 
-- **Hook in two seconds.** Slide 1 states one clear, language-neutral idea (for example, "The same verse in 7 languages"). Avoid English-only wordplay.
-- **Lead with the differentiator.** The app's most shareable asset is the same passage across its editions: KJV (English), KRV (Korean), Lutherbibel (German), Bungo-yaku (Japanese), Diodati (Italian), Martin (French), and Reina-Valera (Spanish). Show the real native scripts so viewers find their own language.
+- **Hook in two seconds.** Slide 1 states one clear, cross-language idea (for example, "The same verse across languages"). Verify any edition or language count against `js/editions.mjs` rather than copying a historical ad's count. Avoid English-only wordplay.
+- **Lead with the differentiator.** Show the same passage across the supported editions, using `js/editions.mjs` for the current edition and language list. Show the real native scripts so viewers find their own language. Preserve published-post history; do not revise historical seven-language posts unless asked.
 - **Emotional, evergreen, non-political content.** Prefer comfort and hope passages (for example, Isaiah 53:5 or Isaiah 41:10) that stand on their own.
 - **Close with a follow prompt.** The last slide invites viewers to follow and read free in their language; the caption invites them to comment their language, which the algorithm rewards.
 - **Remember the reach.** Analytics show 39 entries (38 countries plus Puerto Rico) as of 2026-11-04; re-check before claiming a count.
@@ -30,9 +30,11 @@ Design every post for follower growth with cold audiences at scale. The account 
 
 Budget is thin (about $1 per country), so spend concentrates where it is cheapest. Don't exclude countries just to avoid age-restricted ad markets such as Thailand; use a separate ad set or accept lower delivery.
 
-- Objective: follows or profile visits, not reach. Test 2-3 creatives for the first 2 days, then move budget to the best performer. After 2-3 days, drop countries with the worst cost per follow.
+- Judge follower-growth campaigns primarily by attributed cost per follow and follow volume; views, reach, and profile visits are secondary diagnostics. Compare creative-audience combinations rather than countries alone. Test 2-3 creatives and review results before reallocating; small samples and unfinished campaigns are provisional evidence, not grounds for automatic cuts after a fixed number of days.
+- Use previously successful light-blue and dark-blue multilingual creative as test references, not mandatory templates or guaranteed winners. Consider a limited restart of a proven campaign before a large budget increase, accounting for why it was paused and whether results persist.
+- Small US campaigns can be selective creative tests, not automatic add-ons to every post. Compare their cost per follow with proven alternatives before expanding spend; do not exclude an audience solely because its views or visits cost more.
+- Profile visits and follows do not establish app usage. Edition-specific links improve destination relevance but do not by themselves establish improved follower conversion.
 - **Ad set A (about 80%):** Philippines, Nigeria, Kenya, Ghana, India, South Africa, Uganda, Tanzania, Zambia, Zimbabwe, Indonesia, Mexico, Colombia, Peru, Argentina, Chile, Ecuador, Guatemala, Dominican Republic, Venezuela, Bolivia, DR Congo, Cote d'Ivoire, Cameroon, Senegal, Madagascar.
 - **Ad set B (about 20%, edition-language markets, higher cost):** South Korea, Japan, Germany, Austria, Switzerland, Italy, France, Belgium, Spain.
-- Brazil is Portuguese-speaking and has no matching edition; give it little or no budget.
-- Skip the US, UK, Canada, and Australia (highest cost per follow) and countries where Instagram is blocked or not viable (China, Russia, Iran, North Korea, Afghanistan, Saudi Arabia).
-- These lists are estimates from typical Meta pricing, not live data; verify against Ads Manager estimates.
+- Verify language-edition fit against `js/editions.mjs`, including Portuguese support for Brazil, before selecting creative and destination links.
+- Treat the audience lists and budget splits above as hypotheses, not standing allocations. Verify current platform availability, Ads Manager estimates, and observed campaign results rather than assuming a country is expensive or unsuitable.
