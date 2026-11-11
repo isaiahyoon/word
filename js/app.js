@@ -94,6 +94,8 @@ let offlineControl;
 let verseNavigationQueue = Promise.resolve();
 let editionCycleQueue = Promise.resolve();
 let verseActions;
+let renderedChapter = null;
+let renderedBookList = null;
 const headingBook = document.querySelector("#heading-book");
 const chapterHeading = headingBook.closest("h1");
 
@@ -660,8 +662,7 @@ async function openChapter(book, chapter, requestedRange = null, {
   startAtTop = false,
 } = {}) {
   if (updateHistory) elements.quietWelcome.hidden = true;
-  state.selectedVerses.clear();
-  updateCopyControl();
+  clearVerseSelection();
   const requestId = ++state.chapterRequestId;
   const normalizedRange = normalizeVerseRange(requestedRange);
   state.book = book;
@@ -670,21 +671,26 @@ async function openChapter(book, chapter, requestedRange = null, {
   state.testament = testamentFor(book);
   state.lastBookByTestament[state.testament] = book;
   renderBookList();
-  elements.verseList.setAttribute("aria-busy", "true");
-  elements.verseList.textContent = uiText("loadingPlace");
+  const reuseChapter = renderedChapter?.editionId === state.editionId &&
+    renderedChapter.book === book && renderedChapter.chapter === chapter;
+  if (!reuseChapter) {
+    renderedChapter = null;
+    elements.verseList.setAttribute("aria-busy", "true");
+    elements.verseList.textContent = uiText("loadingPlace");
 
-  try {
-    await logger.measure("Chapter load", { editionId: state.editionId, book, chapter }, () => scripture.loadChapter(book, chapter));
-  } catch (error) {
-    if (requestId !== state.chapterRequestId) return;
-    if (error instanceof RangeError) {
-      showInvalidScripturePath();
+    try {
+      await logger.measure("Chapter load", { editionId: state.editionId, book, chapter }, () => scripture.loadChapter(book, chapter));
+    } catch (error) {
+      if (requestId !== state.chapterRequestId) return;
+      if (error instanceof RangeError) {
+        showInvalidScripturePath();
+        return;
+      }
+      logger.error("Chapter load failed", { editionId: state.editionId, book, chapter, error });
+      elements.verseList.removeAttribute("aria-busy");
+      elements.verseList.textContent = uiText("chapterLoadFailed");
       return;
     }
-    logger.error("Chapter load failed", { editionId: state.editionId, book, chapter, error });
-    elements.verseList.removeAttribute("aria-busy");
-    elements.verseList.textContent = uiText("chapterLoadFailed");
-    return;
   }
 
   if (requestId !== state.chapterRequestId) return;
@@ -695,24 +701,20 @@ async function openChapter(book, chapter, requestedRange = null, {
     return;
   }
   elements.verseList.removeAttribute("aria-busy");
-  renderChapter(range);
-  restoreVerseSelection(selectedVersesToRestore, verses.length);
-  animateChapterTurn(direction, requestId);
-  if (range) {
-    requestAnimationFrame(() => {
-      if (requestId !== state.chapterRequestId) return;
-      if (startAtTop) {
-        window.scrollTo({ top: 0, behavior: "instant" });
-        requestAnimationFrame(visualEffects.triggerChapterGlimmers);
-        return;
-      }
-      document.querySelector(`#verse-${range.start}`)?.scrollIntoView({
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-        block: "center",
-        inline: "nearest"
-      });
-      requestAnimationFrame(visualEffects.triggerChapterGlimmers);
+  if (reuseChapter) {
+    visualEffects.clearScriptureGlow();
+    elements.verseList.querySelectorAll(".verse").forEach((row) => {
+      const verse = Number(row.dataset.verse);
+      row.classList.toggle("is-focused", Boolean(range && verse >= range.start && verse <= range.end));
     });
+  } else {
+    renderChapter(range);
+    renderedChapter = { editionId: state.editionId, book, chapter };
+  }
+  restoreVerseSelection(selectedVersesToRestore, verses.length);
+  if (!reuseChapter) animateChapterTurn(direction, requestId);
+  if (range) {
+    scrollToVerse(range.start, requestId, startAtTop);
   } else {
     visualEffects.triggerChapterGlimmers();
   }
@@ -723,12 +725,37 @@ async function openChapter(book, chapter, requestedRange = null, {
   saveReaderState();
 }
 
+function scrollToVerse(verse, requestId, startAtTop = false) {
+  requestAnimationFrame(() => {
+    if (requestId !== state.chapterRequestId) return;
+    if (startAtTop) {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    } else {
+      document.querySelector(`#verse-${verse}`)?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        block: "center",
+        inline: "nearest"
+      });
+    }
+    requestAnimationFrame(visualEffects.triggerChapterGlimmers);
+  });
+}
+
 function renderBookList() {
+  if (renderedBookList?.editionId === state.editionId && renderedBookList.testament === state.testament) {
+    elements.bookList.querySelectorAll(".book-row").forEach((button) => {
+      const current = Number(button.dataset.book) === state.book;
+      button.classList.toggle("is-current", current);
+      button.setAttribute("aria-current", current ? "page" : "false");
+    });
+    return;
+  }
   elements.bookList.replaceChildren();
   const books = scripture.bookOrder.filter((book) => testamentFor(book) === state.testament);
   for (const book of books) {
     const button = document.createElement("button");
     button.type = "button";
+    button.dataset.book = book;
     button.className = `book-row${book === state.book ? " is-current" : ""}`;
     button.setAttribute("aria-current", book === state.book ? "page" : "false");
     const chapters = scripture.chapterCount(book);
@@ -751,6 +778,7 @@ function renderBookList() {
     });
     elements.bookList.append(button);
   }
+  renderedBookList = { editionId: state.editionId, testament: state.testament };
 }
 
 function renderChapter(focusRange = null) {

@@ -1,6 +1,7 @@
 import { formatUiText } from "./ui-locales.mjs";
 
 export function createChapterPicker({ root, trigger, value, popover, heading, count, list, onSelect }) {
+  let renderedOptions = null;
   function optionButtons() {
     return [...list.querySelectorAll(".chapter-option")];
   }
@@ -36,19 +37,24 @@ export function createChapterPicker({ root, trigger, value, popover, heading, co
     trigger.setAttribute("aria-label", formatUiText(locale, "chooseChapter", { book: bookName, chapter: activeChapter }));
     heading.textContent = bookName.toUpperCase();
     count.textContent = formatUiText(locale, chapterCount === 1 ? "chapterCountOne" : "chapterCountMany", { count: chapterCount });
-    list.replaceChildren();
-
-    for (let chapter = 1; chapter <= chapterCount; chapter += 1) {
-      const option = document.createElement("button");
-      option.type = "button";
-      option.className = "chapter-option";
-      option.setAttribute("role", "option");
+    if (renderedOptions?.bookName !== bookName || renderedOptions.chapterCount !== chapterCount || renderedOptions.locale !== locale) {
+      list.replaceChildren();
+      for (let chapter = 1; chapter <= chapterCount; chapter += 1) {
+        const option = document.createElement("button");
+        option.type = "button";
+        option.className = "chapter-option";
+        option.setAttribute("role", "option");
+        option.setAttribute("aria-label", formatUiText(locale, "chapterOption", { book: bookName, chapter }));
+        option.dataset.chapter = chapter;
+        option.textContent = chapter;
+        list.append(option);
+      }
+      renderedOptions = { bookName, chapterCount, locale };
+    }
+    for (const option of optionButtons()) {
+      const chapter = Number(option.dataset.chapter);
       option.setAttribute("aria-selected", String(chapter === activeChapter));
-      option.setAttribute("aria-label", formatUiText(locale, "chapterOption", { book: bookName, chapter }));
       option.tabIndex = chapter === activeChapter ? 0 : -1;
-      option.dataset.chapter = chapter;
-      option.textContent = chapter;
-      list.append(option);
     }
   }
 

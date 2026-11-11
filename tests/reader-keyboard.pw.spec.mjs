@@ -1,4 +1,109 @@
 import { expect, test } from "./support/browser-test.mjs";
+import { EDITIONS } from "../js/editions.mjs";
+
+for (const edition of Object.values(EDITIONS)) {
+  for (const viewport of [
+    { width: 1440, height: 900 },
+    { width: 390, height: 844 },
+  ]) {
+    test(`verse hotkeys keep the chapter mounted without scroll jumps in ${edition.id} at ${viewport.width}px`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.goto(`/${edition.routeSegment}/b/psalms/c/119/v/80`);
+      const verse = page.locator("#verse-80");
+      await expect(verse).toHaveClass(/is-focused/);
+      await page.evaluate(() => document.fonts.ready.then(() => undefined));
+      await verse.evaluate((row) => row.scrollIntoView({ behavior: "instant", block: "center" }));
+      const expectCentered = async (number) => {
+        await expect.poll(() => page.locator(`#verse-${number}`).evaluate((row) => {
+          const bounds = row.getBoundingClientRect();
+          const style = getComputedStyle(row);
+          const center = (window.innerHeight + parseFloat(style.scrollMarginTop) - parseFloat(style.scrollMarginBottom)) / 2;
+          return Math.abs(bounds.top + bounds.height / 2 - center);
+        })).toBeLessThan(16);
+      };
+      await expect(verse).toBeInViewport();
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
+      await page.emulateMedia({ reducedMotion: viewport.width === 390 ? "reduce" : "no-preference" });
+      await verse.focus({ preventScroll: true });
+      await verse.click();
+      await expect(verse).toHaveAttribute("aria-pressed", "true");
+      await page.evaluate(() => {
+        const list = document.querySelector("#verse-list");
+        const rows = [...list.querySelectorAll(".verse")];
+        const probe = {
+          rows,
+          removed: 0,
+          initialHeight: list.getBoundingClientRect().height,
+          minimumHeight: list.getBoundingClientRect().height,
+          minimumScroll: window.scrollY,
+          initialScroll: window.scrollY,
+        };
+        window.verseNavigationProbe = probe;
+        const observer = new MutationObserver((records) => {
+          probe.removed += records.reduce((count, record) =>
+            count + [...record.removedNodes].filter((node) => rows.includes(node)).length, 0);
+          probe.minimumHeight = Math.min(probe.minimumHeight, list.getBoundingClientRect().height);
+          probe.minimumScroll = Math.min(probe.minimumScroll, window.scrollY);
+        });
+        observer.observe(list, { childList: true });
+      });
+
+      for (const [key, number] of [["ArrowDown", 81], ["ArrowDown", 82], ["ArrowUp", 81]]) {
+        await page.keyboard.press(key);
+        await expect(page).toHaveURL(new RegExp(`/c/119/v/${number}$`));
+        await expect(page.locator(".verse.is-focused")).toHaveCount(1);
+        await expect(page.locator(`#verse-${number}`)).toHaveClass(/is-focused/);
+        await expectCentered(number);
+      }
+
+      const result = await page.evaluate(() => {
+        const probe = window.verseNavigationProbe;
+        return {
+          removed: probe.removed,
+          heightLoss: probe.initialHeight - probe.minimumHeight,
+          scrollDrop: probe.initialScroll - probe.minimumScroll,
+          sameRows: probe.rows.every((row) => row.isConnected),
+          savedVerse: JSON.parse(localStorage.getItem("the-word.reader-state.v1:/")).verse,
+          selectedVerses: document.querySelectorAll(".verse[aria-pressed='true']").length,
+        };
+      });
+      expect(result).toEqual({
+        removed: 0,
+        heightLoss: 0,
+        scrollDrop: 0,
+        sameRows: true,
+        savedVerse: 81,
+        selectedVerses: 0,
+      });
+      await page.goBack();
+      await expect(page).toHaveURL(/\/c\/119\/v\/82$/);
+      await expect(page.locator("#verse-82")).toHaveClass(/is-focused/);
+    });
+  }
+
+  test(`verse hotkeys handle repeated keys, ranges, and chapter boundaries in ${edition.id}`, async ({ page }) => {
+    await page.goto(`/${edition.routeSegment}/b/psalms/c/119/v/80-82`);
+    await expect(page.locator(".verse.is-focused")).toHaveCount(3);
+    await page.evaluate(() => {
+      for (let index = 0; index < 8; index += 1) {
+        document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+      }
+    });
+    await expect(page).toHaveURL(/\/c\/119\/v\/88$/);
+    await expect(page.locator(".verse.is-focused")).toHaveCount(1);
+    await expect(page.locator("#verse-88")).toHaveClass(/is-focused/);
+
+    await page.goto(`/${edition.routeSegment}/b/john/c/3/v/36`);
+    await expect(page.locator("#verse-36")).toHaveClass(/is-focused/);
+    await page.keyboard.press("ArrowDown");
+    await expect(page).toHaveURL(/\/john\/c\/4\/v\/1$/);
+    await expect(page.locator("#verse-1")).toHaveClass(/is-focused/);
+    await page.keyboard.press("ArrowUp");
+    await expect(page).toHaveURL(/\/john\/c\/3\/v\/36$/);
+    await expect(page.locator("#verse-36")).toHaveClass(/is-focused/);
+  });
+}
 
 test("cycles editions with Tab and Shift+Tab and wraps at both ends", async ({ page }) => {
   await page.goto("/");
