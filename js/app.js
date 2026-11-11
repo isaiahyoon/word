@@ -426,24 +426,25 @@ async function changeEdition(editionId, { preserveFocus = false } = {}) {
   const { book, chapter, verse } = state;
   const selectedVerses = [...state.selectedVerses];
   const previousStore = scripture;
+  const targetStore = scriptureStores.get(editionId);
   const searchQuery = readerSearch.getQuery();
   const previousEditionId = state.editionId;
+  const requestId = ++state.chapterRequestId;
+  elements.verseList.setAttribute("aria-busy", "true");
   readerSearch.invalidate();
   try {
-    await activateEdition(editionId);
-  } catch {
-    showEdition(previousEditionId);
+    await targetStore.initialize();
+    await targetStore.loadChapter(book, chapter);
+  } catch (error) {
+    if (requestId !== state.chapterRequestId) return;
+    logger.warn("Edition switch could not load passage", { editionId, book, chapter, error });
+    elements.verseList.removeAttribute("aria-busy");
     elements.editionNotice.textContent = uiText("offlineEditionNotice", { edition: EDITIONS[editionId].name });
     elements.editionNotice.hidden = false;
     return;
   }
-  try {
-    window.localStorage.setItem(defaultEditionStorageKey, editionId);
-  } catch {
-    // The active edition remains usable if browser storage is unavailable.
-  }
-  await scripture.loadChapter(book, chapter);
   const canonicalStore = await verseActions.ensureChapterLoaded("kjv", "aligning");
+  if (requestId !== state.chapterRequestId) return;
   let targetVerse = 1;
   let selectedVersesToRestore = [];
   let alignmentUnavailable = !canonicalStore;
@@ -454,7 +455,7 @@ async function changeEdition(editionId, { preserveFocus = false } = {}) {
         sourceEditionId: previousEditionId,
         sourceStore: previousStore,
         targetEditionId: editionId,
-        targetStore: scripture,
+        targetStore,
         canonicalStore,
         book,
         chapter,
@@ -472,7 +473,7 @@ async function changeEdition(editionId, { preserveFocus = false } = {}) {
           sourceEditionId: previousEditionId,
           sourceStore: previousStore,
           targetEditionId: editionId,
-          targetStore: scripture,
+          targetStore,
           canonicalStore,
           book,
           chapter,
@@ -486,6 +487,12 @@ async function changeEdition(editionId, { preserveFocus = false } = {}) {
     }
   }
 
+  showEdition(editionId);
+  try {
+    window.localStorage.setItem(defaultEditionStorageKey, editionId);
+  } catch {
+    // The active edition remains usable if browser storage is unavailable.
+  }
   await openChapter(book, chapter, targetVerse, { selectedVersesToRestore });
   if (alignmentUnavailable) elements.copyStatus.textContent = uiText("editionAlignmentUnavailable");
   animateEditionSwitch();
@@ -682,7 +689,7 @@ async function openChapter(book, chapter, requestedRange = null, {
   if (!reuseChapter) {
     renderedChapter = null;
     elements.verseList.setAttribute("aria-busy", "true");
-    elements.verseList.textContent = uiText("loadingPlace");
+    if (!elements.verseList.querySelector(".verse")) elements.verseList.textContent = uiText("loadingPlace");
 
     try {
       await logger.measure("Chapter load", { editionId: state.editionId, book, chapter }, () => scripture.loadChapter(book, chapter));
@@ -706,6 +713,16 @@ async function openChapter(book, chapter, requestedRange = null, {
     showInvalidScripturePath();
     return;
   }
+  if (!reuseChapter) {
+    try {
+      const font = getComputedStyle(elements.verseList.querySelector(".verse") ?? elements.verseList).font;
+      await document.fonts.load(font, verses.map((verse) => verse.text).join(" "));
+      await document.fonts.ready;
+    } catch (error) {
+      logger.warn("Reader font loading failed", { editionId: state.editionId, book, chapter, error });
+    }
+    if (requestId !== state.chapterRequestId) return;
+  }
   elements.verseList.removeAttribute("aria-busy");
   if (reuseChapter) {
     visualEffects.clearScriptureGlow();
@@ -720,7 +737,7 @@ async function openChapter(book, chapter, requestedRange = null, {
   restoreVerseSelection(selectedVersesToRestore, verses.length);
   if (!reuseChapter) animateChapterTurn(direction, requestId);
   if (range) {
-    scrollToVerse(range.start, requestId, startAtTop);
+    scrollToVerse(range.start, requestId, startAtTop, !reuseChapter);
   } else {
     visualEffects.triggerChapterGlimmers();
   }
@@ -731,20 +748,22 @@ async function openChapter(book, chapter, requestedRange = null, {
   saveReaderState();
 }
 
-function scrollToVerse(verse, requestId, startAtTop = false) {
-  requestAnimationFrame(() => {
+function scrollToVerse(verse, requestId, startAtTop = false, instant = false) {
+  const scroll = () => {
     if (requestId !== state.chapterRequestId) return;
     if (startAtTop) {
       window.scrollTo({ top: 0, behavior: "instant" });
     } else {
       document.querySelector(`#verse-${verse}`)?.scrollIntoView({
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        behavior: instant || window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
         block: "center",
         inline: "nearest"
       });
     }
     requestAnimationFrame(visualEffects.triggerChapterGlimmers);
-  });
+  };
+  if (instant) scroll();
+  else requestAnimationFrame(scroll);
 }
 
 function renderBookList() {
@@ -829,7 +848,7 @@ function renderChapter(focusRange = null) {
   document.querySelector("#chapter-options-title").lang = EDITIONS[state.editionId].language;
 
   visualEffects.clearScriptureGlow();
-  elements.verseList.replaceChildren();
+  const content = document.createDocumentFragment();
   for (const verse of verses) {
     for (const headingText of scripture.getVerseHeadings(state.book, state.chapter, verse.verse)) {
       const heading = document.createElement("p");
@@ -838,7 +857,7 @@ function renderChapter(focusRange = null) {
       heading.setAttribute("aria-level", "2");
       heading.lang = EDITIONS[state.editionId].language;
       heading.textContent = headingText;
-      elements.verseList.append(heading);
+      content.append(heading);
     }
     const row = document.createElement("button");
     row.type = "button";
@@ -888,8 +907,9 @@ function renderChapter(focusRange = null) {
       text.textContent = verse.text;
     }
     row.append(number, text);
-    elements.verseList.append(row);
+    content.append(row);
   }
+  elements.verseList.replaceChildren(content);
 
   updateChapterLinks();
   document.querySelectorAll(".testament-tab").forEach((tab) => {
