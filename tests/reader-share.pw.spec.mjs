@@ -18,6 +18,11 @@ test("shares selected verse text natively and falls back to copying when sharing
   await expect.poll(() => page.evaluate(() => window.sharedPayload)).toEqual({
     text: `"${verseText}"\n\n- John 3:16`,
   });
+  const nativeStatus = page.locator("#copy-status");
+  await expect(nativeStatus).toHaveText("Shared John 3:16.");
+  await expect(nativeStatus).toContainClass("is-fading");
+  await expect(nativeStatus).toBeHidden();
+  await expect(nativeStatus).toBeEmpty();
   await expect(page.locator("#share-selected-verses")).toHaveAttribute("aria-label", "Share 1 verse");
 
   await page.locator("#share-selected-verses").click();
@@ -35,6 +40,10 @@ test("shares selected verse text natively and falls back to copying when sharing
   await expect(page.locator("#copy-status")).toHaveText("Sharing is unavailable here. Copied John 3:16 to clipboard.");
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
     .toBe(`"${verseText}"\n\n- John 3:16`);
+  const status = page.locator("#copy-status");
+  await expect(status).toContainClass("is-fading");
+  await expect(status).toBeHidden();
+  await expect(status).toBeEmpty();
 });
 
 test("copies selected verses in another language without changing the reading edition", async ({ page }) => {
