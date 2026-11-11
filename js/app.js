@@ -96,6 +96,7 @@ let editionCycleQueue = Promise.resolve();
 let verseActions;
 let renderedChapter = null;
 let renderedBookList = null;
+let displayedEditionId = null;
 const headingBook = document.querySelector("#heading-book");
 const chapterHeading = headingBook.closest("h1");
 
@@ -363,6 +364,10 @@ function showEdition(editionId) {
   const edition = EDITIONS[editionId];
   const store = scriptureStores.get(editionId);
   if (!edition || !store) throw new RangeError(`Unknown edition: ${editionId}`);
+  if (displayedEditionId === editionId) {
+    elements.editionNotice.hidden = true;
+    return;
+  }
 
   state.editionId = editionId;
   elements.brand.href = new URL(edition.routeSegment, document.baseURI).pathname;
@@ -412,6 +417,7 @@ function showEdition(editionId) {
   }
   updateCopyControl();
   void offlineControl.render(edition, uiLocale);
+  displayedEditionId = editionId;
 }
 
 async function changeEdition(editionId, { preserveFocus = false } = {}) {

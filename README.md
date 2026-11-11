@@ -44,7 +44,7 @@ The Amazing Word is free to use, asks for no account, and is built around a simp
 ### Find, read, and carry a passage
 
 - Search Scripture by words or phrases, with relevant results and direct suggestions for books, chapters, and verses. Search uses the selected edition’s text and localized references.
-- Move through the text with book and chapter navigation, keyboard shortcuts, or direct passage links. Up/Down verse shortcuts move within the current chapter without rebuilding it or jumping to the top.
+- Move through the text with book and chapter navigation, keyboard shortcuts, or direct passage links. Same-chapter verse shortcuts, search-result navigation, and Back/Forward reuse the displayed verses rather than rebuilding the chapter. Unchanged book lists and picker options also stay mounted.
 - Select verses to copy or share. When moving a passage between editions, the reader reports known alignment limits instead of presenting uncertain references as exact.
 - Install The Amazing Word on desktop or mobile, and save individual editions for offline reading.
 - Read a localized interface in each edition’s language. Reading position and saved editions stay in browser storage on the device; search runs locally.
@@ -53,7 +53,7 @@ The [About page](./about.html) introduces the reader, explains installation, and
 
 ### Install size
 
-The precached app shell contains 42 unique files: about 1.41 MB raw (1,406,475 bytes), or 1.01 MB gzipped (1,010,262 bytes, summed per file). Fonts and saved Scripture editions are separate; see the [reader guide](./docs/reader-guide.md#install-size) for details.
+The precached app shell contains 42 unique files: about 1.41 MB raw (1,408,481 bytes), or 1.01 MB gzipped (1,010,664 bytes, summed per file). Fonts and saved Scripture editions are separate; see the [reader guide](./docs/reader-guide.md#install-size) for details.
 
 ## For engineers
 

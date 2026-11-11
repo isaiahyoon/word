@@ -60,8 +60,6 @@ export function createEditionPicker({
   }
 
   function render(editionIds, editions, activeEditionId, locale) {
-    if (renderedEdition?.editionIds === editionIds && renderedEdition.editions === editions &&
-        renderedEdition.activeEditionId === activeEditionId && renderedEdition.locale === locale) return;
     const activeEdition = editions[activeEditionId];
     trigger.dataset.edition = activeEditionId;
     trigger.setAttribute("aria-label", formatUiText(locale, "chooseEdition", { edition: activeEdition.label }));
@@ -112,7 +110,7 @@ export function createEditionPicker({
     if (document.fonts) {
       document.fonts.ready.then(() => requestAnimationFrame(refreshScrollableText));
     }
-    renderedEdition = { editionIds, editions, activeEditionId, locale };
+    renderedEdition = { editionIds, editions };
   }
 
   trigger.addEventListener("click", () => {
