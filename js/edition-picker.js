@@ -9,6 +9,7 @@ export function createEditionPicker({
   onSelect,
   onEscape,
 }) {
+  let renderedEdition = null;
   function optionButtons() {
     return [...menu.querySelectorAll(".edition-option")];
   }
@@ -64,9 +65,9 @@ export function createEditionPicker({
     trigger.setAttribute("aria-label", formatUiText(locale, "chooseEdition", { edition: activeEdition.label }));
     code.textContent = activeEdition.shortCode ?? activeEditionId.toUpperCase();
     setScrollableText(label, activeEdition.label);
-    menu.replaceChildren();
-
-    for (const editionId of editionIds) {
+    const rebuildOptions = renderedEdition?.editionIds !== editionIds || renderedEdition.editions !== editions;
+    if (rebuildOptions) menu.replaceChildren();
+    for (const editionId of rebuildOptions ? editionIds : []) {
       const edition = editions[editionId];
       const option = document.createElement("button");
       option.type = "button";
@@ -98,10 +99,18 @@ export function createEditionPicker({
       option.append(mark, description, selectedMark);
       menu.append(option);
     }
+    for (const option of optionButtons()) {
+      const selected = option.dataset.edition === activeEditionId;
+      option.classList.toggle("is-selected", selected);
+      option.setAttribute("aria-selected", String(selected));
+      option.tabIndex = selected ? 0 : -1;
+      option.querySelector(".edition-option-check").textContent = selected ? "✓" : "";
+    }
     requestAnimationFrame(refreshScrollableText);
     if (document.fonts) {
       document.fonts.ready.then(() => requestAnimationFrame(refreshScrollableText));
     }
+    renderedEdition = { editionIds, editions };
   }
 
   trigger.addEventListener("click", () => {
@@ -197,11 +206,17 @@ export function createShareLanguageMenu({
     activeTrigger?.setAttribute("aria-expanded", "false");
     activeTrigger = actionTrigger;
     activeAction = action;
-    const options = document.createElement("div");
-    options.className = "share-language-options";
-    options.setAttribute("role", "presentation");
-    options.append(...editionIds.map(createOption));
-    menu.replaceChildren(options);
+    if (!menu.firstElementChild) {
+      const options = document.createElement("div");
+      options.className = "share-language-options";
+      options.setAttribute("role", "presentation");
+      options.append(...editionIds.map(createOption));
+      menu.append(options);
+    }
+    menu.querySelectorAll("[data-edition]").forEach((option) => {
+      if (option.dataset.edition === getActiveEditionId()) option.setAttribute("aria-current", "true");
+      else option.removeAttribute("aria-current");
+    });
     menu.hidden = false;
     activeTrigger.setAttribute("aria-expanded", "true");
     menu.querySelector("[aria-current]")?.focus();
