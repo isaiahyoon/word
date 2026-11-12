@@ -101,6 +101,26 @@ test("localizes About page content, metadata, and accessible names", async ({ pa
   }
 });
 
+test("routes About reader links to the edition for the selected language", async ({ page }) => {
+  for (const edition of Object.values(EDITIONS)) {
+    await page.goto(`/about?lang=${edition.language}`);
+
+    for (const link of await page.locator("[data-about-reader-link]").all()) {
+      await expect(link).toHaveAttribute("href", `/${edition.routeSegment}`);
+    }
+  }
+
+  await page.goto("/about?lang=en");
+  for (const edition of Object.values(EDITIONS)) {
+    await page.locator("#about-language").click();
+    await page.locator(`#about-language-options [data-language="${edition.language}"]`).click();
+
+    for (const link of await page.locator("[data-about-reader-link]").all()) {
+      await expect(link).toHaveAttribute("href", `/${edition.routeSegment}`);
+    }
+  }
+});
+
 test("uses the selected edition name as the installed app title in every language", async ({ page }) => {
   for (const edition of Object.values(EDITIONS)
     .filter(({ language }) => Object.hasOwn(ABOUT_LOCALES, language))) {
