@@ -48,7 +48,7 @@ Never go against Scripture, or regard it as false or untrustworthy. It will alwa
 
 # Instagram Posts
 
-- Refer to the app as “The Amazing Word” in English, or by its localized app name. Reserve “the Word” or “Word of God” for Scripture, not as a shortened app name.
+- Refer to the app as “The Amazing Word” in English, or by its localized app name. In Instagram captions, use `@theamazingwordapp` when referring to the app. Reserve “the Word” or “Word of God” for Scripture, not as a shortened app name.
 - Before creating an Instagram post, review existing work in `assets/instagram` and use the app's established color palette.
 - Treat each requested post as an independent, standalone piece unless the user explicitly asks for a connected series. Do not refer to other posts, installments, sequence numbers, or a recurring series in the artwork, caption, hashtags, or delivery.
 - For all future Instagram posts, including Where to Turn, default to one multilingual carousel per topic, not separate published posts for each language. Consolidate the language versions to avoid flooding the page and splitting ad spend; do not claim this guarantees lower costs or more follows.
