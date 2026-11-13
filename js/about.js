@@ -10,6 +10,7 @@ const appNameByLanguage = Object.fromEntries(
   Object.values(EDITIONS).map(({ language, appName }) => [language, appName]),
 );
 const brandName = document.querySelector("[data-about-app-name]");
+const readerLinks = document.querySelectorAll("[data-about-reader-link]");
 const readerStateKey = "the-word.reader-state.v1:/";
 const defaultEditionKey = "the-word.default-edition.v1";
 const installLanguageForm = document.querySelector("#install-language-form");
@@ -71,7 +72,12 @@ function getInitialLanguage() {
 
 function applyLanguage(language) {
   const locale = getEditionSummary(ABOUT_LOCALES[language], language, EDITIONS);
+  const edition = Object.values(EDITIONS).find((candidate) => candidate.language === language);
+  if (!edition) throw new RangeError(`No reader edition is registered for language: ${language}`);
   activeLanguage = language;
+  for (const link of readerLinks) {
+    link.href = `/${edition.routeSegment}`;
+  }
   document.documentElement.lang = language;
   const pageTitle = validInstallEdition ? EDITIONS[validInstallEdition].appName : locale.pageTitle;
   document.title = pageTitle;
