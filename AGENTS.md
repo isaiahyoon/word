@@ -48,6 +48,7 @@ Never go against Scripture, or regard it as false or untrustworthy. It will alwa
 
 # Instagram Posts
 
+- Depict all male figures with short hair; female figures may have more flexibility in hairstyle.
 - Refer to the app as “The Amazing Word” in English, or by its localized app name. In Instagram captions, use `@theamazingwordapp` when referring to the app. Reserve “the Word” or “Word of God” for Scripture, not as a shortened app name.
 - Before creating an Instagram post, review existing work in `assets/instagram` and use the app's established color palette.
 - For reference-driven or visually complex posts, separate artwork from typography: first establish the scene and composition, then lay out the carousel text after the artwork is settled. When a reference image is provided, match its requested composition and qualities; once the user selects or approves an image, treat it as locked and do not regenerate or reframe it unless asked.
