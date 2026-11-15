@@ -5,3 +5,4 @@ playwright-report/
 test-results/
 /assets/instagram/
 /assets/facebook/
+/.github/agents/instagram-post.local.agent.md
