@@ -85,6 +85,11 @@ Open [http://localhost:8000](http://localhost:8000). The local server serves the
 
 The [contributor guide](./docs/contributing.md) covers generated routes, diagnostics, CI, tests, and design-system entry points. Search behavior and language-specific reference support are documented in the [search guide](./docs/search.md).
 
+### Instagram production
+
+See the [staged Instagram production workflow](./AGENTS.md#staged-production-workflow), followed by the [Instagram agent](./.github/agents/instagram-post.agent.md).
+Keep multilingual cover and closing-slide typography generously sized, beautifully composed, and clearly readable at phone size.
+
 ## Project links
 
 - [Explore Bible editions](./editions/)
