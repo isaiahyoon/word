@@ -189,6 +189,23 @@ test("finds separated and misspelled words and highlights the matched verse term
   await expect(result.locator("mark")).toHaveText(["sword", "piercing"]);
 });
 
+for (const [route, query, reference, matchedText] of [
+  ["kjv", "peircing sword", "Hebrews 4:12", "piercing"],
+  ["japbungo", "ニコテモ", "ヨハネの福音書 3:1", "ニコデモ"],
+]) {
+  test(`highlights a forgiving typo match in ${route}`, async ({ page }) => {
+    await page.goto(`/${route}`);
+    const search = page.locator("#search-input");
+    await search.fill(query);
+    const result = page.locator(".search-result").filter({ hasText: reference });
+    await expect(result).toHaveCount(1);
+    await expect(result.locator("mark").filter({ hasText: matchedText })).toHaveCount(1);
+    if (route === "kjv") await expect(result.locator("mark")).toHaveText(["sword", "piercing"]);
+    await result.click();
+    await expect(page).toHaveURL(new RegExp(route === "kjv" ? "/kjv/b/hebrews/c/4/v/12$" : "/japbungo/b/john/c/3/v/1$"));
+  });
+}
+
 for (const [width, height] of [[390, 844], [1440, 900]]) {
   for (const [route, query, reference, lastMatch, ending] of [
     ["kjv", "hallowed forgotten", "Deuteronomy 26:13", "forgotten", "neither have I forgotten them."],

@@ -432,19 +432,48 @@ export function createScriptureStore({
     if (Array.from(textQuery).length < 2) return navigationResults;
 
     const index = await getTextSearchIndex();
-    const matches = index.search(textQuery, {
+    const exactMatches = index.search(textQuery, { combineWith: "AND" });
+    const exactById = new Map(exactMatches.map((match) => [match.id, match]));
+    const searchOptions = {
       combineWith: "AND",
       prefix: (term) => term.length >= 3 || hangulTermPattern.test(term) ||
         (language === "ja" && Array.from(term).length >= 2),
       fuzzy: (term) => {
-        if (language === "ja") return false;
         if (hangulTermPattern.test(term)) return term.length >= 3 ? 1 / term.length : false;
-        return term.length >= 6 ? 0.15 : false;
+        if (language === "ja") return Array.from(term).length >= 4 ? 1 : false;
+        if (term.length >= 17) return Math.min(6, Math.round(term.length * 0.15));
+        if (term.length >= 8) return 2;
+        return term.length >= 5 ? 1 : false;
       },
-    });
+    };
+    const matches = index.search(textQuery, searchOptions);
+    const approximateIds = new Set(matches.filter(({ id }) => !exactById.has(id)).map(({ id }) => id));
+    const termsById = new Map();
+    const queryTerms = [...new Set(matches[0]?.queryTerms ?? [])];
+    // Attribute matches per query term so an exact word suppresses its own fuzzy highlights.
+    if (queryTerms.length > 1 && approximateIds.size > 0) {
+      for (const term of queryTerms) {
+        const termMatches = index.search(term, {
+          ...searchOptions,
+          tokenize: (value) => [value],
+          processTerm: (value) => value,
+          filter: ({ id }) => approximateIds.has(id),
+        });
+        for (const match of termMatches) {
+          const words = Object.keys(match.match);
+          const selectedWords = words.includes(term) ? [term] : words;
+          const selected = termsById.get(match.id) ?? new Set();
+          selectedWords.forEach((word) => selected.add(word));
+          termsById.set(match.id, selected);
+        }
+      }
+    }
 
     matches.sort((left, right) => {
-      const scoreDifference = right.score - left.score;
+      const exactDifference = Number(exactById.has(right.id)) - Number(exactById.has(left.id));
+      if (exactDifference !== 0) return exactDifference;
+      const scoreDifference = (exactById.get(right.id)?.score ?? right.score) -
+        (exactById.get(left.id)?.score ?? left.score);
       if (scoreDifference !== 0) return scoreDifference;
 
       const [leftBook, leftChapter, leftVerse] = left.id.split(":").map(Number);
@@ -459,7 +488,9 @@ export function createScriptureStore({
       return {
         ...getChapter(book, chapter)[verseNumber - 1],
         searchType: "text",
-        matchedTerms: Object.keys(match.match),
+        matchedTerms: exactById.has(match.id)
+          ? Object.keys(exactById.get(match.id).match)
+          : [...(termsById.get(match.id) ?? Object.keys(match.match))],
       };
     });
 

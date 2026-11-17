@@ -392,6 +392,93 @@ describe("scripture store", () => {
     assert.deepEqual(await store.search("piercing word"), []);
   });
 
+  it("ranks exact text matches before more frequent typo matches", async () => {
+    const mock = createMockFetch();
+    const fetchImpl = async (url) => {
+      if (url.endsWith("1_genesis.json")) {
+        return { ok: true, json: async () => ({ 1: [
+          [1, "grace grace grace grace appears"],
+          [2, "grase appears in a much longer verse with many other words"],
+          [3, "a piercing sword"],
+          [4, "a piercing sword word word word word"],
+        ] }) };
+      }
+      return mock.fetchImpl(url);
+    };
+    const store = createScriptureStore({ fetchImpl });
+    const results = await store.search("grase");
+    assert.deepEqual(results.slice(0, 2).map(({ verse }) => verse), [2, 1]);
+    assert.deepEqual((await store.search("grase appears")).slice(0, 2).map(({ verse }) => verse), [2, 1]);
+    assert.ok((await store.search("peircing")).some(({ book, verse }) => book === 1 && verse === 3));
+    assert.deepEqual((await store.search("piercing sword")).slice(0, 2).map(({ verse }) => verse), [3, 4]);
+  });
+
+  it("prioritizes exact Korean and Japanese terms over typo matches", async () => {
+    for (const [language, approximate, exact, query] of [
+      ["ko", "하나님이 하나님이 하나님이", "하느님이", "하느님"],
+      ["ja", "ニコデモ ニコデモ ニコデモ", "ニコテモ", "ニコテモ"],
+    ]) {
+      const mock = createMockFetch();
+      const store = createScriptureStore({
+        language,
+        fetchImpl: async (url) => url.endsWith("1_genesis.json")
+          ? { ok: true, json: async () => ({ 1: [[1, approximate], [2, exact]] }) }
+          : mock.fetchImpl(url),
+      });
+      assert.deepEqual((await store.search(query)).slice(0, 2).map(({ verse }) => verse), [2, 1], language);
+    }
+  });
+
+  it("supports five-letter typos in each Latin-script edition language", async () => {
+    for (const [language, word, typo] of [
+      ["en", "grace", "grase"],
+      ["it", "terra", "terrx"],
+      ["de", "liebe", "liebx"],
+      ["fr", "terre", "terrx"],
+      ["es", "mundo", "mundx"],
+      ["pt", "terra", "terrx"],
+    ]) {
+      const mock = createMockFetch();
+      const store = createScriptureStore({
+        language,
+        fetchImpl: async (url) => url.endsWith("1_genesis.json")
+          ? { ok: true, json: async () => ({ 1: [[1, word]] }) }
+          : mock.fetchImpl(url),
+      });
+      const matches = await store.search(typo);
+      assert.ok(matches.some(({ book, verse, searchType }) =>
+        book === 1 && verse === 1 && searchType === "text"), language);
+    }
+  });
+
+  it("finds misspelled text in every edition's real scripture data", async () => {
+    const cases = [
+      ["kjv", "en", "worlx", 16, "world"],
+      ["krv", "ko", "하느님", 16, "하나님"],
+      ["japbungo", "ja", "ニコテモ", 1, "ニコデモ"],
+      ["diodati", "it", "mondx", 16, "mondo"],
+      ["luther1912", "de", "lebex", 16, "leben"],
+      ["martin1744", "fr", "mondx", 16, "monde"],
+      ["rv1865", "es", "mundx", 16, "mundo"],
+      ["alm1911", "pt", "mundx", 16, "mundo"],
+    ];
+    for (const [editionId, language, query, verse, expectedTerm] of cases) {
+      const store = createScriptureStore({
+        editionId,
+        language,
+        dataPath: `./scripture/${editionId}`,
+        fetchImpl: async (path) => ({
+          ok: true,
+          json: async () => JSON.parse(await readFile(new URL(`../${path.replace(/^\.\//, "")}`, import.meta.url), "utf8")),
+        }),
+      });
+      const match = (await store.search(query)).find((result) =>
+        result.searchType === "text" && result.book === 43 && result.chapter === 3 && result.verse === verse);
+      assert.ok(match, `${editionId}: ${query}`);
+      assert.ok(match.matchedTerms.includes(expectedTerm), `${editionId}: ${query}`);
+    }
+  });
+
   it("searches JapBungo Japanese text and localized references", async () => {
     const fetchImpl = async (path) => {
       const fileUrl = new URL(`../${path.replace(/^\.\//, "")}`, import.meta.url);
@@ -409,6 +496,8 @@ describe("scripture store", () => {
     const nicodemusVerse = matches.find((verse) => verse.book === 43 && verse.chapter === 3 && verse.verse === 1);
     assert.ok(nicodemusVerse);
     assert.ok(nicodemusVerse.matchedTerms.includes("ニコデモ"));
+    const typoMatches = await store.search("ニコテモ");
+    assert.ok(typoMatches.some((verse) => verse.book === 43 && verse.chapter === 3 && verse.verse === 1));
 
     const reference = await store.search("ヨハネの福音書 3:16");
     assert.equal(reference[0].searchType, "reference");
@@ -680,6 +769,18 @@ describe("scripture store", () => {
     );
     assert.deepEqual(matches[0].matchedTerms, ["하나님"]);
     assert.deepEqual(await store.search("하느"), []);
+  });
+
+  it("preserves normalized Korean terms when highlighting a mixed exact and typo match", async () => {
+    const mock = createMockFetch();
+    const store = createScriptureStore({
+      language: "ko",
+      fetchImpl: async (url) => url.endsWith("1_genesis.json")
+        ? { ok: true, json: async () => ({ 1: [[1, "여호와의 하나님이"]] }) }
+        : mock.fetchImpl(url),
+    });
+    const result = (await store.search("여호와의 하느님"))[0];
+    assert.deepEqual(result.matchedTerms.sort(), ["여호와", "하나님"]);
   });
 
   it("keeps warm searches responsive for a Bible-sized index", async () => {
