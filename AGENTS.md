@@ -32,6 +32,7 @@ Never go against Scripture, or regard it as false or untrustworthy. It will alwa
 # Testing
 
 - Every new app feature must include appropriate automated tests for its behavior.
+- When adding or changing browser/UI tests, include parallel desktop and mobile cases for behavior supported on both. Prefer shared, parameterized cases, and exercise mobile-specific navigation and touch interactions where relevant. Viewport-independent unit tests do not require duplicate mobile cases.
 - After any significant behavioral change to the app, always run the full test suite with `npm run test:all` before finishing, and fix or report any failures.
 - Make every test parallel-proof: Playwright and Node test files run concurrently, so each test must be independent and order-agnostic. Do not share mutable state, fixed ports, files, `localStorage`, caches, or global stubs between tests; give each test its own fixtures, use ephemeral ports (`listen(0)`), restore any globals it overrides in `finally`/`after`, and never rely on another test having run first. Confirm new tests pass repeatedly under parallel workers (for example `npx playwright test --repeat-each=3`), and fix flaky timing with web-first assertions rather than fixed sleeps.
 - For every layout, styling, or UI bug fix, add a regression test that asserts the intended behavior (for example, element edges aligned across the viewport widths where it broke), run it, and fix the implementation until it passes. Confirm the test fails without the fix when practical.
