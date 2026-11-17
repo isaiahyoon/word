@@ -1,4 +1,4 @@
-const SHELL_CACHE = "the-word-shell-v8";
+const SHELL_CACHE = "the-word-shell-v9";
 const EDITION_CACHE = "the-word-editions";
 const FONT_CACHE = "the-word-fonts-v1";
 const FONT_HOSTS = new Set(["fonts.googleapis.com", "fonts.gstatic.com"]);
@@ -24,6 +24,7 @@ const SHELL_URLS = [
   "/js/about.js",
   "/js/about-locales.mjs",
   "/js/books.mjs",
+  "/js/book-abbreviations.mjs",
   "/js/chapter-picker.js",
   "/js/edition-picker.js",
   "/js/editions.mjs",

@@ -1,4 +1,5 @@
 import { BOOKS, bookFileName } from "./books.mjs";
+import { BOOK_ABBREVIATIONS } from "./book-abbreviations.mjs";
 import MiniSearch from "./vendor/minisearch.js";
 
 const chapterKey = (book, chapter) => `${book}:${chapter}`;
@@ -52,6 +53,7 @@ export function createScriptureStore({
   const chapters = new Map();
   const bookLoads = new Map();
   const bookIndexes = new Map();
+  const abbreviationIndexes = new Map();
   const bookOrderIndexes = new Map(bookOrder.map((book, index) => [book, index]));
   let activeDisplayBookNames = displayBookNames;
   let activeBookNameAliases = [];
@@ -66,6 +68,7 @@ export function createScriptureStore({
   }
   function rebuildBookNameIndex() {
     bookIndexes.clear();
+    abbreviationIndexes.clear();
     [...canonicalBookNames, ...activeDisplayBookNames].forEach((name, index) => {
       const bookIndex = index % canonicalBookNames.length;
       bookIndexes.set(normalizeBookName(name), bookIndex + 1);
@@ -73,6 +76,14 @@ export function createScriptureStore({
     activeBookNameAliases.forEach((aliases, bookIndex) => {
       for (const name of aliases) {
         bookIndexes.set(normalizeBookName(name), bookIndex + 1);
+      }
+    });
+    (BOOK_ABBREVIATIONS[editionId] ?? []).forEach((aliases, bookIndex) => {
+      for (const name of aliases) {
+        const key = normalizeBookName(name);
+        const books = abbreviationIndexes.get(key) ?? new Set();
+        books.add(bookIndex + 1);
+        abbreviationIndexes.set(key, books);
       }
     });
     bookNamesByLength = [...bookIndexes.keys()].sort((left, right) => right.length - left.length);
@@ -299,6 +310,13 @@ export function createScriptureStore({
     const exactBook = bookIndexes.get(normalizedName);
     if (exactBook) return [{ book: exactBook, name: normalizedName }];
 
+    const abbreviatedBooks = abbreviationIndexes.get(normalizedName);
+    if (abbreviatedBooks) {
+      return [...abbreviatedBooks]
+        .sort((left, right) => bookOrderIndexes.get(left) - bookOrderIndexes.get(right))
+        .map((book) => ({ book, name: normalizedName }));
+    }
+
     const matches = bookNamesByLength.filter((bookName) => bookName.startsWith(normalizedName));
     const matchingBooks = [...new Set(matches.map((bookName) => bookIndexes.get(bookName)))];
     return matchingBooks
@@ -310,7 +328,7 @@ export function createScriptureStore({
   function parseNavigationQuery(query) {
     const normalizedQuery = normalizeBookName(query);
     const exactBook = resolveBookNames(normalizedQuery);
-    if (exactBook.length === 1 && exactBook[0].name === normalizedQuery) {
+    if (exactBook.length > 0 && exactBook.every(({ name }) => name === normalizedQuery)) {
       return { searchType: "book", books: exactBook, bookQuery: normalizedQuery };
     }
 
@@ -397,12 +415,21 @@ export function createScriptureStore({
 
   async function search(query) {
     const normalizedQuery = query.normalize("NFKC").trim();
-    if (normalizedQuery.length < 2) return [];
+    if (!normalizedQuery) return [];
 
     await initialize();
+    if (Array.from(normalizedQuery).length === 1) {
+      const name = normalizeBookName(normalizedQuery);
+      if (!abbreviationIndexes.has(name)) return [];
+      return getNavigationResult({
+        searchType: "book",
+        books: resolveBookNames(name),
+      });
+    }
     const navigationQuery = parseNavigationQuery(normalizedQuery);
     const navigationResults = await getNavigationResult(navigationQuery);
     const textQuery = navigationQuery?.bookQuery ?? normalizedQuery;
+    if (Array.from(textQuery).length < 2) return navigationResults;
 
     const index = await getTextSearchIndex();
     const matches = index.search(textQuery, {
@@ -461,5 +488,8 @@ export function createScriptureStore({
 }
 
 function normalizeBookName(name) {
-  return name.normalize("NFKC").trim().toLocaleLowerCase();
+  return name.normalize("NFKC").trim().toLocaleLowerCase()
+    .replace(/\./gu, "")
+    .replace(/^(\d+)\s+(?=\p{L})/u, "$1")
+    .replace(/\s+/gu, " ");
 }

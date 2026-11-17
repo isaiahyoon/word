@@ -505,7 +505,7 @@ async function changeEdition(editionId, { preserveFocus = false } = {}) {
       document.querySelector(`#verse-${state.verse}`)?.focus({ preventScroll: true });
     }
   });
-  if (searchQuery.length >= 2) {
+  if (searchQuery.trim()) {
     readerSearch.refresh(searchQuery);
   }
 }

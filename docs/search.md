@@ -6,7 +6,15 @@ How scripture search works across the supported editions and languages.
 
 Search applies to the selected edition. Scripture text matching requires every query term to appear in the same verse, but the terms do not need to be adjacent. Results are ranked by relevance; longer words tolerate small spelling errors, and prefixes can match as you type. For example, `piercing sword` and `piercin sword` both find Hebrews 4:12. Search is lexical rather than semantic, so it does not infer synonyms or concepts that are absent from the verse text.
 
-Book and passage queries also provide one direct navigation suggestion at the top of the list, followed by matching verse text. For example, `John` offers an option to open John before verses containing “John”; `John 1` offers a chapter link; and `John 1:1` places that exact verse first. The exact passage is not repeated in the text results. Book-name prefixes work when they identify a single book.
+Verse results show the complete verse, so matches near the end remain visible.
+
+Book and passage queries also provide direct navigation suggestions at the top of the list, followed by matching verse text. For example, `John` offers an option to open John before verses containing “John”; `John 1` offers a chapter link; and `John 1:1` places that exact verse first. The exact passage is not repeated in the text results. Book-name prefixes can offer multiple matching books.
+
+All editions also accept established local book abbreviations for books, chapters, and verses. Examples include `Jn 3:16` (English), `요 3:16` (Korean), `ヨハ 3:16` (Japanese), `Gv 3:16` (Italian), `Joh 3:16` (German), `Jn 3:16` (French), `Jn 3:16` (Spanish), and `Jo 3:16` (Portuguese). Periods in book abbreviations and spaces after a numbered book's digit are optional, so `1 Cor. 1:1` and `1Cor 1:1` are equivalent. Full book names remain supported.
+
+An exact full name takes precedence over an abbreviation. If an abbreviation denotes multiple books, matching destinations are shown in edition book order rather than selecting one silently; for example, French `Phil` can denote Philippians or Philemon. A one-character book abbreviation offers navigation suggestions without searching verse text, whether entered alone or with a chapter or verse. The supported forms are maintained in `js/book-abbreviations.mjs`; they do not imply general accent folding or every possible abbreviation.
+
+Reference lists consulted include the [Korean Bible Society](https://bible.bskorea.or.kr/abbreviations-of-the-books-of-the-bible), [JapanKnowledge](https://japanknowledge.com/contents/nce/hanrei11.html), [La Parola](https://www.laparola.net/abbrev.php), [SBC Standard's German list](https://sbc-standard.de/en/specification/mab-title-specification/normative-lists/bible-abbreviations/), and [GraceLife's multilingual list](https://www.gracelife.org/resources/bibletools/books.php). The app maps these forms to its own fixed canon and edition names.
 
 KJV passages use the singular `Psalm` in headings and references; the book selector retains `Psalms`. Search accepts both `Psalm 42:5` and `Psalms 42:5`, and existing `/psalms/` links remain unchanged.
 

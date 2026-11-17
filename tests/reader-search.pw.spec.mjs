@@ -1,5 +1,60 @@
 import { expect, test } from "./support/browser-test.mjs";
 
+for (const [route, abbreviation, fullName] of [
+  ["kjv", "Jn.", "John"],
+  ["krv", "요", "요한복음"],
+  ["japbungo", "ヨハ", "ヨハネの福音書"],
+  ["diodati", "Gv", "Giovanni"],
+  ["licht", "Joh", "Johannes"],
+  ["moh", "Jn", "Jean"],
+  ["luz", "Jn", "San Juan"],
+  ["alm", "Jo", "João"],
+]) {
+  test(`opens an abbreviated reference in ${route} and retains full-name search`, async ({ page }) => {
+    await page.goto(`/${route}`);
+    const search = page.locator("#search-input");
+    const first = page.locator(".search-result").first();
+    await search.fill(`${abbreviation} 3:16`);
+    await expect(first).toHaveAttribute("data-search-type", "reference");
+    await expect(first).toContainText(`${fullName} 3:16`);
+    await first.click();
+    await expect(page).toHaveURL(new RegExp(`/${route}/b/john/c/3/v/16$`));
+    await search.fill(`${fullName} 3:16`);
+    await expect(first).toHaveAttribute("data-search-type", "reference");
+    await expect(first).toContainText(`${fullName} 3:16`);
+  });
+}
+
+test("offers a standalone Korean abbreviation and preserves the query when switching editions", async ({ page }) => {
+  await page.goto("/krv");
+  const search = page.locator("#search-input");
+  await search.fill("요");
+  await expect(page.locator(".search-result").first()).toHaveAttribute("data-search-type", "book");
+  await expect(page.locator(".search-result").first()).toContainText("요한복음");
+  await search.press("Tab");
+  await expect(page.locator("body")).not.toHaveClass(/is-krv-edition/);
+  await expect(search).toHaveValue("요");
+  await expect(page.locator(".search-result--navigation")).toHaveCount(0);
+});
+
+test("shows ambiguous abbreviated references on mobile and opens the keyboard selection", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/moh");
+  const search = page.locator("#search-input");
+  const results = page.locator(".search-result--navigation");
+  await search.fill("Phil 1:1");
+  await expect(results).toHaveCount(2);
+  await expect(results.nth(0)).toContainText("Philippiens 1:1");
+  await expect(results.nth(1)).toContainText("Philémon 1:1");
+  const panel = await page.locator("#search-results").boundingBox();
+  expect(panel.x).toBeGreaterThanOrEqual(0);
+  expect(panel.x + panel.width).toBeLessThanOrEqual(390);
+  await search.press("ArrowDown");
+  await expect(results.nth(1)).toHaveAttribute("aria-selected", "true");
+  await search.press("Enter");
+  await expect(page).toHaveURL(/\/moh\/b\/philemon\/c\/1\/v\/1$/);
+});
+
 test("supports Japanese JapBungo search", async ({ page }) => {
   await page.goto("/japbungo");
   await expect(page.locator("html")).toHaveAttribute("lang", "ja");
@@ -133,6 +188,44 @@ test("finds separated and misspelled words and highlights the matched verse term
   await expect(result).toHaveCount(1);
   await expect(result.locator("mark")).toHaveText(["sword", "piercing"]);
 });
+
+for (const [width, height] of [[390, 844], [1440, 900]]) {
+  for (const [route, query, reference, lastMatch, ending] of [
+    ["kjv", "hallowed forgotten", "Deuteronomy 26:13", "forgotten", "neither have I forgotten them."],
+    ["krv", "육축 안식하게", "신명기 5:14", "안식하게", "너 같이 안식하게 할찌니라"],
+  ]) {
+    test(`shows the complete ${route} search verse at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await page.goto(`/${route}`);
+      await page.locator("#search-input").fill(query);
+      const result = page.locator(".search-result").filter({ hasText: reference });
+      const preview = result.locator(".result-text");
+      const match = preview.locator("mark").filter({ hasText: lastMatch });
+      await expect(result).toHaveCount(1);
+      await expect(preview).toContainText(ending);
+      await expect(match).toHaveCount(1);
+      const bounds = await preview.evaluate((element) => {
+        const text = element.getBoundingClientRect();
+        const marks = [...element.querySelectorAll("mark")].map((mark) => mark.getBoundingClientRect());
+        const last = element.lastChild;
+        const range = document.createRange();
+        range.setStart(last, last.length - 1);
+        range.setEnd(last, last.length);
+        const end = range.getBoundingClientRect();
+        return {
+          top: text.top,
+          bottom: text.bottom,
+          marks: marks.map(({ top, bottom }) => ({ top, bottom })),
+          end: { top: end.top, bottom: end.bottom },
+        };
+      });
+      for (const part of [...bounds.marks, bounds.end]) {
+        expect(part.top).toBeGreaterThanOrEqual(bounds.top - 2);
+        expect(part.bottom).toBeLessThanOrEqual(bounds.bottom + 2);
+      }
+    });
+  }
+}
 
 test("highlights the first search result and opens it with Enter", async ({ page }) => {
   await page.goto("/");

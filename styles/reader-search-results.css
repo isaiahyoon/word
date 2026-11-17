@@ -61,14 +61,11 @@
   font-weight: 700;
 }
 .result-text {
-  display: -webkit-box;
-  overflow: hidden;
+  display: block;
   color: #44443e;
   font-family: var(--serif);
   font-size: var(--type-small-copy);
   line-height: 1.4;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
 }
 .result-text mark {
   border-radius: 2px;

@@ -3,7 +3,8 @@ import { performance } from "node:perf_hooks";
 import { readFile } from "node:fs/promises";
 import { describe, it } from "node:test";
 import { BOOKS, bookFileName } from "../js/books.mjs";
-import { ALM_BOOK_NAMES, ALM_BOOK_NAME_ALIASES, KRV_BOOK_NAMES, MARTIN_BOOK_NAMES } from "../js/editions.mjs";
+import { BOOK_ABBREVIATIONS } from "../js/book-abbreviations.mjs";
+import { ALM_BOOK_NAMES, ALM_BOOK_NAME_ALIASES, EDITIONS, KRV_BOOK_NAMES, MARTIN_BOOK_NAMES } from "../js/editions.mjs";
 import { createScriptureStore } from "../js/scripture-store.js";
 
 function createMockFetch(dataPath = "./scripture/kjv", indexMetadata = {}) {
@@ -46,6 +47,65 @@ function createMockFetch(dataPath = "./scripture/kjv", indexMetadata = {}) {
 }
 
 describe("scripture store", () => {
+  it("resolves every edition's book abbreviations without replacing full names", async () => {
+    for (const [editionId, edition] of Object.entries(EDITIONS)) {
+      const aliases = BOOK_ABBREVIATIONS[editionId];
+      assert.equal(aliases?.length, BOOKS.length, editionId);
+      const index = JSON.parse(await readFile(new URL(`../scripture/${editionId}/index.json`, import.meta.url), "utf8"));
+      const store = createScriptureStore({
+        fetchImpl: createMockFetch(edition.dataPath, {
+          displayBookNames: index.displayBookNames ?? edition.displayBookNames ?? BOOKS,
+          bookNameAliases: index.bookNameAliases,
+        }).fetchImpl,
+        dataPath: edition.dataPath,
+        editionId,
+        language: edition.language,
+      });
+      await store.initialize();
+
+      for (const [index, names] of aliases.entries()) {
+        const book = index + 1;
+        const fullName = store.bookName(book);
+        const fullResults = await store.search(`${fullName} 1:1`);
+        assert.ok(fullResults.some((result) => result.searchType === "reference" && result.book === book), `${editionId}: ${fullName}`);
+        for (const name of names) {
+          for (const [query, type] of [[name, "book"], [`${name} 1`, "chapter"], [`${name}. 1:1`, "reference"]]) {
+            const results = await store.search(query);
+            assert.ok(results.some((result) => result.searchType === type && result.book === book), `${editionId}: ${query} -> ${book}`);
+            if (type === "reference") {
+              assert.equal(results.filter((result) =>
+                result.book === book && result.chapter === 1 && result.verse === 1).length, 1, `${editionId}: ${query}`);
+            }
+          }
+        }
+      }
+    }
+  });
+
+  it("returns ambiguous abbreviations in canon order without guessing", async () => {
+    const store = createScriptureStore({ fetchImpl: createMockFetch().fetchImpl, editionId: "martin1744" });
+    const matches = await store.search("Phil 1:1");
+    assert.deepEqual(matches.filter(({ searchType }) => searchType === "reference").map(({ book }) => book), [50, 57]);
+    assert.ok((await store.search("Phil 1:99")).every(({ searchType }) => searchType !== "reference"));
+  });
+
+  it("only searches exact one-character abbreviations, without indexing verse text", async () => {
+    const mock = createMockFetch();
+    const store = createScriptureStore({ fetchImpl: mock.fetchImpl, editionId: "krv" });
+    assert.deepEqual((await store.search("요")).map(({ book, searchType }) => ({ book, searchType })), [
+      { book: 43, searchType: "book" },
+    ]);
+    assert.deepEqual(await store.search("z"), []);
+    assert.ok(mock.requests.every((url) => url.endsWith("/index.json")));
+    for (const query of ["요 3:16", "요3장16절", "요 ３：１６"]) {
+      const results = await store.search(query);
+      assert.equal(results.length, 1, query);
+      const result = results[0];
+      assert.deepEqual([result.searchType, result.book, result.chapter, result.verse], ["reference", 43, 3, 16], query);
+    }
+    assert.ok(mock.requests.every((url) => url.endsWith("/index.json") || url.endsWith("/43_john.json")));
+  });
+
   it("uses a singular KJV Psalm reference without changing the book name or search", async () => {
     const mock = createMockFetch();
     const store = createScriptureStore({ fetchImpl: mock.fetchImpl, editionId: "kjv" });
@@ -429,6 +489,7 @@ describe("scripture store", () => {
     const store = createScriptureStore({
       fetchImpl,
       dataPath: "./scripture/martin1744",
+      editionId: "martin1744",
       language: "fr",
       displayBookNames: MARTIN_BOOK_NAMES,
     });
@@ -443,6 +504,8 @@ describe("scripture store", () => {
     assert.equal(title[0].searchType, "reference");
     assert.equal(title[0].text, "Psaume de David au sujet de sa fuite de devant Absalom son fils.");
     assert.equal(title.filter(({ book, chapter, verse }) => book === 19 && chapter === 3 && verse === 1).length, 1);
+    const abbreviatedTitle = await store.search("Ps 3:1");
+    assert.equal(abbreviatedTitle[0].text, title[0].text);
 
     const scriptureVerse = await store.search("Psaumes 3:2");
     assert.equal(scriptureVerse[0].searchType, "reference");

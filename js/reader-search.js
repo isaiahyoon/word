@@ -165,7 +165,7 @@ export function createReaderSearch({
     elements.searchResults.replaceChildren();
     state.activeIndex = -1;
     elements.searchInput.removeAttribute("aria-activedescendant");
-    if (trimmed.length < 2) {
+    if (!trimmed) {
       state.matches = [];
       state.query = "";
       state.shown = 0;
@@ -230,7 +230,7 @@ export function createReaderSearch({
   }
 
   function refresh(query = state.query) {
-    if (query.trim().length < 2) return;
+    if (!query.trim()) return;
     void runSearch(query, ++state.requestId);
   }
 
@@ -243,7 +243,7 @@ export function createReaderSearch({
     state.shown = 0;
     state.query = elements.searchInput.value.trim();
     elements.searchResults.replaceChildren();
-    if (state.query.length < 2) {
+    if (!state.query) {
       elements.searchResults.hidden = true;
       elements.searchInput.setAttribute("aria-expanded", "false");
       return;
@@ -299,7 +299,7 @@ export function createReaderSearch({
     elements.searchInput.addEventListener("input", handleInput);
     elements.searchInput.addEventListener("keydown", handleKeydown);
     elements.searchInput.addEventListener("focus", () => {
-      if (elements.searchInput.value.trim().length >= 2) refresh(elements.searchInput.value);
+      if (elements.searchInput.value.trim()) refresh(elements.searchInput.value);
     });
     document.addEventListener("click", (event) => {
       if (!event.composedPath().includes(elements.searchWrap)) close();
