@@ -1,4 +1,5 @@
 import { BOOKS, bookFileName } from "./books.mjs";
+import { BOOK_ABBREVIATIONS } from "./book-abbreviations.mjs";
 import MiniSearch from "./vendor/minisearch.js";
 
 const chapterKey = (book, chapter) => `${book}:${chapter}`;
@@ -7,7 +8,20 @@ const maxBookSuggestions = 5;
 const hangulTermPattern = /\p{Script=Hangul}/u;
 const japaneseCharacterPattern = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u;
 const koreanParticlePattern = /(?:께서|에서|으로|에게|한테|부터|까지|처럼|보다|은|는|이|가|을|를|의|에|로|와|과|도|만|께)$/u;
+const latinSearchLanguages = new Set(["en", "it", "de", "fr", "es", "pt"]);
 const yieldToBrowser = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+export function foldLatinSearchText(text, language) {
+  if (!latinSearchLanguages.has(language)) return text;
+  const folded = text.normalize("NFD")
+    .replace(/(\p{Script=Latin})\p{M}+/gu, "$1")
+    .normalize("NFC")
+    .replace(/æ/gu, "ae")
+    .replace(/œ/gu, "oe");
+  return language === "de"
+    ? folded.replace(/ß/gu, "ss").replace(/([aou])e/gu, "$1")
+    : folded;
+}
 
 function createJapaneseTokenizer() {
   const segmenter = typeof Intl.Segmenter === "function"
@@ -31,9 +45,9 @@ function createJapaneseTokenizer() {
   };
 }
 
-function normalizeSearchTerm(term) {
+function normalizeSearchTerm(term, language) {
   const normalizedTerm = term.normalize("NFKC").toLocaleLowerCase();
-  if (!hangulTermPattern.test(normalizedTerm)) return normalizedTerm;
+  if (!hangulTermPattern.test(normalizedTerm)) return foldLatinSearchText(normalizedTerm, language);
 
   const stem = normalizedTerm.replace(koreanParticlePattern, "");
   return stem.length >= 2 ? stem : normalizedTerm;
@@ -52,6 +66,9 @@ export function createScriptureStore({
   const chapters = new Map();
   const bookLoads = new Map();
   const bookIndexes = new Map();
+  const abbreviationIndexes = new Map();
+  const foldedBookIndexes = new Map();
+  const foldedAbbreviationIndexes = new Map();
   const bookOrderIndexes = new Map(bookOrder.map((book, index) => [book, index]));
   let activeDisplayBookNames = displayBookNames;
   let activeBookNameAliases = [];
@@ -66,6 +83,7 @@ export function createScriptureStore({
   }
   function rebuildBookNameIndex() {
     bookIndexes.clear();
+    abbreviationIndexes.clear();
     [...canonicalBookNames, ...activeDisplayBookNames].forEach((name, index) => {
       const bookIndex = index % canonicalBookNames.length;
       bookIndexes.set(normalizeBookName(name), bookIndex + 1);
@@ -75,6 +93,27 @@ export function createScriptureStore({
         bookIndexes.set(normalizeBookName(name), bookIndex + 1);
       }
     });
+    (BOOK_ABBREVIATIONS[editionId] ?? []).forEach((aliases, bookIndex) => {
+      for (const name of aliases) {
+        const key = normalizeBookName(name);
+        const books = abbreviationIndexes.get(key) ?? new Set();
+        books.add(bookIndex + 1);
+        abbreviationIndexes.set(key, books);
+      }
+    });
+    foldedBookIndexes.clear();
+    foldedAbbreviationIndexes.clear();
+    for (const [source, target] of [
+      [bookIndexes, foldedBookIndexes],
+      [abbreviationIndexes, foldedAbbreviationIndexes],
+    ]) {
+      for (const [name, value] of source) {
+        const key = foldLatinSearchText(name, language);
+        const books = target.get(key) ?? new Set();
+        for (const book of value instanceof Set ? value : [value]) books.add(book);
+        target.set(key, books);
+      }
+    }
     bookNamesByLength = [...bookIndexes.keys()].sort((left, right) => right.length - left.length);
   }
   rebuildBookNameIndex();
@@ -299,9 +338,29 @@ export function createScriptureStore({
     const exactBook = bookIndexes.get(normalizedName);
     if (exactBook) return [{ book: exactBook, name: normalizedName }];
 
+    const abbreviatedBooks = abbreviationIndexes.get(normalizedName);
+    if (abbreviatedBooks) {
+      return [...abbreviatedBooks]
+        .sort((left, right) => bookOrderIndexes.get(left) - bookOrderIndexes.get(right))
+        .map((book) => ({ book, name: normalizedName }));
+    }
+
+    const foldedName = foldLatinSearchText(normalizedName, language);
+    const foldedBooks = foldedBookIndexes.get(foldedName) ?? foldedAbbreviationIndexes.get(foldedName);
+    if (foldedBooks) {
+      return [...foldedBooks]
+        .sort((left, right) => bookOrderIndexes.get(left) - bookOrderIndexes.get(right))
+        .map((book) => ({ book, name: normalizedName }));
+    }
+
     const matches = bookNamesByLength.filter((bookName) => bookName.startsWith(normalizedName));
-    const matchingBooks = [...new Set(matches.map((bookName) => bookIndexes.get(bookName)))];
-    return matchingBooks
+    const matchingBooks = new Set(matches.map((bookName) => bookIndexes.get(bookName)));
+    for (const [name, books] of foldedBookIndexes) {
+      if (name.startsWith(foldedName)) {
+        for (const book of books) matchingBooks.add(book);
+      }
+    }
+    return [...matchingBooks]
       .sort((left, right) => bookOrderIndexes.get(left) - bookOrderIndexes.get(right))
       .slice(0, maxBookSuggestions)
       .map((book) => ({ book, name: normalizeBookName(bookName(book)) }));
@@ -310,7 +369,7 @@ export function createScriptureStore({
   function parseNavigationQuery(query) {
     const normalizedQuery = normalizeBookName(query);
     const exactBook = resolveBookNames(normalizedQuery);
-    if (exactBook.length === 1 && exactBook[0].name === normalizedQuery) {
+    if (exactBook.length > 0 && exactBook.every(({ name }) => name === normalizedQuery)) {
       return { searchType: "book", books: exactBook, bookQuery: normalizedQuery };
     }
 
@@ -363,7 +422,7 @@ export function createScriptureStore({
     if (!textSearchIndexPromise) {
       textSearchIndexPromise = (async () => {
         await loadAllBooks();
-        const indexOptions = { fields: ["text"], processTerm: normalizeSearchTerm };
+        const indexOptions = { fields: ["text"], processTerm: (term) => normalizeSearchTerm(term, language) };
         if (japaneseTokenizer) indexOptions.tokenize = japaneseTokenizer;
         const index = new MiniSearch(indexOptions);
         let batch = [];
@@ -397,27 +456,65 @@ export function createScriptureStore({
 
   async function search(query) {
     const normalizedQuery = query.normalize("NFKC").trim();
-    if (normalizedQuery.length < 2) return [];
+    if (!normalizedQuery) return [];
 
     await initialize();
+    if (Array.from(normalizedQuery).length === 1) {
+      const name = normalizeBookName(normalizedQuery);
+      if (!abbreviationIndexes.has(name) && !foldedAbbreviationIndexes.has(foldLatinSearchText(name, language))) return [];
+      return getNavigationResult({
+        searchType: "book",
+        books: resolveBookNames(name),
+      });
+    }
     const navigationQuery = parseNavigationQuery(normalizedQuery);
     const navigationResults = await getNavigationResult(navigationQuery);
     const textQuery = navigationQuery?.bookQuery ?? normalizedQuery;
+    if (Array.from(textQuery).length < 2) return navigationResults;
 
     const index = await getTextSearchIndex();
-    const matches = index.search(textQuery, {
+    const exactMatches = index.search(textQuery, { combineWith: "AND" });
+    const exactById = new Map(exactMatches.map((match) => [match.id, match]));
+    const searchOptions = {
       combineWith: "AND",
       prefix: (term) => term.length >= 3 || hangulTermPattern.test(term) ||
         (language === "ja" && Array.from(term).length >= 2),
       fuzzy: (term) => {
-        if (language === "ja") return false;
         if (hangulTermPattern.test(term)) return term.length >= 3 ? 1 / term.length : false;
-        return term.length >= 6 ? 0.15 : false;
+        if (language === "ja") return Array.from(term).length >= 4 ? 1 : false;
+        if (term.length >= 17) return Math.min(6, Math.round(term.length * 0.15));
+        if (term.length >= 8) return 2;
+        return term.length >= 5 ? 1 : false;
       },
-    });
+    };
+    const matches = index.search(textQuery, searchOptions);
+    const approximateIds = new Set(matches.filter(({ id }) => !exactById.has(id)).map(({ id }) => id));
+    const termsById = new Map();
+    const queryTerms = [...new Set(matches[0]?.queryTerms ?? [])];
+    // Attribute matches per query term so an exact word suppresses its own fuzzy highlights.
+    if (queryTerms.length > 1 && approximateIds.size > 0) {
+      for (const term of queryTerms) {
+        const termMatches = index.search(term, {
+          ...searchOptions,
+          tokenize: (value) => [value],
+          processTerm: (value) => value,
+          filter: ({ id }) => approximateIds.has(id),
+        });
+        for (const match of termMatches) {
+          const words = Object.keys(match.match);
+          const selectedWords = words.includes(term) ? [term] : words;
+          const selected = termsById.get(match.id) ?? new Set();
+          selectedWords.forEach((word) => selected.add(word));
+          termsById.set(match.id, selected);
+        }
+      }
+    }
 
     matches.sort((left, right) => {
-      const scoreDifference = right.score - left.score;
+      const exactDifference = Number(exactById.has(right.id)) - Number(exactById.has(left.id));
+      if (exactDifference !== 0) return exactDifference;
+      const scoreDifference = (exactById.get(right.id)?.score ?? right.score) -
+        (exactById.get(left.id)?.score ?? left.score);
       if (scoreDifference !== 0) return scoreDifference;
 
       const [leftBook, leftChapter, leftVerse] = left.id.split(":").map(Number);
@@ -432,7 +529,9 @@ export function createScriptureStore({
       return {
         ...getChapter(book, chapter)[verseNumber - 1],
         searchType: "text",
-        matchedTerms: Object.keys(match.match),
+        matchedTerms: exactById.has(match.id)
+          ? Object.keys(exactById.get(match.id).match)
+          : [...(termsById.get(match.id) ?? Object.keys(match.match))],
       };
     });
 
@@ -461,5 +560,8 @@ export function createScriptureStore({
 }
 
 function normalizeBookName(name) {
-  return name.normalize("NFKC").trim().toLocaleLowerCase();
+  return name.normalize("NFKC").trim().toLocaleLowerCase()
+    .replace(/\./gu, "")
+    .replace(/^(\d+)\s+(?=\p{L})/u, "$1")
+    .replace(/\s+/gu, " ");
 }
