@@ -1,3 +1,5 @@
+import { foldLatinSearchText } from "./scripture-store.js";
+
 export function createReaderSearch({
   elements,
   getEditionId,
@@ -38,12 +40,12 @@ export function createReaderSearch({
     }
 
     const hangulTerm = /\p{Script=Hangul}/u;
-    const wordPattern = /[\p{L}\p{N}]+/gu;
+    const wordPattern = /[\p{L}\p{M}\p{N}]+/gu;
     let cursor = 0;
 
     for (const match of text.matchAll(wordPattern)) {
       const word = match[0];
-      const normalizedWord = word.toLocaleLowerCase();
+      const normalizedWord = foldLatinSearchText(word.normalize("NFKC").toLocaleLowerCase(), language);
       const isMatched = terms.has(normalizedWord) || [...terms].some((term) =>
         hangulTerm.test(term) && normalizedWord.startsWith(term)
       );

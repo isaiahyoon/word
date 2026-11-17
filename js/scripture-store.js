@@ -8,7 +8,20 @@ const maxBookSuggestions = 5;
 const hangulTermPattern = /\p{Script=Hangul}/u;
 const japaneseCharacterPattern = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u;
 const koreanParticlePattern = /(?:께서|에서|으로|에게|한테|부터|까지|처럼|보다|은|는|이|가|을|를|의|에|로|와|과|도|만|께)$/u;
+const latinSearchLanguages = new Set(["en", "it", "de", "fr", "es", "pt"]);
 const yieldToBrowser = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+export function foldLatinSearchText(text, language) {
+  if (!latinSearchLanguages.has(language)) return text;
+  const folded = text.normalize("NFD")
+    .replace(/(\p{Script=Latin})\p{M}+/gu, "$1")
+    .normalize("NFC")
+    .replace(/æ/gu, "ae")
+    .replace(/œ/gu, "oe");
+  return language === "de"
+    ? folded.replace(/ß/gu, "ss").replace(/([aou])e/gu, "$1")
+    : folded;
+}
 
 function createJapaneseTokenizer() {
   const segmenter = typeof Intl.Segmenter === "function"
@@ -32,9 +45,9 @@ function createJapaneseTokenizer() {
   };
 }
 
-function normalizeSearchTerm(term) {
+function normalizeSearchTerm(term, language) {
   const normalizedTerm = term.normalize("NFKC").toLocaleLowerCase();
-  if (!hangulTermPattern.test(normalizedTerm)) return normalizedTerm;
+  if (!hangulTermPattern.test(normalizedTerm)) return foldLatinSearchText(normalizedTerm, language);
 
   const stem = normalizedTerm.replace(koreanParticlePattern, "");
   return stem.length >= 2 ? stem : normalizedTerm;
@@ -54,6 +67,8 @@ export function createScriptureStore({
   const bookLoads = new Map();
   const bookIndexes = new Map();
   const abbreviationIndexes = new Map();
+  const foldedBookIndexes = new Map();
+  const foldedAbbreviationIndexes = new Map();
   const bookOrderIndexes = new Map(bookOrder.map((book, index) => [book, index]));
   let activeDisplayBookNames = displayBookNames;
   let activeBookNameAliases = [];
@@ -86,6 +101,19 @@ export function createScriptureStore({
         abbreviationIndexes.set(key, books);
       }
     });
+    foldedBookIndexes.clear();
+    foldedAbbreviationIndexes.clear();
+    for (const [source, target] of [
+      [bookIndexes, foldedBookIndexes],
+      [abbreviationIndexes, foldedAbbreviationIndexes],
+    ]) {
+      for (const [name, value] of source) {
+        const key = foldLatinSearchText(name, language);
+        const books = target.get(key) ?? new Set();
+        for (const book of value instanceof Set ? value : [value]) books.add(book);
+        target.set(key, books);
+      }
+    }
     bookNamesByLength = [...bookIndexes.keys()].sort((left, right) => right.length - left.length);
   }
   rebuildBookNameIndex();
@@ -317,9 +345,22 @@ export function createScriptureStore({
         .map((book) => ({ book, name: normalizedName }));
     }
 
+    const foldedName = foldLatinSearchText(normalizedName, language);
+    const foldedBooks = foldedBookIndexes.get(foldedName) ?? foldedAbbreviationIndexes.get(foldedName);
+    if (foldedBooks) {
+      return [...foldedBooks]
+        .sort((left, right) => bookOrderIndexes.get(left) - bookOrderIndexes.get(right))
+        .map((book) => ({ book, name: normalizedName }));
+    }
+
     const matches = bookNamesByLength.filter((bookName) => bookName.startsWith(normalizedName));
-    const matchingBooks = [...new Set(matches.map((bookName) => bookIndexes.get(bookName)))];
-    return matchingBooks
+    const matchingBooks = new Set(matches.map((bookName) => bookIndexes.get(bookName)));
+    for (const [name, books] of foldedBookIndexes) {
+      if (name.startsWith(foldedName)) {
+        for (const book of books) matchingBooks.add(book);
+      }
+    }
+    return [...matchingBooks]
       .sort((left, right) => bookOrderIndexes.get(left) - bookOrderIndexes.get(right))
       .slice(0, maxBookSuggestions)
       .map((book) => ({ book, name: normalizeBookName(bookName(book)) }));
@@ -381,7 +422,7 @@ export function createScriptureStore({
     if (!textSearchIndexPromise) {
       textSearchIndexPromise = (async () => {
         await loadAllBooks();
-        const indexOptions = { fields: ["text"], processTerm: normalizeSearchTerm };
+        const indexOptions = { fields: ["text"], processTerm: (term) => normalizeSearchTerm(term, language) };
         if (japaneseTokenizer) indexOptions.tokenize = japaneseTokenizer;
         const index = new MiniSearch(indexOptions);
         let batch = [];
@@ -420,7 +461,7 @@ export function createScriptureStore({
     await initialize();
     if (Array.from(normalizedQuery).length === 1) {
       const name = normalizeBookName(normalizedQuery);
-      if (!abbreviationIndexes.has(name)) return [];
+      if (!abbreviationIndexes.has(name) && !foldedAbbreviationIndexes.has(foldLatinSearchText(name, language))) return [];
       return getNavigationResult({
         searchType: "book",
         books: resolveBookNames(name),

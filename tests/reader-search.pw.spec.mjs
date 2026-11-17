@@ -206,6 +206,31 @@ for (const [route, query, reference, matchedText] of [
   });
 }
 
+for (const [route, query, reference, matchedText] of [
+  ["moh", "crea", "Genèse 1:1", "créa"],
+  ["moh", "soeur traite", "Genèse 12:13", "sœur"],
+  ["luz", "nino destetado", "Génesis 21:8", "niño"],
+  ["alm", "coracao imaginacao", "Gênesis 6:5", "coração"],
+  ["licht", "schoen kinder", "1 Mose 6:2", "schön"],
+]) {
+  test(`highlights the original verse for ${query} in ${route}`, async ({ page }) => {
+    await page.goto(`/${route}`);
+    await page.locator("#search-input").fill(query);
+    const result = page.locator(".search-result").filter({ hasText: reference });
+    await expect(result).toHaveCount(1);
+    await expect(result.locator("mark").filter({ hasText: matchedText })).toHaveCount(1);
+  });
+}
+
+test("opens a German book reference written with umlauts", async ({ page }) => {
+  await page.goto("/licht");
+  await page.locator("#search-input").fill("Matthäus 1:1");
+  const first = page.locator(".search-result").first();
+  await expect(first).toHaveAttribute("data-search-type", "reference");
+  await first.click();
+  await expect(page).toHaveURL(/\/licht\/b\/matthew\/c\/1\/v\/1$/);
+});
+
 for (const [width, height] of [[390, 844], [1440, 900]]) {
   for (const [route, query, reference, lastMatch, ending] of [
     ["kjv", "hallowed forgotten", "Deuteronomy 26:13", "forgotten", "neither have I forgotten them."],
