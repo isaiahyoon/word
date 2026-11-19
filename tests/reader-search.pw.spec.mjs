@@ -349,14 +349,20 @@ test("loads another search batch from a mobile touch scroll", async ({ page }) =
     });
     const distance = await searchResults.evaluate((element) => element.scrollHeight - element.clientHeight);
     expect(distance).toBeGreaterThan(0);
-    await session.send("Input.synthesizeScrollGesture", {
-      x: Math.round(bounds.x + bounds.width / 2),
-      y: Math.round(bounds.y + bounds.height - 12),
-      yDistance: -(distance + 64),
-      speed: 1200,
-      preventFling: true,
-      gestureSourceType: "touch",
+    const x = Math.round(bounds.x + bounds.width / 2);
+    const startY = Math.round(bounds.y + bounds.height - 24);
+    const endY = Math.max(Math.round(bounds.y + 8), startY - distance - 64);
+    await session.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [{ id: 1, x, y: startY }],
     });
+    for (let step = 1; step <= 5; step += 1) {
+      await session.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [{ id: 1, x, y: startY + Math.round((endY - startY) * step / 5) }],
+      });
+    }
+    await session.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
   } finally {
     await session.detach();
   }
