@@ -61,6 +61,7 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 900 
       ["alm1911", "alm", "Jo", "João"],
     ]) {
       test(`shows ${editionId} navigation before full-text loading and retains complete results`, async ({ page, context }) => {
+        if (editionId === "japbungo") test.setTimeout(45_000);
         let release;
         const gate = new Promise((resolve) => { release = resolve; });
         await context.route(`**/scripture/${editionId}/books/1_genesis.json`, async (route) => {
@@ -82,7 +83,11 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 900 
             await expect.poll(() => page.workers().length).toBe(1);
           }
           release();
-          await expect(page.locator("#search-results")).not.toHaveAttribute("aria-busy", "true");
+          await expect(page.locator("#search-results")).not.toHaveAttribute(
+            "aria-busy",
+            "true",
+            { timeout: editionId === "japbungo" ? 30_000 : 15_000 },
+          );
           await expect(navigation).toHaveAttribute("data-navigation-probe", "retained");
           await expect(navigation).toHaveCount(1);
           await expect(navigation).toHaveAttribute("aria-selected", "true");

@@ -337,6 +337,7 @@ test("loads another search batch from a mobile touch scroll", async ({ page }) =
   await expect(page.locator(".search-result")).toHaveCount(12);
 
   const searchResults = page.locator("#search-results");
+  await expect(searchResults).not.toHaveAttribute("aria-busy", "true");
   const bounds = await searchResults.boundingBox();
   expect(bounds).not.toBeNull();
 
@@ -347,11 +348,12 @@ test("loads another search batch from a mobile touch scroll", async ({ page }) =
       maxTouchPoints: 1,
     });
     const distance = await searchResults.evaluate((element) => element.scrollHeight - element.clientHeight);
+    expect(distance).toBeGreaterThan(0);
     await session.send("Input.synthesizeScrollGesture", {
       x: Math.round(bounds.x + bounds.width / 2),
       y: Math.round(bounds.y + bounds.height - 12),
-      yDistance: -distance,
-      speed: 3000,
+      yDistance: -(distance + 64),
+      speed: 1200,
       preventFling: true,
       gestureSourceType: "touch",
     });
@@ -359,6 +361,7 @@ test("loads another search batch from a mobile touch scroll", async ({ page }) =
     await session.detach();
   }
 
+  await expect.poll(() => searchResults.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
   await expect(page.locator(".search-result")).toHaveCount(24);
 });
 

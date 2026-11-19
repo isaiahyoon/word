@@ -271,14 +271,16 @@ export function createShareLanguageMenu({
       options[(index + step + options.length) % options.length].focus();
     }
   });
-  document.addEventListener("click", (event) => {
+  function closeOnOutsideInteraction(event) {
     if (
       !menu.hidden &&
       !trigger.contains(event.target) &&
       !copyTrigger.contains(event.target) &&
       !menu.contains(event.target)
     ) close();
-  });
+  }
+  document.addEventListener("pointerdown", closeOnOutsideInteraction);
+  document.addEventListener("click", closeOnOutsideInteraction);
 
   return { close, isOpen: () => !menu.hidden };
 }
