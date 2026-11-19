@@ -64,10 +64,12 @@ export function createScriptureStore({
   canonicalBookNames = BOOKS,
   displayBookNames = canonicalBookNames,
   bookOrder = canonicalBookNames.map((_, index) => index + 1),
+  getCachedBook = async () => null,
   searchIndexCache: searchIndexCacheOverride,
 } = {}) {
   const searchIndexCache = searchIndexCacheOverride ?? createScriptureSearchIndexCache({ logger });
   const chapters = new Map();
+  const chapterLoads = new Map();
   const bookLoads = new Map();
   const bookIndexes = new Map();
   const abbreviationIndexes = new Map();
@@ -256,6 +258,51 @@ export function createScriptureStore({
     }
   }
 
+  function parseChapter(book, chapter, records) {
+    if (!Array.isArray(records) || records.length === 0) {
+      throw new Error(`Invalid chapter data for ${bookName(book)} ${chapter}`);
+    }
+    return records.map((record, index) => {
+      if (
+        !Array.isArray(record) ||
+        (record.length !== 2 && record.length !== 3 && record.length !== 4) ||
+        record[0] !== index + 1 ||
+        typeof record[1] !== "string" ||
+        (record.length >= 3 && typeof record[2] !== "string") ||
+        (record.length === 4 && typeof record[3] !== "string")
+      ) {
+        throw new Error(`Invalid verse data for ${bookName(book)} ${chapter}`);
+      }
+      const verse = { book, chapter, verse: record[0], text: record[1] };
+      if (record[2]) {
+        verse.sourceEdition = record[2];
+        verse.textLanguage = record[2] === "krv" ? "ko" : language;
+      }
+      if (record.length === 4) {
+        verse.referenceText = record[3];
+        verse.referenceTextLanguage = "en";
+      }
+      return verse;
+    });
+  }
+
+  function storeBook(book, bookData) {
+    const loadedChapters = Object.entries(bookData).map(([chapter, records]) => {
+      const number = Number(chapter);
+      if (!Number.isInteger(number) || number < 1 || number > chapterCount(book)) {
+        throw new Error(`Invalid chapter data for ${bookName(book)} ${chapter}`);
+      }
+      return [number, parseChapter(book, number, records)];
+    }).sort(([left], [right]) => left - right);
+    if (
+      loadedChapters.length !== chapterCount(book) ||
+      loadedChapters.some(([chapter], index) => chapter !== index + 1)
+    ) {
+      throw new Error(`Incomplete chapter data for ${bookName(book)}`);
+    }
+    loadedChapters.forEach(([chapter, verses]) => chapters.set(chapterKey(book, chapter), verses));
+  }
+
   function loadBook(book) {
     validateBook(book);
     if (bookLoads.has(book)) return bookLoads.get(book);
@@ -265,48 +312,7 @@ export function createScriptureStore({
         if (!response.ok) throw new Error(`Could not load ${bookName(book)}`);
         return response.json();
       })
-      .then((bookData) => {
-        const entries = Object.entries(bookData);
-        const loadedChapters = entries.map(([chapter, records]) => {
-          const chapterNumber = Number(chapter);
-          if (!Number.isInteger(chapterNumber) || chapterNumber < 1 || chapterNumber > chapterCount(book) || !Array.isArray(records)) {
-            throw new Error(`Invalid chapter data for ${bookName(book)} ${chapter}`);
-          }
-
-          const verses = records.map((record, index) => {
-            if (
-              !Array.isArray(record) ||
-              (record.length !== 2 && record.length !== 3 && record.length !== 4) ||
-              record[0] !== index + 1 ||
-              typeof record[1] !== "string" ||
-              (record.length >= 3 && typeof record[2] !== "string") ||
-              (record.length === 4 && typeof record[3] !== "string")
-            ) {
-              throw new Error(`Invalid verse data for ${bookName(book)} ${chapterNumber}`);
-            }
-            const verse = { book, chapter: chapterNumber, verse: record[0], text: record[1] };
-            if (record[2]) {
-              verse.sourceEdition = record[2];
-              verse.textLanguage = record[2] === "krv" ? "ko" : language;
-            }
-            if (record.length === 4) {
-              verse.referenceText = record[3];
-              verse.referenceTextLanguage = "en";
-            }
-            return verse;
-          });
-          return [chapterNumber, verses];
-        }).sort(([left], [right]) => left - right);
-
-        if (
-          loadedChapters.length !== chapterCount(book) ||
-          loadedChapters.some(([chapter], index) => chapter !== index + 1)
-        ) {
-          throw new Error(`Incomplete chapter data for ${bookName(book)}`);
-        }
-
-        loadedChapters.forEach(([chapter, verses]) => chapters.set(chapterKey(book, chapter), verses));
-      })
+      .then((bookData) => storeBook(book, bookData))
       .catch((error) => {
         bookLoads.delete(book);
         logLoadError("loadBook", error, book);
@@ -321,10 +327,39 @@ export function createScriptureStore({
     await Promise.all(canonicalBookNames.map((_, index) => loadBook(index + 1)));
   }
 
-  async function loadChapter(book, chapter) {
+  async function loadChapter(book, chapter, { chapterOnly = false } = {}) {
     validateBook(book);
     if (!Number.isInteger(chapter) || chapter < 1 || chapter > chapterCount(book)) {
       throw new RangeError(`Invalid chapter: ${bookName(book)} ${chapter}`);
+    }
+    const key = chapterKey(book, chapter);
+    if (chapters.has(key)) return chapters.get(key);
+    if (chapterOnly && !bookLoads.has(book)) {
+      if (!chapterLoads.has(key)) {
+        const request = (async () => {
+          const cachedBook = await getCachedBook(bookFiles[book - 1]);
+          if (cachedBook && !bookLoads.has(book)) {
+            const bookData = await cachedBook.json();
+            if (!bookLoads.has(book)) {
+              storeBook(book, bookData);
+              bookLoads.set(book, Promise.resolve());
+            }
+          }
+          if (bookLoads.has(book)) {
+            await bookLoads.get(book);
+          } else {
+            const response = await fetchImpl(`${dataPath}/chapters/${book}/${chapter}.json`);
+            if (!response.ok) throw new Error(`Could not load ${bookName(book)} ${chapter}`);
+            chapters.set(key, parseChapter(book, chapter, await response.json()));
+          }
+          return chapters.get(key);
+        })().catch((error) => {
+          logLoadError("loadChapter", error, book);
+          throw error;
+        }).finally(() => chapterLoads.delete(key));
+        chapterLoads.set(key, request);
+      }
+      return chapterLoads.get(key);
     }
     await loadBook(book);
     return chapters.get(chapterKey(book, chapter)) ?? [];

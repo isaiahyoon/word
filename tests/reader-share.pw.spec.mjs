@@ -125,7 +125,7 @@ test("shares in another language without waiting on the network once the menu ha
   await mockNativeShare(page);
   await page.locator("#verse-16").click();
 
-  const warmed = page.waitForResponse("**/scripture/luther1912/books/43_john.json");
+  const warmed = page.waitForResponse("**/scripture/luther1912/chapters/43/3.json");
   await page.locator("#share-selected-verses").click();
   await warmed;
   await page.route("**/scripture/**", (route) => route.abort());

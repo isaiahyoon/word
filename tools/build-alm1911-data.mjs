@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { ALM_BOOK_NAMES, ALM_BOOK_NAME_ALIASES } from "../js/editions.mjs";
 import { BOOKS, bookFileName } from "../js/books.mjs";
+import { generateChapterData } from "./chapter-data.mjs";
 import { createSearchIndexVersion, writeSearchIndexCodeVersion } from "./search-index-version.mjs";
 
 const searchIndexCodeVersion = await writeSearchIndexCodeVersion();
@@ -144,6 +145,7 @@ await writeFile(
   }),
 );
 
+await generateChapterData("alm1911");
 console.log(
   `Wrote Almeida 1911 data for ${BOOKS.length} books and ${sourceVerseCount.toLocaleString()} source verses; preserved ${numberingDifferences.length} native numbering difference.`,
 );

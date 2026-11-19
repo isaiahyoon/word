@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { BOOKS, bookFileName } from "../js/books.mjs";
 import { stripParagraphMarks } from "./rv1865-text.mjs";
+import { generateChapterData } from "./chapter-data.mjs";
 import { createSearchIndexVersion, writeSearchIndexCodeVersion } from "./search-index-version.mjs";
 
 const searchIndexCodeVersion = await writeSearchIndexCodeVersion();
@@ -130,6 +131,7 @@ await writeFile(
   }),
 );
 
+await generateChapterData("rv1865");
 console.log(
   `Wrote RV1865 data for ${BOOKS.length} books, ${sourceVerseCount.toLocaleString()} source verses, ${numberingDifferences.length} chapters with KJV count differences, ${alternateReferences.length} alternate references, and ${Object.keys(chapterFrontMatter).length} chapter headings.`,
 );

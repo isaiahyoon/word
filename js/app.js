@@ -3,7 +3,7 @@ import { createChapterPicker } from "./chapter-picker.js";
 import { createScriptureStore } from "./scripture-store.js";
 import { createVisualEffects } from "./visual-effects.js";
 import { createEditionPicker, createShareLanguageMenu } from "./edition-picker.js";
-import { createOfflineEditions, registerServiceWorker } from "./offline.js";
+import { createOfflineEditions, readSavedBook, registerServiceWorker } from "./offline.js";
 import { createOfflineControl } from "./offline-control.js";
 import { createReaderFeedback } from "./reader-feedback.js";
 import { createReaderSearch } from "./reader-search.js";
@@ -139,6 +139,7 @@ const scriptureStores = new Map(EDITION_IDS.map((editionId) => {
     language: edition.language,
     displayBookNames: edition.displayBookNames,
     bookOrder: edition.bookOrder,
+    getCachedBook: (bookFile) => readSavedBook(edition, bookFile),
   })];
 }));
 let scripture = scriptureStores.get(DEFAULT_EDITION);

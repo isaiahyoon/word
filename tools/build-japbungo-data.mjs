@@ -1,5 +1,6 @@
 import { mkdir, readdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { BOOKS, bookFileName } from "../js/books.mjs";
+import { generateChapterData } from "./chapter-data.mjs";
 import { createSearchIndexVersion, writeSearchIndexCodeVersion } from "./search-index-version.mjs";
 
 const searchIndexCodeVersion = await writeSearchIndexCodeVersion();
@@ -176,6 +177,7 @@ await writeFile(
   }),
 );
 
+await generateChapterData("japbungo");
 console.log(
   `Wrote JapBungo data for ${BOOKS.length} books, ${sourceVerseCount.toLocaleString()} Japanese source verses, ${generatedVerseCount.toLocaleString()} generated verse slots, and ${fallbackVerseCount} KRV fallback verses.`,
 );

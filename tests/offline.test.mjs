@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
-import { EDITION_CACHE, createOfflineEditions, registerServiceWorker } from "../js/offline.js";
+import { EDITION_CACHE, createOfflineEditions, readSavedBook, registerServiceWorker } from "../js/offline.js";
 import { preloadEditionFonts } from "../js/offline-fonts.js";
 
 const baseUrl = "https://example.test/";
@@ -14,6 +14,7 @@ function createCacheStorage() {
   const stores = new Map();
   return {
     stores,
+    match: async (url, { cacheName }) => stores.get(cacheName)?.get(url),
     open: async (name) => {
       if (!stores.has(name)) stores.set(name, new Map());
       const entries = stores.get(name);
@@ -56,6 +57,31 @@ function createOffline({ cacheStorage = createCacheStorage(), fetchOptions, prel
 const cachedUrls = (cacheStorage) => [...(cacheStorage.stores.get(EDITION_CACHE)?.keys() ?? [])];
 
 describe("offline editions", () => {
+  it("reads legacy saved books without downloading chapter resources", async () => {
+    const { cacheStorage, offline, requests } = createOffline();
+    await offline.save(kjv);
+    const before = [...requests];
+    const options = { cacheStorage, baseUrl };
+    const response = await readSavedBook(kjv, bookFiles[0], options);
+    assert.deepEqual(await response.json(), { 1: [] });
+    assert.equal(await readSavedBook(krv, bookFiles[0], options), null);
+    assert.equal(await readSavedBook(kjv, bookFiles[0], { cacheStorage: null }), null);
+    assert.deepEqual(requests, before);
+  });
+
+  it("logs cache lookup failures so chapter loading can continue online", async () => {
+    const warnings = [];
+    const error = new Error("Cache unavailable");
+    const response = await readSavedBook(kjv, bookFiles[0], {
+      cacheStorage: { match: async () => { throw error; } },
+      baseUrl,
+      logger: { warn: (...args) => warnings.push(args) },
+    });
+    assert.equal(response, null);
+    assert.equal(warnings.length, 1);
+    assert.deepEqual(warnings[0][1], { editionId: "kjv", bookFile: bookFiles[0], error });
+  });
+
   it("saves every book and the index, reporting progress", async () => {
     const { cacheStorage, offline } = createOffline();
     const progress = [];

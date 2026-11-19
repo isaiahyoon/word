@@ -4,6 +4,21 @@ import { preloadEditionFonts } from "./offline-fonts.js";
 export const EDITION_CACHE = "the-word-editions";
 const downloadConcurrency = 4;
 
+export async function readSavedBook(edition, bookFile, {
+  cacheStorage = globalThis.caches,
+  baseUrl = globalThis.document?.baseURI,
+  logger = defaultLogger,
+} = {}) {
+  if (!cacheStorage) return null;
+  const url = new URL(`${edition.dataPath}/books/${bookFile}`, baseUrl).href;
+  try {
+    return await cacheStorage.match(url, { cacheName: EDITION_CACHE }) ?? null;
+  } catch (error) {
+    logger.warn("Saved book lookup failed", { editionId: edition.id, bookFile, error });
+    return null;
+  }
+}
+
 export function registerServiceWorker({
   serviceWorker = globalThis.navigator?.serviceWorker,
   logger = defaultLogger,

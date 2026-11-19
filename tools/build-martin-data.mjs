@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { BOOKS, bookFileName } from "../js/books.mjs";
 import { MARTIN_BOOK_NAMES } from "../js/editions.mjs";
+import { generateChapterData } from "./chapter-data.mjs";
 import { createSearchIndexVersion, writeSearchIndexCodeVersion } from "./search-index-version.mjs";
 
 const searchIndexCodeVersion = await writeSearchIndexCodeVersion();
@@ -121,6 +122,7 @@ await writeFile(
   }),
 );
 
+await generateChapterData("martin1744");
 console.log(
   `Wrote Martin data for ${BOOKS.length} books, ${sourceVerseCount.toLocaleString()} native verses, and ${numberingDifferences.length} chapters with KJV count differences.`,
 );

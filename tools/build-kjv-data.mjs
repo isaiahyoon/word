@@ -1,5 +1,6 @@
 import { mkdir, readdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { BOOKS, bookFileName } from "../js/books.mjs";
+import { generateChapterData } from "./chapter-data.mjs";
 import { createSearchIndexVersion, writeSearchIndexCodeVersion } from "./search-index-version.mjs";
 
 const searchIndexCodeVersion = await writeSearchIndexCodeVersion();
@@ -56,4 +57,5 @@ await writeFile(manifestUrl, JSON.stringify({
     searchIndexCodeVersion,
   }),
 }));
+await generateChapterData("kjv");
 console.log(`Wrote KJV data for ${books.length} books.`);

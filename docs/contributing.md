@@ -78,6 +78,13 @@ immediate navigation suggestions, stale-query handling, and offline worker searc
 Native sharing and clipboard writes are instrumented in these cross-browser
 tests; existing Chromium tests also verify actual clipboard contents.
 
+Edition builders regenerate their chapter-sized Copy/Share assets automatically.
+Run `npm run build:chapters` to regenerate all editions; its `-- --check` mode
+checks generated chapter files without rewriting them. Copy/Share tests cover
+all editions, chapter-only network warming, user activation, and offline
+compatibility with the existing whole-book cache. Source-data parity tests cover
+every generated chapter and its optional fallback/reference fields.
+
 Full-text search uses `js/scripture-search-worker.js` and the same Scripture-store
 matching implementation as the unit tests. `js/scripture-search-client.js` owns
 worker reuse, cancellation, edition replacement, and error propagation; the

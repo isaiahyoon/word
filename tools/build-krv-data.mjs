@@ -1,6 +1,7 @@
 import { mkdir, readdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { BOOKS, bookFileName } from "../js/books.mjs";
 import { EDITIONS } from "../js/editions.mjs";
+import { generateChapterData } from "./chapter-data.mjs";
 import { createSearchIndexVersion, writeSearchIndexCodeVersion } from "./search-index-version.mjs";
 
 const searchIndexCodeVersion = await writeSearchIndexCodeVersion();
@@ -82,6 +83,7 @@ await writeFile(
   }),
 );
 
+await generateChapterData("krv");
 console.log(`Wrote KRV data for ${BOOKS.length} books and ${totalVerses.toLocaleString()} verses.`);
 
 function normalizeBookId(name) {

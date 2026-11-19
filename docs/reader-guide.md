@@ -12,7 +12,7 @@ To install it on Mac, open the site in Safari and choose **File → Add to Dock*
 
 ### Install size
 
-The 47 unique files listed in `sw.js` total about 1.43 MB raw (1,429,538 bytes), or about 1.02 MB when each file is gzipped and the results are summed (1,017,663 bytes). This includes the rounded browser favicon, Apple touch icon, and PWA icons, but excludes fonts and saved editions. A fresh local load of the About install page fetched two WOFF2 files totaling 71,776 bytes. Almeida's offline font preloader fetched 15 WOFF2 files totaling 279,504 bytes; nine Cardo files account for 97,904 bytes. Other languages and browser/font subsets may fetch different files, and Korean and Japanese editions need more font data. Saved editions are optional, stored separately, and removable. These figures will change as the app changes, so re-measure before quoting them.
+The 47 unique files listed in `sw.js` total about 1.43 MB raw (1,431,463 bytes), or about 1.02 MB when each file is gzipped and the results are summed (1,018,049 bytes). This includes the rounded browser favicon, Apple touch icon, and PWA icons, but excludes fonts and saved editions. A fresh local load of the About install page fetched two WOFF2 files totaling 71,776 bytes. Almeida's offline font preloader fetched 15 WOFF2 files totaling 279,504 bytes; nine Cardo files account for 97,904 bytes. Other languages and browser/font subsets may fetch different files, and Korean and Japanese editions need more font data. Saved editions are optional, stored separately, and removable. These figures will change as the app changes, so re-measure before quoting them.
 
 ## Offline editions
 
@@ -32,6 +32,13 @@ Choose **Save** under the Reading Edition picker to download every book of the s
 These are uncompressed file sizes measured locally on 2026-11-06. They exclude the app shell and fonts; actual browser storage may vary. A progress count appears while an edition saves, and that edition's fonts are downloaded for offline use. Korean and Japanese editions download more font data than the others. When saving finishes, the status changes to **Available offline**; **Remove** deletes the saved copy. If a download fails, nothing is kept and the control offers to try again. Editions not saved are available only online: choosing one while offline keeps the current edition and shows a notice, and opening one directly explains that a connection is required while leaving the edition picker usable. Search works offline for saved editions.
 
 A service worker (`sw.js`) keeps the reader's code available offline. It checks the network first for code and styles, so online readers receive new deploys on their next load; saved editions are served from the cache and refreshed in the background when online. Saved copies stay on the device and are not synced.
+
+Copy and Share warm the current chapter in the other languages when their menu
+opens, not each edition's entire book. Saved whole books are reused directly,
+including editions saved before chapter-sized loading was introduced. This
+does not add to the offline download size or require saving an edition again.
+Offline, cross-language copying and sharing require the target edition's saved
+text; known verse-alignment limits still apply.
 
 ## Privacy
 

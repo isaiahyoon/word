@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { BOOKS, bookFileName } from "../js/books.mjs";
+import { generateChapterData } from "./chapter-data.mjs";
 import { createSearchIndexVersion, writeSearchIndexCodeVersion } from "./search-index-version.mjs";
 
 const searchIndexCodeVersion = await writeSearchIndexCodeVersion();
@@ -119,6 +120,7 @@ await writeFile(
   }),
 );
 
+await generateChapterData("diodati");
 console.log(
   `Wrote Diodati data for ${BOOKS.length} books and ${sourceVerseCount.toLocaleString()} KJV-aligned verses.`,
 );
