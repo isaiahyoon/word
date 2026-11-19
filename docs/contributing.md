@@ -72,10 +72,25 @@ Playwright uses two workers in CI and 50% of available workers locally; pass
 runs the full check on every push and pull request.
 
 The Chromium project runs the full browser suite. The WebKit project also runs
-the focused Copy/Share interaction suite at desktop and mobile sizes, including
-real taps, language selection, clipboard fallback, Cut, and menu dismissal.
+the focused Copy/Share and progressive-search suites at desktop and mobile sizes,
+including real taps, language selection, clipboard fallback, Cut, menu dismissal,
+immediate navigation suggestions, stale-query handling, and offline worker search.
 Native sharing and clipboard writes are instrumented in these cross-browser
 tests; existing Chromium tests also verify actual clipboard contents.
+
+Full-text search uses `js/scripture-search-worker.js` and the same Scripture-store
+matching implementation as the unit tests. `js/scripture-search-client.js` owns
+worker reuse, cancellation, edition replacement, and error propagation; the
+reader renders navigation suggestions independently. Keep both new worker
+modules in the service-worker shell cache. Benchmark reference-suggestion latency
+separately from complete search latency, and include main-thread long tasks,
+cold/warm runs, transfer size, and offline operation. Page-level CPU throttling
+does not necessarily throttle the worker equally.
+
+Prebuilt and persistent indexes are not enabled. A serialized MiniSearch index
+must be measured together with the verse text needed to display results, not
+treated as a replacement for Scripture data. Versioning, storage quotas, index
+restore time, and language-specific tokenization also affect that tradeoff.
 
 CI jobs use the official Playwright container with browsers and Linux dependencies
 preinstalled, rather than installing browsers in every job. The exact

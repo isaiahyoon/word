@@ -405,12 +405,12 @@ export function createScriptureStore({
     const results = [];
     for (const { book } of books) {
       if (chapter > chapterCount(book)) continue;
-      const verses = await loadChapter(book, chapter);
       if (searchType === "chapter") {
         results.push({ searchType, book, chapter, verse: 1, text: "", matchedTerms: [] });
         continue;
       }
 
+      const verses = await loadChapter(book, chapter);
       const exactVerse = verses.find((item) => item.verse === verse);
       if (exactVerse) results.push({ ...exactVerse, searchType, matchedTerms: [] });
     }
@@ -454,23 +454,29 @@ export function createScriptureStore({
     return textSearchIndexPromise;
   }
 
-  async function search(query) {
+  async function prepareSearch(query) {
     const normalizedQuery = query.normalize("NFKC").trim();
-    if (!normalizedQuery) return [];
+    if (!normalizedQuery) return { navigationResults: [], textQuery: "" };
 
     await initialize();
     if (Array.from(normalizedQuery).length === 1) {
       const name = normalizeBookName(normalizedQuery);
-      if (!abbreviationIndexes.has(name) && !foldedAbbreviationIndexes.has(foldLatinSearchText(name, language))) return [];
-      return getNavigationResult({
-        searchType: "book",
-        books: resolveBookNames(name),
-      });
+      const recognized = abbreviationIndexes.has(name) ||
+        foldedAbbreviationIndexes.has(foldLatinSearchText(name, language));
+      const navigationResults = recognized
+        ? await getNavigationResult({ searchType: "book", books: resolveBookNames(name) })
+        : [];
+      return { navigationResults, textQuery: "" };
     }
     const navigationQuery = parseNavigationQuery(normalizedQuery);
     const navigationResults = await getNavigationResult(navigationQuery);
     const textQuery = navigationQuery?.bookQuery ?? normalizedQuery;
-    if (Array.from(textQuery).length < 2) return navigationResults;
+    return { navigationResults, textQuery: Array.from(textQuery).length < 2 ? "" : textQuery };
+  }
+
+  async function search(query) {
+    const { navigationResults, textQuery } = await prepareSearch(query);
+    if (!textQuery) return navigationResults;
 
     const index = await getTextSearchIndex();
     const exactMatches = index.search(textQuery, { combineWith: "AND" });
@@ -555,6 +561,7 @@ export function createScriptureStore({
     getChapterFrontMatter,
     getVerseHeadings,
     getReferenceMetadata: () => referenceMetadata,
+    prepareSearch,
     search,
   };
 }

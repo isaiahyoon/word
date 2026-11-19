@@ -341,24 +341,23 @@ test("loads another search batch from a mobile touch scroll", async ({ page }) =
   expect(bounds).not.toBeNull();
 
   const session = await page.context().newCDPSession(page);
-  await session.send("Emulation.setTouchEmulationEnabled", {
-    enabled: true,
-    maxTouchPoints: 1,
-  });
-  const x = Math.round(bounds.x + bounds.width / 2);
-  await session.send("Input.dispatchTouchEvent", {
-    type: "touchStart",
-    touchPoints: [{ id: 1, x, y: Math.round(bounds.y + bounds.height - 12) }],
-  });
-  await session.send("Input.dispatchTouchEvent", {
-    type: "touchMove",
-    touchPoints: [{ id: 1, x, y: Math.max(1, Math.round(bounds.y - 120)) }],
-  });
-  await session.send("Input.dispatchTouchEvent", {
-    type: "touchEnd",
-    touchPoints: [],
-  });
-  await session.detach();
+  try {
+    await session.send("Emulation.setTouchEmulationEnabled", {
+      enabled: true,
+      maxTouchPoints: 1,
+    });
+    const distance = await searchResults.evaluate((element) => element.scrollHeight - element.clientHeight);
+    await session.send("Input.synthesizeScrollGesture", {
+      x: Math.round(bounds.x + bounds.width / 2),
+      y: Math.round(bounds.y + bounds.height - 12),
+      yDistance: -distance,
+      speed: 3000,
+      preventFling: true,
+      gestureSourceType: "touch",
+    });
+  } finally {
+    await session.detach();
+  }
 
   await expect(page.locator(".search-result")).toHaveCount(24);
 });

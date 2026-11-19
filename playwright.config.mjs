@@ -10,7 +10,10 @@ export default defineConfig({
     { name: "chromium" },
     {
       name: "webkit",
-      testMatch: "**/reader-copy-share-interactions.pw.spec.mjs",
+      testMatch: [
+        "**/reader-copy-share-interactions.pw.spec.mjs",
+        "**/reader-search-progressive.pw.spec.mjs",
+      ],
       use: { browserName: "webkit" },
     },
   ],

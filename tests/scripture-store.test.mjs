@@ -47,6 +47,22 @@ function createMockFetch(dataPath = "./scripture/kjv", indexMetadata = {}) {
 }
 
 describe("scripture store", () => {
+  it("prepares navigation without loading or indexing unrelated books", async () => {
+    const mock = createMockFetch();
+    const store = createScriptureStore({ fetchImpl: mock.fetchImpl, editionId: "kjv" });
+    const book = await store.prepareSearch("John");
+    assert.equal(book.navigationResults[0].searchType, "book");
+    const chapter = await store.prepareSearch("John 3");
+    assert.equal(chapter.navigationResults[0].searchType, "chapter");
+    assert.deepEqual(mock.requests, ["./scripture/kjv/index.json"]);
+    const reference = await store.prepareSearch("Jn. ３：１６");
+    assert.deepEqual(reference.navigationResults.map(({ book, chapter, verse }) => [book, chapter, verse]), [[43, 3, 16]]);
+    assert.equal(reference.textQuery, "jn");
+    assert.deepEqual(mock.requests, ["./scripture/kjv/index.json", "./scripture/kjv/books/43_john.json"]);
+    assert.deepEqual((await store.prepareSearch("John 3:99")).navigationResults, []);
+    assert.deepEqual(await store.prepareSearch("z"), { navigationResults: [], textQuery: "" });
+  });
+
   it("resolves every edition's book abbreviations without replacing full names", async () => {
     for (const [editionId, edition] of Object.entries(EDITIONS)) {
       const aliases = BOOK_ABBREVIATIONS[editionId];
