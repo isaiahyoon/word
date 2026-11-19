@@ -43,11 +43,11 @@ The Amazing Word is free to use, asks for no account, and is built around a simp
 
 ### Find, read, and carry a passage
 
-- Search Scripture by words or phrases, with exact word matches ahead of typo-tolerant results, optional accents in Latin-script editions, complete verses, and direct suggestions for books, passages, and localized abbreviations.
+- Search Scripture by words or phrases, with exact word matches ahead of typo-tolerant results, optional accents in Latin-script editions, and complete verses. Book, passage, and localized abbreviation suggestions appear before full-text loading finishes; indexing and text search run in a background worker, and a small versioned device cache avoids rebuilding recent indexes after reloads.
 - Move through the text with book and chapter navigation, keyboard shortcuts, or direct passage links. Same-chapter verse shortcuts, search-result navigation, and Back/Forward reuse the displayed verses rather than rebuilding the chapter. Unchanged book lists and picker options also stay mounted.
 - Press Space to jump to the top even when a reader button has focus. Enter still activates buttons, and Space keeps its normal behavior while typing or using a menu or dialog. Escape returns focus from search to the current verse.
 - Chapter and edition changes keep the current passage visible while loading, wait for the reading font, replace the text in one update, and position the new passage before painting. Up/Down within the displayed chapter retains smooth scrolling unless reduced motion is enabled.
-- Select verses to copy or share. When moving a passage between editions, the reader reports known alignment limits instead of presenting uncertain references as exact.
+- Select verses to copy or share, then choose a language by touch, pointer, or keyboard. Opening the language menu warms only the current chapter in the other editions, rather than downloading their entire books; existing offline book saves are reused. Escape, tabbing away, or tapping or clicking outside dismisses the language menu. When moving a passage between editions, the reader reports known alignment limits instead of presenting uncertain references as exact.
 - Install The Amazing Word on desktop or mobile, and save individual editions for offline reading.
 - Read a localized interface in each edition’s language. Reading position and saved editions stay in browser storage on the device; search runs locally.
 
@@ -55,7 +55,7 @@ The [About page](./about.html) introduces the reader, explains installation, and
 
 ### Install size
 
-The precached app shell contains 43 unique files: about 1.42 MB raw (1,419,527 bytes), or 1.01 MB gzipped (1,014,489 bytes, summed per file). Fonts and saved Scripture editions are separate; see the [reader guide](./docs/reader-guide.md#install-size) for details.
+The precached app shell contains 47 unique files: about 1.43 MB raw (1,431,593 bytes), or 1.02 MB gzipped (1,018,079 bytes, summed per file). Fonts and saved Scripture editions are separate; see the [reader guide](./docs/reader-guide.md#install-size) for details.
 
 ## For engineers
 
@@ -82,6 +82,7 @@ Open [http://localhost:8000](http://localhost:8000). The local server serves the
 | Run linters and all test suites | `npm run test:all` |
 | Rebuild edition landing pages and sitemap | `npm run build:seo` |
 | Rebuild edition-specific install manifests | `npm run build:install-manifests` |
+| Regenerate chapter-sized Copy/Share data for all editions | `npm run build:chapters` |
 | Rebuild or inspect Scripture data | See the [Scripture data guide](./docs/scripture-data.md) |
 
 The [contributor guide](./docs/contributing.md) covers generated routes, diagnostics, CI, tests, and design-system entry points. Search behavior and language-specific reference support are documented in the [search guide](./docs/search.md).

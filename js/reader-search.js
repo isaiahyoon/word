@@ -1,4 +1,5 @@
 import { foldLatinSearchText } from "./scripture-store.js";
+import { createScriptureSearchClient } from "./scripture-search-client.js";
 
 export function createReaderSearch({
   elements,
@@ -19,6 +20,10 @@ export function createReaderSearch({
     shown: 0,
     activeIndex: -1,
   };
+  const searchClient = createScriptureSearchClient({
+    fallbackSearch: (query) => getScripture().search(query),
+    logger,
+  });
 
   function appendHighlighted(container, text, matchedTerms = [], language = editions[getEditionId()].language) {
     const terms = new Set(matchedTerms.map((term) => term.toLocaleLowerCase()));
@@ -109,8 +114,8 @@ export function createReaderSearch({
     return summaryParts.join(" · ");
   }
 
-  function appendResults() {
-    const batch = state.matches.slice(state.shown, state.shown + 12);
+  function appendResults(limit = state.shown + 12) {
+    const batch = state.matches.slice(state.shown, limit);
     for (const [batchIndex, verse] of batch.entries()) {
       const resultIndex = state.shown + batchIndex;
       const button = document.createElement("button");
@@ -159,16 +164,20 @@ export function createReaderSearch({
     }
     state.shown += batch.length;
     const summary = elements.searchResults.querySelector(".search-summary");
+    summary.hidden = false;
     summary.textContent = formatSummary(state.matches, state.shown);
   }
 
   async function runSearch(query, requestId) {
     const trimmed = query.trim();
+    const editionId = getEditionId();
+    const isCurrent = () => requestId === state.requestId &&
+      editionId === getEditionId() && trimmed === elements.searchInput.value.trim();
     elements.searchResults.replaceChildren();
+    state.matches = [];
     state.activeIndex = -1;
     elements.searchInput.removeAttribute("aria-activedescendant");
     if (!trimmed) {
-      state.matches = [];
       state.query = "";
       state.shown = 0;
       elements.searchResults.hidden = true;
@@ -176,52 +185,64 @@ export function createReaderSearch({
       return;
     }
     elements.searchResults.hidden = false;
+    elements.searchResults.setAttribute("aria-busy", "true");
     elements.searchInput.setAttribute("aria-expanded", "true");
     state.query = trimmed;
     state.shown = 0;
 
+    const summary = document.createElement("div");
+    summary.className = "search-summary";
+    summary.hidden = true;
+    elements.searchResults.append(summary);
     const loading = document.createElement("div");
-    loading.className = "search-summary";
+    loading.className = "search-summary search-loading";
     loading.textContent = uiText("searchLoading");
     elements.searchResults.append(loading);
-
-    let matches;
     try {
-      const editionId = getEditionId();
-      matches = await logger.measure("Search", { editionId }, () => getScripture().search(trimmed));
-      if (requestId !== state.requestId || trimmed !== elements.searchInput.value.trim()) return;
+      const { navigationResults, textQuery } = await getScripture().prepareSearch(trimmed);
+      if (!isCurrent()) return;
+      state.matches = navigationResults;
+      if (navigationResults.length) {
+        appendResults(12);
+        setActiveResult(0);
+        elements.searchResults.append(loading);
+      }
 
-      elements.searchResults.replaceChildren();
+      const matches = textQuery
+        ? await logger.measure("Search", { editionId }, () => searchClient.search(editionId, trimmed))
+        : navigationResults;
+      if (!isCurrent()) return;
+      loading.remove();
+      elements.searchResults.removeAttribute("aria-busy");
       state.matches = matches;
+      if (matches.length === 0) {
+        summary.remove();
+        const empty = document.createElement("div");
+        empty.className = "search-empty";
+        empty.textContent = uiText("searchNoMatches");
+        elements.searchResults.append(empty);
+        return;
+      }
+      appendResults(12);
+      if (state.activeIndex < 0) setActiveResult(0);
     } catch (error) {
-      if (requestId !== state.requestId) return;
-      logger.error("Search failed", { editionId: getEditionId(), error });
-      elements.searchResults.replaceChildren();
+      if (!isCurrent()) return;
+      logger.error("Search failed", { editionId, error });
+      loading.remove();
+      elements.searchResults.removeAttribute("aria-busy");
+      if (!state.matches.length) summary.remove();
       const message = document.createElement("div");
       message.className = "search-empty";
       message.textContent = uiText("searchUnavailable");
       elements.searchResults.append(message);
-      return;
     }
-
-    if (matches.length === 0) {
-      const empty = document.createElement("div");
-      empty.className = "search-empty";
-      empty.textContent = uiText("searchNoMatches");
-      elements.searchResults.append(empty);
-      return;
-    }
-    const summary = document.createElement("div");
-    summary.className = "search-summary";
-    summary.textContent = formatSummary(matches, Math.min(matches.length, 12));
-    elements.searchResults.append(summary);
-    appendResults();
-    setActiveResult(0);
   }
 
   function invalidate() {
     clearTimeout(state.timer);
     state.requestId += 1;
+    searchClient.cancel();
+    elements.searchResults.removeAttribute("aria-busy");
   }
 
   function close() {
@@ -292,6 +313,7 @@ export function createReaderSearch({
 
   function bindEvents() {
     elements.searchResults.addEventListener("scroll", () => {
+      if (elements.searchResults.getAttribute("aria-busy") === "true") return;
       if (state.shown >= state.matches.length) return;
       const distanceToBottom = elements.searchResults.scrollHeight -
         elements.searchResults.scrollTop -
@@ -306,6 +328,7 @@ export function createReaderSearch({
     document.addEventListener("click", (event) => {
       if (!event.composedPath().includes(elements.searchWrap)) close();
     });
+    if (elements.searchInput.value.trim()) handleInput();
   }
 
   return {

@@ -491,6 +491,11 @@ describe("generated scripture data", () => {
       assert.equal(Object.keys(bookData).length, expectedChapters.size, `${edition} ${BOOKS[index]} chapter count`);
       for (const [chapter, expectedVerses] of expectedChapters) {
         assert.deepEqual(bookData[chapter], expectedVerses, `${edition} ${BOOKS[index]} ${chapter}`);
+        const chapterData = JSON.parse(await readFile(
+          new URL(`../scripture/${edition}/chapters/${bookNumber}/${chapter}.json`, import.meta.url),
+          "utf8",
+        ));
+        assert.deepEqual(chapterData, expectedVerses, `${edition} ${BOOKS[index]} ${chapter} chapter asset`);
         comparedVerses += expectedVerses.length;
       }
     }

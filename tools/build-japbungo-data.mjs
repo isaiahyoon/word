@@ -1,5 +1,9 @@
 import { mkdir, readdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { BOOKS, bookFileName } from "../js/books.mjs";
+import { generateChapterData } from "./chapter-data.mjs";
+import { createSearchIndexVersion, writeSearchIndexCodeVersion } from "./search-index-version.mjs";
+
+const searchIndexCodeVersion = await writeSearchIndexCodeVersion();
 
 const sourceFileUrl = new URL("../sources/japbungo.json", import.meta.url);
 const canonicalIndexUrl = new URL("../scripture/kjv/index.json", import.meta.url);
@@ -152,6 +156,13 @@ await writeFile(
     edition: source.metadata.editionId,
     chapterCounts,
     bookFiles,
+    searchIndexCodeVersion,
+    searchIndexVersion: await createSearchIndexVersion({
+      editionId: "japbungo",
+      bookFiles,
+      bookOutputUrl,
+      searchIndexCodeVersion,
+    }),
     displayBookNames: source.books.map((book) => book.displayName),
     language: source.metadata.language,
     sourceUrl: source.metadata.sourceApi,
@@ -166,6 +177,7 @@ await writeFile(
   }),
 );
 
+await generateChapterData("japbungo");
 console.log(
   `Wrote JapBungo data for ${BOOKS.length} books, ${sourceVerseCount.toLocaleString()} Japanese source verses, ${generatedVerseCount.toLocaleString()} generated verse slots, and ${fallbackVerseCount} KRV fallback verses.`,
 );

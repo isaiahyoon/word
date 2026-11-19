@@ -259,7 +259,7 @@ export function createVerseCopyShare({
     if (store.getChapter(state.book, state.chapter).length === 0) {
       try {
         await store.initialize();
-        await store.loadChapter(state.book, state.chapter);
+        await store.loadChapter(state.book, state.chapter, { chapterOnly: true });
       } catch (error) {
         logger.error("Chapter load failed", {
           action,
@@ -314,7 +314,7 @@ export function createVerseCopyShare({
     const { book, chapter } = state;
     for (const [editionId, store] of scriptureStores) {
       store.initialize()
-        .then(() => store.loadChapter(book, chapter))
+        .then(() => store.loadChapter(book, chapter, { chapterOnly: true }))
         .catch((error) => logger.debug("Share chapter preload failed", { editionId, book, chapter, error }));
     }
   }

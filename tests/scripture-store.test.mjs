@@ -36,10 +36,13 @@ function createMockFetch(dataPath = "./scripture/kjv", indexMetadata = {}) {
     requests,
     fetchImpl: async (url) => {
       requests.push(url);
+      const chapter = url.match(/\/chapters\/(\d+)\/(\d+)\.json$/u);
       const value =
         url === `${dataPath}/index.json`
           ? { chapterCounts, bookFiles, ...indexMetadata }
-          : books[bookFiles.indexOf(url.split("/").at(-1))];
+          : chapter
+            ? books[Number(chapter[1]) - 1]?.[chapter[2]]
+            : books[bookFiles.indexOf(url.split("/").at(-1))];
       if (!value) return { ok: false };
       return { ok: true, json: async () => value };
     },
@@ -47,6 +50,22 @@ function createMockFetch(dataPath = "./scripture/kjv", indexMetadata = {}) {
 }
 
 describe("scripture store", () => {
+  it("prepares navigation without loading or indexing unrelated books", async () => {
+    const mock = createMockFetch();
+    const store = createScriptureStore({ fetchImpl: mock.fetchImpl, editionId: "kjv" });
+    const book = await store.prepareSearch("John");
+    assert.equal(book.navigationResults[0].searchType, "book");
+    const chapter = await store.prepareSearch("John 3");
+    assert.equal(chapter.navigationResults[0].searchType, "chapter");
+    assert.deepEqual(mock.requests, ["./scripture/kjv/index.json"]);
+    const reference = await store.prepareSearch("Jn. ３：１６");
+    assert.deepEqual(reference.navigationResults.map(({ book, chapter, verse }) => [book, chapter, verse]), [[43, 3, 16]]);
+    assert.equal(reference.textQuery, "jn");
+    assert.deepEqual(mock.requests, ["./scripture/kjv/index.json", "./scripture/kjv/books/43_john.json"]);
+    assert.deepEqual((await store.prepareSearch("John 3:99")).navigationResults, []);
+    assert.deepEqual(await store.prepareSearch("z"), { navigationResults: [], textQuery: "" });
+  });
+
   it("resolves every edition's book abbreviations without replacing full names", async () => {
     for (const [editionId, edition] of Object.entries(EDITIONS)) {
       const aliases = BOOK_ABBREVIATIONS[editionId];
@@ -173,6 +192,119 @@ describe("scripture store", () => {
       mock.requests.filter((url) => url.endsWith("43_john.json")).length,
       1,
     );
+  });
+
+  it("deduplicates chapter-only loads without marking the whole book as loaded", async () => {
+    const mock = createMockFetch();
+    const store = createScriptureStore({ fetchImpl: mock.fetchImpl });
+    await store.initialize();
+
+    const [first, second] = await Promise.all([
+      store.loadChapter(43, 3, { chapterOnly: true }),
+      store.loadChapter(43, 3, { chapterOnly: true }),
+    ]);
+
+    assert.equal(first, second);
+    assert.equal(first[15].text, "For God so loved the world");
+    assert.equal(await store.loadChapter(43, 3, { chapterOnly: true }), first);
+    assert.deepEqual(store.getChapter(43, 1), []);
+    assert.deepEqual(mock.requests, ["./scripture/kjv/index.json", "./scripture/kjv/chapters/43/3.json"]);
+
+    await store.loadChapter(43, 1);
+    assert.equal(store.getChapter(43, 2)[0].text, "John chapter two");
+    assert.equal(mock.requests.at(-1), "./scripture/kjv/books/43_john.json");
+    assert.equal((await store.search("John 3:16"))[0].verse, 16);
+  });
+
+  it("reuses a whole-book request already in flight for chapter-only loading", async () => {
+    const mock = createMockFetch();
+    let release;
+    const gate = new Promise((resolve) => { release = resolve; });
+    const store = createScriptureStore({
+      fetchImpl: async (url) => {
+        if (url.includes("/books/")) await gate;
+        return mock.fetchImpl(url);
+      },
+    });
+    await store.initialize();
+    const book = store.loadChapter(43, 1);
+    const chapter = store.loadChapter(43, 3, { chapterOnly: true });
+    release();
+    await book;
+    assert.equal((await chapter)[15].text, "For God so loved the world");
+    assert.deepEqual(mock.requests, ["./scripture/kjv/index.json", "./scripture/kjv/books/43_john.json"]);
+  });
+
+  it("validates chapter-only responses atomically, logs failures, and permits retry", async () => {
+    for (const invalid of [null, [], [[2, "Out of order"]], [[1, "Text"], [2, "Text", 42]]]) {
+      const mock = createMockFetch();
+      const errors = [];
+      let failed = false;
+      const store = createScriptureStore({
+        fetchImpl: async (url) => {
+          if (url.includes("/chapters/") && !failed) {
+            failed = true;
+            return { ok: invalid !== null, json: async () => invalid };
+          }
+          return mock.fetchImpl(url);
+        },
+        logger: { error: (...args) => errors.push(args) },
+      });
+      await store.initialize();
+      await assert.rejects(store.loadChapter(43, 3, { chapterOnly: true }), /Could not load|Invalid/u);
+      assert.deepEqual(store.getChapter(43, 3), []);
+      assert.equal(errors.length, 1);
+      assert.equal(errors[0][1].book.id, 43);
+      assert.equal((await store.loadChapter(43, 3, { chapterOnly: true }))[15].verse, 16);
+      assert.ok(mock.requests.every((url) => !url.includes("/books/")));
+    }
+  });
+
+  it("keeps fallback language and reference text in chapter-only responses", async () => {
+    const mock = createMockFetch();
+    const store = createScriptureStore({
+      language: "ja",
+      fetchImpl: (url) => url.includes("/chapters/")
+        ? Promise.resolve({ ok: true, json: async () => [[1, "Fallback", "krv", "KJV reference"]] })
+        : mock.fetchImpl(url),
+    });
+    await store.initialize();
+    assert.deepEqual(await store.loadChapter(43, 3, { chapterOnly: true }), [{
+      book: 43, chapter: 3, verse: 1, text: "Fallback",
+      sourceEdition: "krv", textLanguage: "ko", referenceText: "KJV reference", referenceTextLanguage: "en",
+    }]);
+  });
+
+  it("reuses saved whole books for chapter-only loading without fetching chapter assets", async () => {
+    const mock = createMockFetch();
+    const cached = [];
+    const store = createScriptureStore({
+      fetchImpl: mock.fetchImpl,
+      getCachedBook: async (file) => {
+        cached.push(file);
+        return { json: async () => ({ 1: [[1, "First"]], 2: [[1, "Second"]], 3: [[1, "Saved"]] }) };
+      },
+    });
+    await store.initialize();
+    assert.equal((await store.loadChapter(43, 3, { chapterOnly: true }))[0].text, "Saved");
+    assert.equal((await store.loadChapter(43, 2))[0].text, "Second");
+    assert.deepEqual(cached, ["43_john.json"]);
+    assert.deepEqual(mock.requests, ["./scripture/kjv/index.json"]);
+  });
+
+  it("rejects incomplete saved books instead of presenting partial offline data as complete", async () => {
+    const mock = createMockFetch();
+    const errors = [];
+    const store = createScriptureStore({
+      fetchImpl: mock.fetchImpl,
+      getCachedBook: async () => ({ json: async () => ({ 3: [[1, "Saved"]] }) }),
+      logger: { error: (...args) => errors.push(args) },
+    });
+    await store.initialize();
+    await assert.rejects(store.loadChapter(43, 3, { chapterOnly: true }), /Incomplete chapter data/u);
+    assert.deepEqual(store.getChapter(43, 3), []);
+    assert.equal(errors.length, 1);
+    assert.deepEqual(mock.requests, ["./scripture/kjv/index.json"]);
   });
 
   it("loads localized KRV references from the KRV edition path", async () => {

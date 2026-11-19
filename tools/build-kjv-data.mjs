@@ -1,5 +1,9 @@
 import { mkdir, readdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { BOOKS, bookFileName } from "../js/books.mjs";
+import { generateChapterData } from "./chapter-data.mjs";
+import { createSearchIndexVersion, writeSearchIndexCodeVersion } from "./search-index-version.mjs";
+
+const searchIndexCodeVersion = await writeSearchIndexCodeVersion();
 
 const sourceUrl = new URL("../sources/kjv.json", import.meta.url);
 const outputUrl = new URL("../scripture/kjv/books/", import.meta.url);
@@ -41,5 +45,17 @@ for (const [index, chapters] of books.entries()) {
   bookFiles.push(fileName);
 }
 
-await writeFile(manifestUrl, JSON.stringify({ edition: "kjv", chapterCounts, bookFiles }));
+await writeFile(manifestUrl, JSON.stringify({
+  edition: "kjv",
+  chapterCounts,
+  bookFiles,
+  searchIndexCodeVersion,
+  searchIndexVersion: await createSearchIndexVersion({
+    editionId: "kjv",
+    bookFiles,
+    bookOutputUrl: outputUrl,
+    searchIndexCodeVersion,
+  }),
+}));
+await generateChapterData("kjv");
 console.log(`Wrote KJV data for ${books.length} books.`);

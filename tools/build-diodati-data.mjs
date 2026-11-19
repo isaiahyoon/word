@@ -1,5 +1,9 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { BOOKS, bookFileName } from "../js/books.mjs";
+import { generateChapterData } from "./chapter-data.mjs";
+import { createSearchIndexVersion, writeSearchIndexCodeVersion } from "./search-index-version.mjs";
+
+const searchIndexCodeVersion = await writeSearchIndexCodeVersion();
 
 const sourceFileUrl = new URL("../sources/diodati.json", import.meta.url);
 const canonicalIndexUrl = new URL("../scripture/kjv/index.json", import.meta.url);
@@ -99,6 +103,13 @@ await writeFile(
     edition: source.metadata.editionId,
     chapterCounts,
     bookFiles,
+    searchIndexCodeVersion,
+    searchIndexVersion: await createSearchIndexVersion({
+      editionId: "diodati",
+      bookFiles,
+      bookOutputUrl,
+      searchIndexCodeVersion,
+    }),
     displayBookNames: source.books.map((book) => book.displayName),
     language: source.metadata.language,
     sourceRepository: source.metadata.sourceRepository,
@@ -109,6 +120,7 @@ await writeFile(
   }),
 );
 
+await generateChapterData("diodati");
 console.log(
   `Wrote Diodati data for ${BOOKS.length} books and ${sourceVerseCount.toLocaleString()} KJV-aligned verses.`,
 );

@@ -1,5 +1,7 @@
 import { BOOKS, bookFileName } from "./books.mjs";
 import { BOOK_ABBREVIATIONS } from "./book-abbreviations.mjs";
+import { createScriptureSearchIndexCache } from "./scripture-search-index-cache.js";
+import { SCRIPTURE_SEARCH_INDEX_CODE_VERSION } from "./scripture-search-index-version.mjs";
 import MiniSearch from "./vendor/minisearch.js";
 
 const chapterKey = (book, chapter) => `${book}:${chapter}`;
@@ -62,8 +64,12 @@ export function createScriptureStore({
   canonicalBookNames = BOOKS,
   displayBookNames = canonicalBookNames,
   bookOrder = canonicalBookNames.map((_, index) => index + 1),
+  getCachedBook = async () => null,
+  searchIndexCache: searchIndexCacheOverride,
 } = {}) {
+  const searchIndexCache = searchIndexCacheOverride ?? createScriptureSearchIndexCache({ logger });
   const chapters = new Map();
+  const chapterLoads = new Map();
   const bookLoads = new Map();
   const bookIndexes = new Map();
   const abbreviationIndexes = new Map();
@@ -122,6 +128,7 @@ export function createScriptureStore({
   let chapterFrontMatter = new Map();
   let verseHeadings = new Map();
   let referenceMetadata = { numberingDifferences: [], alternateReferences: [] };
+  let searchIndexVersion = null;
   let initialization;
   let textSearchIndex;
   let textSearchIndexPromise;
@@ -204,6 +211,10 @@ export function createScriptureStore({
         }
         chapterCounts = index.chapterCounts;
         bookFiles = index.bookFiles;
+        searchIndexVersion = index.searchIndexCodeVersion === SCRIPTURE_SEARCH_INDEX_CODE_VERSION &&
+          /^[a-f0-9]{64}$/u.test(index.searchIndexVersion ?? "")
+          ? index.searchIndexVersion
+          : null;
         chapterFrontMatter = new Map(Object.entries(indexChapterFrontMatter));
         referenceMetadata = { numberingDifferences, alternateReferences };
         verseHeadings = new Map();
@@ -247,6 +258,51 @@ export function createScriptureStore({
     }
   }
 
+  function parseChapter(book, chapter, records) {
+    if (!Array.isArray(records) || records.length === 0) {
+      throw new Error(`Invalid chapter data for ${bookName(book)} ${chapter}`);
+    }
+    return records.map((record, index) => {
+      if (
+        !Array.isArray(record) ||
+        (record.length !== 2 && record.length !== 3 && record.length !== 4) ||
+        record[0] !== index + 1 ||
+        typeof record[1] !== "string" ||
+        (record.length >= 3 && typeof record[2] !== "string") ||
+        (record.length === 4 && typeof record[3] !== "string")
+      ) {
+        throw new Error(`Invalid verse data for ${bookName(book)} ${chapter}`);
+      }
+      const verse = { book, chapter, verse: record[0], text: record[1] };
+      if (record[2]) {
+        verse.sourceEdition = record[2];
+        verse.textLanguage = record[2] === "krv" ? "ko" : language;
+      }
+      if (record.length === 4) {
+        verse.referenceText = record[3];
+        verse.referenceTextLanguage = "en";
+      }
+      return verse;
+    });
+  }
+
+  function storeBook(book, bookData) {
+    const loadedChapters = Object.entries(bookData).map(([chapter, records]) => {
+      const number = Number(chapter);
+      if (!Number.isInteger(number) || number < 1 || number > chapterCount(book)) {
+        throw new Error(`Invalid chapter data for ${bookName(book)} ${chapter}`);
+      }
+      return [number, parseChapter(book, number, records)];
+    }).sort(([left], [right]) => left - right);
+    if (
+      loadedChapters.length !== chapterCount(book) ||
+      loadedChapters.some(([chapter], index) => chapter !== index + 1)
+    ) {
+      throw new Error(`Incomplete chapter data for ${bookName(book)}`);
+    }
+    loadedChapters.forEach(([chapter, verses]) => chapters.set(chapterKey(book, chapter), verses));
+  }
+
   function loadBook(book) {
     validateBook(book);
     if (bookLoads.has(book)) return bookLoads.get(book);
@@ -256,48 +312,7 @@ export function createScriptureStore({
         if (!response.ok) throw new Error(`Could not load ${bookName(book)}`);
         return response.json();
       })
-      .then((bookData) => {
-        const entries = Object.entries(bookData);
-        const loadedChapters = entries.map(([chapter, records]) => {
-          const chapterNumber = Number(chapter);
-          if (!Number.isInteger(chapterNumber) || chapterNumber < 1 || chapterNumber > chapterCount(book) || !Array.isArray(records)) {
-            throw new Error(`Invalid chapter data for ${bookName(book)} ${chapter}`);
-          }
-
-          const verses = records.map((record, index) => {
-            if (
-              !Array.isArray(record) ||
-              (record.length !== 2 && record.length !== 3 && record.length !== 4) ||
-              record[0] !== index + 1 ||
-              typeof record[1] !== "string" ||
-              (record.length >= 3 && typeof record[2] !== "string") ||
-              (record.length === 4 && typeof record[3] !== "string")
-            ) {
-              throw new Error(`Invalid verse data for ${bookName(book)} ${chapterNumber}`);
-            }
-            const verse = { book, chapter: chapterNumber, verse: record[0], text: record[1] };
-            if (record[2]) {
-              verse.sourceEdition = record[2];
-              verse.textLanguage = record[2] === "krv" ? "ko" : language;
-            }
-            if (record.length === 4) {
-              verse.referenceText = record[3];
-              verse.referenceTextLanguage = "en";
-            }
-            return verse;
-          });
-          return [chapterNumber, verses];
-        }).sort(([left], [right]) => left - right);
-
-        if (
-          loadedChapters.length !== chapterCount(book) ||
-          loadedChapters.some(([chapter], index) => chapter !== index + 1)
-        ) {
-          throw new Error(`Incomplete chapter data for ${bookName(book)}`);
-        }
-
-        loadedChapters.forEach(([chapter, verses]) => chapters.set(chapterKey(book, chapter), verses));
-      })
+      .then((bookData) => storeBook(book, bookData))
       .catch((error) => {
         bookLoads.delete(book);
         logLoadError("loadBook", error, book);
@@ -312,10 +327,39 @@ export function createScriptureStore({
     await Promise.all(canonicalBookNames.map((_, index) => loadBook(index + 1)));
   }
 
-  async function loadChapter(book, chapter) {
+  async function loadChapter(book, chapter, { chapterOnly = false } = {}) {
     validateBook(book);
     if (!Number.isInteger(chapter) || chapter < 1 || chapter > chapterCount(book)) {
       throw new RangeError(`Invalid chapter: ${bookName(book)} ${chapter}`);
+    }
+    const key = chapterKey(book, chapter);
+    if (chapters.has(key)) return chapters.get(key);
+    if (chapterOnly && !bookLoads.has(book)) {
+      if (!chapterLoads.has(key)) {
+        const request = (async () => {
+          const cachedBook = await getCachedBook(bookFiles[book - 1]);
+          if (cachedBook && !bookLoads.has(book)) {
+            const bookData = await cachedBook.json();
+            if (!bookLoads.has(book)) {
+              storeBook(book, bookData);
+              bookLoads.set(book, Promise.resolve());
+            }
+          }
+          if (bookLoads.has(book)) {
+            await bookLoads.get(book);
+          } else {
+            const response = await fetchImpl(`${dataPath}/chapters/${book}/${chapter}.json`);
+            if (!response.ok) throw new Error(`Could not load ${bookName(book)} ${chapter}`);
+            chapters.set(key, parseChapter(book, chapter, await response.json()));
+          }
+          return chapters.get(key);
+        })().catch((error) => {
+          logLoadError("loadChapter", error, book);
+          throw error;
+        }).finally(() => chapterLoads.delete(key));
+        chapterLoads.set(key, request);
+      }
+      return chapterLoads.get(key);
     }
     await loadBook(book);
     return chapters.get(chapterKey(book, chapter)) ?? [];
@@ -405,12 +449,12 @@ export function createScriptureStore({
     const results = [];
     for (const { book } of books) {
       if (chapter > chapterCount(book)) continue;
-      const verses = await loadChapter(book, chapter);
       if (searchType === "chapter") {
         results.push({ searchType, book, chapter, verse: 1, text: "", matchedTerms: [] });
         continue;
       }
 
+      const verses = await loadChapter(book, chapter);
       const exactVerse = verses.find((item) => item.verse === verse);
       if (exactVerse) results.push({ ...exactVerse, searchType, matchedTerms: [] });
     }
@@ -421,9 +465,32 @@ export function createScriptureStore({
     if (textSearchIndex) return textSearchIndex;
     if (!textSearchIndexPromise) {
       textSearchIndexPromise = (async () => {
-        await loadAllBooks();
         const indexOptions = { fields: ["text"], processTerm: (term) => normalizeSearchTerm(term, language) };
         if (japaneseTokenizer) indexOptions.tokenize = japaneseTokenizer;
+        const runtimeVersion = language === "ja" ? globalThis.navigator?.userAgent ?? "unknown" : "";
+        const [, cachedIndex] = await Promise.all([
+          loadAllBooks(),
+          searchIndexVersion && typeof searchIndexCache.get === "function"
+            ? searchIndexCache.get(editionId, searchIndexVersion, runtimeVersion).catch((error) => {
+              logger.warn("Search index cache read failed", { editionId, error });
+              return null;
+            })
+            : null,
+        ]);
+        if (cachedIndex) {
+          try {
+            textSearchIndex = MiniSearch.loadJSON(cachedIndex, indexOptions);
+            return textSearchIndex;
+          } catch (error) {
+            logger.warn("Cached search index could not be restored; rebuilding", { editionId, error });
+            try {
+              await searchIndexCache.remove?.(editionId, searchIndexVersion, runtimeVersion);
+            } catch (removeError) {
+              logger.warn("Search index cache removal failed", { editionId, error: removeError });
+            }
+          }
+        }
+
         const index = new MiniSearch(indexOptions);
         let batch = [];
 
@@ -445,6 +512,23 @@ export function createScriptureStore({
 
         if (batch.length > 0) index.addAll(batch);
         textSearchIndex = index;
+        if (searchIndexVersion && typeof searchIndexCache.set === "function") {
+          setTimeout(() => {
+            try {
+              const serializedIndex = JSON.stringify(index);
+              void Promise.resolve(searchIndexCache.set(
+                editionId,
+                searchIndexVersion,
+                serializedIndex,
+                runtimeVersion,
+              )).catch((error) => {
+                logger.warn("Search index cache write failed", { editionId, error });
+              });
+            } catch (error) {
+              logger.warn("Search index cache serialization failed", { editionId, error });
+            }
+          }, 0);
+        }
         return index;
       })().catch((error) => {
         textSearchIndexPromise = null;
@@ -454,23 +538,29 @@ export function createScriptureStore({
     return textSearchIndexPromise;
   }
 
-  async function search(query) {
+  async function prepareSearch(query) {
     const normalizedQuery = query.normalize("NFKC").trim();
-    if (!normalizedQuery) return [];
+    if (!normalizedQuery) return { navigationResults: [], textQuery: "" };
 
     await initialize();
     if (Array.from(normalizedQuery).length === 1) {
       const name = normalizeBookName(normalizedQuery);
-      if (!abbreviationIndexes.has(name) && !foldedAbbreviationIndexes.has(foldLatinSearchText(name, language))) return [];
-      return getNavigationResult({
-        searchType: "book",
-        books: resolveBookNames(name),
-      });
+      const recognized = abbreviationIndexes.has(name) ||
+        foldedAbbreviationIndexes.has(foldLatinSearchText(name, language));
+      const navigationResults = recognized
+        ? await getNavigationResult({ searchType: "book", books: resolveBookNames(name) })
+        : [];
+      return { navigationResults, textQuery: "" };
     }
     const navigationQuery = parseNavigationQuery(normalizedQuery);
     const navigationResults = await getNavigationResult(navigationQuery);
     const textQuery = navigationQuery?.bookQuery ?? normalizedQuery;
-    if (Array.from(textQuery).length < 2) return navigationResults;
+    return { navigationResults, textQuery: Array.from(textQuery).length < 2 ? "" : textQuery };
+  }
+
+  async function search(query) {
+    const { navigationResults, textQuery } = await prepareSearch(query);
+    if (!textQuery) return navigationResults;
 
     const index = await getTextSearchIndex();
     const exactMatches = index.search(textQuery, { combineWith: "AND" });
@@ -555,6 +645,7 @@ export function createScriptureStore({
     getChapterFrontMatter,
     getVerseHeadings,
     getReferenceMetadata: () => referenceMetadata,
+    prepareSearch,
     search,
   };
 }

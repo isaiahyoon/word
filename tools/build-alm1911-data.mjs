@@ -1,6 +1,10 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { ALM_BOOK_NAMES, ALM_BOOK_NAME_ALIASES } from "../js/editions.mjs";
 import { BOOKS, bookFileName } from "../js/books.mjs";
+import { generateChapterData } from "./chapter-data.mjs";
+import { createSearchIndexVersion, writeSearchIndexCodeVersion } from "./search-index-version.mjs";
+
+const searchIndexCodeVersion = await writeSearchIndexCodeVersion();
 
 const sourceUrl = new URL("../sources/alm1911.json", import.meta.url);
 const canonicalIndexUrl = new URL("../scripture/kjv/index.json", import.meta.url);
@@ -114,6 +118,13 @@ await writeFile(
     edition: source.metadata.editionId,
     chapterCounts: books.map((book) => Object.keys(book).length),
     bookFiles,
+    searchIndexCodeVersion,
+    searchIndexVersion: await createSearchIndexVersion({
+      editionId: "alm1911",
+      bookFiles,
+      bookOutputUrl,
+      searchIndexCodeVersion,
+    }),
     displayBookNames: source.books.map((book) => book.displayName),
     bookNameAliases: source.books.map((book) => book.nameAliases),
     language: source.metadata.language,
@@ -134,6 +145,7 @@ await writeFile(
   }),
 );
 
+await generateChapterData("alm1911");
 console.log(
   `Wrote Almeida 1911 data for ${BOOKS.length} books and ${sourceVerseCount.toLocaleString()} source verses; preserved ${numberingDifferences.length} native numbering difference.`,
 );

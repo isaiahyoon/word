@@ -337,29 +337,37 @@ test("loads another search batch from a mobile touch scroll", async ({ page }) =
   await expect(page.locator(".search-result")).toHaveCount(12);
 
   const searchResults = page.locator("#search-results");
+  await expect(searchResults).not.toHaveAttribute("aria-busy", "true");
   const bounds = await searchResults.boundingBox();
   expect(bounds).not.toBeNull();
 
   const session = await page.context().newCDPSession(page);
-  await session.send("Emulation.setTouchEmulationEnabled", {
-    enabled: true,
-    maxTouchPoints: 1,
-  });
-  const x = Math.round(bounds.x + bounds.width / 2);
-  await session.send("Input.dispatchTouchEvent", {
-    type: "touchStart",
-    touchPoints: [{ id: 1, x, y: Math.round(bounds.y + bounds.height - 12) }],
-  });
-  await session.send("Input.dispatchTouchEvent", {
-    type: "touchMove",
-    touchPoints: [{ id: 1, x, y: Math.max(1, Math.round(bounds.y - 120)) }],
-  });
-  await session.send("Input.dispatchTouchEvent", {
-    type: "touchEnd",
-    touchPoints: [],
-  });
-  await session.detach();
+  try {
+    await session.send("Emulation.setTouchEmulationEnabled", {
+      enabled: true,
+      maxTouchPoints: 1,
+    });
+    const distance = await searchResults.evaluate((element) => element.scrollHeight - element.clientHeight);
+    expect(distance).toBeGreaterThan(0);
+    const x = Math.round(bounds.x + bounds.width / 2);
+    const startY = Math.round(bounds.y + bounds.height - 24);
+    const endY = Math.max(Math.round(bounds.y + 8), startY - distance - 64);
+    await session.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [{ id: 1, x, y: startY }],
+    });
+    for (let step = 1; step <= 5; step += 1) {
+      await session.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [{ id: 1, x, y: startY + Math.round((endY - startY) * step / 5) }],
+      });
+    }
+    await session.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  } finally {
+    await session.detach();
+  }
 
+  await expect.poll(() => searchResults.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
   await expect(page.locator(".search-result")).toHaveCount(24);
 });
 

@@ -6,6 +6,17 @@ export default defineConfig({
   fullyParallel: true,
   expect: { timeout: 15_000 },
   workers: process.env.CI ? 2 : "50%",
+  projects: [
+    { name: "chromium" },
+    {
+      name: "webkit",
+      testMatch: [
+        "**/reader-copy-share-interactions.pw.spec.mjs",
+        "**/reader-search-progressive.pw.spec.mjs",
+      ],
+      use: { browserName: "webkit" },
+    },
+  ],
   use: {
     baseURL: "http://127.0.0.1:4174",
     browserName: "chromium",

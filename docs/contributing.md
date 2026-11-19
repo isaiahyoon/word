@@ -56,13 +56,13 @@ Failures such as a chapter that cannot load, a failed search, or a failed copy a
 
 Run both linters and the route, keyboard-shortcut, scripture-store,
 source-data parity, and development-server tests with Node's built-in test
-runner, then install Chromium once and run the browser interaction tests:
+runner, then install Chromium and WebKit once and run the browser interaction tests:
 
 ```sh
 npm run lint:css
 npm run lint:js
 npm test
-npx playwright install chromium
+npx playwright install chromium webkit
 npm run test:ui
 ```
 
@@ -71,8 +71,42 @@ Playwright uses two workers in CI and 50% of available workers locally; pass
 `--workers=N` to `npm run test:ui` to override the local default. GitHub Actions
 runs the full check on every push and pull request.
 
+The Chromium project runs the full browser suite. The WebKit project also runs
+the focused Copy/Share and progressive-search suites at desktop and mobile sizes,
+including real taps, language selection, clipboard fallback, Cut, menu dismissal,
+immediate navigation suggestions, stale-query handling, and offline worker search.
+Native sharing and clipboard writes are instrumented in these cross-browser
+tests; existing Chromium tests also verify actual clipboard contents.
+
+Edition builders regenerate their chapter-sized Copy/Share assets automatically.
+Run `npm run build:chapters` to regenerate all editions; its `-- --check` mode
+checks generated chapter files without rewriting them. Copy/Share tests cover
+all editions, chapter-only network warming, user activation, and offline
+compatibility with the existing whole-book cache. Source-data parity tests cover
+every generated chapter and its optional fallback/reference fields.
+
+Full-text search uses `js/scripture-search-worker.js` and the same Scripture-store
+matching implementation as the unit tests. `js/scripture-search-client.js` owns
+worker reuse, cancellation, edition replacement, and error propagation; the
+reader renders navigation suggestions independently. Keep both new worker
+modules in the service-worker shell cache. Benchmark reference-suggestion latency
+separately from complete search latency, and include main-thread long tasks,
+cold/warm runs, transfer size, and offline operation. Page-level CPU throttling
+does not necessarily throttle the worker equally.
+
+Search indexes are built lazily and stored as disposable, versioned Cache Storage
+entries on the device; at most two edition indexes are retained. The generated
+`searchIndexVersion` hashes the edition's book files, indexing/tokenization
+implementation, and MiniSearch implementation so Scripture corrections or index
+format changes invalidate stale entries. When changing index construction or
+serialization, rebuild all edition data and verify the generated search-index
+versions. Prebuilt indexes remain disabled: a serialized MiniSearch index is
+additional to the verse text needed to display results, not a replacement for
+Scripture data. Versioning, storage quotas, index restore time, and
+language-specific tokenization also affect that tradeoff.
+
 CI jobs use the official Playwright container with browsers and Linux dependencies
-preinstalled, rather than installing Chromium in every job. The exact
+preinstalled, rather than installing browsers in every job. The exact
 `@playwright/test` version in `package.json`, its lockfile entries, and both
 container image tags in `.github/workflows/ci.yml` must match; a Node test enforces
 this. Container startup still requires downloading the image, so compare actual

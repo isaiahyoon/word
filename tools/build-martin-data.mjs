@@ -1,6 +1,10 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { BOOKS, bookFileName } from "../js/books.mjs";
 import { MARTIN_BOOK_NAMES } from "../js/editions.mjs";
+import { generateChapterData } from "./chapter-data.mjs";
+import { createSearchIndexVersion, writeSearchIndexCodeVersion } from "./search-index-version.mjs";
+
+const searchIndexCodeVersion = await writeSearchIndexCodeVersion();
 
 const sourceUrl = new URL("../sources/martin_1744.json", import.meta.url);
 const canonicalIndexUrl = new URL("../scripture/kjv/index.json", import.meta.url);
@@ -96,6 +100,13 @@ await writeFile(
     edition: "martin1744",
     chapterCounts: books.map((book) => Object.keys(book).length),
     bookFiles,
+    searchIndexCodeVersion,
+    searchIndexVersion: await createSearchIndexVersion({
+      editionId: "martin1744",
+      bookFiles,
+      bookOutputUrl,
+      searchIndexCodeVersion,
+    }),
     displayBookNames,
     language: "fr",
     source: "David Martin Bible (1744)",
@@ -111,6 +122,7 @@ await writeFile(
   }),
 );
 
+await generateChapterData("martin1744");
 console.log(
   `Wrote Martin data for ${BOOKS.length} books, ${sourceVerseCount.toLocaleString()} native verses, and ${numberingDifferences.length} chapters with KJV count differences.`,
 );

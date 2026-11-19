@@ -174,6 +174,9 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
     await page.keyboard.press("End");
     await page.keyboard.press("Space");
     await expect(search).toHaveValue("john ");
+    const searchResults = page.locator("#search-results");
+    await expect(searchResults).toHaveAttribute("aria-busy", "true");
+    await expect(searchResults).not.toHaveAttribute("aria-busy", "true");
     await expect(page.locator(".search-result").first()).toBeVisible();
     const scrollBefore = await page.evaluate(() => window.scrollY);
 

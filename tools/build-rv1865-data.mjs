@@ -1,6 +1,10 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { BOOKS, bookFileName } from "../js/books.mjs";
 import { stripParagraphMarks } from "./rv1865-text.mjs";
+import { generateChapterData } from "./chapter-data.mjs";
+import { createSearchIndexVersion, writeSearchIndexCodeVersion } from "./search-index-version.mjs";
+
+const searchIndexCodeVersion = await writeSearchIndexCodeVersion();
 
 const sourceUrl = new URL("../sources/rv1865.json", import.meta.url);
 const canonicalIndexUrl = new URL("../scripture/kjv/index.json", import.meta.url);
@@ -102,6 +106,13 @@ await writeFile(
     edition: "rv1865",
     chapterCounts: books.map((book) => Object.keys(book).length),
     bookFiles,
+    searchIndexCodeVersion,
+    searchIndexVersion: await createSearchIndexVersion({
+      editionId: "rv1865",
+      bookFiles,
+      bookOutputUrl,
+      searchIndexCodeVersion,
+    }),
     displayBookNames,
     language: source.metadata.language,
     source: source.metadata.name,
@@ -120,6 +131,7 @@ await writeFile(
   }),
 );
 
+await generateChapterData("rv1865");
 console.log(
   `Wrote RV1865 data for ${BOOKS.length} books, ${sourceVerseCount.toLocaleString()} source verses, ${numberingDifferences.length} chapters with KJV count differences, ${alternateReferences.length} alternate references, and ${Object.keys(chapterFrontMatter).length} chapter headings.`,
 );

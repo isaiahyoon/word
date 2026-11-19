@@ -18,6 +18,23 @@ node tools/import-alm1911-source.mjs /path/to/ALM1911.json
 npm run build:alm1911
 ```
 
+Each edition builder regenerates that edition's chapter-sized Copy/Share assets
+after writing its book files. Run `npm run build:chapters` to regenerate all
+registered editions, or verify without writing with
+`npm run build:chapters -- --check`. Regeneration removes obsolete numeric
+chapter files. Source-data tests compare every chapter asset with the original
+verse records, including fallback edition and KJV-reference fields.
+
+Copy/Share requests `scripture/<edition>/chapters/<book-number>/<chapter>.json`,
+an array of the book file's exact verse records for that chapter. Opening either
+language menu warms the current chapter in the other editions, reusing loaded
+chapters, in-flight book requests, and saved whole-book responses first. Chapter
+requests are deduplicated and validated before entering the in-memory cache;
+failures are logged and can be retried. A chapter-only response does not mark its
+whole book as loaded. Reading and full-text search retain the whole-book path.
+Chapter assets are not precached or added to offline edition downloads, so
+existing saves remain usable without downloading the new files.
+
 The KJV source is stored in `sources/kjv.json`; the 1961 KRV source is pinned in `sources/krv-1961.json`. KRV attribution is shown when selected. The four chapters with different verse counts have verse-level KJV mappings:
 
 | KRV passage | KJV correspondence |
