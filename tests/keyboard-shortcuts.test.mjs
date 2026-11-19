@@ -14,14 +14,12 @@ function createKeyboardHarness(testContext) {
   let searchInputBounds = { top: 0, bottom: 40 };
 
   globalThis.Element = class TestElement {
-    constructor(isEditing = false, isFocusableControl = false) {
+    constructor(isEditing = false) {
       this.isEditing = isEditing;
-      this.isFocusableControl = isFocusableControl;
     }
 
     closest(selector) {
       if (this.isEditing && selector.includes("input")) return this;
-      if (this.isFocusableControl && selector.includes("button")) return this;
       return null;
     }
   };
@@ -90,10 +88,12 @@ function createKeyboardHarness(testContext) {
   });
 
   function press(key, options = {}) {
-    let defaultPrevented = false;
+    let defaultPrevented = options.defaultPrevented ?? false;
     documentListeners.get("keydown")({
       key,
       target: options.target ?? new globalThis.Element(),
+      defaultPrevented,
+      isComposing: options.isComposing ?? false,
       altKey: options.altKey ?? false,
       ctrlKey: options.ctrlKey ?? false,
       metaKey: options.metaKey ?? false,
@@ -156,15 +156,23 @@ describe("keyboard navigation shortcuts", () => {
     assert.equal(getNavigationAction(" ", { pickerOpen: true }), null);
   });
 
-  it("scrolls on Space except from activatable controls or with Shift", (testContext) => {
+  it("scrolls on Space but leaves typing, composition, and Shift+Space alone", (testContext) => {
     const { calls, press } = createKeyboardHarness(testContext);
-    const button = new globalThis.Element(false, true);
+    const input = new globalThis.Element(true);
 
     assert.equal(press(" "), true);
     assert.deepEqual(calls, ["scrollToTop"]);
-    assert.equal(press(" ", { target: button }), false);
+    assert.equal(press(" ", { target: input }), false);
+    assert.equal(press(" ", { isComposing: true }), false);
     assert.equal(press(" ", { shiftKey: true }), false);
     assert.deepEqual(calls, ["scrollToTop"]);
+  });
+
+  it("leaves keyboard events already handled by a control alone", (testContext) => {
+    const { calls, press } = createKeyboardHarness(testContext);
+
+    press("ArrowDown", { defaultPrevented: true });
+    assert.deepEqual(calls, []);
   });
 
   it("maps Tab and Shift+Tab to forward and backward edition cycling", () => {

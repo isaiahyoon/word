@@ -250,13 +250,28 @@ test("Space jumps to the top and is listed with a rainbow keycap", async ({ page
   expect(background.match(/rgb\(/g)).toHaveLength(6);
 });
 
-test("Space still activates focused buttons instead of scrolling", async ({ page }) => {
-  await page.goto("/kjv/b/genesis/c/1/v/1");
-  await page.locator("#verse-1").waitFor();
-  await page.locator("#shortcuts-open").focus();
-  await page.keyboard.press("Space");
-  await expect(page.locator("#shortcuts-dialog")).toHaveAttribute("open", "");
-});
+for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+  test(`Space jumps to top without activating the focused shortcuts button at ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/kjv/b/genesis/c/1/v/1");
+    await page.locator("#verse-1").waitFor();
+    const button = page.locator("#shortcuts-open");
+    const dialog = page.locator("#shortcuts-dialog");
+    await button.focus();
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(420);
+    await expect(button).toBeFocused();
+
+    await page.keyboard.press("Space");
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+    await expect(dialog).toBeHidden();
+    await expect(button).toBeFocused();
+
+    await page.keyboard.press("Enter");
+    await expect(dialog).toBeVisible();
+  });
+}
 
 test("restores reading position and selected verses across reloads", async ({ page }) => {
   await page.goto("/krv/b/john/c/3/v/16");

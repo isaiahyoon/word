@@ -1234,11 +1234,12 @@ function bindScrollToTop() {
 }
 
 function bindEvents() {
+  const shortcutsDialog = document.querySelector("#shortcuts-dialog");
   readerSearch.bindEvents();
   document.addEventListener("keydown", (event) => {
     const key = event.key.toLowerCase();
     if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey || (key !== "c" && key !== "x")) return;
-    if (elements.feedbackDialog.open) return;
+    if (shortcutsDialog.open || elements.feedbackDialog.open) return;
     if (state.selectedVerses.size === 0) return;
     if (event.target instanceof Element && event.target.closest("input, textarea, select, [contenteditable='true']")) return;
     const selection = window.getSelection();
@@ -1273,7 +1274,7 @@ function bindEvents() {
   document.querySelector("#bottom-next").addEventListener("click", () => navigate(1));
   window.addEventListener("popstate", () => void restoreLocationFromPath());
   bindKeyboardShortcuts({
-    dialog: document.querySelector("#shortcuts-dialog"),
+    dialog: shortcutsDialog,
     openButton: document.querySelector("#shortcuts-open"),
     closeButton: document.querySelector("#shortcuts-close"),
     searchInput: elements.searchInput,
@@ -1293,11 +1294,15 @@ function bindEvents() {
     onScrollToTop: scrollToPageTop,
     isSidebarOpen: () => elements.sidebar.classList.contains("is-open"),
     onEscape: () => {
+      const returnFocusToVerse = elements.searchWrap.contains(document.activeElement);
       const returnFocusToChapterPicker = chapterPicker.isOpen();
       setQuietReadingMode(false);
       chapterPicker.close(returnFocusToChapterPicker);
       readerSearch.close();
       closeSidebar();
+      if (returnFocusToVerse) {
+        document.querySelector(`#verse-${state.verse}`)?.focus({ preventScroll: true });
+      }
     }
   });
   elements.menuToggle.addEventListener("click", () => {

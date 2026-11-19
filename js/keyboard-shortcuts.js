@@ -11,9 +11,6 @@ const NAVIGATION_ACTIONS = new Map([
   [" ", "scrollToTop"],
 ]);
 
-// Space natively activates these, except verse buttons, which Space scrolls past.
-const SPACE_ACTIVATED_CONTROLS = "button:not(.verse), a[href], summary, select, [role='option'], [role='tab'], [role='menuitem']";
-
 export function getNavigationAction(
   key,
   {
@@ -67,6 +64,7 @@ export function bindKeyboardShortcuts({
   });
 
   document.addEventListener("keydown", (event) => {
+    if (event.defaultPrevented || event.isComposing) return;
     if (event.key === "Escape") {
       if (dialog.open) {
         dialog.close();
@@ -91,11 +89,7 @@ export function bindKeyboardShortcuts({
     const isEditing =
       event.target instanceof Element &&
       event.target.closest("input, textarea, select, [contenteditable='true']");
-    const isSpaceActivatingControl =
-      event.key === " " &&
-      (event.shiftKey ||
-        (event.target instanceof Element && event.target.closest(SPACE_ACTIVATED_CONTROLS)));
-    if (isSpaceActivatingControl) return;
+    if (event.key === " " && event.shiftKey) return;
     const action = getNavigationAction(event.key, {
       dialogOpen: dialog.open,
       pickerOpen,

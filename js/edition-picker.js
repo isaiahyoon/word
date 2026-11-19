@@ -223,6 +223,11 @@ export function createShareLanguageMenu({
     onOpen?.(action);
   }
 
+  function closeOnFocusLeave(event) {
+    const next = event.relatedTarget;
+    if (!menu.hidden && next !== activeTrigger && !menu.contains(next)) close();
+  }
+
   for (const [actionTrigger, action] of [[trigger, "share"], [copyTrigger, "copy"]]) {
     actionTrigger.addEventListener("click", () => {
       if (menu.hidden || activeTrigger !== actionTrigger) open(actionTrigger, action);
@@ -232,9 +237,16 @@ export function createShareLanguageMenu({
       if (event.key === "ArrowDown" || event.key === "ArrowUp") {
         event.preventDefault();
         open(actionTrigger, action);
+      } else if (event.key === "Escape" && activeTrigger === actionTrigger) {
+        event.preventDefault();
+        close();
       }
     });
+    actionTrigger.addEventListener("focusout", (event) => {
+      if (activeTrigger === actionTrigger) closeOnFocusLeave(event);
+    });
   }
+  menu.addEventListener("focusout", closeOnFocusLeave);
   menu.addEventListener("click", (event) => {
     const option = event.target.closest("[data-edition]");
     if (!option) return;

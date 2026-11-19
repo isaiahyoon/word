@@ -4,6 +4,8 @@ How scripture search works across the supported editions and languages.
 
 ## Search
 
+Press Escape from search to close the results and return focus to the current verse without scrolling, so reader shortcuts work again.
+
 Search applies to the selected edition. Scripture text matching requires every query term to match in the same verse, but the terms do not need to be adjacent. Verses matching all terms exactly after search normalization come before prefix and typo matches; within each group, results are ranked by relevance, with Bible order breaking ties. Book and passage navigation suggestions still come first. Search is lexical rather than semantic, so it does not infer synonyms or concepts that are absent from the verse text.
 
 For English, Italian, German, French, Spanish, and Portuguese, five- to seven-character terms allow one edit, eight- to sixteen-character terms allow two, and longer terms retain the previous proportional allowance (up to six edits). Shorter terms do not use typo matching, though prefixes may still match. For example, `peircing sword` can find Hebrews 4:12. Edits include insertions, deletions, and substitutions; switching adjacent letters can count as two edits. This matching does not change the stored or displayed Scripture.
