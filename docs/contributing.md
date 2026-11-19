@@ -87,10 +87,16 @@ separately from complete search latency, and include main-thread long tasks,
 cold/warm runs, transfer size, and offline operation. Page-level CPU throttling
 does not necessarily throttle the worker equally.
 
-Prebuilt and persistent indexes are not enabled. A serialized MiniSearch index
-must be measured together with the verse text needed to display results, not
-treated as a replacement for Scripture data. Versioning, storage quotas, index
-restore time, and language-specific tokenization also affect that tradeoff.
+Search indexes are built lazily and stored as disposable, versioned Cache Storage
+entries on the device; at most two edition indexes are retained. The generated
+`searchIndexVersion` hashes the edition's book files, indexing/tokenization
+implementation, and MiniSearch implementation so Scripture corrections or index
+format changes invalidate stale entries. When changing index construction or
+serialization, rebuild all edition data and verify the generated search-index
+versions. Prebuilt indexes remain disabled: a serialized MiniSearch index is
+additional to the verse text needed to display results, not a replacement for
+Scripture data. Versioning, storage quotas, index restore time, and
+language-specific tokenization also affect that tradeoff.
 
 CI jobs use the official Playwright container with browsers and Linux dependencies
 preinstalled, rather than installing browsers in every job. The exact

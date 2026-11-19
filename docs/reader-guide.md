@@ -12,7 +12,7 @@ To install it on Mac, open the site in Safari and choose **File → Add to Dock*
 
 ### Install size
 
-The 45 unique files listed in `sw.js` total about 1.42 MB raw (1,424,457 bytes), or about 1.02 MB when each file is gzipped and the results are summed (1,016,126 bytes). This includes the rounded browser favicon, Apple touch icon, and PWA icons, but excludes fonts and saved editions. A fresh local load of the About install page fetched two WOFF2 files totaling 71,776 bytes. Almeida's offline font preloader fetched 15 WOFF2 files totaling 279,504 bytes; nine Cardo files account for 97,904 bytes. Other languages and browser/font subsets may fetch different files, and Korean and Japanese editions need more font data. Saved editions are optional, stored separately, and removable. These figures will change as the app changes, so re-measure before quoting them.
+The 47 unique files listed in `sw.js` total about 1.43 MB raw (1,429,538 bytes), or about 1.02 MB when each file is gzipped and the results are summed (1,017,663 bytes). This includes the rounded browser favicon, Apple touch icon, and PWA icons, but excludes fonts and saved editions. A fresh local load of the About install page fetched two WOFF2 files totaling 71,776 bytes. Almeida's offline font preloader fetched 15 WOFF2 files totaling 279,504 bytes; nine Cardo files account for 97,904 bytes. Other languages and browser/font subsets may fetch different files, and Korean and Japanese editions need more font data. Saved editions are optional, stored separately, and removable. These figures will change as the app changes, so re-measure before quoting them.
 
 ## Offline editions
 

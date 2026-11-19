@@ -36,6 +36,8 @@ const SHELL_URLS = [
   "/js/reader-feedback.js",
   "/js/reader-search.js",
   "/js/scripture-search-client.js",
+  "/js/scripture-search-index-cache.js",
+  "/js/scripture-search-index-version.mjs",
   "/js/scripture-search-worker.js",
   "/js/scripture-routes.mjs",
   "/js/scripture-store.js",

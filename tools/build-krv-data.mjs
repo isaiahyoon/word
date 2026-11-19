@@ -1,6 +1,9 @@
 import { mkdir, readdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { BOOKS, bookFileName } from "../js/books.mjs";
 import { EDITIONS } from "../js/editions.mjs";
+import { createSearchIndexVersion, writeSearchIndexCodeVersion } from "./search-index-version.mjs";
+
+const searchIndexCodeVersion = await writeSearchIndexCodeVersion();
 
 const sourceCommit = "65cdce887b141581b45097163b4b224de4a332fa";
 const sourceUrl = `https://raw.githubusercontent.com/bluesaurel/Korean-Bible-1961-KRV/${sourceCommit}/bible_1961_krv.json`;
@@ -66,6 +69,13 @@ await writeFile(
   JSON.stringify({
     chapterCounts,
     bookFiles,
+    searchIndexCodeVersion,
+    searchIndexVersion: await createSearchIndexVersion({
+      editionId: "krv",
+      bookFiles,
+      bookOutputUrl,
+      searchIndexCodeVersion,
+    }),
     edition: EDITIONS.krv.id,
     sourceUrl,
     attribution: EDITIONS.krv.attribution,

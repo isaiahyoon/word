@@ -4,6 +4,35 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 900 
   test.describe(`progressive search at ${viewport.width}px`, () => {
     test.use({ viewport, serviceWorkers: "block" });
 
+    test.describe("persistent search index", () => {
+      test.use({ serviceWorkers: "allow" });
+
+      test("persists a search index lazily and reuses it after reload", async ({ page }) => {
+        await page.goto("/kjv/b/john/c/3/v/16");
+        await page.evaluate(async () => {
+          await caches.delete("the-word-search-indexes-v1");
+          await navigator.serviceWorker.ready;
+        });
+        expect(await page.evaluate(() => caches.keys())).not.toContain("the-word-search-indexes-v1");
+
+        const search = page.locator("#search-input");
+        await search.fill("piercing sword");
+        await expect(page.locator(".search-result[data-search-type='text']")
+          .filter({ hasText: "Hebrews 4:12" })).toHaveCount(1);
+        await expect.poll(() => page.evaluate(async () =>
+          (await (await caches.open("the-word-search-indexes-v1")).keys()).length
+        )).toBe(1);
+
+        await page.reload();
+        await page.locator("#search-input").fill("piercing sword");
+        await expect(page.locator(".search-result[data-search-type='text']")
+          .filter({ hasText: "Hebrews 4:12" })).toHaveCount(1);
+        await expect.poll(() => page.evaluate(async () =>
+          (await (await caches.open("the-word-search-indexes-v1")).keys()).length
+        )).toBe(1);
+      });
+    });
+
     test("retains a query typed before the edition finishes initializing", async ({ page, context }) => {
       let release;
       const gate = new Promise((resolve) => { release = resolve; });

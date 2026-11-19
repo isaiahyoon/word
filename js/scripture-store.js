@@ -1,5 +1,7 @@
 import { BOOKS, bookFileName } from "./books.mjs";
 import { BOOK_ABBREVIATIONS } from "./book-abbreviations.mjs";
+import { createScriptureSearchIndexCache } from "./scripture-search-index-cache.js";
+import { SCRIPTURE_SEARCH_INDEX_CODE_VERSION } from "./scripture-search-index-version.mjs";
 import MiniSearch from "./vendor/minisearch.js";
 
 const chapterKey = (book, chapter) => `${book}:${chapter}`;
@@ -62,7 +64,9 @@ export function createScriptureStore({
   canonicalBookNames = BOOKS,
   displayBookNames = canonicalBookNames,
   bookOrder = canonicalBookNames.map((_, index) => index + 1),
+  searchIndexCache: searchIndexCacheOverride,
 } = {}) {
+  const searchIndexCache = searchIndexCacheOverride ?? createScriptureSearchIndexCache({ logger });
   const chapters = new Map();
   const bookLoads = new Map();
   const bookIndexes = new Map();
@@ -122,6 +126,7 @@ export function createScriptureStore({
   let chapterFrontMatter = new Map();
   let verseHeadings = new Map();
   let referenceMetadata = { numberingDifferences: [], alternateReferences: [] };
+  let searchIndexVersion = null;
   let initialization;
   let textSearchIndex;
   let textSearchIndexPromise;
@@ -204,6 +209,10 @@ export function createScriptureStore({
         }
         chapterCounts = index.chapterCounts;
         bookFiles = index.bookFiles;
+        searchIndexVersion = index.searchIndexCodeVersion === SCRIPTURE_SEARCH_INDEX_CODE_VERSION &&
+          /^[a-f0-9]{64}$/u.test(index.searchIndexVersion ?? "")
+          ? index.searchIndexVersion
+          : null;
         chapterFrontMatter = new Map(Object.entries(indexChapterFrontMatter));
         referenceMetadata = { numberingDifferences, alternateReferences };
         verseHeadings = new Map();
@@ -421,9 +430,32 @@ export function createScriptureStore({
     if (textSearchIndex) return textSearchIndex;
     if (!textSearchIndexPromise) {
       textSearchIndexPromise = (async () => {
-        await loadAllBooks();
         const indexOptions = { fields: ["text"], processTerm: (term) => normalizeSearchTerm(term, language) };
         if (japaneseTokenizer) indexOptions.tokenize = japaneseTokenizer;
+        const runtimeVersion = language === "ja" ? globalThis.navigator?.userAgent ?? "unknown" : "";
+        const [, cachedIndex] = await Promise.all([
+          loadAllBooks(),
+          searchIndexVersion && typeof searchIndexCache.get === "function"
+            ? searchIndexCache.get(editionId, searchIndexVersion, runtimeVersion).catch((error) => {
+              logger.warn("Search index cache read failed", { editionId, error });
+              return null;
+            })
+            : null,
+        ]);
+        if (cachedIndex) {
+          try {
+            textSearchIndex = MiniSearch.loadJSON(cachedIndex, indexOptions);
+            return textSearchIndex;
+          } catch (error) {
+            logger.warn("Cached search index could not be restored; rebuilding", { editionId, error });
+            try {
+              await searchIndexCache.remove?.(editionId, searchIndexVersion, runtimeVersion);
+            } catch (removeError) {
+              logger.warn("Search index cache removal failed", { editionId, error: removeError });
+            }
+          }
+        }
+
         const index = new MiniSearch(indexOptions);
         let batch = [];
 
@@ -445,6 +477,23 @@ export function createScriptureStore({
 
         if (batch.length > 0) index.addAll(batch);
         textSearchIndex = index;
+        if (searchIndexVersion && typeof searchIndexCache.set === "function") {
+          setTimeout(() => {
+            try {
+              const serializedIndex = JSON.stringify(index);
+              void Promise.resolve(searchIndexCache.set(
+                editionId,
+                searchIndexVersion,
+                serializedIndex,
+                runtimeVersion,
+              )).catch((error) => {
+                logger.warn("Search index cache write failed", { editionId, error });
+              });
+            } catch (error) {
+              logger.warn("Search index cache serialization failed", { editionId, error });
+            }
+          }, 0);
+        }
         return index;
       })().catch((error) => {
         textSearchIndexPromise = null;
