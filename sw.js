@@ -1,4 +1,4 @@
-const SHELL_CACHE = "the-word-shell-v9";
+const SHELL_CACHE = "the-word-shell-v11";
 const EDITION_CACHE = "the-word-editions";
 const FONT_CACHE = "the-word-fonts-v1";
 const FONT_HOSTS = new Set(["fonts.googleapis.com", "fonts.gstatic.com"]);

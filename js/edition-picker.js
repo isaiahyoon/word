@@ -1,3 +1,4 @@
+import { getPickerOptionIndex } from "./keyboard-shortcuts.js";
 import { formatUiText } from "./ui-locales.mjs";
 
 export function createEditionPicker({
@@ -132,13 +133,8 @@ export function createEditionPicker({
   menu.addEventListener("keydown", (event) => {
     const options = optionButtons();
     const currentIndex = options.indexOf(document.activeElement);
-    let targetIndex;
 
-    if (event.key === "ArrowDown") targetIndex = Math.min(currentIndex + 1, options.length - 1);
-    else if (event.key === "ArrowUp") targetIndex = Math.max(currentIndex - 1, 0);
-    else if (event.key === "Home") targetIndex = 0;
-    else if (event.key === "End") targetIndex = options.length - 1;
-    else if (event.key === "Escape") {
+    if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();
       close();
@@ -148,8 +144,10 @@ export function createEditionPicker({
       event.preventDefault();
       options[currentIndex]?.click();
       return;
-    } else return;
+    }
 
+    const targetIndex = getPickerOptionIndex(event.key, currentIndex, options.length);
+    if (targetIndex === null) return;
     event.preventDefault();
     options[targetIndex]?.focus();
   });
@@ -223,6 +221,11 @@ export function createShareLanguageMenu({
     onOpen?.(action);
   }
 
+  function closeOnFocusLeave(event) {
+    const next = event.relatedTarget;
+    if (!menu.hidden && next !== activeTrigger && !menu.contains(next)) close();
+  }
+
   for (const [actionTrigger, action] of [[trigger, "share"], [copyTrigger, "copy"]]) {
     actionTrigger.addEventListener("click", () => {
       if (menu.hidden || activeTrigger !== actionTrigger) open(actionTrigger, action);
@@ -232,9 +235,16 @@ export function createShareLanguageMenu({
       if (event.key === "ArrowDown" || event.key === "ArrowUp") {
         event.preventDefault();
         open(actionTrigger, action);
+      } else if (event.key === "Escape" && activeTrigger === actionTrigger) {
+        event.preventDefault();
+        close();
       }
     });
+    actionTrigger.addEventListener("focusout", (event) => {
+      if (activeTrigger === actionTrigger) closeOnFocusLeave(event);
+    });
   }
+  menu.addEventListener("focusout", closeOnFocusLeave);
   menu.addEventListener("click", (event) => {
     const option = event.target.closest("[data-edition]");
     if (!option) return;

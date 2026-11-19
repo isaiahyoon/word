@@ -162,6 +162,75 @@ test("styles edition cycling keycaps distinctly and preserves native Tab in cont
 
 const pathname = (page) => () => new URL(page.url()).pathname;
 
+for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+  test(`Escape returns focus from search to the current verse at ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/kjv/b/genesis/c/1/v/16");
+    const verse = page.locator("#verse-16");
+    const search = page.locator("#search-input");
+    await expect(verse).toHaveClass(/is-focused/);
+    await search.fill("john");
+    await page.keyboard.press("End");
+    await page.keyboard.press("Space");
+    await expect(search).toHaveValue("john ");
+    await expect(page.locator(".search-result").first()).toBeVisible();
+    const scrollBefore = await page.evaluate(() => window.scrollY);
+
+    await page.keyboard.press("Escape");
+    await expect(page.locator("#search-results")).toBeHidden();
+    await expect(verse).toBeFocused();
+    expect(await page.evaluate(() => window.scrollY)).toBe(scrollBefore);
+    await page.keyboard.press("q");
+    await expect(page.locator("body")).toHaveClass(/is-quiet-reading/);
+  });
+
+  for (const action of ["share", "copy"]) {
+    test(`Tabbing out of the ${action} menu restores reader shortcuts at ${viewport.width}px`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await page.goto("/kjv/b/genesis/c/1/v/1");
+      await page.locator("#verse-2").click();
+      const trigger = page.locator(`#${action}-selected-verses`);
+      const menu = page.locator("#share-language-menu");
+      await trigger.click();
+      await expect(menu).toBeVisible();
+      const lastOption = menu.getByRole("menuitem").last();
+      await lastOption.focus();
+      await expect(lastOption).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      await expect(page.locator("#cut-selected-verses")).toBeFocused();
+      await expect(menu).toBeHidden();
+      await expect(trigger).toHaveAttribute("aria-expanded", "false");
+      await page.keyboard.press("ArrowRight");
+      await expect(page).toHaveURL(/\/kjv\/b\/genesis\/c\/2\/v\/1$/);
+    });
+  }
+
+  test(`Copy and Cut do not act on selected verses behind the shortcuts dialog at ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto("/kjv/b/genesis/c/1/v/1");
+    const verse = page.locator("#verse-2");
+    await verse.click();
+    await expect(verse).toHaveAttribute("aria-pressed", "true");
+    await page.locator("#shortcuts-open").click();
+    await expect(page.locator("#shortcuts-dialog")).toBeVisible();
+
+    await page.evaluate(() => {
+      window.verseShortcutProbe = [];
+      window.addEventListener("keydown", (event) => {
+        if (event.ctrlKey && (event.key === "c" || event.key === "x")) {
+          window.verseShortcutProbe.push([event.key, event.defaultPrevented]);
+        }
+      });
+    });
+    await page.keyboard.press("Control+c");
+    await page.keyboard.press("Control+x");
+    expect(await page.evaluate(() => window.verseShortcutProbe)).toEqual([["c", false], ["x", false]]);
+    await expect(verse).toHaveAttribute("aria-pressed", "true");
+  });
+}
+
 test("Tab cycles editions from the focused search bar", async ({ page }) => {
   await page.goto("/kjv/b/genesis/c/1/v/1");
   await page.locator("#verse-1").waitFor();

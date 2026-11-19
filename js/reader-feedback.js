@@ -1,3 +1,5 @@
+import { getPickerOptionIndex } from "./keyboard-shortcuts.js";
+
 export function createReaderFeedback({ elements, uiText, currentPassage, logger }) {
   function feedbackCategoryOptions() {
     return [...elements.feedbackCategoryMenu.querySelectorAll(".feedback-category-option")];
@@ -117,13 +119,8 @@ export function createReaderFeedback({ elements, uiText, currentPassage, logger 
     elements.feedbackCategoryMenu.addEventListener("keydown", (event) => {
       const options = feedbackCategoryOptions();
       const currentIndex = options.indexOf(document.activeElement);
-      let targetIndex;
 
-      if (event.key === "ArrowDown") targetIndex = Math.min(currentIndex + 1, options.length - 1);
-      else if (event.key === "ArrowUp") targetIndex = Math.max(currentIndex - 1, 0);
-      else if (event.key === "Home") targetIndex = 0;
-      else if (event.key === "End") targetIndex = options.length - 1;
-      else if (event.key === "Escape") {
+      if (event.key === "Escape") {
         event.preventDefault();
         event.stopPropagation();
         closeFeedbackCategory(true);
@@ -132,8 +129,10 @@ export function createReaderFeedback({ elements, uiText, currentPassage, logger 
         event.preventDefault();
         if (currentIndex >= 0) selectFeedbackCategory(options[currentIndex]);
         return;
-      } else return;
+      }
 
+      const targetIndex = getPickerOptionIndex(event.key, currentIndex, options.length);
+      if (targetIndex === null) return;
       event.preventDefault();
       options[targetIndex]?.focus();
     });

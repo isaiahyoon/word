@@ -11,8 +11,20 @@ const NAVIGATION_ACTIONS = new Map([
   [" ", "scrollToTop"],
 ]);
 
-// Space natively activates these, except verse buttons, which Space scrolls past.
-const SPACE_ACTIVATED_CONTROLS = "button:not(.verse), a[href], summary, select, [role='option'], [role='tab'], [role='menuitem']";
+export function isEditingTarget(target) {
+  return target instanceof Element &&
+    Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
+}
+
+export function getPickerOptionIndex(key, currentIndex, optionCount) {
+  switch (key) {
+    case "ArrowDown": return Math.min(currentIndex + 1, optionCount - 1);
+    case "ArrowUp": return Math.max(currentIndex - 1, 0);
+    case "Home": return 0;
+    case "End": return optionCount - 1;
+    default: return null;
+  }
+}
 
 export function getNavigationAction(
   key,
@@ -45,7 +57,7 @@ export function bindKeyboardShortcuts({
   searchInput,
   isPickerOpen,
   isMenuOpen = () => false,
-  isOtherDialogOpen = () => false,
+  isDialogOpen = () => dialog.open,
   onPreviousChapter,
   onNextChapter,
   onPreviousVerse,
@@ -67,17 +79,17 @@ export function bindKeyboardShortcuts({
   });
 
   document.addEventListener("keydown", (event) => {
+    if (event.defaultPrevented || event.isComposing) return;
     if (event.key === "Escape") {
       if (dialog.open) {
         dialog.close();
         return;
       }
-      if (isOtherDialogOpen()) return;
+      if (isDialogOpen()) return;
       onEscape();
       return;
     }
-    const pickerOpen = isPickerOpen();
-    if (dialog.open || isMenuOpen() || isOtherDialogOpen()) return;
+    if (isDialogOpen() || isMenuOpen()) return;
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
       event.preventDefault();
       const bounds = searchInput.getBoundingClientRect();
@@ -88,18 +100,10 @@ export function bindKeyboardShortcuts({
       return;
     }
 
-    const isEditing =
-      event.target instanceof Element &&
-      event.target.closest("input, textarea, select, [contenteditable='true']");
-    const isSpaceActivatingControl =
-      event.key === " " &&
-      (event.shiftKey ||
-        (event.target instanceof Element && event.target.closest(SPACE_ACTIVATED_CONTROLS)));
-    if (isSpaceActivatingControl) return;
+    if (event.key === " " && event.shiftKey) return;
     const action = getNavigationAction(event.key, {
-      dialogOpen: dialog.open,
-      pickerOpen,
-      isEditing: Boolean(isEditing),
+      pickerOpen: isPickerOpen(),
+      isEditing: isEditingTarget(event.target),
       allowEditionCycling: !isSidebarOpen(),
       shiftKey: event.shiftKey,
       altKey: event.altKey,

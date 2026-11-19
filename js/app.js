@@ -1,4 +1,4 @@
-import { bindKeyboardShortcuts } from "./keyboard-shortcuts.js";
+import { bindKeyboardShortcuts, isEditingTarget } from "./keyboard-shortcuts.js";
 import { createChapterPicker } from "./chapter-picker.js";
 import { createScriptureStore } from "./scripture-store.js";
 import { createVisualEffects } from "./visual-effects.js";
@@ -1234,13 +1234,15 @@ function bindScrollToTop() {
 }
 
 function bindEvents() {
+  const shortcutsDialog = document.querySelector("#shortcuts-dialog");
+  const isDialogOpen = () => shortcutsDialog.open || elements.feedbackDialog.open;
   readerSearch.bindEvents();
   document.addEventListener("keydown", (event) => {
     const key = event.key.toLowerCase();
     if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey || (key !== "c" && key !== "x")) return;
-    if (elements.feedbackDialog.open) return;
+    if (isDialogOpen()) return;
     if (state.selectedVerses.size === 0) return;
-    if (event.target instanceof Element && event.target.closest("input, textarea, select, [contenteditable='true']")) return;
+    if (isEditingTarget(event.target)) return;
     const selection = window.getSelection();
     if (selection && !selection.isCollapsed) return;
 
@@ -1273,13 +1275,13 @@ function bindEvents() {
   document.querySelector("#bottom-next").addEventListener("click", () => navigate(1));
   window.addEventListener("popstate", () => void restoreLocationFromPath());
   bindKeyboardShortcuts({
-    dialog: document.querySelector("#shortcuts-dialog"),
+    dialog: shortcutsDialog,
     openButton: document.querySelector("#shortcuts-open"),
     closeButton: document.querySelector("#shortcuts-close"),
     searchInput: elements.searchInput,
     isPickerOpen: () => chapterPicker.isOpen() || editionPicker.isOpen(),
     isMenuOpen: () => shareLanguageMenu.isOpen(),
-    isOtherDialogOpen: () => elements.feedbackDialog.open,
+    isDialogOpen,
     onPreviousChapter: () => navigate(-1),
     onNextChapter: () => navigate(1),
     onPreviousVerse: () => navigateVerse(-1),
@@ -1293,11 +1295,15 @@ function bindEvents() {
     onScrollToTop: scrollToPageTop,
     isSidebarOpen: () => elements.sidebar.classList.contains("is-open"),
     onEscape: () => {
+      const returnFocusToVerse = elements.searchWrap.contains(document.activeElement);
       const returnFocusToChapterPicker = chapterPicker.isOpen();
       setQuietReadingMode(false);
       chapterPicker.close(returnFocusToChapterPicker);
       readerSearch.close();
       closeSidebar();
+      if (returnFocusToVerse) {
+        document.querySelector(`#verse-${state.verse}`)?.focus({ preventScroll: true });
+      }
     }
   });
   elements.menuToggle.addEventListener("click", () => {
