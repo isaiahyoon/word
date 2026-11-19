@@ -226,6 +226,13 @@ export function createShareLanguageMenu({
     if (!menu.hidden && next !== activeTrigger && !menu.contains(next)) close();
   }
 
+  // Keep Safari from blurring a menu option before its pointer click can activate it.
+  for (const control of [trigger, copyTrigger, menu]) {
+    control.addEventListener("mousedown", (event) => {
+      if (!menu.hidden) event.preventDefault();
+    });
+  }
+
   for (const [actionTrigger, action] of [[trigger, "share"], [copyTrigger, "copy"]]) {
     actionTrigger.addEventListener("click", () => {
       if (menu.hidden || activeTrigger !== actionTrigger) open(actionTrigger, action);

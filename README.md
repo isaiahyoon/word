@@ -47,7 +47,7 @@ The Amazing Word is free to use, asks for no account, and is built around a simp
 - Move through the text with book and chapter navigation, keyboard shortcuts, or direct passage links. Same-chapter verse shortcuts, search-result navigation, and Back/Forward reuse the displayed verses rather than rebuilding the chapter. Unchanged book lists and picker options also stay mounted.
 - Press Space to jump to the top even when a reader button has focus. Enter still activates buttons, and Space keeps its normal behavior while typing or using a menu or dialog. Escape returns focus from search to the current verse.
 - Chapter and edition changes keep the current passage visible while loading, wait for the reading font, replace the text in one update, and position the new passage before painting. Up/Down within the displayed chapter retains smooth scrolling unless reduced motion is enabled.
-- Select verses to copy or share. When moving a passage between editions, the reader reports known alignment limits instead of presenting uncertain references as exact.
+- Select verses to copy or share, then choose a language by touch, pointer, or keyboard. Escape, tabbing away, or clicking outside dismisses the language menu. When moving a passage between editions, the reader reports known alignment limits instead of presenting uncertain references as exact.
 - Install The Amazing Word on desktop or mobile, and save individual editions for offline reading.
 - Read a localized interface in each edition’s language. Reading position and saved editions stay in browser storage on the device; search runs locally.
 
@@ -55,7 +55,7 @@ The [About page](./about.html) introduces the reader, explains installation, and
 
 ### Install size
 
-The precached app shell contains 43 unique files: about 1.42 MB raw (1,419,527 bytes), or 1.01 MB gzipped (1,014,489 bytes, summed per file). Fonts and saved Scripture editions are separate; see the [reader guide](./docs/reader-guide.md#install-size) for details.
+The precached app shell contains 43 unique files: about 1.42 MB raw (1,419,786 bytes), or 1.01 MB gzipped (1,014,577 bytes, summed per file). Fonts and saved Scripture editions are separate; see the [reader guide](./docs/reader-guide.md#install-size) for details.
 
 ## For engineers
 
