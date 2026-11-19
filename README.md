@@ -55,7 +55,7 @@ The [About page](./about.html) introduces the reader, explains installation, and
 
 ### Install size
 
-The precached app shell contains 43 unique files: about 1.42 MB raw (1,419,766 bytes), or 1.01 MB gzipped (1,014,389 bytes, summed per file). Fonts and saved Scripture editions are separate; see the [reader guide](./docs/reader-guide.md#install-size) for details.
+The precached app shell contains 43 unique files: about 1.42 MB raw (1,419,527 bytes), or 1.01 MB gzipped (1,014,489 bytes, summed per file). Fonts and saved Scripture editions are separate; see the [reader guide](./docs/reader-guide.md#install-size) for details.
 
 ## For engineers
 

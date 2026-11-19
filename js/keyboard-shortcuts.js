@@ -11,6 +11,21 @@ const NAVIGATION_ACTIONS = new Map([
   [" ", "scrollToTop"],
 ]);
 
+export function isEditingTarget(target) {
+  return target instanceof Element &&
+    Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
+}
+
+export function getPickerOptionIndex(key, currentIndex, optionCount) {
+  switch (key) {
+    case "ArrowDown": return Math.min(currentIndex + 1, optionCount - 1);
+    case "ArrowUp": return Math.max(currentIndex - 1, 0);
+    case "Home": return 0;
+    case "End": return optionCount - 1;
+    default: return null;
+  }
+}
+
 export function getNavigationAction(
   key,
   {
@@ -42,7 +57,7 @@ export function bindKeyboardShortcuts({
   searchInput,
   isPickerOpen,
   isMenuOpen = () => false,
-  isOtherDialogOpen = () => false,
+  isDialogOpen = () => dialog.open,
   onPreviousChapter,
   onNextChapter,
   onPreviousVerse,
@@ -70,12 +85,11 @@ export function bindKeyboardShortcuts({
         dialog.close();
         return;
       }
-      if (isOtherDialogOpen()) return;
+      if (isDialogOpen()) return;
       onEscape();
       return;
     }
-    const pickerOpen = isPickerOpen();
-    if (dialog.open || isMenuOpen() || isOtherDialogOpen()) return;
+    if (isDialogOpen() || isMenuOpen()) return;
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
       event.preventDefault();
       const bounds = searchInput.getBoundingClientRect();
@@ -86,14 +100,10 @@ export function bindKeyboardShortcuts({
       return;
     }
 
-    const isEditing =
-      event.target instanceof Element &&
-      event.target.closest("input, textarea, select, [contenteditable='true']");
     if (event.key === " " && event.shiftKey) return;
     const action = getNavigationAction(event.key, {
-      dialogOpen: dialog.open,
-      pickerOpen,
-      isEditing: Boolean(isEditing),
+      pickerOpen: isPickerOpen(),
+      isEditing: isEditingTarget(event.target),
       allowEditionCycling: !isSidebarOpen(),
       shiftKey: event.shiftKey,
       altKey: event.altKey,
