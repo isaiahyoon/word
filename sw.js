@@ -34,6 +34,7 @@ const SHELL_URLS = [
   "/js/offline-control.js",
   "/js/offline-fonts.js",
   "/js/reader-feedback.js",
+  "/js/reader-mobile-interactions.js",
   "/js/reader-search.js",
   "/js/scripture-search-client.js",
   "/js/scripture-search-index-cache.js",

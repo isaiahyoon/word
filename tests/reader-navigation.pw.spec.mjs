@@ -188,6 +188,21 @@ test("closes the mobile navigation drawer with a left swipe", async ({ page }) =
   await session.detach();
 });
 
+test("mobile chapter cues navigate to adjacent chapters", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/kjv/b/john/c/3/v/16");
+
+  const previousChapter = page.locator("#mobile-previous-chapter");
+  const nextChapter = page.locator("#mobile-next-chapter");
+  await expect(previousChapter).toBeVisible();
+  await expect(nextChapter).toBeVisible();
+
+  await nextChapter.click();
+  await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/4\/v\/1$/);
+  await previousChapter.click();
+  await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/1$/);
+});
+
 test("shows a back-to-top button on mobile and desktop", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
