@@ -1,7 +1,8 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { BOOKS, bookFileName } from "../js/books.mjs";
+import { readFile, writeFile } from "node:fs/promises";
+import { BOOKS } from "../js/books.mjs";
 import { generateChapterData } from "./chapter-data.mjs";
-import { createSearchIndexVersion, writeSearchIndexCodeVersion } from "./search-index-version.mjs";
+import { writeSearchIndexCodeVersion } from "./search-index-version.mjs";
+import { writeEditionBooks } from "./write-edition-books.mjs";
 
 const searchIndexCodeVersion = await writeSearchIndexCodeVersion();
 
@@ -90,12 +91,12 @@ if (sourceVerseCount !== 31102) {
   throw new Error(`Unexpected Diodati verse count: ${sourceVerseCount}`);
 }
 
-await mkdir(bookOutputUrl, { recursive: true });
-const bookFiles = BOOKS.map((_, index) => bookFileName(index + 1));
-const chapterCounts = books.map((book) => Object.keys(book).length);
-for (const [index, book] of books.entries()) {
-  await writeFile(new URL(bookFiles[index], bookOutputUrl), JSON.stringify(book));
-}
+const { bookFiles, chapterCounts, searchIndexVersion } = await writeEditionBooks({
+  editionId: "diodati",
+  books,
+  bookOutputUrl,
+  searchIndexCodeVersion,
+});
 
 await writeFile(
   new URL("index.json", outputUrl),
@@ -104,12 +105,7 @@ await writeFile(
     chapterCounts,
     bookFiles,
     searchIndexCodeVersion,
-    searchIndexVersion: await createSearchIndexVersion({
-      editionId: "diodati",
-      bookFiles,
-      bookOutputUrl,
-      searchIndexCodeVersion,
-    }),
+    searchIndexVersion,
     displayBookNames: source.books.map((book) => book.displayName),
     language: source.metadata.language,
     sourceRepository: source.metadata.sourceRepository,

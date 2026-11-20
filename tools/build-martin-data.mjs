@@ -1,8 +1,9 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { BOOKS, bookFileName } from "../js/books.mjs";
+import { readFile, writeFile } from "node:fs/promises";
+import { BOOKS } from "../js/books.mjs";
 import { MARTIN_BOOK_NAMES } from "../js/editions.mjs";
 import { generateChapterData } from "./chapter-data.mjs";
-import { createSearchIndexVersion, writeSearchIndexCodeVersion } from "./search-index-version.mjs";
+import { writeSearchIndexCodeVersion } from "./search-index-version.mjs";
+import { writeEditionBooks } from "./write-edition-books.mjs";
 
 const searchIndexCodeVersion = await writeSearchIndexCodeVersion();
 
@@ -88,25 +89,21 @@ for (const [bookIndex, sourceBook] of source.books.entries()) {
   displayBookNames.push(MARTIN_BOOK_NAMES[bookIndex]);
 }
 
-await mkdir(bookOutputUrl, { recursive: true });
-const bookFiles = BOOKS.map((_, index) => bookFileName(index + 1));
-for (const [index, book] of books.entries()) {
-  await writeFile(new URL(bookFiles[index], bookOutputUrl), JSON.stringify(book));
-}
+const { bookFiles, chapterCounts, searchIndexVersion } = await writeEditionBooks({
+  editionId: "martin1744",
+  books,
+  bookOutputUrl,
+  searchIndexCodeVersion,
+});
 
 await writeFile(
   new URL("index.json", outputUrl),
   JSON.stringify({
     edition: "martin1744",
-    chapterCounts: books.map((book) => Object.keys(book).length),
+    chapterCounts,
     bookFiles,
     searchIndexCodeVersion,
-    searchIndexVersion: await createSearchIndexVersion({
-      editionId: "martin1744",
-      bookFiles,
-      bookOutputUrl,
-      searchIndexCodeVersion,
-    }),
+    searchIndexVersion,
     displayBookNames,
     language: "fr",
     source: "David Martin Bible (1744)",

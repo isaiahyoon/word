@@ -1,8 +1,9 @@
-import { mkdir, readdir, readFile, unlink, writeFile } from "node:fs/promises";
-import { BOOKS, bookFileName } from "../js/books.mjs";
+import { readFile, writeFile } from "node:fs/promises";
+import { BOOKS } from "../js/books.mjs";
 import { EDITIONS } from "../js/editions.mjs";
 import { generateChapterData } from "./chapter-data.mjs";
-import { createSearchIndexVersion, writeSearchIndexCodeVersion } from "./search-index-version.mjs";
+import { writeSearchIndexCodeVersion } from "./search-index-version.mjs";
+import { writeEditionBooks } from "./write-edition-books.mjs";
 
 const searchIndexCodeVersion = await writeSearchIndexCodeVersion();
 
@@ -48,22 +49,19 @@ if (sourceBooks.length !== BOOKS.length || books.some((book) => book === null)) 
   throw new Error("KRV source does not cover the fixed 66-book canon");
 }
 
-await mkdir(bookOutputUrl, { recursive: true });
-for (const file of await readdir(bookOutputUrl)) {
-  if (/^\d+_[a-z0-9_]+\.json$/.test(file)) await unlink(new URL(file, bookOutputUrl));
-}
-
-const bookFiles = BOOKS.map((_, index) => bookFileName(index + 1));
-const chapterCounts = books.map((book) => Object.keys(book).length);
 const totalVerses = books.reduce(
   (total, book) => total + Object.values(book).reduce((count, verses) => count + verses.length, 0),
   0,
 );
 if (totalVerses !== 31102) throw new Error(`Expected 31,102 KRV verses, found ${totalVerses}`);
 
-for (const [index, book] of books.entries()) {
-  await writeFile(new URL(bookFiles[index], bookOutputUrl), JSON.stringify(book));
-}
+const { bookFiles, chapterCounts, searchIndexVersion } = await writeEditionBooks({
+  editionId: "krv",
+  books,
+  bookOutputUrl,
+  searchIndexCodeVersion,
+  removeStaleBookFiles: true,
+});
 
 await writeFile(
   new URL("index.json", outputUrl),
@@ -71,12 +69,7 @@ await writeFile(
     chapterCounts,
     bookFiles,
     searchIndexCodeVersion,
-    searchIndexVersion: await createSearchIndexVersion({
-      editionId: "krv",
-      bookFiles,
-      bookOutputUrl,
-      searchIndexCodeVersion,
-    }),
+    searchIndexVersion,
     edition: EDITIONS.krv.id,
     sourceUrl,
     attribution: EDITIONS.krv.attribution,

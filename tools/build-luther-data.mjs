@@ -1,7 +1,8 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { BOOKS, bookFileName } from "../js/books.mjs";
+import { readFile, writeFile } from "node:fs/promises";
+import { BOOKS } from "../js/books.mjs";
 import { generateChapterData } from "./chapter-data.mjs";
-import { createSearchIndexVersion, writeSearchIndexCodeVersion } from "./search-index-version.mjs";
+import { writeSearchIndexCodeVersion } from "./search-index-version.mjs";
+import { writeEditionBooks } from "./write-edition-books.mjs";
 
 const searchIndexCodeVersion = await writeSearchIndexCodeVersion();
 
@@ -107,12 +108,12 @@ if (sourceVerseCount !== expectedVerseCount || sourceVerseCount !== source.verse
   throw new Error(`Luther source parity failed: read ${sourceVerseCount} of ${source.verses.length} verses`);
 }
 
-await mkdir(bookOutputUrl, { recursive: true });
-const bookFiles = BOOKS.map((_, index) => bookFileName(index + 1));
-const chapterCounts = books.map((book) => Object.keys(book).length);
-for (const [index, book] of books.entries()) {
-  await writeFile(new URL(bookFiles[index], bookOutputUrl), JSON.stringify(book));
-}
+const { bookFiles, chapterCounts, searchIndexVersion } = await writeEditionBooks({
+  editionId: "luther1912",
+  books,
+  bookOutputUrl,
+  searchIndexCodeVersion,
+});
 
 await writeFile(
   new URL("index.json", outputUrl),
@@ -121,12 +122,7 @@ await writeFile(
     chapterCounts,
     bookFiles,
     searchIndexCodeVersion,
-    searchIndexVersion: await createSearchIndexVersion({
-      editionId: "luther1912",
-      bookFiles,
-      bookOutputUrl,
-      searchIndexCodeVersion,
-    }),
+    searchIndexVersion,
     displayBookNames,
     language: source.metadata.lang_short,
     source: source.metadata.name,

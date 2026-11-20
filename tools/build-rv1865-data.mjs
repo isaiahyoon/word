@@ -1,8 +1,9 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { BOOKS, bookFileName } from "../js/books.mjs";
+import { readFile, writeFile } from "node:fs/promises";
+import { BOOKS } from "../js/books.mjs";
 import { stripParagraphMarks } from "./rv1865-text.mjs";
 import { generateChapterData } from "./chapter-data.mjs";
-import { createSearchIndexVersion, writeSearchIndexCodeVersion } from "./search-index-version.mjs";
+import { writeSearchIndexCodeVersion } from "./search-index-version.mjs";
+import { writeEditionBooks } from "./write-edition-books.mjs";
 
 const searchIndexCodeVersion = await writeSearchIndexCodeVersion();
 
@@ -94,25 +95,21 @@ for (const [bookIndex, sourceBook] of source.books.entries()) {
   books.push(chapterData);
 }
 
-await mkdir(bookOutputUrl, { recursive: true });
-const bookFiles = BOOKS.map((_, index) => bookFileName(index + 1));
-for (const [index, book] of books.entries()) {
-  await writeFile(new URL(bookFiles[index], bookOutputUrl), JSON.stringify(book));
-}
+const { bookFiles, chapterCounts, searchIndexVersion } = await writeEditionBooks({
+  editionId: "rv1865",
+  books,
+  bookOutputUrl,
+  searchIndexCodeVersion,
+});
 
 await writeFile(
   new URL("index.json", outputUrl),
   JSON.stringify({
     edition: "rv1865",
-    chapterCounts: books.map((book) => Object.keys(book).length),
+    chapterCounts,
     bookFiles,
     searchIndexCodeVersion,
-    searchIndexVersion: await createSearchIndexVersion({
-      editionId: "rv1865",
-      bookFiles,
-      bookOutputUrl,
-      searchIndexCodeVersion,
-    }),
+    searchIndexVersion,
     displayBookNames,
     language: source.metadata.language,
     source: source.metadata.name,

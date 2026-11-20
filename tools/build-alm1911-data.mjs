@@ -1,8 +1,9 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { ALM_BOOK_NAMES, ALM_BOOK_NAME_ALIASES } from "../js/editions.mjs";
-import { BOOKS, bookFileName } from "../js/books.mjs";
+import { BOOKS } from "../js/books.mjs";
 import { generateChapterData } from "./chapter-data.mjs";
-import { createSearchIndexVersion, writeSearchIndexCodeVersion } from "./search-index-version.mjs";
+import { writeSearchIndexCodeVersion } from "./search-index-version.mjs";
+import { writeEditionBooks } from "./write-edition-books.mjs";
 
 const searchIndexCodeVersion = await writeSearchIndexCodeVersion();
 
@@ -106,25 +107,21 @@ if (
   throw new Error("Almeida 1911 verse coverage or native numbering differs from the audited source");
 }
 
-await mkdir(bookOutputUrl, { recursive: true });
-const bookFiles = BOOKS.map((_, index) => bookFileName(index + 1));
-for (const [index, book] of books.entries()) {
-  await writeFile(new URL(bookFiles[index], bookOutputUrl), JSON.stringify(book));
-}
+const { bookFiles, chapterCounts, searchIndexVersion } = await writeEditionBooks({
+  editionId: "alm1911",
+  books,
+  bookOutputUrl,
+  searchIndexCodeVersion,
+});
 
 await writeFile(
   new URL("index.json", outputUrl),
   JSON.stringify({
     edition: source.metadata.editionId,
-    chapterCounts: books.map((book) => Object.keys(book).length),
+    chapterCounts,
     bookFiles,
     searchIndexCodeVersion,
-    searchIndexVersion: await createSearchIndexVersion({
-      editionId: "alm1911",
-      bookFiles,
-      bookOutputUrl,
-      searchIndexCodeVersion,
-    }),
+    searchIndexVersion,
     displayBookNames: source.books.map((book) => book.displayName),
     bookNameAliases: source.books.map((book) => book.nameAliases),
     language: source.metadata.language,
