@@ -1,4 +1,5 @@
 import { expect, test } from "./support/browser-test.mjs";
+import { withTouchEmulation } from "./support/touch-input.mjs";
 
 for (const [route, abbreviation, fullName] of [
   ["kjv", "Jn.", "John"],
@@ -341,31 +342,18 @@ test("loads another search batch from a mobile touch scroll", async ({ page }) =
   const bounds = await searchResults.boundingBox();
   expect(bounds).not.toBeNull();
 
-  const session = await page.context().newCDPSession(page);
-  try {
-    await session.send("Emulation.setTouchEmulationEnabled", {
-      enabled: true,
-      maxTouchPoints: 1,
-    });
+  await withTouchEmulation(page, async (dispatchTouch) => {
     const distance = await searchResults.evaluate((element) => element.scrollHeight - element.clientHeight);
     expect(distance).toBeGreaterThan(0);
     const x = Math.round(bounds.x + bounds.width / 2);
     const startY = Math.round(bounds.y + bounds.height - 24);
     const endY = Math.max(Math.round(bounds.y + 8), startY - distance - 64);
-    await session.send("Input.dispatchTouchEvent", {
-      type: "touchStart",
-      touchPoints: [{ id: 1, x, y: startY }],
-    });
+    await dispatchTouch("touchStart", x, startY);
     for (let step = 1; step <= 5; step += 1) {
-      await session.send("Input.dispatchTouchEvent", {
-        type: "touchMove",
-        touchPoints: [{ id: 1, x, y: startY + Math.round((endY - startY) * step / 5) }],
-      });
+      await dispatchTouch("touchMove", x, startY + Math.round((endY - startY) * step / 5));
     }
-    await session.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-  } finally {
-    await session.detach();
-  }
+    await dispatchTouch("touchEnd", x, endY);
+  });
 
   await expect.poll(() => searchResults.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
   await expect(page.locator(".search-result")).toHaveCount(24);
@@ -379,30 +367,21 @@ test("refreshes the current passage only after a pull past the mobile threshold"
   await page.evaluate(() => window.scrollTo(0, 0));
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
 
-  const session = await page.context().newCDPSession(page);
-  await session.send("Emulation.setTouchEmulationEnabled", {
-    enabled: true,
-    maxTouchPoints: 1,
-  });
-  const dispatchTouch = (type, y) => session.send("Input.dispatchTouchEvent", {
-    type,
-    touchPoints: type === "touchEnd" ? [] : [{ id: 1, x: 5, y }],
-  });
+  await withTouchEmulation(page, async (dispatchTouch) => {
+    await dispatchTouch("touchStart", 5, 50);
+    await dispatchTouch("touchMove", 5, 90);
+    await expect(page.locator("#pull-refresh-indicator")).toHaveAttribute("aria-hidden", "false");
+    await expect(page.locator("#pull-refresh-label")).toHaveText("Pull down to refresh");
+    await dispatchTouch("touchEnd", 5, 90);
+    await expect(page.locator("#pull-refresh-indicator")).toHaveAttribute("aria-hidden", "true");
+    await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/16$/);
 
-  await dispatchTouch("touchStart", 50);
-  await dispatchTouch("touchMove", 90);
-  await expect(page.locator("#pull-refresh-indicator")).toHaveAttribute("aria-hidden", "false");
-  await expect(page.locator("#pull-refresh-label")).toHaveText("Pull down to refresh");
-  await dispatchTouch("touchEnd", 90);
-  await expect(page.locator("#pull-refresh-indicator")).toHaveAttribute("aria-hidden", "true");
-  await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/16$/);
-
-  await dispatchTouch("touchStart", 50);
-  await dispatchTouch("touchMove", 190);
-  await expect(page.locator("#pull-refresh-label")).toHaveText("Release to refresh");
-  const reloaded = page.waitForEvent("load");
-  await dispatchTouch("touchEnd", 190);
-  await reloaded;
-  await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/16$/);
-  await session.detach();
+    await dispatchTouch("touchStart", 5, 50);
+    await dispatchTouch("touchMove", 5, 190);
+    await expect(page.locator("#pull-refresh-label")).toHaveText("Release to refresh");
+    const reloaded = page.waitForEvent("load");
+    await dispatchTouch("touchEnd", 5, 190);
+    await reloaded;
+    await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/16$/);
+  });
 });

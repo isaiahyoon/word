@@ -1,6 +1,5 @@
-const SHELL_CACHE = "the-word-shell-v14";
-const EDITION_CACHE = "the-word-editions";
-const FONT_CACHE = "the-word-fonts-v1";
+import { EDITION_CACHE, FONT_CACHE, SHELL_CACHE } from "./js/cache-names.mjs";
+
 const FONT_HOSTS = new Set(["fonts.googleapis.com", "fonts.gstatic.com"]);
 const SHELL_URLS = [
   "/",
@@ -25,6 +24,7 @@ const SHELL_URLS = [
   "/js/about-locales.mjs",
   "/js/books.mjs",
   "/js/book-abbreviations.mjs",
+  "/js/cache-names.mjs",
   "/js/chapter-picker.js",
   "/js/edition-picker.js",
   "/js/editions.mjs",
@@ -34,6 +34,7 @@ const SHELL_URLS = [
   "/js/offline-control.js",
   "/js/offline-fonts.js",
   "/js/reader-feedback.js",
+  "/js/reader-mobile-interactions.js",
   "/js/reader-search.js",
   "/js/scripture-search-client.js",
   "/js/scripture-search-index-cache.js",
