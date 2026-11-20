@@ -148,7 +148,7 @@ const testamentFor = (book) => book <= 39 ? "old" : "new";
 const bookName = (book) => scripture.bookName(book);
 const referenceBookName = (book) => scripture.referenceBookName(book);
 const visualEffects = createVisualEffects({
-  shell: document.querySelector(".app-shell"),
+  shell: elements.appShell,
   verseList: elements.verseList
 });
 const shareLanguageMenu = createShareLanguageMenu({
@@ -542,7 +542,7 @@ function animateEditionSwitch() {
 }
 
 function setQuietReadingMode(enabled) {
-  document.querySelector(".app-shell").classList.toggle("is-quiet-reading", enabled);
+  elements.appShell.classList.toggle("is-quiet-reading", enabled);
   document.body.classList.toggle("is-quiet-reading", enabled);
   elements.quietViewToggle.setAttribute("aria-pressed", String(enabled));
   const label = uiText(enabled ? "exitQuiet" : "enterQuiet");
@@ -552,7 +552,7 @@ function setQuietReadingMode(enabled) {
 }
 
 function toggleQuietReadingMode() {
-  const isQuietReading = document.querySelector(".app-shell").classList.contains("is-quiet-reading");
+  const isQuietReading = elements.appShell.classList.contains("is-quiet-reading");
   setQuietReadingMode(!isQuietReading);
 }
 

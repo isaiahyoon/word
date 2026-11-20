@@ -1,4 +1,5 @@
 import { expect, test } from "./support/browser-test.mjs";
+import { withTouchEmulation } from "./support/touch-input.mjs";
 
 test("routes an edition-only URL to Genesis 1:1 in that edition", async ({ page }) => {
   await page.goto("/krv");
@@ -137,25 +138,16 @@ test("opens the mobile navigation drawer with a right swipe from the left edge",
   await page.goto("/");
   await page.locator("#verse-1").waitFor();
 
-  const session = await page.context().newCDPSession(page);
-  await session.send("Emulation.setTouchEmulationEnabled", {
-    enabled: true,
-    maxTouchPoints: 1,
+  await withTouchEmulation(page, async (dispatchTouch) => {
+    await dispatchTouch("touchStart", 5, 280);
+    await dispatchTouch("touchMove", 85, 286);
+    await dispatchTouch("touchMove", 155, 290);
+    await dispatchTouch("touchEnd", 155, 290);
   });
-  const dispatchTouch = (type, x, y) => session.send("Input.dispatchTouchEvent", {
-    type,
-    touchPoints: type === "touchEnd" ? [] : [{ id: 1, x, y }],
-  });
-
-  await dispatchTouch("touchStart", 5, 280);
-  await dispatchTouch("touchMove", 85, 286);
-  await dispatchTouch("touchMove", 155, 290);
-  await dispatchTouch("touchEnd", 155, 290);
 
   await expect(page.locator("#sidebar")).toHaveClass(/is-open/);
   await expect(page.locator("#sidebar-scrim")).toHaveClass(/is-open/);
   await expect(page.locator("#menu-toggle")).toHaveAttribute("aria-expanded", "true");
-  await session.detach();
 });
 
 test("closes the mobile navigation drawer with a left swipe", async ({ page }) => {
@@ -167,25 +159,16 @@ test("closes the mobile navigation drawer with a left swipe", async ({ page }) =
     getComputedStyle(element).transform,
   )).toBe("matrix(1, 0, 0, 1, 0, 0)");
 
-  const session = await page.context().newCDPSession(page);
-  await session.send("Emulation.setTouchEmulationEnabled", {
-    enabled: true,
-    maxTouchPoints: 1,
+  await withTouchEmulation(page, async (dispatchTouch) => {
+    await dispatchTouch("touchStart", 260, 350);
+    await dispatchTouch("touchMove", 180, 354);
+    await dispatchTouch("touchMove", 100, 358);
+    await dispatchTouch("touchEnd", 100, 358);
   });
-  const dispatchTouch = (type, x, y) => session.send("Input.dispatchTouchEvent", {
-    type,
-    touchPoints: type === "touchEnd" ? [] : [{ id: 1, x, y }],
-  });
-
-  await dispatchTouch("touchStart", 260, 350);
-  await dispatchTouch("touchMove", 180, 354);
-  await dispatchTouch("touchMove", 100, 358);
-  await dispatchTouch("touchEnd", 100, 358);
 
   await expect(page.locator("#sidebar")).not.toHaveClass(/is-open/);
   await expect(page.locator("#sidebar-scrim")).not.toHaveClass(/is-open/);
   await expect(page.locator("#menu-toggle")).toHaveAttribute("aria-expanded", "false");
-  await session.detach();
 });
 
 test("mobile chapter cues navigate to adjacent chapters", async ({ page }) => {
