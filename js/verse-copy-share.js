@@ -29,7 +29,9 @@ function formatReferenceList(references, store) {
   const groups = new Map();
   for (const [book, chapter, verse] of references) {
     const key = `${book}:${chapter}`;
-    groups.set(key, [...(groups.get(key) ?? []), verse]);
+    const verses = groups.get(key);
+    if (verses) verses.push(verse);
+    else groups.set(key, [verse]);
   }
   return [...groups.entries()]
     .sort(([left], [right]) => left.localeCompare(right, undefined, { numeric: true }))
