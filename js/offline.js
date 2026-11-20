@@ -1,7 +1,8 @@
 import { logger as defaultLogger } from "./logger.js";
 import { preloadEditionFonts } from "./offline-fonts.js";
+import { EDITION_CACHE } from "./cache-names.mjs";
 
-export const EDITION_CACHE = "the-word-editions";
+export { EDITION_CACHE };
 const downloadConcurrency = 4;
 
 export async function readSavedBook(edition, bookFile, {
@@ -24,7 +25,7 @@ export function registerServiceWorker({
   logger = defaultLogger,
 } = {}) {
   if (!serviceWorker) return Promise.resolve(null);
-  return serviceWorker.register("/sw.js").catch((error) => {
+  return serviceWorker.register("/sw.js", { type: "module" }).catch((error) => {
     logger.error("Service worker registration failed", { error });
     return null;
   });

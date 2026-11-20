@@ -216,9 +216,9 @@ describe("offline fonts", () => {
 describe("service worker", () => {
   it("registers the root worker and logs a failed registration", async () => {
     const registered = [];
-    const serviceWorker = { register: async (url) => void registered.push(url) };
+    const serviceWorker = { register: async (url, options) => void registered.push([url, options]) };
     await registerServiceWorker({ serviceWorker });
-    assert.deepEqual(registered, ["/sw.js"]);
+    assert.deepEqual(registered, [["/sw.js", { type: "module" }]]);
 
     const errors = [];
     const failing = { register: async () => { throw new Error("blocked"); } };
