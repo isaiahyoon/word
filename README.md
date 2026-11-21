@@ -49,7 +49,7 @@ The Amazing Word is free to use, asks for no account, and is built around a simp
 - Chapter and edition changes keep the current passage visible while loading, wait for the reading font, replace the text in one update, and position the new passage before painting. Up/Down within the displayed chapter retains smooth scrolling unless reduced motion is enabled.
 - Select verses to copy or share, then choose a language by touch, pointer, or keyboard. Opening the language menu warms only the current chapter in the other editions, rather than downloading their entire books; existing offline book saves are reused. Escape, tabbing away, or tapping or clicking outside dismisses the language menu. When moving a passage between editions, the reader reports known alignment limits instead of presenting uncertain references as exact.
 - Install The Amazing Word on desktop or mobile, and save individual editions for offline reading.
-- Read a localized interface in each edition’s language. Reading position and saved editions stay in browser storage on the device; search runs locally.
+- Read a localized interface in each edition’s language, with a soft blue-to-lavender-to-pink canvas for the KJV. Reading position and saved editions stay in browser storage on the device; search runs locally.
 
 The [About page](./about.html) introduces the reader, explains installation, and presents the project’s convictions in eight interface languages. See the [reader guide](./docs/reader-guide.md) for platform instructions, offline behavior, and privacy details.
 

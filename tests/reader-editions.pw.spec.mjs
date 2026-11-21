@@ -1,5 +1,36 @@
 import { expect, test } from "./support/browser-test.mjs";
 
+for (const viewport of [
+  { name: "desktop", width: 1280, height: 900 },
+  { name: "mobile", width: 390, height: 844 },
+]) {
+  test(`keeps the blue-to-pink canvas exclusive to KJV on ${viewport.name}`, async ({ page }) => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto("/kjv/b/john/c/3/v/16");
+
+    const kjvCanvas = page.locator("body");
+    const kjvBackground = await kjvCanvas.evaluate((body) => {
+      const style = getComputedStyle(body, "::before");
+      return { color: style.backgroundColor, image: style.backgroundImage, opacity: style.opacity };
+    });
+    expect(kjvBackground.color).toBe("rgb(246, 244, 249)");
+    expect(kjvBackground.image).toContain("rgba(202, 228, 246");
+    expect(kjvBackground.image).toContain("rgba(247, 215, 229");
+    await expect.poll(() => kjvCanvas.evaluate((body) =>
+      getComputedStyle(body, "::before").opacity,
+    )).toBe("1");
+
+    await page.goto("/krv/b/john/c/3/v/16");
+    const krvBackground = await page.locator("body").evaluate((body) => {
+      const style = getComputedStyle(body, "::before");
+      return { color: style.backgroundColor, image: style.backgroundImage, opacity: style.opacity };
+    });
+    expect(krvBackground.color).toBe("rgb(232, 241, 244)");
+    expect(krvBackground.image).toContain("linear-gradient");
+    expect(krvBackground.image).not.toContain("rgba(202, 228, 246");
+  });
+}
+
 for (const edition of ["kjv", "krv", "diodati", "licht", "japbungo", "moh", "luz", "alm"]) {
   test(`fits book titles only when needed in ${edition}`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 800 });
