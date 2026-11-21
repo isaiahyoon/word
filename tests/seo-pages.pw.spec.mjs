@@ -3,12 +3,12 @@ import { EDITIONS } from "../js/editions.mjs";
 import { expect, test } from "./support/browser-test.mjs";
 
 const expectedEditionPalettes = {
-  kjv: ["#7654a4", "#dcd7f7", "#7654a4"],
+  kjv: ["#cae4f6", "#fffafa", "#f7d7e5"],
   krv: ["#4b7395", "#bed8ea", "#4b7395"],
   diodati: ["#a94f66", "#f3cada", "#a94f66"],
   luther1912: ["#8a6c22", "#fff1bd", "#b9534b"],
   japbungo: ["#5c7655", "#d6f2b9", "#5c7655"],
-  martin1744: ["#405d75", "#dce8f8", "#f5d6e2"],
+  martin1744: ["#dce8f8", "#e7dcf2", "#f5d6e2"],
   rv1865: ["#4f6448", "#d5e5ce", "#9d7839", "#f2e7c7", "#4f6448"],
   alm1911: ["#a83f4b", "#e5d6a5", "#526553"],
 };
@@ -194,3 +194,40 @@ test("edition directory is a restrained two-column list on desktop", async ({ pa
     .evaluate((link) => getComputedStyle(link).outlineStyle);
   expect(focusOutline).toBe("solid");
 });
+
+for (const viewport of [
+  { name: "desktop", width: 1280, height: 900 },
+  { name: "mobile", width: 390, height: 844 },
+]) {
+  test(`carries the KJV palette through edition discovery on ${viewport.name}`, async ({ page }) => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+
+    for (const path of ["/editions/", "/editions/kjv/"]) {
+      await page.goto(path);
+      const kjvLink = page.locator('.edition-directory a[href="/editions/kjv/"]');
+      await kjvLink.hover();
+
+      const linkStyle = await kjvLink.evaluate((link) => ({
+        gradient: getComputedStyle(link).getPropertyValue("--edition-link-gradient"),
+        backgroundImage: getComputedStyle(link).backgroundImage,
+      }));
+      expect(linkStyle.gradient).toContain("#cae4f6");
+      expect(linkStyle.gradient).toContain("#fffafa");
+      expect(linkStyle.gradient).toContain("#f7d7e5");
+      expect(linkStyle.backgroundImage).toContain("linear-gradient");
+      await expect(kjvLink).toHaveCSS("background-image", /linear-gradient/);
+
+      if (path === "/editions/kjv/") {
+        const kjvCanvas = page.locator("body");
+        const canvasImage = await kjvCanvas.evaluate((body) =>
+          getComputedStyle(body, "::before").backgroundImage,
+        );
+        expect(canvasImage).toContain("rgba(202, 228, 246");
+        expect(canvasImage).toContain("rgba(247, 215, 229");
+        await expect.poll(() => kjvCanvas.evaluate((body) =>
+          getComputedStyle(body, "::before").opacity,
+        )).toBe("1");
+      }
+    }
+  });
+}

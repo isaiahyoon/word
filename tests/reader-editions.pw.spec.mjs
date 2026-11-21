@@ -1,5 +1,64 @@
 import { expect, test } from "./support/browser-test.mjs";
 
+for (const viewport of [
+  { name: "desktop", width: 1280, height: 900 },
+  { name: "mobile", width: 390, height: 844 },
+]) {
+  test(`distinguishes KJV and French reader palettes on ${viewport.name}`, async ({ page }) => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto("/kjv/b/john/c/3/v/16");
+
+    const kjvCanvas = page.locator("body");
+    const kjvBackground = await kjvCanvas.evaluate((body) => {
+      const style = getComputedStyle(body, "::before");
+      return { color: style.backgroundColor, image: style.backgroundImage, opacity: style.opacity };
+    });
+    expect(kjvBackground.color).toBe("rgb(255, 250, 250)");
+    expect(kjvBackground.image).toContain("rgba(202, 228, 246");
+    expect(kjvBackground.image).toContain("rgba(247, 215, 229");
+    await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#fffafa");
+    await expect.poll(() => kjvCanvas.evaluate((body) =>
+      getComputedStyle(body, "::before").opacity,
+    )).toBe("1");
+    await expect(page.locator(".verse-list")).toHaveCSS("background-color", "rgb(255, 248, 248)");
+    if (viewport.name === "mobile") {
+      const previousCue = await page.locator(".mobile-chapter-button--previous").evaluate((button) =>
+        getComputedStyle(button, "::before").backgroundImage,
+      );
+      expect(previousCue).toContain("rgba(220, 232, 248");
+    }
+
+    await page.goto("/krv/b/john/c/3/v/16");
+    const krvBackground = await page.locator("body").evaluate((body) => {
+      const style = getComputedStyle(body, "::before");
+      return { color: style.backgroundColor, image: style.backgroundImage, opacity: style.opacity };
+    });
+    expect(krvBackground.color).toBe("rgb(232, 241, 244)");
+    expect(krvBackground.image).toContain("linear-gradient");
+    expect(krvBackground.image).not.toContain("rgba(202, 228, 246");
+
+    await page.goto("/moh/b/john/c/3/v/16");
+    const frenchTheme = await page.locator("body").evaluate((body) => {
+      const style = getComputedStyle(body);
+      const canvas = getComputedStyle(body, "::before");
+      const paper = getComputedStyle(body.querySelector(".verse-list"));
+      return {
+        canvas: canvas.backgroundImage,
+        lavender: style.getPropertyValue("--lavender").trim(),
+        chapterLavender: style.getPropertyValue("--chapter-lavender").trim(),
+        paper: paper.backgroundColor,
+      };
+    });
+    expect(frenchTheme.canvas).toContain("rgb(220, 232, 248)");
+    expect(frenchTheme.canvas).toContain("rgb(231, 220, 242)");
+    expect(frenchTheme.canvas).toContain("rgb(245, 214, 226)");
+    expect(frenchTheme.lavender).toBe("#e6e2f1");
+    expect(frenchTheme.chapterLavender).toBe("#d9cbe8");
+    expect(frenchTheme.paper).toBe("rgb(246, 245, 255)");
+    await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#e7dcf2");
+  });
+}
+
 for (const edition of ["kjv", "krv", "diodati", "licht", "japbungo", "moh", "luz", "alm"]) {
   test(`fits book titles only when needed in ${edition}`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 800 });
@@ -155,9 +214,13 @@ test("switches editions at the same passage and canonicalizes legacy KJV links",
   await page.locator("#edition-option-kjv").click();
   await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/17$/);
   await expect(page.locator("body")).not.toHaveClass(/is-krv-edition/);
+  await expect(page.locator("body")).toHaveClass(/is-kjv-edition/);
   await expect.poll(() => page.locator("body").evaluate((element) =>
     getComputedStyle(element, "::before").opacity,
-  )).toBe("0");
+  )).toBe("1");
+  await expect.poll(() => page.locator("body").evaluate((element) =>
+    getComputedStyle(element, "::before").backgroundImage,
+  )).toContain("rgba(202, 228, 246");
   await expect(page.locator("#verse-16 .verse-text")).toContainText("For God so loved the world");
   await expect(page.locator("#edition-attribution")).toBeHidden();
 
@@ -266,7 +329,7 @@ test("opens the Martin edition with native Psalm numbering and the French pastel
     getComputedStyle(element, "::before").backgroundImage,
   );
   expect(gradient).toContain("rgb(220, 232, 248)");
-  expect(gradient).toContain("rgb(255, 255, 255)");
+  expect(gradient).toContain("rgb(231, 220, 242)");
   expect(gradient).toContain("rgb(245, 214, 226)");
   const dimensions = await page.evaluate(() => ({
     clientWidth: document.documentElement.clientWidth,
