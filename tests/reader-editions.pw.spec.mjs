@@ -186,9 +186,13 @@ test("switches editions at the same passage and canonicalizes legacy KJV links",
   await page.locator("#edition-option-kjv").click();
   await expect(page).toHaveURL(/\/kjv\/b\/john\/c\/3\/v\/17$/);
   await expect(page.locator("body")).not.toHaveClass(/is-krv-edition/);
+  await expect(page.locator("body")).toHaveClass(/is-kjv-edition/);
   await expect.poll(() => page.locator("body").evaluate((element) =>
     getComputedStyle(element, "::before").opacity,
-  )).toBe("0");
+  )).toBe("1");
+  await expect.poll(() => page.locator("body").evaluate((element) =>
+    getComputedStyle(element, "::before").backgroundImage,
+  )).toContain("rgba(202, 228, 246");
   await expect(page.locator("#verse-16 .verse-text")).toContainText("For God so loved the world");
   await expect(page.locator("#edition-attribution")).toBeHidden();
 
