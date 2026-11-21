@@ -49,13 +49,13 @@ The Amazing Word is free to use, asks for no account, and is built around a simp
 - Chapter and edition changes keep the current passage visible while loading, wait for the reading font, replace the text in one update, and position the new passage before painting. Up/Down within the displayed chapter retains smooth scrolling unless reduced motion is enabled.
 - Select verses to copy or share, then choose a language by touch, pointer, or keyboard. Opening the language menu warms only the current chapter in the other editions, rather than downloading their entire books; existing offline book saves are reused. Escape, tabbing away, or tapping or clicking outside dismisses the language menu. When moving a passage between editions, the reader reports known alignment limits instead of presenting uncertain references as exact.
 - Install The Amazing Word on desktop or mobile, and save individual editions for offline reading.
-- Read a localized interface in each edition’s language, with a soft blue-to-lavender-to-pink KJV canvas and matching accents in edition links. Reading position and saved editions stay in browser storage on the device; search runs locally.
+- Read a localized interface in each edition’s language, with a blue-and-pink KJV canvas and a lavender-centered French reading theme, with matching edition-link accents. Reading position and saved editions stay in browser storage on the device; search runs locally.
 
 The [About page](./about.html) introduces the reader, explains installation, and presents the project’s convictions in eight interface languages. See the [reader guide](./docs/reader-guide.md) for platform instructions, offline behavior, and privacy details.
 
 ### Install size
 
-The precached app shell contains 50 unique files: about 1.47 MB raw (1,466,570 bytes), or 1.03 MB gzipped (1,025,804 bytes, summed per file). Fonts and saved Scripture editions are separate; see the [reader guide](./docs/reader-guide.md#install-size) for details.
+The precached app shell contains 50 URLs (49 unique files, with the reader shell cached at both `/` and `/index.html`): about 1.47 MB raw (1,467,688 bytes), or 1.03 MB gzipped (1,026,140 bytes, summed per URL). Fonts and saved Scripture editions are separate; see the [reader guide](./docs/reader-guide.md#install-size) for details.
 
 ## For engineers
 

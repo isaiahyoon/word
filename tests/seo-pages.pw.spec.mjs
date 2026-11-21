@@ -3,12 +3,12 @@ import { EDITIONS } from "../js/editions.mjs";
 import { expect, test } from "./support/browser-test.mjs";
 
 const expectedEditionPalettes = {
-  kjv: ["#cae4f6", "#dcd7f7", "#f7d7e5"],
+  kjv: ["#cae4f6", "#fffafa", "#f7d7e5"],
   krv: ["#4b7395", "#bed8ea", "#4b7395"],
   diodati: ["#a94f66", "#f3cada", "#a94f66"],
   luther1912: ["#8a6c22", "#fff1bd", "#b9534b"],
   japbungo: ["#5c7655", "#d6f2b9", "#5c7655"],
-  martin1744: ["#405d75", "#dce8f8", "#f5d6e2"],
+  martin1744: ["#dce8f8", "#e7dcf2", "#f5d6e2"],
   rv1865: ["#4f6448", "#d5e5ce", "#9d7839", "#f2e7c7", "#4f6448"],
   alm1911: ["#a83f4b", "#e5d6a5", "#526553"],
 };
@@ -212,7 +212,7 @@ for (const viewport of [
         backgroundImage: getComputedStyle(link).backgroundImage,
       }));
       expect(linkStyle.gradient).toContain("#cae4f6");
-      expect(linkStyle.gradient).toContain("#dcd7f7");
+      expect(linkStyle.gradient).toContain("#fffafa");
       expect(linkStyle.gradient).toContain("#f7d7e5");
       expect(linkStyle.backgroundImage).toContain("linear-gradient");
       await expect(kjvLink).toHaveCSS("background-image", /linear-gradient/);

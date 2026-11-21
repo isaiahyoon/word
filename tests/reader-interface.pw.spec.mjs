@@ -352,7 +352,7 @@ test("renders edition-colored dotted scripture pages without mobile overflow", a
   expect(kjvPage.background).toContain("radial-gradient");
   expect(kjvPage.background).toContain("linear-gradient");
   expect(kjvPage.background).not.toContain("189, 121, 152");
-  expect(kjvPage.paper).toBe("#f6f5ff");
+  expect(kjvPage.paper).toBe("#fff8f8");
   expect(kjvPage.scrollWidth).toBe(kjvPage.clientWidth);
 
   await page.locator("#menu-toggle").click();
@@ -554,7 +554,7 @@ test("adds gold borders and sparkles to the four-square brand mark", async ({ pa
     await expect(tiles).toHaveCount(4);
     expect(await tiles.evaluateAll((elements) => elements.map((element) => getComputedStyle(element).backgroundColor))).toEqual([
       "rgb(222, 254, 252)",
-      "rgb(220, 215, 247)",
+      route === "/" ? "rgb(228, 237, 245)" : "rgb(220, 215, 247)",
       "rgb(250, 212, 224)",
       "rgb(255, 254, 207)",
     ]);
