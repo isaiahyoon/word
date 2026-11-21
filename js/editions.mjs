@@ -69,7 +69,7 @@ export const EDITIONS = {
     language: "en",
     languageName: "English",
     accentColor: "#7654a4",
-    accentColors: ["#7654a4", "#dcd7f7", "#7654a4"],
+    accentColors: ["#cae4f6", "#dcd7f7", "#f7d7e5"],
     appName: "The Amazing Word",
     direction: "ltr",
     dataPath: "./scripture/kjv",
