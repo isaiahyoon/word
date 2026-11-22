@@ -59,6 +59,10 @@ Never go against Scripture, or regard it as false or untrustworthy. It will alwa
 - Put browser JavaScript modules in `js/`, stylesheets in `styles/`, images and icons in `assets/`, translation source data in `sources/`, generated scripture data in `scripture/`, tests in `tests/`, and build or development scripts in `tools/`.
 - Keep vendored JavaScript dependencies under `js/vendor/`; do not add duplicate runtime modules at the repository root.
 
+# Instagram Numbering
+
+- Instagram posts 40 and 41 are standalone posts, not Where to Turn topics. Continue Where to Turn folder positions at 42, preserve the existing 78-topic order, and increment later positions from there. Do not renumber completed folders or treat 40 and 41 as series topics.
+
 # Edition Themes
 
 - Accessibility and understandability are part of multilingual design: localize visible interface copy, navigation, accessible names, alternate text, and status messages to the selected edition language, while preserving scripture text and correct language metadata.
