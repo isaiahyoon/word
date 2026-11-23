@@ -19,15 +19,38 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 900 
         await search.fill("piercing sword");
         await expect(page.locator(".search-result[data-search-type='text']")
           .filter({ hasText: "Hebrews 4:12" })).toHaveCount(1);
-        await expect.poll(() => page.evaluate(async () =>
-          (await (await caches.open("the-word-search-indexes-v1")).keys()).length
-        )).toBe(1);
+        // Wait for a complete, readable index before unloading the worker.
+        await expect.poll(() => page.evaluate(async () => {
+          const cache = await caches.open("the-word-search-indexes-v1");
+          const keys = await cache.keys();
+          if (keys.length !== 1) return null;
+          const response = await cache.match(keys[0]);
+          return response ? (await response.json()).documentCount : null;
+        })).toBe(31_102);
+
+        // An index-only probe proves reuse without changing the displayed Scripture.
+        await page.evaluate(async () => {
+          const { default: MiniSearch } = await import("/js/vendor/minisearch.js");
+          const cache = await caches.open("the-word-search-indexes-v1");
+          const [key] = await cache.keys();
+          const response = await cache.match(key);
+          const index = MiniSearch.loadJSON(await response.text(), { fields: ["text"] });
+          index.replace({ id: "58:4:12", text: "piercing sword cacheprobe" });
+          await cache.put(key, new Response(JSON.stringify(index), {
+            headers: response.headers,
+          }));
+        });
 
         await page.reload();
         await page.locator("#search-input").fill("piercing sword");
         await expect(page.locator(".search-result[data-search-type='text']")
           .filter({ hasText: "Hebrews 4:12" })).toHaveCount(1);
-        await expect.poll(() => page.evaluate(async () =>
+        await page.locator("#search-input").fill("cacheprobe");
+        await expect(page.locator(".search-result[data-search-type='text']")
+          .filter({ hasText: "Hebrews 4:12" })).toHaveCount(1);
+        await expect(page.locator(".search-result[data-search-type='text']"))
+          .not.toContainText("cacheprobe");
+        expect(await page.evaluate(async () =>
           (await (await caches.open("the-word-search-indexes-v1")).keys()).length
         )).toBe(1);
       });
