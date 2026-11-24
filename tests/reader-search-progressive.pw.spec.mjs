@@ -1,4 +1,22 @@
+import { readFile } from "node:fs/promises";
 import { expect, test } from "./support/browser-test.mjs";
+
+async function useProgressiveSearchCorpus(context, editionId, gate) {
+  // Exercise real loading and tokenization without benchmarking a whole-edition cold index.
+  await context.route(`**/scripture/${editionId}/books/*.json`, async (route) => {
+    const fileName = new URL(route.request().url()).pathname.split("/").at(-1);
+    if (fileName === "1_genesis.json") await gate;
+    const book = JSON.parse(await readFile(
+      new URL(`../scripture/${editionId}/books/${fileName}`, import.meta.url),
+      "utf8",
+    ));
+    const chapters = Object.fromEntries(Object.entries(book).map(([chapter, verses]) => [
+      chapter,
+      fileName === "43_john.json" && chapter === "3" ? verses : verses.slice(0, 1),
+    ]));
+    await route.fulfill({ json: chapters });
+  });
+}
 
 for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 900 }]) {
   test.describe(`progressive search at ${viewport.width}px`, () => {
@@ -73,24 +91,20 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 900 
       }
     });
 
-    for (const [editionId, route, abbreviation, bookName] of [
-      ["kjv", "kjv", "Jn.", "John"],
-      ["krv", "krv", "요", "요한복음"],
-      ["japbungo", "japbungo", "ヨハ", "ヨハネの福音書"],
-      ["diodati", "diodati", "Gv", "Giovanni"],
-      ["luther1912", "licht", "Joh", "Johannes"],
-      ["martin1744", "moh", "Jn", "Jean"],
-      ["rv1865", "luz", "Jn", "San Juan"],
-      ["alm1911", "alm", "Jo", "João"],
+    for (const [editionId, route, abbreviation, bookName, textQuery, textVerse] of [
+      ["kjv", "kjv", "Jn.", "John", "worlx", 16],
+      ["krv", "krv", "요", "요한복음", "하느님 독생자", 16],
+      ["japbungo", "japbungo", "ヨハ", "ヨハネの福音書", "ニコテモ", 1],
+      ["diodati", "diodati", "Gv", "Giovanni", "mondx", 16],
+      ["luther1912", "licht", "Joh", "Johannes", "lebex", 16],
+      ["martin1744", "moh", "Jn", "Jean", "mondx", 16],
+      ["rv1865", "luz", "Jn", "San Juan", "mundx", 16],
+      ["alm1911", "alm", "Jo", "João", "mundx", 16],
     ]) {
-      test(`shows ${editionId} navigation before full-text loading and retains complete results`, async ({ page, context }) => {
-        if (editionId === "japbungo") test.setTimeout(45_000);
+      test(`shows ${editionId} navigation before full-text loading and retains it when text search completes`, async ({ page, context }) => {
         let release;
         const gate = new Promise((resolve) => { release = resolve; });
-        await context.route(`**/scripture/${editionId}/books/1_genesis.json`, async (route) => {
-          await gate;
-          await route.continue();
-        });
+        await useProgressiveSearchCorpus(context, editionId, gate);
         try {
           await page.goto(`/${route}/b/john/c/3/v/16`);
           await page.locator("#search-input").fill(`${abbreviation} 3:16`);
@@ -106,17 +120,27 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 900 
             await expect.poll(() => page.workers().length).toBe(1);
           }
           release();
-          await expect(page.locator("#search-results")).not.toHaveAttribute(
-            "aria-busy",
-            "true",
-            { timeout: editionId === "japbungo" ? 30_000 : 15_000 },
-          );
+          await expect(page.locator("#search-results")).not.toHaveAttribute("aria-busy", "true");
           await expect(navigation).toHaveAttribute("data-navigation-probe", "retained");
           await expect(navigation).toHaveCount(1);
           await expect(navigation).toHaveAttribute("aria-selected", "true");
           await expect(page.locator(".search-result").first()).toHaveAttribute("data-search-type", "reference");
+          await expect(page.locator(".search-empty")).toHaveCount(0);
           await navigation.click();
           await expect(page).toHaveURL(new RegExp(`/${route}/b/john/c/3/v/16$`));
+
+          await page.locator("#search-input").fill(textQuery);
+          const textResult = page.locator(".search-result[data-search-type='text']").filter({
+            has: page.locator(".result-reference", { hasText: new RegExp(`^${bookName} 3:${textVerse}$`) }),
+          });
+          await expect(textResult).toHaveCount(1);
+          const john = JSON.parse(await readFile(
+            new URL(`../scripture/${editionId}/books/43_john.json`, import.meta.url),
+            "utf8",
+          ));
+          await expect(textResult.locator(".result-text")).toHaveText(john["3"][textVerse - 1][1]);
+          await expect(page.locator("#search-results")).not.toHaveAttribute("aria-busy", "true");
+          expect(page.workers()).toHaveLength(1);
         } finally {
           release();
         }
