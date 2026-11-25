@@ -91,7 +91,7 @@ test("localizes About page content, metadata, and accessible names", async ({ pa
     await expect(page.locator('meta[property="og:description"]')).toHaveAttribute("content", locale.metaDescription);
     await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute("content", locale.pageTitle);
     await expect(page.locator('meta[name="twitter:description"]')).toHaveAttribute("content", locale.metaDescription);
-    await expect(page.locator(".return-link")).toHaveText(`${locale.returnToReading} →`);
+    await expect(page.locator(".return-link")).toHaveText(locale.returnToReading);
 
     const missingTranslations = await page.locator("[data-about]").evaluateAll((elements, strings) =>
       elements.filter((element) => !strings[element.dataset.about]).map((element) => element.dataset.about),

@@ -36,12 +36,16 @@ test("registered SEO output stays reproducible and current", async (t) => {
   }
   const collection = await readFile(new URL("editions/index.html", root), "utf8");
   assert.ok(collection.includes("Bíblia Almeida (1911)<small>Português</small>"));
+  assert.doesNotMatch(collection, /[→↗]/u);
+  assert.equal((collection.match(/class="arrow-icon"/g) ?? []).length, 1 + Object.keys(EDITIONS).length * 2);
   const portuguesePage = await readFile(new URL("editions/alm/index.html", root), "utf8");
   assert.ok(portuguesePage.includes("<h1 id=\"page-title\">Bíblia Almeida (1911)</h1>"));
   assert.ok(portuguesePage.includes("Bíblia Almeida 1911 em Português online"));
   for (const { routeSegment } of Object.values(EDITIONS)) {
     const page = await readFile(new URL(`editions/${routeSegment}/index.html`, root), "utf8");
     assert.ok(page.includes(">Almeida · Português</span>"), `${routeSegment} links to the Portuguese edition`);
+    assert.doesNotMatch(page, /[→↗]/u);
+    assert.equal((page.match(/class="arrow-icon"/g) ?? []).length, 2 + Object.keys(EDITIONS).length);
   }
   const about = await readFile(new URL("about.html", root), "utf8");
   assert.ok(about.includes("and Almeida · Português, with"));

@@ -152,6 +152,18 @@ a:focus-visible {
   text-decoration: none;
 }
 
+.arrow-icon {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  vertical-align: -0.125em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .language-control {
   position: relative;
   display: block;
