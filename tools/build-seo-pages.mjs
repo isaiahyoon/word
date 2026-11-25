@@ -7,6 +7,8 @@ import { EDITIONS } from "../js/editions.mjs";
 const root = new URL("../", import.meta.url);
 const siteUrl = "https://theamazingword.org";
 const previewImage = `${siteUrl}/assets/social-preview.png?v=3`;
+const rightArrow = '<svg class="arrow-icon" viewBox="0 0 16 16" focusable="false"><path d="M2 8h12M9 3l5 5-5 5" /></svg>';
+const diagonalArrow = '<svg class="arrow-icon" viewBox="0 0 16 16" focusable="false"><path d="M4 12 12 4M5 4h7v7" /></svg>';
 
 function escapeHtml(value) {
   return value
@@ -71,9 +73,9 @@ function renderEditionDirectory(editions, locales, { detailed = false, label = "
     const languageName = detailed ? `<small>${escapeHtml(edition.languageName)}</small>` : "";
     const readerLabel = locales[edition.language].openReader;
     const readerLink = detailed ? `
-                <a class="edition-read-link" href="/${edition.routeSegment}/b/genesis/c/1/v/1" lang="${edition.language}" aria-label="${escapeHtml(`${readerLabel} · ${heading}`)}">${escapeHtml(readerLabel)} <span aria-hidden="true">→</span></a>` : "";
+                <a class="edition-read-link" href="/${edition.routeSegment}/b/genesis/c/1/v/1" lang="${edition.language}" aria-label="${escapeHtml(`${readerLabel} · ${heading}`)}">${escapeHtml(readerLabel)} <span aria-hidden="true">${rightArrow}</span></a>` : "";
     return `              <li${detailed ? ` style="${style}"` : ""}>
-                <a href="/editions/${escapeHtml(edition.routeSegment)}/" style="${style}"><span class="edition-number" aria-hidden="true">${String(index + 1).padStart(2, "0")}</span><span class="edition-name"${nameAttributes}>${escapeHtml(detailed ? heading : edition.label)}${languageName}</span><span class="edition-arrow" aria-hidden="true">↗</span></a>${readerLink}
+                <a href="/editions/${escapeHtml(edition.routeSegment)}/" style="${style}"><span class="edition-number" aria-hidden="true">${String(index + 1).padStart(2, "0")}</span><span class="edition-name"${nameAttributes}>${escapeHtml(detailed ? heading : edition.label)}${languageName}</span><span class="edition-arrow" aria-hidden="true">${diagonalArrow}</span></a>${readerLink}
               </li>`;
   });
   return `          <nav class="edition-directory${detailed ? " edition-collection-directory" : ""}" aria-label="${escapeHtml(label)}">
@@ -108,7 +110,7 @@ ${renderPageHead({ title, description, canonicalUrl, themeColor })}
         </a>
         <a class="return-link" href="${readerUrl}">
           <span>${escapeHtml(locale.returnToReading)}</span>
-          <span aria-hidden="true">→</span>
+          <span aria-hidden="true">${rightArrow}</span>
         </a>
       </header>
 
@@ -119,7 +121,7 @@ ${renderPageHead({ title, description, canonicalUrl, themeColor })}
           <p class="hero-copy">${escapeHtml(description)}</p>
           <a class="primary-link" href="${readerUrl}">
             <span>${escapeHtml(locale.openReader)}</span>
-            <span aria-hidden="true">→</span>
+            <span aria-hidden="true">${rightArrow}</span>
           </a>
           <div class="hero-rule" aria-hidden="true"><i></i><i></i><i></i></div>
         </section>
@@ -186,7 +188,7 @@ ${renderPageHead({ title, description, canonicalUrl: `${siteUrl}/editions/` })}
           <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
           <span class="brand-name"><strong>The Amazing Word</strong><small>BIBLE READER</small></span>
         </a>
-        <a class="return-link" href="/">Open the reader <span aria-hidden="true">→</span></a>
+        <a class="return-link" href="/">Open the reader <span aria-hidden="true">${rightArrow}</span></a>
       </header>
       <main>
         <section class="about-hero" aria-labelledby="page-title">

@@ -70,6 +70,32 @@ function getInitialLanguage() {
     : getSavedLanguage();
 }
 
+function setLocalizedContent(element, text) {
+  const parts = text.split("→");
+  if (parts.length === 1) {
+    element.textContent = text;
+    return;
+  }
+
+  const nodes = [];
+  for (const [index, part] of parts.entries()) {
+    if (index > 0) {
+      const arrow = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      arrow.setAttribute("class", "arrow-icon");
+      arrow.setAttribute("viewBox", "0 0 16 16");
+      arrow.setAttribute("role", "img");
+      arrow.setAttribute("aria-label", "→");
+      arrow.setAttribute("focusable", "false");
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", "M2 8h12M9 3l5 5-5 5");
+      arrow.append(path);
+      nodes.push(arrow);
+    }
+    nodes.push(document.createTextNode(part));
+  }
+  element.replaceChildren(...nodes);
+}
+
 function applyLanguage(language) {
   const locale = getEditionSummary(ABOUT_LOCALES[language], language, EDITIONS);
   const edition = Object.values(EDITIONS).find((candidate) => candidate.language === language);
@@ -90,7 +116,7 @@ function applyLanguage(language) {
 
   for (const element of document.querySelectorAll("[data-about]")) {
     const key = element.dataset.about;
-    element.textContent = locale[key];
+    setLocalizedContent(element, locale[key]);
   }
 
   for (const element of document.querySelectorAll("[data-about-aria-label]")) {

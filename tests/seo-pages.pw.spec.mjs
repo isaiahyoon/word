@@ -40,7 +40,6 @@ for (const width of [320, 360, 390, 1280]) {
     }
   });
 }
-
 test("edition collection works with either URL form and offers native-language introductions and reading", async ({ page }) => {
   for (const path of ["/editions", "/editions/"]) {
     await page.goto(path);
@@ -73,7 +72,7 @@ test("edition collection works with either URL form and offers native-language i
       if (edition.id === "alm1911") {
         await expect(intro.locator(".edition-name")).toHaveText("Bíblia Almeida (1911)Português");
       }
-      await expect(read).toHaveText(`${ABOUT_LOCALES[edition.language].openReader} →`);
+      await expect(read).toHaveText(ABOUT_LOCALES[edition.language].openReader);
       await intro.hover();
       await expect.poll(() => intro.evaluate((link) => getComputedStyle(link).boxShadow)).toContain("26px");
       await read.focus();
@@ -84,6 +83,7 @@ test("edition collection works with either URL form and offers native-language i
       expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
       expect(bounds.height).toBeGreaterThanOrEqual(44);
     }
+
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
 
@@ -93,6 +93,69 @@ test("edition collection works with either URL form and offers native-language i
   await page.locator('.edition-read-link[href="/kjv/b/genesis/c/1/v/1"]').click();
   await expect(page.locator("#verse-list")).toBeVisible();
 });
+
+for (const viewport of [
+  { name: "desktop", width: 1280, height: 900 },
+  { name: "mobile", width: 390, height: 844 },
+]) {
+  test(`renders accessible SVG arrows on About and edition pages on ${viewport.name}`, async ({ page }) => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto("/about?lang=en");
+
+    for (const [language, locale] of Object.entries(ABOUT_LOCALES)) {
+      if (language !== "en") {
+        await page.locator("#about-language").click();
+        await page.locator(`#about-language-options [data-language="${language}"]`).click();
+      }
+      for (const key of ["macAction", "iphoneAction", "windowsAction"]) {
+        const action = page.locator(`[data-about="${key}"]`);
+        const parts = locale[key].split("→");
+        await expect(action).toHaveText(parts.join(""));
+        await expect(action.locator('svg[role="img"][aria-label="→"]')).toHaveCount(parts.length - 1);
+        for (const arrow of await action.locator("svg").all()) {
+          await expect(arrow).toHaveAccessibleName("→");
+          await expect(arrow.locator("path")).toHaveAttribute("d", "M2 8h12M9 3l5 5-5 5");
+        }
+      }
+    }
+
+    for (const path of ["/about?lang=en", "/editions/", ...Object.values(EDITIONS)
+      .map((edition) => `/editions/${edition.routeSegment}/`)]) {
+      await page.goto(path);
+      const links = page.locator(".return-link, .primary-link, .support-note .support-link, .edition-directory a");
+      for (const link of await links.all()) {
+        await expect(link.locator('span[aria-hidden="true"] svg.arrow-icon')).toHaveCount(1);
+        const icon = link.locator("svg.arrow-icon");
+        await expect(icon).toBeVisible();
+        await expect(icon.locator("path")).toHaveAttribute("d", await link.evaluate((element) =>
+          element.querySelector(".edition-arrow") || element.closest(".support-note")
+            ? "M4 12 12 4M5 4h7v7"
+            : "M2 8h12M9 3l5 5-5 5",
+        ));
+        const geometry = await icon.evaluate((element) => {
+          const iconBounds = element.getBoundingClientRect();
+          const linkBounds = element.closest("a").getBoundingClientRect();
+          return {
+            width: iconBounds.width,
+            height: iconBounds.height,
+            left: iconBounds.left,
+            right: iconBounds.right,
+            linkLeft: linkBounds.left,
+            linkRight: linkBounds.right,
+            stroke: getComputedStyle(element).stroke,
+            color: getComputedStyle(element).color,
+          };
+        });
+        expect(geometry.width).toBeGreaterThan(0);
+        expect(geometry.height).toBeGreaterThan(0);
+        expect(geometry.left).toBeGreaterThanOrEqual(geometry.linkLeft - 1);
+        expect(geometry.right).toBeLessThanOrEqual(geometry.linkRight + 1);
+        expect(geometry.stroke).toBe(geometry.color);
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+    }
+  });
+}
 
 test("edition landing pages render localized, responsive content and links", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });

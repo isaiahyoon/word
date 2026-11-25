@@ -51,11 +51,11 @@ The Amazing Word is free to use, asks for no account, and is built around a simp
 - Install The Amazing Word on desktop or mobile, and save individual editions for offline reading.
 - Read a localized interface in each edition’s language, with a blue-and-pink KJV canvas and a lavender-centered French reading theme, with matching edition-link accents. Reading position and saved editions stay in browser storage on the device; search runs locally.
 
-The [About page](./about.html) introduces the reader, explains installation, and presents the project’s convictions in eight interface languages. See the [reader guide](./docs/reader-guide.md) for platform instructions, offline behavior, and privacy details.
+The [About page](./about.html) introduces the reader, explains installation, and presents the project’s convictions in eight interface languages. Its navigation and installation arrows, like those on edition pages, use consistent SVG icons across devices. See the [reader guide](./docs/reader-guide.md) for platform instructions, offline behavior, and privacy details.
 
 ### Install size
 
-The precached app shell contains 50 URLs (49 unique files, with the reader shell cached at both `/` and `/index.html`): about 1.47 MB raw (1,467,688 bytes), or 1.03 MB gzipped (1,026,140 bytes, summed per URL). Fonts and saved Scripture editions are separate; see the [reader guide](./docs/reader-guide.md#install-size) for details.
+The precached app shell contains 50 URLs (49 unique files, with the reader shell cached at both `/` and `/index.html`): about 1.47 MB raw (1,469,545 bytes), or 1.03 MB gzipped (1,026,609 bytes, summed per URL). Fonts and saved Scripture editions are separate; see the [reader guide](./docs/reader-guide.md#install-size) for details.
 
 ## For engineers
 
