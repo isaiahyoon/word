@@ -61,7 +61,12 @@ Never go against Scripture, or regard it as false or untrustworthy. It will alwa
 
 # Instagram Numbering
 
-- Instagram posts 40 and 41 are standalone posts, not Where to Turn topics. Continue Where to Turn folder positions at 42, preserve the existing 78-topic order, and increment later positions from there. Do not renumber completed folders or treat 40 and 41 as series topics.
+Store posts 40 and 41 as Where to Turn topics using the numbered topic folder and slide filename convention. Preserve the existing 78-topic order and continue subsequent positions at 42; do not renumber completed folders.
+
+# Instagram Post Legibility
+
+- Design every Instagram post for comfortable phone-scale reading and an elegant, balanced composition. Inspect the final export at 375px wide, checking every language, especially the longest copy and non-Latin scripts.
+- Fit text to the available slide space: reflow or simplify surrounding copy, adjust type size and spacing, or add slides as needed. Do not prescribe fixed minimum font sizes; keep text readable without letting it crowd or overwhelm the artwork.
 
 # Edition Themes
 
