@@ -87,10 +87,11 @@ export function createEditionPicker({
       const description = document.createElement("span");
       description.className = "edition-option-description";
       description.lang = edition.language;
+      description.dir = edition.direction;
       const title = document.createElement("strong");
-      setScrollableText(title, edition.label);
+      title.textContent = edition.name;
       const subtitle = document.createElement("small");
-      setScrollableText(subtitle, edition.name);
+      subtitle.textContent = edition.languageName;
       description.append(title, subtitle);
 
       const selectedMark = document.createElement("span");

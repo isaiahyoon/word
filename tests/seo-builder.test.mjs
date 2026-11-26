@@ -35,6 +35,12 @@ test("registered SEO output stays reproducible and current", async (t) => {
     assert.equal(await readFile(new URL(path, root), "utf8"), await readFile(new URL(path, repository), "utf8"), path);
   }
   const collection = await readFile(new URL("editions/index.html", root), "utf8");
+  for (const edition of Object.values(EDITIONS)) {
+    assert.ok(collection.includes(`${edition.seo.heading}<small>${edition.languageName}</small>`), edition.id);
+    const page = await readFile(new URL(`editions/${edition.routeSegment}/index.html`, root), "utf8");
+    assert.ok(page.includes(`<h1 id="page-title">${edition.seo.heading}</h1>`), edition.id);
+    assert.ok(page.includes(`<title>${edition.seo.title}</title>`), edition.id);
+  }
   assert.ok(collection.includes("Bíblia Almeida (1911)<small>Português</small>"));
   assert.doesNotMatch(collection, /[→↗]/u);
   assert.equal((collection.match(/class="arrow-icon"/g) ?? []).length, 1 + Object.keys(EDITIONS).length * 2);
@@ -43,12 +49,12 @@ test("registered SEO output stays reproducible and current", async (t) => {
   assert.ok(portuguesePage.includes("Bíblia Almeida 1911 em Português online"));
   for (const { routeSegment } of Object.values(EDITIONS)) {
     const page = await readFile(new URL(`editions/${routeSegment}/index.html`, root), "utf8");
-    assert.ok(page.includes(">Almeida · Português</span>"), `${routeSegment} links to the Portuguese edition`);
+    assert.ok(page.includes(">Almeida (1911) · Português</span>"), `${routeSegment} links to the Portuguese edition`);
     assert.doesNotMatch(page, /[→↗]/u);
     assert.equal((page.match(/class="arrow-icon"/g) ?? []).length, 2 + Object.keys(EDITIONS).length);
   }
   const about = await readFile(new URL("about.html", root), "utf8");
-  assert.ok(about.includes("and Almeida · Português, with"));
+  assert.ok(about.includes("and Almeida (1911) · Português, with"));
   await buildSeoPages({ projectRoot: root });
   for (const path of paths) {
     assert.equal(await readFile(new URL(path, root), "utf8"), await readFile(new URL(path, repository), "utf8"), `${path} is idempotent`);

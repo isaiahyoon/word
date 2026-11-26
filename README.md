@@ -33,18 +33,19 @@ The Amazing Word is free to use, asks for no account, and is built around a simp
 | Edition | Language |
 | --- | --- |
 | King James Version (KJV) | English |
-| Korean Revised Version (KRV) | Korean |
-| Bungo-yaku (JapBungo) | Japanese |
-| Giovanni Diodati (1649) | Italian |
-| Luther Bible (1912) | German |
+| 개역한글 (1961) | Korean |
+| Bungo-yaku (1887 / 1917) | Japanese |
+| Giovanni Diodati | Italian |
+| Lutherbibel (1912) | German |
 | David Martin Bible (1744) | French |
-| Reina-Valera 1865 | Spanish |
-| Almeida 1911 | Portuguese |
+| Reina-Valera (1865) | Spanish |
+| Almeida (1911) | Portuguese |
 
 ### Find, read, and carry a passage
 
 - Search Scripture by words or phrases, with exact word matches ahead of typo-tolerant results, optional accents in Latin-script editions, and complete verses. Book, passage, and localized abbreviation suggestions appear before full-text loading finishes; indexing and text search run in a background worker, and a small versioned device cache avoids rebuilding recent indexes after reloads.
 - Move through the text with book and chapter navigation, keyboard shortcuts, or direct passage links. Same-chapter verse shortcuts, search-result navigation, and Back/Forward reuse the displayed verses rather than rebuilding the chapter. Unchanged book lists and picker options also stay mounted.
+- The edition picker shows each edition's full name and language without repeating the name; longer names wrap, and the menu scrolls on shorter screens.
 - Press Space to jump to the top even when a reader button has focus. Enter still activates buttons, and Space keeps its normal behavior while typing or using a menu or dialog. Escape returns focus from search to the current verse.
 - Chapter and edition changes keep the current passage visible while loading, wait for the reading font, replace the text in one update, and position the new passage before painting. Up/Down within the displayed chapter retains smooth scrolling unless reduced motion is enabled.
 - Select verses to copy or share, then choose a language by touch, pointer, or keyboard. Opening the language menu warms only the current chapter in the other editions, rather than downloading their entire books; existing offline book saves are reused. Escape, tabbing away, or tapping or clicking outside dismisses the language menu. When moving a passage between editions, the reader reports known alignment limits instead of presenting uncertain references as exact.
@@ -55,7 +56,7 @@ The [About page](./about.html) introduces the reader, explains installation, and
 
 ### Install size
 
-The precached app shell contains 50 URLs (49 unique files, with the reader shell cached at both `/` and `/index.html`): about 1.47 MB raw (1,469,545 bytes), or 1.03 MB gzipped (1,026,609 bytes, summed per URL). Fonts and saved Scripture editions are separate; see the [reader guide](./docs/reader-guide.md#install-size) for details.
+The precached app shell contains 50 URLs (49 unique files, with the reader shell cached at both `/` and `/index.html`): about 1.47 MB raw (1,469,532 bytes), or 1.03 MB gzipped (1,026,767 bytes, summed per URL). Fonts and saved Scripture editions are separate; see the [reader guide](./docs/reader-guide.md#install-size) for details.
 
 ## For engineers
 

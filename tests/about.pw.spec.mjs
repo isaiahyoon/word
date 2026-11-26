@@ -40,6 +40,7 @@ for (const width of [390, 1280]) {
       await expect(page.locator("#page-title")).toHaveText(localizedHeadings[edition.language]);
       await expect(page.locator("html")).toHaveAttribute("translate", "no");
       await expect(page.locator('meta[name="google"]')).toHaveAttribute("content", "notranslate");
+      await expect(page.locator('input[name="install-language"]')).toHaveCount(Object.keys(EDITIONS).length);
 
       for (const language of new Set(["en", edition.language])) {
         await page.locator("#about-language").click();
@@ -68,7 +69,7 @@ test("localizes About page content, metadata, and accessible names", async ({ pa
     const summary = getEditionSummary(locale, language, EDITIONS);
     await expect(page.locator('[data-about="editionsTitle"]')).toHaveText(summary.editionsTitle);
     await expect(page.locator('[data-about="editionsCopy"]')).toHaveText(summary.editionsCopy);
-    await expect(page.locator('[data-about="editionsCopy"]')).toContainText("Almeida · Português");
+    await expect(page.locator('[data-about="editionsCopy"]')).toContainText("Almeida (1911) · Português");
     await expect(page.locator("[data-about-app-name]"))
       .toHaveText(Object.values(EDITIONS).find((edition) => edition.language === language).appName);
     await expect(page.locator("#about-language")).toHaveAttribute("aria-label", locale.languageLabel);
@@ -167,7 +168,7 @@ test("prepares the selected manifest before offering the native install prompt",
   await page.goto("/");
   await expect(page.locator("#verse-1")).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("lang", "es");
-  await expect(page.locator("#edition-select-label")).toContainText("Reina-Valera · Español");
+  await expect(page.locator("#edition-select-label")).toContainText("Reina-Valera (1865) · Español");
 
   await page.locator("#edition-select").click();
   await page.locator('#edition-options [data-edition="krv"]').click();
