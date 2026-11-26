@@ -139,8 +139,11 @@
   top: calc(100% + 6px);
   right: 0;
   left: 0;
+  max-height: calc(100dvh - 170px);
   display: grid;
   gap: 3px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 5px;
   border: 1px solid rgba(169, 124, 53, 0.36);
   border-radius: 4px;
@@ -195,21 +198,17 @@
 .edition-option-description strong {
   display: block;
   min-width: 0;
-  overflow: hidden;
+  overflow-wrap: anywhere;
   font-size: 11px;
   font-weight: var(--weight-semibold);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .edition-option-description small {
   display: block;
   min-width: 0;
-  overflow: hidden;
+  overflow-wrap: anywhere;
   color: #777970;
   font-family: var(--serif);
   font-size: 11px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .edition-option-check {
   color: var(--deep-teal);
@@ -221,14 +220,12 @@
   z-index: 13;
 }
 @media (hover: hover) and (pointer: fine) {
-  .edition-trigger:hover .edition-trigger-label.is-overflowing .edition-scroll-text,
-  .edition-option:hover .edition-option-description .is-overflowing .edition-scroll-text {
+  .edition-trigger:hover .edition-trigger-label.is-overflowing .edition-scroll-text {
     animation: edition-label-scroll 1.25s linear infinite alternate;
   }
 }
 @media (max-width: 640px) {
-  .sidebar.is-open .edition-trigger-label.is-overflowing .edition-scroll-text,
-  .sidebar.is-open .edition-option-description .is-overflowing .edition-scroll-text {
+  .sidebar.is-open .edition-trigger-label.is-overflowing .edition-scroll-text {
     animation: edition-label-scroll 1.25s linear infinite alternate;
   }
 }
@@ -251,8 +248,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .edition-trigger-label.is-overflowing .edition-scroll-text,
-  .edition-option-description .is-overflowing .edition-scroll-text {
+  .edition-trigger-label.is-overflowing .edition-scroll-text {
     animation: none;
   }
 }

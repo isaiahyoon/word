@@ -1,9 +1,86 @@
 import { expect, test } from "./support/browser-test.mjs";
+import { withTouchEmulation } from "./support/touch-input.mjs";
+
+const editionNames = [
+  ["kjv", "King James Version", "English"],
+  ["krv", "개역한글 (1961)", "한국어"],
+  ["diodati", "Giovanni Diodati", "Italiano"],
+  ["luther1912", "Lutherbibel (1912)", "Deutsch"],
+  ["japbungo", "Bungo-yaku (1887 / 1917)", "日本語"],
+  ["martin1744", "David Martin Bible (1744)", "Français"],
+  ["rv1865", "Reina-Valera (1865)", "Español"],
+  ["alm1911", "Almeida (1911)", "Português"],
+];
 
 for (const viewport of [
   { name: "desktop", width: 1280, height: 900 },
-  { name: "mobile", width: 390, height: 844 },
+  { name: "mobile", width: 320, height: 568 },
 ]) {
+  test.describe(`${viewport.name} edition picker`, () => {
+    test.use({ hasTouch: viewport.name === "mobile", isMobile: viewport.name === "mobile" });
+
+    test("shows complete edition names and languages", async ({ page }) => {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      await page.goto("/kjv/b/john/c/3/v/16");
+      if (viewport.name === "mobile") {
+        await page.locator("#menu-toggle").click();
+        await expect.poll(() => page.locator("#sidebar").evaluate((element) =>
+          getComputedStyle(element).transform,
+        )).toBe("matrix(1, 0, 0, 1, 0, 0)");
+      }
+      const trigger = page.locator("#edition-select");
+      await trigger.focus();
+      await page.keyboard.press("ArrowDown");
+      const menu = page.locator("#edition-options");
+      await expect(menu).toBeVisible();
+      for (const [id, name, language] of editionNames) {
+        const option = page.locator(`#edition-option-${id}`);
+        await expect(option.locator("strong")).toHaveText(name);
+        await expect(option.locator("small")).toHaveText(language);
+        for (const text of [option.locator("strong"), option.locator("small")]) {
+          expect(await text.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+        }
+      }
+      const bounds = await menu.boundingBox();
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(viewport.width);
+      expect(bounds.y + bounds.height).toBeLessThanOrEqual(viewport.height);
+      const japaneseTitle = page.locator("#edition-option-japbungo strong");
+      const lineCount = await japaneseTitle.evaluate((element) => {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        return range.getClientRects().length;
+      });
+      expect(lineCount).toBeGreaterThan(1);
+      await page.keyboard.press("End");
+      const lastOption = page.locator("#edition-option-alm1911");
+      await expect(lastOption).toBeFocused();
+      const lastBounds = await lastOption.boundingBox();
+      expect(lastBounds.y + lastBounds.height).toBeLessThanOrEqual(bounds.y + bounds.height);
+      await page.keyboard.press("Home");
+      await expect(page.locator("#edition-option-kjv")).toBeFocused();
+      await page.keyboard.press("Escape");
+      await expect(menu).toBeHidden();
+      if (viewport.name === "mobile") {
+        await trigger.tap();
+        const panel = await menu.boundingBox();
+        await withTouchEmulation(page, async (dispatchTouch) => {
+          const x = Math.round(panel.x + panel.width / 2);
+          await dispatchTouch("touchStart", x, Math.round(panel.y + panel.height - 30));
+          await dispatchTouch("touchMove", x, Math.round(panel.y + 80));
+          await dispatchTouch("touchEnd", x, Math.round(panel.y + 80));
+        });
+        await expect.poll(() => menu.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+        await page.locator("#edition-option-alm1911").tap();
+        await expect(page).toHaveURL(/\/alm\/b\/john\/c\/3\/v\/16$/);
+      } else {
+        await trigger.click();
+        await page.locator("#edition-option-japbungo").click();
+        await expect(page).toHaveURL(/\/japbungo\/b\/john\/c\/3\/v\/16$/);
+      }
+    });
+  });
+
   test(`distinguishes KJV and French reader palettes on ${viewport.name}`, async ({ page }) => {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
     await page.goto("/kjv/b/john/c/3/v/16");
@@ -269,11 +346,11 @@ test("switches a selected passage to Almeida 1911 and copies its Portuguese cita
   await page.locator("#verse-16").click();
   await page.locator("#edition-select").click();
   await expect(page.locator("#edition-option-alm1911 .edition-option-description strong"))
-    .toHaveText("Almeida · Português");
+    .toHaveText("Almeida (1911)");
   await page.locator("#edition-option-alm1911").click();
 
   await expect(page).toHaveURL(/\/alm\/b\/john\/c\/3\/v\/16$/);
-  await expect(page.locator("#edition-select-label")).toHaveText("Almeida · Português");
+  await expect(page.locator("#edition-select-label")).toHaveText("Almeida (1911) · Português");
   await expect(page.locator("#verse-list")).toHaveAttribute("lang", "pt");
   await expect(page.locator("#verse-16")).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator("#copy-selected-verses")).toHaveText("Copiar 1 versículo");
@@ -361,7 +438,7 @@ test("opens the RV1865 LUZ edition with source headings, Petrona, and Spanish ci
 
   await expect(page).toHaveURL(/\/luz\/b\/psalms\/c\/3\/v\/1$/);
   await expect(page.locator("#edition-select-code")).toHaveText("LUZ");
-  await expect(page.locator("#edition-select-label")).toHaveText("Reina-Valera · Español");
+  await expect(page.locator("#edition-select-label")).toHaveText("Reina-Valera (1865) · Español");
   await expect(page.locator("#verse-list")).toHaveAttribute("lang", "es");
   await expect(page.locator("body")).toHaveClass(/is-rv1865-edition/);
   await expect(page.locator("#chapter-source-heading")).toHaveText("Salmo de David, cuando huía de delante de Absalom su hijo.");
@@ -532,7 +609,7 @@ test("uses a two-pixel smaller verse size only for KJV", async ({ page }) => {
   await expect(page.locator("#verse-1")).toHaveCSS("font-size", "19px");
 });
 
-test("auto-scrolls long edition labels only while the mobile sidebar is open", async ({ page }) => {
+test("auto-scrolls the long edition trigger only while the mobile sidebar is open", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 800 });
   await page.goto("/licht");
   const triggerLabel = page.locator("#edition-select-label");
@@ -542,24 +619,17 @@ test("auto-scrolls long edition labels only while the mobile sidebar is open", a
   await page.locator("#menu-toggle").click();
   await expect(triggerTrack).toHaveCSS("animation-name", "edition-label-scroll");
 
-  await page.locator("#edition-select").click();
-  const lutherOption = page.locator("#edition-option-luther1912");
-  const longOptionTitle = lutherOption.locator(".edition-option-description strong.is-overflowing .edition-scroll-text");
-  await expect(longOptionTitle).toHaveCount(1);
-  await expect(longOptionTitle).toHaveCSS("animation-name", "edition-label-scroll");
-
   await page.locator(".sidebar-scrim").click({ position: { x: 310, y: 400 } });
   await expect(page.locator(".sidebar")).not.toHaveClass(/is-open/);
   await expect(triggerTrack).toHaveCSS("animation-name", "none");
 });
 
-test("scrolls long edition labels only when hovered on desktop", async ({ page }) => {
+test("scrolls the long edition trigger only when hovered on desktop", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/licht");
   await page.addStyleTag({
     content: `
-      #edition-select-label,
-      #edition-option-luther1912 .edition-option-description strong {
+      #edition-select-label {
         width: 80px;
       }
     `,
@@ -571,14 +641,7 @@ test("scrolls long edition labels only when hovered on desktop", async ({ page }
   await expect(desktopTrack).toHaveCSS("animation-name", "none");
   await page.locator("#edition-select").hover();
   await expect(desktopTrack).toHaveCSS("animation-name", "edition-label-scroll");
-  await page.locator("#edition-select").click();
-  const longOptionTitle = page.locator(
-    "#edition-option-luther1912 .edition-option-description strong.is-overflowing .edition-scroll-text",
-  );
-  await expect(longOptionTitle).toHaveCSS("animation-name", "none");
-  await page.locator("#edition-option-luther1912").hover();
-  await expect(longOptionTitle).toHaveCSS("animation-name", "edition-label-scroll");
-  const endGap = await longOptionTitle.evaluate(async (track) => {
+  const endGap = await desktopTrack.evaluate(async (track) => {
     const animation = track.getAnimations()[0];
     animation.pause();
     animation.currentTime = 1000;
@@ -593,11 +656,11 @@ test("scrolls long edition labels only when hovered on desktop", async ({ page }
 test("uses a compact JAP edition code while keeping the full Bungo name", async ({ page }) => {
   await page.goto("/japbungo");
   await expect(page.locator("#edition-select-code")).toHaveText("JAP");
-  await expect(page.locator("#edition-select-label")).toHaveText("Bungo-yaku · 日本語");
+  await expect(page.locator("#edition-select-label")).toHaveText("Bungo-yaku (1887 / 1917) · 日本語");
 
   await page.locator("#edition-select").click();
   await expect(page.locator("#edition-option-japbungo .edition-option-mark")).toHaveText("JAP");
-  await expect(page.locator("#edition-option-japbungo .edition-option-description small")).toHaveText("Bungo-yaku (文語訳)");
+  await expect(page.locator("#edition-option-japbungo .edition-option-description strong")).toHaveText("Bungo-yaku (1887 / 1917)");
 });
 
 test("loads Diodati with the DIO code, Italian typography, and pink theme", async ({ page }) => {
@@ -608,7 +671,7 @@ test("loads Diodati with the DIO code, Italian typography, and pink theme", asyn
   await expect(page.locator("#edition-select-label")).toHaveText("Diodati · Italiano");
   await page.locator("#edition-select").click();
   await expect(page.locator("#edition-option-diodati .edition-option-mark")).toHaveText("DIO");
-  await expect(page.locator("#edition-option-diodati .edition-option-description small")).toHaveText("Giovanni Diodati (1649)");
+  await expect(page.locator("#edition-option-diodati .edition-option-description strong")).toHaveText("Giovanni Diodati");
   await page.locator("#edition-select").click();
   await expect(page.locator("html")).toHaveAttribute("lang", "it");
   await expect(page.locator("body")).toHaveClass(/is-diodati-edition/);
@@ -650,10 +713,10 @@ test("loads Luther with the LUX code, German search, and yellow-red theme", asyn
 
   await expect(page).toHaveURL(/\/licht\/b\/genesis\/c\/1\/v\/1$/);
   await expect(page.locator("#edition-select-code")).toHaveText("LUX");
-  await expect(page.locator("#edition-select-label")).toHaveText("Lutherbibel · Deutsch");
+  await expect(page.locator("#edition-select-label")).toHaveText("Lutherbibel (1912) · Deutsch");
   await page.locator("#edition-select").click();
   await expect(page.locator("#edition-option-luther1912 .edition-option-mark")).toHaveText("LUX");
-  await expect(page.locator("#edition-option-luther1912 .edition-option-description small")).toHaveText("Luther Bible (1912)");
+  await expect(page.locator("#edition-option-luther1912 .edition-option-description strong")).toHaveText("Lutherbibel (1912)");
   await page.locator("#edition-select").click();
 
   await expect(page.locator("html")).toHaveAttribute("lang", "de");
