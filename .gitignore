@@ -6,3 +6,7 @@ test-results/
 /assets/instagram/
 /assets/facebook/
 /.github/agents/instagram-post.local.agent.md
+/tools/render-instagram-post.mjs
+/tools/instagram-scripture-post.mjs
+/tests/instagram-post-generator.test.mjs
+/instagram-generator-work/
